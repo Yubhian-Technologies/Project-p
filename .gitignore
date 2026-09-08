@@ -15,6 +15,7 @@ functions/lib
 
 # Environment variables
 .env
+.env.example
 .env.*.local
 
 # Editor directories and files
