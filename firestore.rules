@@ -73,7 +73,12 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.counsellorId == request.auth.uid ||
-        isStaff()
+        isStaff() ||
+        // listScheduledBookings() is queried platform-wide by every signed-in user
+        // (BookingSection.tsx) purely to compute a counsellor's live "in session"
+        // badge. Only "scheduled" bookings are exposed this way; the sensitive
+        // intake subcollection below stays locked to the two parties + staff.
+        resource.data.status == 'scheduled'
       );
 
       allow create: if isSignedIn() && (
