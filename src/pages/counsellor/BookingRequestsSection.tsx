@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import {
   listBookingsForCounsellor,
@@ -22,6 +22,10 @@ import { RequestDetailModal } from "../../components/booking/RequestDetailModal"
 import { SessionHistoryModal } from "../../components/booking/SessionHistoryModal";
 import "./BookingRequestsSection.css";
 
+const ImportSessionsModal = lazy(() =>
+  import("../../components/booking/ImportSessionsModal").then((m) => ({ default: m.ImportSessionsModal })),
+);
+
 type Tab = "new" | "upcoming" | "completed";
 
 const TABS: { id: Tab; label: string }[] = [
@@ -40,8 +44,13 @@ interface HistoryState {
   loading: boolean;
 }
 
-export function BookingRequestsSection() {
-  const { currentUser } = useAuth();
+interface BookingRequestsSectionProps {
+  importOpen?: boolean;
+  onImportClose?: () => void;
+}
+
+export function BookingRequestsSection({ importOpen = false, onImportClose }: BookingRequestsSectionProps) {
+  const { currentUser, profile } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [transferCandidates, setTransferCandidates] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,17 +101,19 @@ export function BookingRequestsSection() {
 
   return (
     <div className="booking-requests-section">
-      <div className="booking-requests-section__tabs">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`booking-requests-section__tab ${activeTab === tab.id ? "booking-requests-section__tab--active" : ""}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label} ({tabCounts[tab.id]})
-          </button>
-        ))}
+      <div className="booking-requests-section__header">
+        <div className="booking-requests-section__tabs">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={`booking-requests-section__tab ${activeTab === tab.id ? "booking-requests-section__tab--active" : ""}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label} ({tabCounts[tab.id]})
+            </button>
+          ))}
+        </div>
       </div>
 
       {activeTab === "new" &&
@@ -206,6 +217,16 @@ export function BookingRequestsSection() {
           loading={historyState.loading}
           onClose={() => setHistoryState(null)}
         />
+      )}
+
+      {importOpen && currentUser && (
+        <Suspense fallback={null}>
+          <ImportSessionsModal
+            counsellor={{ uid: currentUser.uid, email: profile?.email ?? "" }}
+            onClose={() => onImportClose?.()}
+            onImported={refresh}
+          />
+        </Suspense>
       )}
     </div>
   );

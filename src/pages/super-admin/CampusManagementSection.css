@@ -81,6 +81,14 @@
   font-weight: 600;
 }
 
+.campus-management__colleges {
+  flex-basis: 100%;
+  cursor: default;
+  padding-top: 14px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(163, 177, 198, 0.3);
+}
+
 .campus-management__confirm {
   display: flex;
   align-items: center;

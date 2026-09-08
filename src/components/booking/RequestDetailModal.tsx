@@ -185,6 +185,9 @@ export function RequestDetailModal({
             )}
           </p>
         )}
+        {booking.sessionMode === "offline" && (
+          <span className="request-card__offline-tag">Offline</span>
+        )}
         <span className={`request-card__status request-card__status--${booking.status}`}>
           {booking.status}
         </span>

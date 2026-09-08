@@ -14,6 +14,8 @@ import { db } from "./config";
 import type { UserProfile } from "../../types/user";
 import type { Booking, BookingIntake, BookingOutcome } from "../../types/booking";
 import { createNotification } from "./notifications";
+import type { OfflineSessionRow } from "../../utils/offlineSessionImport";
+import { clientDisplayLabel, syntheticClientId } from "../../utils/offlineSessionImport";
 
 export const SESSION_DURATION_MINUTES = 90;
 export const SESSION_DURATION_LABEL = `${Math.floor(SESSION_DURATION_MINUTES / 60)}h ${SESSION_DURATION_MINUTES % 60}m`;
@@ -289,5 +291,49 @@ export async function createFollowUpBooking(
     title: "Follow-up session scheduled",
     message: `A follow-up session with ${original.counsellorEmail} is scheduled for ${new Date(scheduledAt).toLocaleString()}`,
   });
+  return docRef.id;
+}
+
+/**
+ * Imports one row from an offline (in-person) session log directly as a
+ * completed booking — skips the pending/accepted/scheduled state machine and
+ * skips notifications entirely, since this is a historical record, not a live
+ * event. Sequential addDoc then setDoc (not writeBatch): a security rule's
+ * get() on the parent booking must see it as already committed when the
+ * private/details write is evaluated, which sequential awaited writes
+ * guarantee and a batch does not.
+ */
+export async function importOfflineSession(
+  counsellor: { uid: string; email: string },
+  row: OfflineSessionRow,
+): Promise<string> {
+  const userId = syntheticClientId(row.clientEmail, row.whatsappNumber);
+  const userEmail = clientDisplayLabel(row.clientName, row.whatsappNumber);
+
+  const docRef = await addDoc(bookingsCollection, {
+    userId,
+    userEmail,
+    counsellorId: counsellor.uid,
+    counsellorEmail: counsellor.email,
+    status: "completed",
+    outcome: "completed",
+    sessionMode: "offline",
+    scheduledAt: row.scheduledAt,
+    durationMinutes: row.durationMinutes,
+    createdAt: row.scheduledAt,
+    updatedAt: row.scheduledAt,
+    ...(row.userRating !== undefined ? { userRatingOfCounsellor: row.userRating } : {}),
+    ...(row.counsellorRating !== undefined ? { counsellorRatingOfUser: row.counsellorRating } : {}),
+    ...(row.counsellorNote ? { counsellorNoteOnUser: row.counsellorNote } : {}),
+  });
+
+  await setDoc(intakeDocRef(docRef.id), {
+    username: row.clientName,
+    occupation: row.occupation,
+    whatsappNumber: row.whatsappNumber,
+    issue: row.issue,
+    ...(row.summary ? { summary: row.summary } : {}),
+  });
+
   return docRef.id;
 }

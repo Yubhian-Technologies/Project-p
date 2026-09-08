@@ -145,6 +145,21 @@
   color: var(--neu-text-muted, #718096);
 }
 
+.request-card__offline-tag {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-sunken-sm);
+  color: var(--neu-text-muted, #718096);
+  white-space: nowrap;
+}
+
 .request-card__intake {
   display: grid;
   grid-template-columns: 110px 1fr;

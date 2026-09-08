@@ -24,8 +24,10 @@ export function LandingPage() {
 
           <ul className="landing-nav__links">
             <li><a href="#about" className="landing-nav__link">About</a></li>
+            <li><a href="#team" className="landing-nav__link">Our Team</a></li>
             <li><a href="#features" className="landing-nav__link">Features</a></li>
             <li><a href="#resources" className="landing-nav__link">Resources</a></li>
+            <li><a href="#terms" className="landing-nav__link">Terms and Policies</a></li>
           </ul>
 
           <div className="landing-nav__actions">
@@ -46,95 +48,58 @@ export function LandingPage() {
           </div>
         </header>
 
-        {/* Hero Photo Placeholder Banner */}
+        {/* Hero Photo Banner */}
         <div className="hero-photo-banner">
-          <div className="hero-photo-banner__inner">
-            <svg className="hero-photo-banner__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="4" ry="4" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <polyline points="21 15 16 10 5 21" />
-            </svg>
-            <span className="hero-photo-banner__label">Insert calm wellness imagery here</span>
+          <div className="hero-photo-banner__frame">
+            <div className="hero-photo-banner__media">
+              <img
+                src="/hero-counsellor.jpg"
+                alt="A counsellor and client talking together in a calm, plant-filled room"
+                className="hero-photo-banner__image"
+              />
+              <div className="hero-photo-banner__overlay" />
+
+              <section className="landing-hero">
+                <h1 className="landing-headline">
+                  Elevate Your Mind, Body & Soul. <br />
+                  <span className="landing-headline__gradient">Redefined.</span>
+                </h1>
+
+                <p className="landing-subtitle">
+                  Book 1-on-1 sessions with certified psychologists, track your personal wellness journey, and receive dedicated counselling support—all in one seamless workspace.
+                </p>
+
+                <div className="landing-hero__ctas">
+                  <Link to={currentUser ? dashboardPath : "/signup"} className="btn-glass-primary btn-hero-primary">
+                    Book Session &rarr;
+                  </Link>
+                </div>
+              </section>
+            </div>
           </div>
         </div>
 
-        {/* Hero Section */}
-        <section className="landing-hero">
-          <h1 className="landing-headline">
-            Elevate Your Mind, Body & Soul. <br />
-            <span className="landing-headline__gradient">Redefined.</span>
-          </h1>
-
-          <p className="landing-subtitle">
-            Book 1-on-1 sessions with certified psychologists, track your personal wellness journey, and receive dedicated counselling support—all in one seamless workspace.
-          </p>
-
-          <div className="landing-hero__ctas">
-            <Link to={currentUser ? dashboardPath : "/signup"} className="btn-glass-primary btn-hero-primary">
-              Book Session &rarr;
-            </Link>
-          </div>
-        </section>
-
-        {/* Floating Product Preview Showcase */}
-        <div className="landing-preview-viewport">
-          {/* Floating Left Widget */}
-          <div className="floating-widget floating-widget--left">
-            <div className="widget-icon">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
-            </div>
-            <div className="widget-text">
-              <div className="widget-text__title">Mindfulness Score</div>
-              <div className="widget-text__value">98% &bull; Wellbeing Index</div>
-            </div>
+        {/* Core Values Showcase */}
+        <div className="landing-values">
+          <div className="value-card value-card--1">
+            <h3 className="value-card__title">Confidentiality</h3>
+            <p className="value-card__desc">
+              Everything you share stays strictly between you and your counsellor — private, secure, and never disclosed without your consent.
+            </p>
           </div>
 
-          {/* Central Main Preview Card */}
-          <div className="preview-main-card">
-            <div className="preview-bar">
-              <div className="preview-bar__dots">
-                <div className="preview-bar__dot" />
-                <div className="preview-bar__dot" />
-                <div className="preview-bar__dot" />
-              </div>
-              <div className="preview-bar__search">
-                <span>vishnuwellness.com/counselling</span>
-              </div>
-            </div>
-
-            <div className="preview-content-grid">
-              <div className="preview-sidebar">
-                <div className="preview-item preview-item--short" />
-                <div className="preview-item preview-item--medium" />
-                <div className="preview-item preview-item--short" />
-                <div className="preview-item preview-item--medium" />
-              </div>
-
-              <div className="preview-main-panel">
-                <div style={{ color: '#64748b', fontSize: '12px' }}>
-                  Upcoming Session • 1-on-1 Counselling
-                </div>
-                <div className="preview-prompt-box">
-                  <span>"Dr. Ananya Sharma — Mindfulness & Stress Relief Session"</span>
-                  <span className="preview-pill">Join Session</span>
-                </div>
-              </div>
-            </div>
+          <div className="value-card value-card--2">
+            <h3 className="value-card__title">Empathy</h3>
+            <p className="value-card__desc">
+              Every session starts with genuinely listening — our counsellors meet you where you are, with warmth and understanding.
+            </p>
           </div>
 
-          {/* Floating Right Widget */}
-          <div className="floating-widget floating-widget--right">
-            <div className="widget-icon">
-              <svg viewBox="0 0 24 24">
-                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" />
-              </svg>
-            </div>
-            <div className="widget-text">
-              <div className="widget-text__title">1-on-1 Counselling</div>
-              <div className="widget-text__value">Certified Psychologists</div>
-            </div>
+          <div className="value-card value-card--3">
+            <h3 className="value-card__title">Non-judgemental</h3>
+            <p className="value-card__desc">
+              A safe space to share exactly as you are — no labels, no judgement, just support.
+            </p>
           </div>
         </div>
 
@@ -175,6 +140,21 @@ export function LandingPage() {
             <div className="about-photo-card about-photo-card--4">
               <div className="about-photo-placeholder" />
             </div>
+          </div>
+        </section>
+
+        {/* Our Team Section — placeholder overview copy, real content to be added later */}
+        <section className="landing-team" id="team">
+          <div className="landing-section-heading">
+            <span className="landing-about__eyebrow">Our Team</span>
+            <h2 className="landing-section-heading__title">The people behind Vishnu Wellness</h2>
+          </div>
+
+          <div className="team-overview-card">
+            <p className="team-overview-card__body">
+              Placeholder overview of our team as a whole — replace with real content describing
+              our counsellors, their collective experience, and the approach they bring to care.
+            </p>
           </div>
         </section>
 
@@ -269,6 +249,63 @@ export function LandingPage() {
               <h3 className="resource-card__title">Placeholder Reference Title</h3>
               <p className="resource-card__desc">Background reading our approach is grounded in.</p>
             </div>
+          </div>
+        </section>
+
+        {/* Terms and Policies Section */}
+        <section className="landing-terms" id="terms">
+          <div className="landing-section-heading">
+            <span className="landing-about__eyebrow">Terms and Policies</span>
+            <h2 className="landing-section-heading__title">Please review our terms before you begin</h2>
+          </div>
+
+          <div className="terms-card">
+            <ol className="terms-list">
+              <li>
+                <strong>Confidentiality:</strong> All information shared during counselling sessions is strictly
+                confidential and will not be disclosed to any third party without the individual's explicit consent,
+                except in cases where there is a risk of harm to oneself or others.
+              </li>
+              <li>
+                <strong>Eligibility:</strong> Counselling services are available to currently enrolled students,
+                faculty, and staff of the university free of charge.
+              </li>
+              <li>
+                <strong>Appointment Scheduling:</strong> Counselling sessions are available by appointment only.
+                Walk-in appointments may be accommodated based on emergency and counsellor availability.
+              </li>
+              <li>
+                <strong>Cancellation Policy:</strong> If you need to cancel or reschedule your appointment, please
+                notify us at least 24 hours in advance to avoid any inconvenience.
+              </li>
+              <li>
+                <strong>Duration of Sessions:</strong> Counselling sessions typically last 45 minutes unless
+                otherwise arranged with your counsellor.
+              </li>
+              <li>
+                <strong>Respectful Environment:</strong> Our wellness centre is committed to providing a safe,
+                inclusive, and respectful environment for all individuals seeking support.
+              </li>
+              <li>
+                <strong>Limits of Service:</strong> While our counsellors strive to provide effective support, it's
+                important to note that counselling services may not be suitable for all concerns. Referrals to
+                external resources or specialised professionals may be provided when appropriate.
+              </li>
+              <li>
+                <strong>Code of Conduct:</strong> The clients are expected to adhere to the university's code of
+                conduct during counselling sessions, respect the counsellor's professional boundaries, and refrain
+                from any behaviour that may compromise the safety or comfort of others.
+              </li>
+              <li>
+                <strong>Feedback and Concerns:</strong> We value your feedback and encourage open communication. If
+                you have any concerns or suggestions regarding our services, please do not hesitate to contact us.
+              </li>
+              <li>
+                <strong>Compliance with Laws and Ethical Standards:</strong> Our wellness centre operates in
+                accordance with relevant laws and ethical guidelines governing mental health services, ensuring the
+                highest standards of care and professionalism.
+              </li>
+            </ol>
           </div>
         </section>
 

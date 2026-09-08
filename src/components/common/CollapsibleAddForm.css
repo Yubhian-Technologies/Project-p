@@ -1,0 +1,36 @@
+.collapsible-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.collapsible-add-form__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.collapsible-add-form__title {
+  margin: 0 0 6px 0;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.collapsible-add-form__close {
+  background: var(--neu-bg, #E8ECF2);
+  border: none;
+  box-shadow: var(--neu-shadow-extruded-sm);
+  border-radius: 9999px;
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--neu-text-muted, #718096);
+  cursor: pointer;
+  transition: box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.collapsible-add-form__close:hover {
+  box-shadow: var(--neu-shadow-extruded);
+}

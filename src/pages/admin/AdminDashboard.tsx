@@ -3,17 +3,20 @@ import { AppShell } from "../../components/layout/AppShell";
 import { ProfileSection } from "../../components/layout/ProfileSection";
 import { BentoCard } from "../../components/common/BentoCard";
 import { useAuth } from "../../hooks/useAuth";
-import { CampusOverviewSection } from "./CampusOverviewSection";
+import { CampusManagementSection } from "../super-admin/CampusManagementSection";
+import { AnalyticsSection } from "./analytics/AnalyticsSection";
 import "../../styles/bento-grid.css";
 
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "campuses", label: "Campuses" },
+  { id: "analytics", label: "Analytics" },
 ];
 
 const TITLES: Record<string, string> = {
   profile: "Profile",
   campuses: "Campuses",
+  analytics: "Analytics",
 };
 
 export function AdminDashboard() {
@@ -30,7 +33,9 @@ export function AdminDashboard() {
       {activeSection === "profile" ? (
         <ProfileSection />
       ) : activeSection === "campuses" ? (
-        <CampusOverviewSection />
+        <CampusManagementSection />
+      ) : activeSection === "analytics" ? (
+        <AnalyticsSection />
       ) : (
         <div className="bento-grid">
           <BentoCard

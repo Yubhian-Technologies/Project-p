@@ -10,13 +10,14 @@ import "./AppShell.css";
 
 interface AppShellProps {
   title: string;
+  headerAction?: ReactNode;
   sections: SidebarSection[];
   activeSection: string;
   onSelectSection: (id: string) => void;
   children: ReactNode;
 }
 
-export function AppShell({ title, sections, activeSection, onSelectSection, children }: AppShellProps) {
+export function AppShell({ title, headerAction, sections, activeSection, onSelectSection, children }: AppShellProps) {
   const { profile, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -61,7 +62,12 @@ export function AppShell({ title, sections, activeSection, onSelectSection, chil
           onClose={() => setSidebarOpen(false)}
         />
         <main className="app-shell__content">
-          {title && <h1 className="app-shell__title">{title}</h1>}
+          {title && (
+            <div className="app-shell__title-row">
+              <h1 className="app-shell__title">{title}</h1>
+              {headerAction && <div className="app-shell__title-action">{headerAction}</div>}
+            </div>
+          )}
           {children}
         </main>
       </div>

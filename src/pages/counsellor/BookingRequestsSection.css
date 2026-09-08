@@ -5,6 +5,13 @@
   max-width: 560px;
 }
 
+.booking-requests-section__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .booking-requests-section__tabs {
   display: flex;
   gap: 10px;
