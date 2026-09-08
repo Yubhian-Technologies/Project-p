@@ -1,0 +1,66 @@
+.md-button {
+  border: none;
+  border-radius: 9999px;
+  padding: 12px 28px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--neu-bg, #E8ECF2);
+  color: var(--neu-text-primary, #2D3748);
+  box-shadow: var(--neu-shadow-extruded);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.md-button:hover {
+  box-shadow: var(--neu-shadow-extruded-hover);
+  transform: translateY(-1px);
+}
+
+.md-button:active {
+  box-shadow: var(--neu-shadow-sunken);
+  transform: translateY(0);
+}
+
+.md-button--filled {
+  background: linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%);
+  color: #ffffff;
+  box-shadow: var(--neu-shadow-accent);
+}
+
+.md-button--filled:hover {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  box-shadow: -3px -3px 7px rgba(255, 255, 255, 0.25), 4px 4px 10px rgba(30, 58, 138, 0.4);
+}
+
+.md-button--filled:active {
+  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.35), inset -3px -3px 6px rgba(255, 255, 255, 0.3);
+}
+
+.md-button--outlined {
+  background: var(--neu-bg, #E8ECF2);
+  color: var(--neu-accent-primary, #2563EB);
+  box-shadow: var(--neu-shadow-extruded-sm);
+  border: none;
+}
+
+.md-button--outlined:hover {
+  box-shadow: var(--neu-shadow-extruded);
+  color: var(--neu-accent-hover, #1D4ED8);
+}
+
+.md-button--outlined:active {
+  box-shadow: var(--neu-shadow-sunken-sm);
+}
+
+.md-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+

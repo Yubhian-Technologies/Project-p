@@ -1,0 +1,68 @@
+:root {
+  /* Neumorphic Base Canvas & Surface Tokens */
+  --neu-bg: #EBF0F5;
+  --neu-surface: #EBF0F5;
+
+  /* Neumorphic Dual Light Physics (Subtle non-glowing 135° top-left light source) */
+  --neu-shadow-extruded-sm: -3px -3px 8px rgba(255, 255, 255, 0.7), 3px 3px 8px rgba(163, 177, 198, 0.35);
+  --neu-shadow-extruded: -4px -4px 10px rgba(255, 255, 255, 0.7), 5px 5px 12px rgba(163, 177, 198, 0.4);
+  --neu-shadow-extruded-lg: -5px -5px 14px rgba(255, 255, 255, 0.75), 8px 8px 18px rgba(163, 177, 198, 0.45);
+  --neu-shadow-extruded-hover: -5px -5px 14px rgba(255, 255, 255, 0.8), 7px 7px 16px rgba(163, 177, 198, 0.5);
+  --neu-shadow-accent: -2px -2px 5px rgba(255, 255, 255, 0.25), 3px 3px 8px rgba(29, 78, 216, 0.35);
+
+  --neu-shadow-sunken: inset 4px 4px 8px rgba(163, 177, 198, 0.5), inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+  --neu-shadow-sunken-focus: inset 5px 5px 10px rgba(163, 177, 198, 0.6), inset -5px -5px 10px rgba(255, 255, 255, 0.9), 0 0 0 2px rgba(37, 99, 235, 0.3);
+  --neu-shadow-sunken-sm: inset 2px 2px 4px rgba(163, 177, 198, 0.5), inset -2px -2px 4px rgba(255, 255, 255, 0.8);
+
+  /* Color Palette - Blue Shades Neumorphic Accents */
+  --neu-accent-primary: #2563EB;
+  --neu-accent-vivid: #1D4ED8;
+  --neu-accent-dark: #1E3A8A;
+  --neu-accent-hover: #1D4ED8;
+  --neu-accent-light: #DBEAFE;
+
+
+  /* Text Hierarchy Tokens */
+  --neu-text-primary: #0F172A;
+  --neu-text-body: #475569;
+  --neu-text-muted: #64748B;
+
+  /* Material 3 Legacy Variable Mappings for Compatibility */
+  --md-sys-color-primary: var(--neu-accent-primary);
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: var(--neu-accent-light);
+  --md-sys-color-on-primary-container: var(--neu-accent-primary);
+
+  --md-sys-color-secondary: var(--neu-accent-dark);
+  --md-sys-color-on-secondary: #ffffff;
+  --md-sys-color-secondary-container: #E1E6EE;
+  --md-sys-color-on-secondary-container: #2D3748;
+
+  --md-sys-color-error: #e53e3e;
+  --md-sys-color-on-error: #ffffff;
+
+  --md-sys-color-background: var(--neu-bg);
+  --md-sys-color-on-background: var(--neu-text-primary);
+  --md-sys-color-surface: var(--neu-surface);
+  --md-sys-color-on-surface: var(--neu-text-primary);
+  --md-sys-color-surface-variant: #DCE2ED;
+  --md-sys-color-on-surface-variant: var(--neu-text-body);
+  --md-sys-color-outline: #CBD5E0;
+
+  /* Shape Tokens */
+  --md-sys-shape-corner-small: 12px;
+  --md-sys-shape-corner-medium: 20px;
+  --md-sys-shape-corner-large: 24px;
+  --md-sys-shape-corner-full: 9999px;
+
+  /* Typography */
+  --md-sys-typescale-font-display: 'Satoshi', 'General Sans', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --md-sys-typescale-font-body: 'Plus Jakarta Sans', 'Inter', 'General Sans', 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Motion */
+  --md-sys-motion-easing-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --md-sys-motion-duration-short: 150ms;
+  --md-sys-motion-duration-medium: 250ms;
+  --md-sys-motion-duration-long: 500ms;
+}
+

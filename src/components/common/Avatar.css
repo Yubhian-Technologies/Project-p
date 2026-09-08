@@ -1,0 +1,42 @@
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  object-fit: cover;
+  background: var(--neu-bg, #E8ECF2);
+  color: var(--neu-accent-primary, #2563EB);
+  border: none;
+  box-shadow: 2px 2px 6px rgba(163, 177, 198, 0.35), -2px -2px 6px rgba(255, 255, 255, 0.3);
+  font-family: var(--md-sys-typescale-font-display);
+  font-weight: 700;
+}
+
+.avatar--circle {
+  border-radius: 50%;
+}
+
+.avatar--square {
+  border-radius: 20px;
+}
+
+.avatar--small {
+  width: 36px;
+  height: 36px;
+  font-size: 14px;
+}
+
+.avatar--large {
+  width: 80px;
+  height: 80px;
+  font-size: 30px;
+  box-shadow: 3px 3px 10px rgba(163, 177, 198, 0.35), -3px -3px 8px rgba(255, 255, 255, 0.3);
+}
+
+.avatar--xl {
+  width: 130px;
+  height: 130px;
+  font-size: 46px;
+  box-shadow: 4px 4px 14px rgba(163, 177, 198, 0.35), -3px -3px 10px rgba(255, 255, 255, 0.3);
+}
+

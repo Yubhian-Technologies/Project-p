@@ -1,0 +1,53 @@
+.availability-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.availability-editor__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--neu-bg, #E8ECF2);
+  padding: 8px 16px;
+  border-radius: 9999px;
+  box-shadow: var(--neu-shadow-extruded-sm);
+}
+
+.availability-editor__day {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 70px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--neu-text-primary, #2D3748);
+  flex-shrink: 0;
+}
+
+.availability-editor__row input[type="time"] {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: none;
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-sunken-sm);
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.availability-editor__row input[type="time"]:focus {
+  box-shadow: var(--neu-shadow-sunken-focus);
+}
+
+.availability-editor__row input[type="time"]:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.availability-editor__to {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--neu-text-muted, #718096);
+}
+

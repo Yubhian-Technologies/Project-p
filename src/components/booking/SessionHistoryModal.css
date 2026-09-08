@@ -1,0 +1,31 @@
+.session-history {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.session-history__entry {
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-sunken-sm);
+  border-radius: 16px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.session-history__date {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--neu-text-muted, #718096);
+}
+
+.session-history__summary {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--neu-text-body, #4A5568);
+}

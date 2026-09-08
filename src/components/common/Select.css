@@ -1,0 +1,104 @@
+.md-select {
+  position: relative;
+  width: 100%;
+}
+
+.md-select__control {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 12px 18px;
+  border-radius: 16px;
+  border: none;
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-sunken);
+  color: var(--neu-text-primary, #2D3748);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.md-select__control:focus-visible {
+  box-shadow: var(--neu-shadow-sunken-focus);
+  outline: none;
+}
+
+.md-select__control:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.md-select__value {
+  color: var(--neu-text-primary, #2D3748);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.md-select__placeholder {
+  color: var(--neu-text-muted, #718096);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.md-select__chevron {
+  flex-shrink: 0;
+  color: var(--neu-text-muted, #718096);
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.md-select__control[aria-expanded="true"] .md-select__chevron {
+  transform: rotate(180deg);
+}
+
+.md-select__menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--neu-bg, #E8ECF2);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.35), 0 8px 24px rgba(15, 23, 42, 0.2);
+}
+
+.md-select__option {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--neu-text-primary, #2D3748);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.md-select__option:hover {
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.md-select__option--selected {
+  background: rgba(37, 99, 235, 0.14);
+  color: var(--neu-accent-primary, #2563EB);
+  font-weight: 700;
+}
+
+.md-select__option--disabled {
+  color: var(--neu-text-muted, #718096);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.md-select__option--disabled:hover {
+  background: transparent;
+}

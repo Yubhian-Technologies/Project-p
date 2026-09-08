@@ -1,0 +1,134 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isRole(role) {
+      return isSignedIn() && myRole() == role;
+    }
+
+    // Head, Admin, Super Admin all have broad platform/campus oversight in this app today.
+    function isStaff() {
+      return isSignedIn() && myRole() in ['head', 'admin', 'super-admin'];
+    }
+
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ---------- users ----------
+    match /users/{uid} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+
+      // Public Signup always creates role "user" for exactly the signed-up account.
+      // Counsellor/Head/Admin/Super-Admin accounts are created ONLY by the
+      // createCampusLogin Cloud Function (Admin SDK, bypasses these rules).
+      allow create: if isSelf(uid)
+                    && request.resource.data.uid == uid
+                    && request.resource.data.role == 'user';
+
+      allow update: if isSignedIn() && (
+        (
+          // Self-service profile edits: never touch role/campus/college/email.
+          isSelf(uid) &&
+          request.resource.data.role == resource.data.role &&
+          request.resource.data.campusId == resource.data.campusId &&
+          request.resource.data.collegeId == resource.data.collegeId &&
+          request.resource.data.email == resource.data.email
+        ) || (
+          // Head/Admin/Super Admin toggling a counsellor's/head's availability badge.
+          isStaff() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['available'])
+        )
+      );
+
+      // No client-side deletes. deleteCampusLogin Cloud Function (Admin SDK) handles this.
+      allow delete: if false;
+    }
+
+    // ---------- campuses ----------
+    match /campuses/{campusId} {
+      // Public Signup page reads this list before the visitor has an account.
+      allow read: if true;
+      allow write: if isRole('super-admin');
+    }
+
+    // ---------- colleges ----------
+    match /colleges/{collegeId} {
+      allow read: if true;
+      allow write: if isRole('super-admin');
+    }
+
+    // ---------- bookings ----------
+    match /bookings/{bookingId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.counsellorId == request.auth.uid ||
+        isStaff()
+      );
+
+      allow create: if isSignedIn() && (
+        request.resource.data.userId == request.auth.uid ||
+        request.resource.data.counsellorId == request.auth.uid
+      );
+
+      // Covers accept/reject/schedule/cancel/close/rate/transfer — all performed by
+      // the user, the assigned counsellor, or Head/Admin/Super Admin oversight actions.
+      allow update: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.counsellorId == request.auth.uid ||
+        isStaff()
+      );
+
+      allow delete: if false;
+
+      // Sensitive intake details: name, occupation, WhatsApp number, issue, session summary.
+      match /private/details {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/bookings/$(bookingId)).data.userId == request.auth.uid ||
+          get(/databases/$(database)/documents/bookings/$(bookingId)).data.counsellorId == request.auth.uid ||
+          isStaff()
+        );
+        allow write: if isSignedIn() && (
+          get(/databases/$(database)/documents/bookings/$(bookingId)).data.userId == request.auth.uid ||
+          get(/databases/$(database)/documents/bookings/$(bookingId)).data.counsellorId == request.auth.uid
+        );
+      }
+    }
+
+    // ---------- notifications ----------
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.recipientId == request.auth.uid;
+
+      // The creator must be a party to the referenced booking, and the recipient
+      // must be the other party on that same booking — blocks notification spam.
+      // If this ever proves too strict (createNotification already fails silently
+      // into a console.error on rejection), the simple fallback is:
+      //   allow create: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.read == false &&
+        (
+          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.auth.uid ||
+          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.auth.uid
+        ) &&
+        (
+          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.resource.data.recipientId ||
+          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.resource.data.recipientId
+        );
+
+      allow update: if isSignedIn() && resource.data.recipientId == request.auth.uid
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+
+      allow delete: if false;
+    }
+  }
+}

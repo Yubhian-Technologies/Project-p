@@ -1,0 +1,44 @@
+.memory-match__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 64px);
+  gap: 12px;
+}
+
+.memory-match__card {
+  width: 64px;
+  height: 64px;
+  border: none;
+  border-radius: 16px;
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-extruded);
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.memory-match__card:hover {
+  box-shadow: var(--neu-shadow-extruded-hover);
+}
+
+.memory-match__card--revealed {
+  box-shadow: var(--neu-shadow-sunken);
+}
+
+.memory-match__card--matched {
+  box-shadow: var(--neu-shadow-sunken);
+  opacity: 0.55;
+}
+
+@media (max-width: 420px) {
+  .memory-match__grid {
+    grid-template-columns: repeat(4, 56px);
+  }
+  .memory-match__card {
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+  }
+}

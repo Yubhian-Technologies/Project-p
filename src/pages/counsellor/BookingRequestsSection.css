@@ -1,0 +1,49 @@
+.booking-requests-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 560px;
+}
+
+.booking-requests-section__tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.booking-requests-section__tab {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-extruded-sm);
+  color: var(--neu-text-body, #4A5568);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.booking-requests-section__tab:hover {
+  box-shadow: var(--neu-shadow-extruded);
+}
+
+.booking-requests-section__tab--active {
+  box-shadow: var(--neu-shadow-sunken) !important;
+  color: var(--neu-accent-primary, #2563EB);
+}
+
+.booking-requests-section__group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.booking-requests-section__group-title {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--neu-text-primary, #2D3748);
+}

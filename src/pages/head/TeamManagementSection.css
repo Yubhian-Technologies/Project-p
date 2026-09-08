@@ -1,0 +1,94 @@
+.team-management {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 800px;
+}
+
+.team-management__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  cursor: pointer;
+  background: var(--neu-bg, #E8ECF2);
+  border: none;
+  border-radius: 20px;
+  padding: 18px 24px;
+  box-shadow: var(--neu-shadow-extruded);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.team-management__row:hover {
+  box-shadow: var(--neu-shadow-extruded-hover);
+  transform: translateY(-2px);
+}
+
+.team-management__name {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.team-management__role {
+  margin: 2px 0 6px 0;
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
+  font-weight: 600;
+}
+
+.team-management__verified-tag {
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #16a34a;
+}
+
+.team-management__stats {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neu-text-body, #4A5568);
+  flex-wrap: wrap;
+}
+
+.team-management__availability {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.team-management__status {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  box-shadow: var(--neu-shadow-extruded-sm);
+  background: var(--neu-bg, #E8ECF2);
+}
+
+.team-management__heading {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--neu-accent-primary, #2563EB);
+}
+
+.team-management__status--available {
+  color: #16a34a;
+}
+
+.team-management__status--unavailable {
+  color: #dc2626;
+}
+
+.team-management__status--in-session {
+  color: #ea580c;
+}
+

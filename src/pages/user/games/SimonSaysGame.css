@@ -1,0 +1,43 @@
+.simon__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 100px);
+  grid-template-rows: repeat(2, 100px);
+  gap: 12px;
+}
+
+.simon__pad {
+  width: 100px;
+  height: 100px;
+  border: none;
+  border-radius: 20px;
+  box-shadow: var(--neu-shadow-extruded);
+  cursor: pointer;
+  opacity: 0.55;
+  transition: all 0.15s ease;
+}
+
+.simon__pad:disabled {
+  cursor: default;
+}
+
+.simon__pad--0 {
+  background: #2563EB;
+}
+
+.simon__pad--1 {
+  background: #16a34a;
+}
+
+.simon__pad--2 {
+  background: #d97706;
+}
+
+.simon__pad--3 {
+  background: #db2777;
+}
+
+.simon__pad--active {
+  opacity: 1;
+  box-shadow: var(--neu-shadow-sunken);
+  transform: scale(0.96);
+}

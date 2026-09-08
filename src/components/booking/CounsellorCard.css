@@ -1,0 +1,84 @@
+.counsellor-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 320px;
+  background: var(--neu-bg, #E8ECF2);
+  border: none;
+  border-radius: 24px;
+  padding: 24px;
+  box-sizing: border-box;
+  box-shadow: var(--neu-shadow-extruded);
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+
+.counsellor-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--neu-shadow-extruded-hover);
+}
+
+.counsellor-card__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.counsellor-card__name {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.counsellor-card__role {
+  margin: 3px 0 0 0;
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
+  font-weight: 600;
+}
+
+.counsellor-card__bio {
+  margin: 0;
+  font-size: 13px;
+  color: var(--neu-text-body, #4A5568);
+  line-height: 1.6;
+}
+
+.counsellor-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.counsellor-card__badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  box-shadow: var(--neu-shadow-extruded-sm);
+  background: var(--neu-bg, #E8ECF2);
+}
+
+.counsellor-card__badge--available {
+  color: #16a34a;
+}
+
+.counsellor-card__badge--unavailable {
+  color: #dc2626;
+}
+
+.counsellor-card__badge--in-session {
+  color: #ea580c;
+}
+
+.counsellor-card__hint {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neu-accent-primary, #2563EB);
+}
+

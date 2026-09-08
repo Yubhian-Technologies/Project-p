@@ -1,0 +1,292 @@
+/* Bento Grid Design System for Vishnu Wellness Dashboards (Typography: Plus Jakarta Sans + Inter + General Sans + Satoshi) */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@500,700,900&display=swap');
+
+:root {
+  --bento-bg: var(--neu-bg, #E8ECF2);
+  --bento-bg-subtle: var(--neu-bg, #E8ECF2);
+  --bento-border: none;
+  --bento-border-highlight: none;
+  --bento-shadow: var(--neu-shadow-extruded, -4px -4px 10px rgba(255, 255, 255, 0.4), 5px 5px 12px rgba(163, 177, 198, 0.4));
+  --bento-shadow-hover: var(--neu-shadow-extruded-hover, -5px -5px 14px rgba(255, 255, 255, 0.45), 7px 7px 16px rgba(163, 177, 198, 0.5));
+  --bento-radius: 24px;
+  
+  /* Typography Tokens */
+  --bento-font-title: 'General Sans', 'Satoshi', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --bento-font-body: 'Plus Jakarta Sans', 'Inter', 'General Sans', 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  --bento-primary: var(--neu-accent-primary, #2563EB);
+  --bento-primary-hover: var(--neu-accent-hover, #1D4ED8);
+  --bento-accent: #1E3A8A;
+  --bento-success: #2e7d32;
+  --bento-warning: #ed6c02;
+}
+
+/* Master Grid Container */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 20px;
+}
+
+/* Individual Bento Card */
+.bento-card {
+  background: var(--neu-bg, #E8ECF2);
+  border: none;
+  border-radius: var(--bento-radius);
+  box-shadow: var(--bento-shadow);
+  padding: 28px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.bento-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--bento-shadow-hover);
+}
+
+/* Grid Column Spans */
+.bento-card--col-12 { grid-column: span 12; }
+.bento-card--col-8  { grid-column: span 8; }
+.bento-card--col-6  { grid-column: span 6; }
+.bento-card--col-4  { grid-column: span 4; }
+.bento-card--col-3  { grid-column: span 3; }
+
+/* Hero Variant */
+.bento-card--hero {
+  background: linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: var(--neu-shadow-accent, -4px -4px 12px rgba(255, 255, 255, 0.6), 4px 4px 14px rgba(37, 99, 235, 0.45));
+}
+
+.bento-card--hero .bento-card__title {
+  color: #ffffff;
+}
+
+.bento-card--hero .bento-card__subtitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Card Header */
+.bento-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.bento-card__title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bento-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-extruded-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bento-primary);
+}
+
+.bento-card__icon svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.bento-card__title {
+  font-family: var(--bento-font-title);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--neu-text-primary, #2D3748);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.bento-card__subtitle {
+  font-family: var(--bento-font-body);
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
+  margin: 4px 0 0 0;
+}
+
+/* KPI / Stat Display */
+.bento-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 14px 0;
+}
+
+.bento-kpi__number {
+  font-family: var(--bento-font-title);
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--neu-text-primary, #2D3748);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.bento-kpi__label {
+  font-family: var(--bento-font-body);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neu-text-muted, #718096);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Badges */
+.bento-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-family: var(--bento-font-body);
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: var(--neu-shadow-extruded-sm);
+  background: var(--neu-bg, #E8ECF2);
+}
+
+.bento-badge--primary {
+  color: var(--neu-accent-primary, #2563EB);
+}
+
+.bento-badge--success {
+  color: #16a34a;
+}
+
+.bento-badge--warning {
+  color: #d97706;
+}
+
+.bento-badge--neutral {
+  color: var(--neu-text-muted, #718096);
+}
+
+/* Lists & Rows */
+.bento-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+  width: 100%;
+}
+
+.bento-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: var(--neu-bg, #E8ECF2);
+  border-radius: 16px;
+  box-shadow: var(--neu-shadow-sunken);
+  border: none;
+  font-family: var(--bento-font-body);
+  font-size: 13px;
+  color: var(--neu-text-body, #4A5568);
+}
+
+.bento-list-item__title {
+  font-weight: 700;
+  color: var(--neu-text-primary, #2D3748);
+}
+
+/* Action Buttons */
+.bento-btn {
+  font-family: var(--bento-font-body);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 22px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-extruded-sm);
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.bento-btn:hover {
+  box-shadow: var(--neu-shadow-extruded);
+  transform: translateY(-1px);
+}
+
+.bento-btn:active {
+  box-shadow: var(--neu-shadow-sunken-sm);
+  transform: translateY(0);
+}
+
+.bento-btn--primary {
+  background: linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%);
+  color: #ffffff;
+  box-shadow: var(--neu-shadow-accent);
+}
+
+.bento-btn--primary:hover {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+}
+
+.bento-btn--secondary {
+  background: var(--neu-bg, #E8ECF2);
+  color: var(--neu-accent-primary, #2563EB);
+  box-shadow: var(--neu-shadow-extruded-sm);
+}
+
+.bento-btn--secondary:hover {
+  box-shadow: var(--neu-shadow-extruded);
+}
+
+/* On a dark/colored hero card, the light neumorphic shadow above reads as a glow
+   against the saturated background, so give it a grounded shadow instead. */
+.bento-card--hero .bento-btn--secondary {
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+}
+
+.bento-card--hero .bento-btn--secondary:hover {
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.3);
+}
+
+
+/* Responsive Grid Rules */
+@media (max-width: 1024px) {
+  .bento-card--col-8,
+  .bento-card--col-6,
+  .bento-card--col-4,
+  .bento-card--col-3 {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 640px) {
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bento-card--col-12,
+  .bento-card--col-8,
+  .bento-card--col-6,
+  .bento-card--col-4,
+  .bento-card--col-3 {
+    grid-column: span 1;
+  }
+}

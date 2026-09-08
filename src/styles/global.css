@@ -1,0 +1,97 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background-color: var(--neu-bg, #E8ECF2);
+}
+
+body {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-body);
+  background-color: var(--neu-bg, #E8ECF2);
+  color: var(--neu-text-body, #4A5568);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
+  color: var(--neu-text-primary, #2D3748);
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin: 0;
+  color: var(--neu-text-body, #4A5568);
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  outline: none;
+}
+
+/* Global Neumorphic Input Utilities */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+  background: var(--neu-bg, #E8ECF2);
+  border: none;
+  border-radius: 16px;
+  box-shadow: var(--neu-shadow-sunken);
+  color: var(--neu-text-primary, #2D3748);
+  padding: 12px 18px;
+  font-size: 14px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  box-shadow: var(--neu-shadow-sunken-focus);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--neu-text-muted, #718096);
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 0 12px;
+  }
+}
+
