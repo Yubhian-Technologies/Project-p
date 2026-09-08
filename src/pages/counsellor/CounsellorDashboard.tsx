@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AppShell } from "../../components/layout/AppShell";
 import { ProfileSection } from "../../components/layout/ProfileSection";
 import { BentoCard } from "../../components/common/BentoCard";
+import { Button } from "../../components/common/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { BookingRequestsSection } from "./BookingRequestsSection";
 import { DailyQuoteCard } from "../../components/common/DailyQuoteCard";
@@ -15,6 +16,7 @@ const SECTIONS = [
 export function CounsellorDashboard() {
   const { profile } = useAuth();
   const [activeSection, setActiveSection] = useState("overview");
+  const [showImport, setShowImport] = useState(false);
 
   const title =
     activeSection === "profile"
@@ -24,9 +26,23 @@ export function CounsellorDashboard() {
         : "Counsellor Dashboard";
 
   return (
-    <AppShell title={title} sections={SECTIONS} activeSection={activeSection} onSelectSection={setActiveSection}>
+    <AppShell
+      title={title}
+      headerAction={
+        activeSection === "requests" ? (
+          <Button type="button" variant="outlined" onClick={() => setShowImport(true)}>
+            Import Sessions
+          </Button>
+        ) : undefined
+      }
+      sections={SECTIONS}
+      activeSection={activeSection}
+      onSelectSection={setActiveSection}
+    >
       {activeSection === "profile" && <ProfileSection />}
-      {activeSection === "requests" && <BookingRequestsSection />}
+      {activeSection === "requests" && (
+        <BookingRequestsSection importOpen={showImport} onImportClose={() => setShowImport(false)} />
+      )}
       {activeSection === "overview" && (
         <div className="bento-grid">
           <BentoCard

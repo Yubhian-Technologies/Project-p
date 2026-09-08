@@ -1,4 +1,5 @@
 import type { DayAvailability } from "../../types/availability";
+import { TimePicker } from "../common/TimePicker";
 import "./AvailabilityScheduleEditor.css";
 
 interface AvailabilityScheduleEditorProps {
@@ -23,18 +24,16 @@ export function AvailabilityScheduleEditor({ value, onChange }: AvailabilitySche
             />
             {d.day}
           </label>
-          <input
-            type="time"
+          <TimePicker
             value={d.start ?? ""}
             disabled={!d.enabled}
-            onChange={(e) => updateDay(d.day, { start: e.target.value })}
+            onChange={(value) => updateDay(d.day, { start: value })}
           />
           <span className="availability-editor__to">to</span>
-          <input
-            type="time"
+          <TimePicker
             value={d.end ?? ""}
             disabled={!d.enabled}
-            onChange={(e) => updateDay(d.day, { end: e.target.value })}
+            onChange={(value) => updateDay(d.day, { end: value })}
           />
         </div>
       ))}

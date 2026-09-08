@@ -22,6 +22,7 @@ interface CounsellorStats {
   cancelled: number;
   avgRating: number;
   ratingCount: number;
+  totalHours: number;
 }
 
 function computeStats(profiles: UserProfile[], bookings: Booking[]): CounsellorStats[] {
@@ -36,6 +37,7 @@ function computeStats(profiles: UserProfile[], bookings: Booking[]): CounsellorS
       rated.length > 0
         ? rated.reduce((sum, b) => sum + (b.userRatingOfCounsellor ?? 0), 0) / rated.length
         : 0;
+    const totalHours = own.reduce((sum, b) => sum + b.durationMinutes, 0) / 60;
     return {
       profile,
       sessionsTaken: own.length,
@@ -45,6 +47,7 @@ function computeStats(profiles: UserProfile[], bookings: Booking[]): CounsellorS
       cancelled,
       avgRating,
       ratingCount: rated.length,
+      totalHours,
     };
   });
 }
@@ -90,7 +93,7 @@ export function TeamManagementSection() {
   return (
     <div className="team-management">
       {stats.length === 0 && <p>No counsellors or heads are set up yet.</p>}
-      {stats.map(({ profile, sessionsTaken, usersServed, completed, followedUp, cancelled, avgRating, ratingCount }) => {
+      {stats.map(({ profile, sessionsTaken, usersServed, completed, followedUp, cancelled, avgRating, ratingCount, totalHours }) => {
         const status = computeLiveStatus(profile, scheduledBookings);
         return (
           <Card
@@ -121,6 +124,9 @@ export function TeamManagementSection() {
               </span>
               <span>
                 <strong>{cancelled}</strong> cancelled
+              </span>
+              <span>
+                <strong>{totalHours.toFixed(1)}</strong> hours
               </span>
             </div>
             <div className="team-management__availability" onClick={(e) => e.stopPropagation()}>

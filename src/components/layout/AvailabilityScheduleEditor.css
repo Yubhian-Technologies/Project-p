@@ -25,24 +25,15 @@
   flex-shrink: 0;
 }
 
-.availability-editor__row input[type="time"] {
-  font-family: inherit;
-  font-size: 13px;
+.availability-editor__row .md-timepicker {
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.availability-editor__row .md-timepicker__control {
   padding: 8px 14px;
-  border-radius: 12px;
-  border: none;
-  background: var(--neu-bg, #E8ECF2);
+  font-size: 13px;
   box-shadow: var(--neu-shadow-sunken-sm);
-  color: var(--neu-text-primary, #2D3748);
-}
-
-.availability-editor__row input[type="time"]:focus {
-  box-shadow: var(--neu-shadow-sunken-focus);
-}
-
-.availability-editor__row input[type="time"]:disabled {
-  opacity: 0.5;
-  box-shadow: none;
 }
 
 .availability-editor__to {

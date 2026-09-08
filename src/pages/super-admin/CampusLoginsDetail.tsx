@@ -11,8 +11,8 @@ import type { UserProfile } from "../../types/user";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { Select } from "../../components/common/Select";
+import { CollapsibleAddForm } from "../../components/common/CollapsibleAddForm";
 import { ROLE_LABELS } from "../../config/roles";
-import { CampusCollegesSection } from "./CampusCollegesSection";
 import { EditLoginModal } from "./EditLoginModal";
 import "./CampusLoginsDetail.css";
 
@@ -100,14 +100,9 @@ export function CampusLoginsDetail({ campus, onBack }: CampusLoginsDetailProps) 
         ← Back to Campuses
       </Button>
 
-      <h3 className="campus-logins-detail__heading">{campus.name} — Colleges</h3>
-
-      <CampusCollegesSection campus={campus} colleges={colleges} onChange={load} />
-
       <h3 className="campus-logins-detail__heading">{campus.name} — Logins</h3>
 
-      <Card className="campus-logins-detail__add-form">
-        <p className="campus-logins-detail__form-title">+ Add Login</p>
+      <CollapsibleAddForm label="+ Add Login" title="Add a login">
         <form onSubmit={handleAdd}>
           <div className="campus-logins-detail__field">
             <label htmlFor="login-display-name">Display name</label>
@@ -166,7 +161,7 @@ export function CampusLoginsDetail({ campus, onBack }: CampusLoginsDetailProps) 
             {adding ? "Creating…" : "Create login"}
           </Button>
         </form>
-      </Card>
+      </CollapsibleAddForm>
 
       {deleteError && <p className="campus-logins-detail__error">{deleteError}</p>}
 

@@ -99,13 +99,26 @@
   box-sizing: border-box;
 }
 
+.app-shell__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
 .app-shell__title {
   font-family: var(--md-sys-typescale-font-display);
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--neu-text-primary, #2D3748);
-  margin-bottom: 28px;
+  margin: 0;
+}
+
+.app-shell__title-action {
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

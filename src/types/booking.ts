@@ -26,6 +26,7 @@ export interface Booking {
   userReviewText?: string;
   counsellorRatingOfUser?: number;
   counsellorNoteOnUser?: string;
+  sessionMode?: "online" | "offline";
   createdAt: number;
   updatedAt: number;
 }

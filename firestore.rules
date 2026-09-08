@@ -24,6 +24,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
+    // Admin and Super Admin both manage campuses/colleges/logins.
+    function isCampusManager() {
+      return isSignedIn() && myRole() in ['admin', 'super-admin'];
+    }
+
     // ---------- users ----------
     match /users/{uid} {
       allow get: if isSignedIn();
@@ -59,13 +64,24 @@ service cloud.firestore {
     match /campuses/{campusId} {
       // Public Signup page reads this list before the visitor has an account.
       allow read: if true;
-      allow write: if isRole('super-admin');
+      allow write: if isCampusManager();
     }
 
     // ---------- colleges ----------
     match /colleges/{collegeId} {
       allow read: if true;
-      allow write: if isRole('super-admin');
+      allow write: if isCampusManager();
+    }
+
+    // ---------- events ----------
+    match /events/{eventId} {
+      // Head, Admin, and Super Admin can all view events/programs across campuses
+      // (this is what powers Admin's Group Sessions analytics).
+      allow read: if isStaff();
+
+      // Only the Head who created an event can create/update/delete it.
+      allow create: if isRole('head') && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if isRole('head') && resource.data.createdBy == request.auth.uid;
     }
 
     // ---------- bookings ----------
@@ -134,6 +150,19 @@ service cloud.firestore {
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
 
       allow delete: if false;
+    }
+
+    // ---------- everything else ----------
+    // Explicit default-deny for any path not matched above. Firestore already denies
+    // unmatched paths by default — this exists so a newly-added collection that nobody
+    // wrote a rule for fails loudly (permission-denied in the app) rather than anyone
+    // assuming it's covered. When you add a real collection, copy the closest existing
+    // pattern above rather than loosening this block:
+    //   - "public reference data, staff-only writes" -> copy campuses/colleges
+    //   - "record owned by one user, readable by staff too" -> copy bookings
+    //   - "recipient-only, spam-guarded via a linked record" -> copy notifications
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -4,7 +4,9 @@ import { listCampuses, createCampus, deleteCampus } from "../../services/firebas
 import type { Campus } from "../../types/campus";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
+import { CollapsibleAddForm } from "../../components/common/CollapsibleAddForm";
 import { CampusLoginsDetail } from "./CampusLoginsDetail";
+import { CampusCollegesSection } from "./CampusCollegesSection";
 import "./CampusManagementSection.css";
 
 export function CampusManagementSection() {
@@ -57,8 +59,7 @@ export function CampusManagementSection() {
 
   return (
     <div className="campus-management">
-      <Card className="campus-management__add-form">
-        <p className="campus-management__form-title">+ Add Campus</p>
+      <CollapsibleAddForm label="+ Add Campus" title="Add a new campus">
         <form onSubmit={handleCreate} className="campus-management__form">
           <input
             type="text"
@@ -70,7 +71,7 @@ export function CampusManagementSection() {
             {creating ? "Adding…" : "Add campus"}
           </Button>
         </form>
-      </Card>
+      </CollapsibleAddForm>
 
       {campuses.length === 0 && <p>No campuses yet.</p>}
 
@@ -97,6 +98,10 @@ export function CampusManagementSection() {
                 Delete
               </Button>
             )}
+          </div>
+
+          <div className="campus-management__colleges" onClick={(e) => e.stopPropagation()}>
+            <CampusCollegesSection campus={campus} />
           </div>
         </Card>
       ))}

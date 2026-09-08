@@ -1,22 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { createCollege, deleteCollege } from "../../services/firebase/colleges";
+import { createCollege, deleteCollege, listColleges } from "../../services/firebase/colleges";
 import type { Campus } from "../../types/campus";
 import type { College } from "../../types/college";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
+import { CollapsibleAddForm } from "../../components/common/CollapsibleAddForm";
 import "./CampusCollegesSection.css";
 
 interface CampusCollegesSectionProps {
   campus: Campus;
-  colleges: College[];
-  onChange: () => Promise<void>;
 }
 
-export function CampusCollegesSection({ campus, colleges, onChange }: CampusCollegesSectionProps) {
+export function CampusCollegesSection({ campus }: CampusCollegesSectionProps) {
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [loading, setLoading] = useState(true);
   const [nameField, setNameField] = useState("");
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function load() {
+    setColleges(await listColleges(campus.id));
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campus.id]);
 
   async function handleCreate(event: FormEvent) {
     event.preventDefault();
@@ -25,7 +36,7 @@ export function CampusCollegesSection({ campus, colleges, onChange }: CampusColl
     try {
       await createCollege(campus.id, nameField.trim());
       setNameField("");
-      await onChange();
+      await load();
     } finally {
       setCreating(false);
     }
@@ -35,21 +46,22 @@ export function CampusCollegesSection({ campus, colleges, onChange }: CampusColl
     setDeletingId(id);
     try {
       await deleteCollege(id);
-      await onChange();
+      await load();
     } finally {
       setDeletingId(null);
     }
   }
 
+  if (loading) return null;
+
   return (
     <div className="campus-colleges-section">
-      <Card className="campus-colleges-section__add-form">
-        <p className="campus-colleges-section__form-title">+ Add College</p>
+      <CollapsibleAddForm label="+ Add College" title="Add a college">
         <form onSubmit={handleCreate}>
           <div className="campus-colleges-section__field">
-            <label htmlFor="college-name">College name</label>
+            <label htmlFor={`college-name-${campus.id}`}>College name</label>
             <input
-              id="college-name"
+              id={`college-name-${campus.id}`}
               type="text"
               placeholder="College name, e.g. Test College"
               value={nameField}
@@ -60,7 +72,7 @@ export function CampusCollegesSection({ campus, colleges, onChange }: CampusColl
             {creating ? "Adding…" : "Add college"}
           </Button>
         </form>
-      </Card>
+      </CollapsibleAddForm>
 
       {colleges.length === 0 && <p>No colleges added for this campus yet.</p>}
 
