@@ -8,6 +8,7 @@ interface DateTimePickerProps {
   value: string;
   onChange: (value: string) => void;
   min?: string;
+  max?: string;
 }
 
 interface ParsedValue {
@@ -54,15 +55,16 @@ function formatDisplay(value: string): string {
   });
 }
 
-export function DateTimePicker({ id, value, onChange, min }: DateTimePickerProps) {
+export function DateTimePicker({ id, value, onChange, min, max }: DateTimePickerProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const parsed = parseValue(value);
   const minParsed = min ? parseValue(min) : null;
+  const maxParsed = max ? parseValue(max) : null;
   const today = new Date();
 
-  const [viewYear, setViewYear] = useState(parsed?.year ?? today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(parsed?.month ?? today.getMonth());
+  const [viewYear, setViewYear] = useState(parsed?.year ?? minParsed?.year ?? today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(parsed?.month ?? minParsed?.month ?? today.getMonth());
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -107,10 +109,16 @@ export function DateTimePicker({ id, value, onChange, min }: DateTimePickerProps
     cells.push({ day: 0, disabled: true });
   }
   const minDayKey = minParsed ? dayKey(minParsed.year, minParsed.month, minParsed.day) : null;
+  const maxDayKey = maxParsed ? dayKey(maxParsed.year, maxParsed.month, maxParsed.day) : null;
   for (let day = 1; day <= daysInMonth; day++) {
-    const disabled = minDayKey !== null && dayKey(viewYear, viewMonth, day) < minDayKey;
+    const key = dayKey(viewYear, viewMonth, day);
+    const disabled = (minDayKey !== null && key < minDayKey) || (maxDayKey !== null && key > maxDayKey);
     cells.push({ day, disabled });
   }
+
+  const monthKey = viewYear * 12 + viewMonth;
+  const prevDisabled = minParsed !== null && monthKey <= minParsed.year * 12 + minParsed.month;
+  const nextDisabled = maxParsed !== null && monthKey >= maxParsed.year * 12 + maxParsed.month;
 
   const { hour12, ampm } = parsed ? to12Hour(parsed.hour) : { hour12: 12, ampm: "AM" as const };
 
@@ -135,13 +143,25 @@ export function DateTimePicker({ id, value, onChange, min }: DateTimePickerProps
       {open && (
         <div className="md-datetime__popup" role="dialog">
           <div className="md-datetime__calendar-header">
-            <button type="button" className="md-datetime__nav" onClick={() => goToMonth(-1)} aria-label="Previous month">
+            <button
+              type="button"
+              className="md-datetime__nav"
+              disabled={prevDisabled}
+              onClick={() => goToMonth(-1)}
+              aria-label="Previous month"
+            >
               ‹
             </button>
             <span className="md-datetime__month-label">
               {MONTH_LABELS[viewMonth]} {viewYear}
             </span>
-            <button type="button" className="md-datetime__nav" onClick={() => goToMonth(1)} aria-label="Next month">
+            <button
+              type="button"
+              className="md-datetime__nav"
+              disabled={nextDisabled}
+              onClick={() => goToMonth(1)}
+              aria-label="Next month"
+            >
               ›
             </button>
           </div>

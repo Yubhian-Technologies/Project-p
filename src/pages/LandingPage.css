@@ -838,3 +838,91 @@ body {
   }
 }
 
+@media (max-width: 480px) {
+  .landing-nav {
+    padding: 8px 12px;
+  }
+
+  .landing-brand {
+    gap: 6px;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  .landing-brand__logo {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .landing-brand__name {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .landing-nav__actions {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .btn-glass-subtle {
+    padding: 6px 12px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .btn-glass-primary {
+    padding: 6px 12px;
+    font-size: 11px;
+    gap: 3px;
+    white-space: nowrap;
+  }
+
+  .hero-photo-banner__image {
+    height: 380px;
+  }
+
+  .hero-photo-banner__frame {
+    padding: 10px;
+  }
+
+  .landing-hero {
+    padding: 24px 20px 24px;
+  }
+
+  .landing-headline {
+    font-size: 28px;
+    margin: 0 0 14px 0;
+  }
+
+  .landing-subtitle {
+    font-size: 14px;
+    margin: 0 auto 20px auto;
+  }
+
+  .btn-hero-primary {
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+
+  .landing-section-heading__title {
+    font-size: 26px;
+  }
+
+  .landing-team,
+  .landing-features,
+  .landing-resources,
+  .landing-terms {
+    margin-top: 40px;
+    padding-top: 32px;
+  }
+
+  .team-overview-card,
+  .terms-card {
+    padding: 24px 20px;
+  }
+}
+

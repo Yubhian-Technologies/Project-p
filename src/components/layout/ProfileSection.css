@@ -46,6 +46,12 @@
   box-shadow: var(--neu-shadow-sunken-sm);
 }
 
+@media (max-width: 480px) {
+  .profile-section__list {
+    grid-template-columns: 1fr;
+  }
+}
+
 .profile-section__list dt {
   font-size: 13px;
   color: var(--neu-text-muted, #718096);

@@ -61,7 +61,7 @@ export function LandingPage() {
 
               <section className="landing-hero">
                 <h1 className="landing-headline">
-                  Elevate Your Mind, Body & Soul. <br />
+                  Elevate Your Mind, Body &amp; Soul.{" "}
                   <span className="landing-headline__gradient">Redefined.</span>
                 </h1>
 

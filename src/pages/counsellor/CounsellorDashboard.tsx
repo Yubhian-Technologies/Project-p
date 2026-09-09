@@ -5,12 +5,14 @@ import { BentoCard } from "../../components/common/BentoCard";
 import { Button } from "../../components/common/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { BookingRequestsSection } from "./BookingRequestsSection";
+import { EventsProgramsSection } from "./EventsProgramsSection";
 import { DailyQuoteCard } from "../../components/common/DailyQuoteCard";
 import "../../styles/bento-grid.css";
 
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
+  { id: "events", label: "Events & Programs" },
 ];
 
 export function CounsellorDashboard() {
@@ -23,7 +25,9 @@ export function CounsellorDashboard() {
       ? "Profile"
       : activeSection === "requests"
         ? "Booking Requests"
-        : "Counsellor Dashboard";
+        : activeSection === "events"
+          ? "Events & Programs"
+          : "Counsellor Dashboard";
 
   return (
     <AppShell
@@ -43,6 +47,7 @@ export function CounsellorDashboard() {
       {activeSection === "requests" && (
         <BookingRequestsSection importOpen={showImport} onImportClose={() => setShowImport(false)} />
       )}
+      {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "overview" && (
         <div className="bento-grid">
           <BentoCard

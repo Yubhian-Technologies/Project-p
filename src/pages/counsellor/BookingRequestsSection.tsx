@@ -10,8 +10,11 @@ import {
   transferBooking,
   saveSessionSummary,
   closeBooking,
+  closeMissedSession,
   createFollowUpBooking,
+  flagMissedSessionPending,
   getBookingIntake,
+  isSessionEndedPending,
   rateUser,
   getFollowUpHistory,
 } from "../../services/firebase/bookings";
@@ -26,12 +29,13 @@ const ImportSessionsModal = lazy(() =>
   import("../../components/booking/ImportSessionsModal").then((m) => ({ default: m.ImportSessionsModal })),
 );
 
-type Tab = "new" | "upcoming" | "completed";
+type Tab = "new" | "upcoming" | "completed" | "missed";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "new", label: "New Requests" },
   { id: "upcoming", label: "Upcoming Sessions" },
   { id: "completed", label: "Completed" },
+  { id: "missed", label: "Missed Sessions" },
 ];
 
 const NEW_STATUSES = ["pending"];
@@ -67,6 +71,14 @@ export function BookingRequestsSection({ importOpen = false, onImportClose }: Bo
     setBookings(myBookings);
     setTransferCandidates(allBookable.filter((p) => p.uid !== currentUser.uid));
     setLoading(false);
+
+    const newlyPending = myBookings.filter((b) => isSessionEndedPending(b) && !b.missedNotified);
+    if (newlyPending.length > 0) {
+      await Promise.all(newlyPending.map((b) => flagMissedSessionPending(b)));
+      setBookings((prev) =>
+        prev.map((b) => (newlyPending.some((p) => p.id === b.id) ? { ...b, missedNotified: true } : b)),
+      );
+    }
   }
 
   useEffect(() => {
@@ -82,8 +94,11 @@ export function BookingRequestsSection({ importOpen = false, onImportClose }: Bo
   if (loading) return null;
 
   const newRequests = bookings.filter((b) => NEW_STATUSES.includes(b.status));
-  const upcoming = bookings.filter((b) => UPCOMING_STATUSES.includes(b.status));
-  const completed = bookings.filter((b) => COMPLETED_STATUSES.includes(b.status));
+  const upcoming = bookings.filter((b) => UPCOMING_STATUSES.includes(b.status) && !isSessionEndedPending(b));
+  const completed = bookings.filter((b) => COMPLETED_STATUSES.includes(b.status) && b.outcome !== "missed");
+  const missed = bookings.filter(
+    (b) => (b.status === "completed" && b.outcome === "missed") || isSessionEndedPending(b),
+  );
   const upcomingFollowUps = upcoming.filter((b) => b.followUpOfBookingId);
   const upcomingNewSessions = upcoming.filter((b) => !b.followUpOfBookingId);
 
@@ -91,6 +106,7 @@ export function BookingRequestsSection({ importOpen = false, onImportClose }: Bo
     new: newRequests.length,
     upcoming: upcoming.length,
     completed: completed.length,
+    missed: missed.length,
   };
 
   // Looked up from the full, unfiltered list so the modal stays open and correct
@@ -155,6 +171,13 @@ export function BookingRequestsSection({ importOpen = false, onImportClose }: Bo
           completed.map((b) => <RequestCard key={b.id} booking={b} onClick={() => setSelectedId(b.id)} />)
         ))}
 
+      {activeTab === "missed" &&
+        (missed.length === 0 ? (
+          <p>No missed sessions.</p>
+        ) : (
+          missed.map((b) => <RequestCard key={b.id} booking={b} onClick={() => setSelectedId(b.id)} />)
+        ))}
+
       {selectedBooking && (
         <RequestDetailModal
           booking={selectedBooking}
@@ -201,6 +224,10 @@ export function BookingRequestsSection({ importOpen = false, onImportClose }: Bo
               await createFollowUpBooking(selectedBooking, intake, scheduledAt);
             }
             await closeBooking(selectedBooking, "followup");
+            await refresh();
+          }}
+          onCloseMissed={async (reason) => {
+            await closeMissedSession(selectedBooking, reason);
             await refresh();
           }}
           onRateUser={async (rating, note) => {

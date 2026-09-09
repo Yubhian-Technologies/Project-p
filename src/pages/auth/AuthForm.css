@@ -36,6 +36,17 @@
   animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@media (max-width: 480px) {
+  .auth-wrapper {
+    padding: 16px;
+  }
+
+  .auth-glass-card {
+    padding: 28px 22px;
+    border-radius: 22px;
+  }
+}
+
 .auth-header {
   text-align: center;
   margin-bottom: 32px;

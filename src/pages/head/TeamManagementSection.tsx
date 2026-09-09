@@ -19,6 +19,7 @@ interface CounsellorStats {
   usersServed: number;
   completed: number;
   followedUp: number;
+  missed: number;
   cancelled: number;
   avgRating: number;
   ratingCount: number;
@@ -31,6 +32,7 @@ function computeStats(profiles: UserProfile[], bookings: Booking[]): CounsellorS
     const usersServed = new Set(own.map((b) => b.userId)).size;
     const completed = own.filter((b) => b.status === "completed" && b.outcome === "completed").length;
     const followedUp = own.filter((b) => b.status === "completed" && b.outcome === "followup").length;
+    const missed = own.filter((b) => b.status === "completed" && b.outcome === "missed").length;
     const cancelled = bookings.filter((b) => b.counsellorId === profile.uid && b.status === "cancelled").length;
     const rated = own.filter((b) => b.userRatingOfCounsellor !== undefined);
     const avgRating =
@@ -44,6 +46,7 @@ function computeStats(profiles: UserProfile[], bookings: Booking[]): CounsellorS
       usersServed,
       completed,
       followedUp,
+      missed,
       cancelled,
       avgRating,
       ratingCount: rated.length,
@@ -93,7 +96,7 @@ export function TeamManagementSection() {
   return (
     <div className="team-management">
       {stats.length === 0 && <p>No counsellors or heads are set up yet.</p>}
-      {stats.map(({ profile, sessionsTaken, usersServed, completed, followedUp, cancelled, avgRating, ratingCount, totalHours }) => {
+      {stats.map(({ profile, sessionsTaken, usersServed, completed, followedUp, missed, cancelled, avgRating, ratingCount, totalHours }) => {
         const status = computeLiveStatus(profile, scheduledBookings);
         return (
           <Card
@@ -122,6 +125,11 @@ export function TeamManagementSection() {
               <span>
                 <strong>{followedUp}</strong> followed up
               </span>
+              {missed > 0 && (
+                <span>
+                  <strong>{missed}</strong> missed
+                </span>
+              )}
               <span>
                 <strong>{cancelled}</strong> cancelled
               </span>

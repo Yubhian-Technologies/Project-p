@@ -6,7 +6,7 @@ export type BookingStatus =
   | "cancelled"
   | "completed";
 
-export type BookingOutcome = "completed" | "followup";
+export type BookingOutcome = "completed" | "followup" | "missed";
 
 export interface Booking {
   id: string;
@@ -21,6 +21,8 @@ export interface Booking {
   followUpOfBookingId?: string;
   cancelledBy?: "user" | "counsellor";
   cancellationReason?: string;
+  missedReason?: string;
+  missedNotified?: boolean;
   transferredFrom?: string;
   userRatingOfCounsellor?: number;
   userReviewText?: string;

@@ -6,6 +6,7 @@ import {
   getDoc,
   getDocs,
   query,
+  runTransaction,
   setDoc,
   updateDoc,
   where,
@@ -262,6 +263,64 @@ export async function closeBooking(booking: Booking, outcome: BookingOutcome): P
       message: `Your session with ${booking.counsellorEmail} is complete`,
     });
   }
+}
+
+export async function closeMissedSession(booking: Booking, reason: string): Promise<void> {
+  await updateDoc(doc(db, "bookings", booking.id), {
+    status: "completed",
+    outcome: "missed",
+    missedReason: reason,
+    updatedAt: Date.now(),
+  });
+  await createNotification({
+    recipientId: booking.userId,
+    type: "booking_missed",
+    bookingId: booking.id,
+    title: "Session not held",
+    message: `Your scheduled session with ${booking.counsellorEmail} did not take place: ${reason}`,
+  });
+}
+
+/**
+ * A "scheduled" booking whose end time (scheduledAt + duration) has already
+ * passed with no closing action taken — i.e. it should show as missed even
+ * though nobody has written a reason yet.
+ */
+export function isSessionEndedPending(booking: Booking): boolean {
+  return (
+    booking.status === "scheduled" &&
+    booking.scheduledAt !== undefined &&
+    Date.now() >= booking.scheduledAt + booking.durationMinutes * 60000
+  );
+}
+
+/**
+ * One-time reminder to the counsellor themselves that a session needs to be
+ * marked. Does not change status/outcome — the booking stays "scheduled"
+ * until the counsellor actually writes a reason via closeMissedSession.
+ *
+ * Uses a transaction (rather than a plain read-then-write) because this gets
+ * called from refresh(), which can run more than once in quick succession
+ * (e.g. React StrictMode's double-invoked effects) — a transaction guarantees
+ * only one of those concurrent calls actually flips missedNotified and sends
+ * the notification, instead of both racing past the same stale flag value.
+ */
+export async function flagMissedSessionPending(booking: Booking): Promise<void> {
+  const bookingRef = doc(db, "bookings", booking.id);
+  const shouldNotify = await runTransaction(db, async (transaction) => {
+    const snap = await transaction.get(bookingRef);
+    if (!snap.exists() || snap.data().missedNotified) return false;
+    transaction.update(bookingRef, { missedNotified: true });
+    return true;
+  });
+  if (!shouldNotify) return;
+  await createNotification({
+    recipientId: booking.counsellorId,
+    type: "session_needs_review",
+    bookingId: booking.id,
+    title: "Session needs review",
+    message: `Your session with ${booking.userEmail} was scheduled to end and hasn't been marked yet — let us know what happened.`,
+  });
 }
 
 export async function createFollowUpBooking(

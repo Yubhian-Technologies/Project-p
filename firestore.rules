@@ -7,8 +7,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function myProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
     function myRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return myProfile().role;
     }
 
     function isRole(role) {
@@ -27,6 +31,12 @@ service cloud.firestore {
     // Admin and Super Admin both manage campuses/colleges/logins.
     function isCampusManager() {
       return isSignedIn() && myRole() in ['admin', 'super-admin'];
+    }
+
+    // Counsellors can view (but not manage) the Events & Programs calendar
+    // alongside Head/Admin/Super Admin.
+    function canViewEventsCalendar() {
+      return isStaff() || isRole('counsellor');
     }
 
     // ---------- users ----------
@@ -75,13 +85,68 @@ service cloud.firestore {
 
     // ---------- events ----------
     match /events/{eventId} {
-      // Head, Admin, and Super Admin can all view events/programs across campuses
+      // Head, Admin, Super Admin, and Counsellor can all view events/programs
       // (this is what powers Admin's Group Sessions analytics).
-      allow read: if isStaff();
+      allow read: if canViewEventsCalendar();
 
-      // Only the Head who created an event can create/update/delete it.
-      allow create: if isRole('head') && request.resource.data.createdBy == request.auth.uid;
-      allow update, delete: if isRole('head') && resource.data.createdBy == request.auth.uid;
+      // Only the Head who created an event can create/update/delete it, and only for
+      // their own campus + a college that actually belongs to that campus.
+      allow create: if isRole('head')
+                    && request.resource.data.createdBy == request.auth.uid
+                    && request.resource.data.campusId == myProfile().campusId
+                    && get(/databases/$(database)/documents/colleges/$(request.resource.data.collegeId)).data.campusId == myProfile().campusId;
+
+      // Updates may change event details/status/report fields, but never move the
+      // event to a different campus/college or reassign who created it.
+      allow update: if isRole('head')
+                    && resource.data.createdBy == request.auth.uid
+                    && request.resource.data.campusId == resource.data.campusId
+                    && request.resource.data.collegeId == resource.data.collegeId
+                    && request.resource.data.calendarYearId == resource.data.calendarYearId
+                    && request.resource.data.calendarMonthId == resource.data.calendarMonthId
+                    && request.resource.data.createdBy == resource.data.createdBy;
+
+      allow delete: if isRole('head') && resource.data.createdBy == request.auth.uid;
+    }
+
+    // ---------- calendarYears ----------
+    match /calendarYears/{yearId} {
+      // Head, Admin, Super Admin, and Counsellor can all view the academic years
+      // a Head has written for a college; only the owning Head can create one.
+      allow read: if canViewEventsCalendar();
+      allow create: if isRole('head')
+                    && request.resource.data.createdBy == request.auth.uid
+                    && request.resource.data.campusId == myProfile().campusId
+                    && get(/databases/$(database)/documents/colleges/$(request.resource.data.collegeId)).data.campusId == myProfile().campusId;
+
+      // The owning Head can rename a year or delete it, but never reassign it to a
+      // different campus/college/owner.
+      allow update: if isRole('head')
+                    && resource.data.createdBy == request.auth.uid
+                    && request.resource.data.campusId == resource.data.campusId
+                    && request.resource.data.collegeId == resource.data.collegeId
+                    && request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if isRole('head') && resource.data.createdBy == request.auth.uid;
+    }
+
+    // ---------- calendarMonths ----------
+    match /calendarMonths/{monthId} {
+      // Same shape as calendarYears — Head adds months one at a time under a year.
+      allow read: if canViewEventsCalendar();
+      allow create: if isRole('head')
+                    && request.resource.data.createdBy == request.auth.uid
+                    && request.resource.data.campusId == myProfile().campusId
+                    && get(/databases/$(database)/documents/colleges/$(request.resource.data.collegeId)).data.campusId == myProfile().campusId;
+
+      // The owning Head can change which month/year this row represents or delete
+      // it, but never move it to a different year container/campus/college/owner.
+      allow update: if isRole('head')
+                    && resource.data.createdBy == request.auth.uid
+                    && request.resource.data.campusId == resource.data.campusId
+                    && request.resource.data.collegeId == resource.data.collegeId
+                    && request.resource.data.yearId == resource.data.yearId
+                    && request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if isRole('head') && resource.data.createdBy == request.auth.uid;
     }
 
     // ---------- bookings ----------

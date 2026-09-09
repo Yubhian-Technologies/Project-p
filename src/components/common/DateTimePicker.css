@@ -54,6 +54,12 @@
   box-sizing: border-box;
 }
 
+@media (max-width: 480px) {
+  .md-datetime__popup {
+    width: min(300px, calc(100vw - 32px));
+  }
+}
+
 .md-datetime__calendar-header {
   display: flex;
   align-items: center;
@@ -86,6 +92,12 @@
 
 .md-datetime__nav:hover {
   box-shadow: var(--neu-shadow-extruded);
+}
+
+.md-datetime__nav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--neu-shadow-extruded-sm);
 }
 
 .md-datetime__weekdays {

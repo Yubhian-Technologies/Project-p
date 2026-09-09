@@ -1,100 +1,176 @@
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
 import { listBookableProfiles } from "../../services/firebase/bookings";
-import { createEvent, deleteEvent, listEventsForCampus, updateEvent } from "../../services/firebase/events";
+import { listEventsForCollege } from "../../services/firebase/events";
+import { listColleges } from "../../services/firebase/colleges";
+import { createCalendarYear, deleteCalendarYear, listCalendarYears, updateCalendarYear } from "../../services/firebase/calendarYears";
+import {
+  createCalendarMonth,
+  deleteCalendarMonth,
+  listCalendarMonths,
+  updateCalendarMonth,
+} from "../../services/firebase/calendarMonths";
 import { useAuth } from "../../hooks/useAuth";
 import type { UserProfile } from "../../types/user";
-import type { EventProgram } from "../../types/event";
-import { Card } from "../../components/common/Card";
-import { Button } from "../../components/common/Button";
-import { Select } from "../../components/common/Select";
-import { DateTimePicker } from "../../components/common/DateTimePicker";
+import type { College } from "../../types/college";
+import type { CalendarYear } from "../../types/calendarYear";
+import type { CalendarMonth } from "../../types/calendarMonth";
+import type { EventCategory, EventProgram } from "../../types/event";
+import { CollegePicker } from "../../components/events/CollegePicker";
+import { EventsCalendarGrid } from "../../components/events/EventsCalendarGrid";
+import { EventDetailModal } from "./EventDetailModal";
 import "./EventsProgramsSection.css";
+
+interface ModalState {
+  mode: "create" | "manage";
+  event?: EventProgram;
+  category?: EventCategory;
+  calendarYearId?: string;
+  calendarMonthId?: string;
+  defaultDate?: string;
+}
 
 export function EventsProgramsSection() {
   const { profile } = useAuth();
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [selectedCollegeId, setSelectedCollegeId] = useState("");
+  const [years, setYears] = useState<CalendarYear[]>([]);
+  const [selectedYearId, setSelectedYearId] = useState("");
+  const [months, setMonths] = useState<CalendarMonth[]>([]);
   const [events, setEvents] = useState<EventProgram[]>([]);
   const [organizers, setOrganizers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalState, setModalState] = useState<ModalState | null>(null);
+  const [error, setError] = useState("");
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [organizerId, setOrganizerId] = useState("");
-  const [eventDateValue, setEventDateValue] = useState("");
-  const [creating, setCreating] = useState(false);
-
-  const [attendeeDrafts, setAttendeeDrafts] = useState<Record<string, string>>({});
-  const [savingId, setSavingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  async function load() {
+  useEffect(() => {
     if (!profile?.campusId) {
       setLoading(false);
       return;
     }
-    const [campusEvents, allBookable] = await Promise.all([
-      listEventsForCampus(profile.campusId),
-      listBookableProfiles(),
-    ]);
-    setEvents(campusEvents);
-    setOrganizers(allBookable.filter((p) => p.campusId === profile.campusId));
-    setAttendeeDrafts(Object.fromEntries(campusEvents.map((e) => [e.id, String(e.attendeeCount)])));
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    load();
+    Promise.all([listColleges(profile.campusId), listBookableProfiles()]).then(([collegeList, allBookable]) => {
+      setColleges(collegeList);
+      setOrganizers(allBookable.filter((p) => p.campusId === profile.campusId));
+      setSelectedCollegeId((current) => current || collegeList[0]?.id || "");
+      setLoading(false);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.campusId]);
 
-  async function handleCreate(event: FormEvent) {
-    event.preventDefault();
-    if (!profile?.campusId || !organizerId) return;
-    const organizer = organizers.find((o) => o.uid === organizerId);
-    if (!organizer) return;
+  async function loadYearsAndEvents(collegeId: string) {
+    const [yearList, collegeEvents] = await Promise.all([listCalendarYears(collegeId), listEventsForCollege(collegeId)]);
+    setYears(yearList);
+    setEvents(collegeEvents);
+    setSelectedYearId((current) => (yearList.some((y) => y.id === current) ? current : yearList[0]?.id || ""));
+  }
 
-    setCreating(true);
+  useEffect(() => {
+    if (!selectedCollegeId) {
+      setYears([]);
+      setEvents([]);
+      setSelectedYearId("");
+      return;
+    }
+    loadYearsAndEvents(selectedCollegeId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCollegeId]);
+
+  async function loadMonths(yearId: string) {
+    const monthList = await listCalendarMonths(yearId);
+    setMonths(monthList);
+  }
+
+  useEffect(() => {
+    if (!selectedYearId) {
+      setMonths([]);
+      return;
+    }
+    loadMonths(selectedYearId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedYearId]);
+
+  async function refreshEvents() {
+    if (!selectedCollegeId) return;
+    setEvents(await listEventsForCollege(selectedCollegeId));
+  }
+
+  async function handleAddYear(label: string) {
+    if (!profile?.campusId) return;
+    setError("");
     try {
-      await createEvent({
-        campusId: profile.campusId,
-        title: title.trim(),
-        description: description.trim(),
-        organizerId: organizer.uid,
-        organizerName: organizer.displayName || organizer.email,
-        eventDate: eventDateValue ? new Date(eventDateValue).getTime() : Date.now(),
-        attendeeCount: 0,
-        createdBy: profile.uid,
-      });
-      setTitle("");
-      setDescription("");
-      setOrganizerId("");
-      setEventDateValue("");
-      await load();
-    } finally {
-      setCreating(false);
+      const yearId = await createCalendarYear(profile.campusId, selectedCollegeId, label, profile.uid);
+      const yearList = await listCalendarYears(selectedCollegeId);
+      setYears(yearList);
+      setSelectedYearId(yearId);
+    } catch {
+      setError("Couldn't add that year. Please try again.");
     }
   }
 
-  async function handleSaveAttendance(id: string) {
-    const value = Number(attendeeDrafts[id]);
-    if (Number.isNaN(value) || value < 0) return;
-    setSavingId(id);
+  async function handleAddMonth(month: number, calendarYear: number) {
+    if (!profile?.campusId || !selectedYearId) return;
+    setError("");
     try {
-      await updateEvent(id, { attendeeCount: value });
-      await load();
-    } finally {
-      setSavingId(null);
+      await createCalendarMonth(profile.campusId, selectedCollegeId, selectedYearId, month, calendarYear, profile.uid);
+      await loadMonths(selectedYearId);
+    } catch {
+      setError("Couldn't add that month. Please try again.");
     }
   }
 
-  async function handleDelete(id: string) {
-    setDeletingId(id);
+  async function handleEditYear(yearId: string, label: string) {
+    setError("");
     try {
-      await deleteEvent(id);
-      await load();
-    } finally {
-      setDeletingId(null);
+      await updateCalendarYear(yearId, label);
+      setYears(await listCalendarYears(selectedCollegeId));
+    } catch {
+      setError("Couldn't rename that year. Please try again.");
     }
+  }
+
+  async function handleDeleteYear(yearId: string) {
+    setError("");
+    try {
+      await deleteCalendarYear(yearId);
+      await loadYearsAndEvents(selectedCollegeId);
+    } catch {
+      setError("Couldn't delete that year. Please try again.");
+    }
+  }
+
+  async function handleEditMonth(monthId: string, month: number, calendarYear: number) {
+    setError("");
+    try {
+      await updateCalendarMonth(monthId, month, calendarYear);
+      await loadMonths(selectedYearId);
+    } catch {
+      setError("Couldn't update that month. Please try again.");
+    }
+  }
+
+  async function handleDeleteMonth(monthId: string) {
+    setError("");
+    try {
+      await deleteCalendarMonth(monthId);
+      await Promise.all([loadMonths(selectedYearId), refreshEvents()]);
+    } catch {
+      setError("Couldn't delete that month. Please try again.");
+    }
+  }
+
+  function handleAddEvent(category: EventCategory, yearId: string, monthId: string) {
+    const month = months.find((m) => m.id === monthId);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    setModalState({
+      mode: "create",
+      category,
+      calendarYearId: yearId,
+      calendarMonthId: monthId,
+      defaultDate: month ? `${month.calendarYear}-${pad(month.month + 1)}-01T09:00` : undefined,
+    });
+  }
+
+  function handleSelectEvent(event: EventProgram) {
+    setModalState({ mode: "manage", event });
   }
 
   if (loading) return null;
@@ -105,92 +181,44 @@ export function EventsProgramsSection() {
 
   return (
     <div className="events-programs">
-      <Card className="events-programs__add-form">
-        <p className="events-programs__form-title">+ Add Event</p>
-        <form onSubmit={handleCreate}>
-          <div className="events-programs__field">
-            <label htmlFor="event-title">Title</label>
-            <input
-              id="event-title"
-              type="text"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
-          <div className="events-programs__field">
-            <label htmlFor="event-description">Description</label>
-            <textarea
-              id="event-description"
-              rows={3}
-              required
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What's this event or program about?"
-            />
-          </div>
-          <div className="events-programs__field">
-            <label htmlFor="event-organizer">Organizer</label>
-            <Select id="event-organizer" value={organizerId} onChange={setOrganizerId}>
-              <option value="" disabled>
-                {organizers.length === 0 ? "No team members on this campus" : "Select an organizer…"}
-              </option>
-              {organizers.map((o) => (
-                <option key={o.uid} value={o.uid}>
-                  {o.displayName || o.email}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className="events-programs__field">
-            <label htmlFor="event-date">Date &amp; time</label>
-            <DateTimePicker id="event-date" value={eventDateValue} onChange={setEventDateValue} />
-          </div>
-          <Button type="submit" disabled={creating || !organizerId || !eventDateValue}>
-            {creating ? "Adding…" : "Add event"}
-          </Button>
-        </form>
-      </Card>
+      <CollegePicker colleges={colleges} selectedId={selectedCollegeId} onSelect={setSelectedCollegeId} />
 
-      {events.length === 0 && <p>No events or programs added for your campus yet.</p>}
+      {error && <p className="events-programs__error">{error}</p>}
 
-      {events.map((event) => (
-        <Card key={event.id} className="events-programs__row">
-          <div>
-            <p className="events-programs__title">{event.title}</p>
-            <p className="events-programs__meta">
-              {event.organizerName} • {new Date(event.eventDate).toLocaleString()}
-            </p>
-            <p className="events-programs__description">{event.description}</p>
-          </div>
-          <div className="events-programs__attendance">
-            <label htmlFor={`attendance-${event.id}`}>Attendees</label>
-            <input
-              id={`attendance-${event.id}`}
-              type="number"
-              min={0}
-              value={attendeeDrafts[event.id] ?? ""}
-              onChange={(e) => setAttendeeDrafts((d) => ({ ...d, [event.id]: e.target.value }))}
-            />
-            <Button
-              type="button"
-              variant="outlined"
-              disabled={savingId === event.id}
-              onClick={() => handleSaveAttendance(event.id)}
-            >
-              {savingId === event.id ? "Saving…" : "Save"}
-            </Button>
-            <Button
-              type="button"
-              variant="outlined"
-              disabled={deletingId === event.id}
-              onClick={() => handleDelete(event.id)}
-            >
-              {deletingId === event.id ? "Deleting…" : "Delete"}
-            </Button>
-          </div>
-        </Card>
-      ))}
+      {selectedCollegeId && (
+        <EventsCalendarGrid
+          years={years}
+          selectedYearId={selectedYearId}
+          onSelectYear={setSelectedYearId}
+          onAddYear={handleAddYear}
+          onEditYear={handleEditYear}
+          onDeleteYear={handleDeleteYear}
+          months={months}
+          onAddMonth={handleAddMonth}
+          onEditMonth={handleEditMonth}
+          onDeleteMonth={handleDeleteMonth}
+          events={events}
+          onAddEvent={handleAddEvent}
+          onSelectEvent={handleSelectEvent}
+        />
+      )}
+
+      {modalState && (
+        <EventDetailModal
+          mode={modalState.mode}
+          event={modalState.event}
+          defaultCategory={modalState.category}
+          defaultDate={modalState.defaultDate}
+          calendarYearId={modalState.calendarYearId ?? modalState.event?.calendarYearId}
+          calendarMonthId={modalState.calendarMonthId ?? modalState.event?.calendarMonthId}
+          campusId={profile.campusId}
+          collegeId={selectedCollegeId}
+          createdBy={profile.uid}
+          organizers={organizers}
+          onClose={() => setModalState(null)}
+          onSaved={refreshEvents}
+        />
+      )}
     </div>
   );
 }

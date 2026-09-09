@@ -1,0 +1,19 @@
+.college-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 320px;
+  margin-bottom: 20px;
+}
+
+.college-picker label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neu-text-muted, #718096);
+}
+
+.college-picker__empty {
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
+  margin-bottom: 20px;
+}

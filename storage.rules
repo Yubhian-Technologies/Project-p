@@ -15,6 +15,20 @@ service firebase.storage {
       allow delete: if false; // app only overwrites avatars, never deletes them
     }
 
+    // Event completion reports: src/services/firebase/storage.ts uploads to
+    // event-reports/{eventId}/report. Head, Admin, Super Admin, and Counsellor can
+    // all view reports (mirrors the Firestore "events" read rule); only Head
+    // uploads/replaces.
+    match /event-reports/{eventId}/{fileName} {
+      allow read: if request.auth != null &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['head', 'admin', 'super-admin', 'counsellor'];
+      allow write: if request.auth != null &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'head' &&
+        request.resource.size < 15 * 1024 * 1024 &&
+        request.resource.contentType.matches('application/pdf|image/.*');
+      allow delete: if false;
+    }
+
     // Deny everything else by default.
     match /{allPaths=**} {
       allow read, write: if false;

@@ -16,6 +16,14 @@ export async function listEventsForCampus(campusId: string): Promise<EventProgra
     .sort((a, b) => b.eventDate - a.eventDate);
 }
 
+export async function listEventsForCollege(collegeId: string): Promise<EventProgram[]> {
+  const q = query(eventsCollection, where("collegeId", "==", collegeId));
+  const snapshot = await getDocs(q);
+  return snapshot.docs
+    .map((d) => toEvent(d.id, d.data()))
+    .sort((a, b) => b.eventDate - a.eventDate);
+}
+
 export async function createEvent(
   input: Omit<EventProgram, "id" | "createdAt" | "updatedAt">,
 ): Promise<string> {
@@ -26,7 +34,27 @@ export async function createEvent(
 
 export async function updateEvent(
   id: string,
-  updates: Partial<Pick<EventProgram, "title" | "description" | "eventDate" | "attendeeCount">>,
+  updates: Partial<
+    Pick<
+      EventProgram,
+      | "title"
+      | "description"
+      | "category"
+      | "sessionYears"
+      | "targetGroup"
+      | "importantDay"
+      | "organizerIds"
+      | "organizerNames"
+      | "eventDate"
+      | "attendeeCount"
+      | "phase"
+      | "reschedule"
+      | "notConductedReason"
+      | "reportUrl"
+      | "reportFileName"
+      | "reportUploadedAt"
+    >
+  >,
 ): Promise<void> {
   await updateDoc(doc(db, "events", id), { ...updates, updatedAt: Date.now() });
 }

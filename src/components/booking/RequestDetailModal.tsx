@@ -34,6 +34,7 @@ interface RequestDetailModalProps {
   onSaveSummary: (summary: string) => Promise<void>;
   onCloseComplete: (summary: string) => Promise<void>;
   onCloseFollowUp: (summary: string, scheduledAt: number) => Promise<void>;
+  onCloseMissed: (reason: string) => Promise<void>;
   onRateUser: (rating: number, note: string) => void;
   onViewSummary?: () => void;
   onClose: () => void;
@@ -50,6 +51,7 @@ export function RequestDetailModal({
   onSaveSummary,
   onCloseComplete,
   onCloseFollowUp,
+  onCloseMissed,
   onRateUser,
   onViewSummary,
   onClose,
@@ -72,6 +74,7 @@ export function RequestDetailModal({
   const [rateUserValue, setRateUserValue] = useState(0);
   const [rateUserNote, setRateUserNote] = useState("");
   const [closing, setClosing] = useState(false);
+  const [missedReason, setMissedReason] = useState("");
 
   useEffect(() => {
     if (booking.status === "pending") return;
@@ -84,6 +87,8 @@ export function RequestDetailModal({
   const [now] = useState(() => Date.now());
   const nowValue = toDateTimeLocalValue(now);
   const sessionStarted = booking.scheduledAt !== undefined && now >= booking.scheduledAt;
+  const sessionEnded =
+    booking.scheduledAt !== undefined && now >= booking.scheduledAt + booking.durationMinutes * 60000;
 
   async function handleSaveSummary() {
     setSavingSummary(true);
@@ -131,6 +136,16 @@ export function RequestDetailModal({
     if (!cancelReason.trim()) return;
     onCancel(cancelReason.trim());
     setShowCancelReason(false);
+  }
+
+  async function handleConfirmMissed() {
+    if (!missedReason.trim() || closing) return;
+    setClosing(true);
+    try {
+      await onCloseMissed(missedReason.trim());
+    } finally {
+      setClosing(false);
+    }
   }
 
   const canCancelOrTransfer = booking.status === "accepted" || booking.status === "scheduled";
@@ -188,8 +203,12 @@ export function RequestDetailModal({
         {booking.sessionMode === "offline" && (
           <span className="request-card__offline-tag">Offline</span>
         )}
-        <span className={`request-card__status request-card__status--${booking.status}`}>
-          {booking.status}
+        <span
+          className={`request-card__status request-card__status--${
+            booking.outcome === "missed" ? "missed" : booking.status
+          }`}
+        >
+          {booking.outcome === "missed" ? "missed" : booking.status}
         </span>
       </div>
 
@@ -270,64 +289,86 @@ export function RequestDetailModal({
             </>
           )}
 
-          <div className="request-card__summary">
-            <label>Session summary</label>
-            <Button
-              type="button"
-              variant="outlined"
-              disabled={!sessionStarted}
-              onClick={() => setSummaryFocusMode(true)}
-            >
-              View Summary
-            </Button>
-            {!sessionStarted && (
-              <p className="request-card__summary-hint">
-                Available once the session starts
-                {booking.scheduledAt ? ` (${new Date(booking.scheduledAt).toLocaleString()})` : ""}.
+          {sessionEnded ? (
+            <div className="request-card__cancel-reason">
+              <p className="request-card__time-warning">
+                This session's scheduled time has passed. Why wasn't it held?
               </p>
-            )}
-          </div>
-
-          {showFollowUp ? (
-            <div className="request-card__schedule">
-              <label htmlFor={`followup-${booking.id}`}>Follow-up session time</label>
-              <DateTimePicker
-                id={`followup-${booking.id}`}
-                min={nowValue}
-                value={followUpTime}
-                onChange={setFollowUpTime}
+              <textarea
+                id={`missed-reason-${booking.id}`}
+                rows={2}
+                value={missedReason}
+                onChange={(e) => setMissedReason(e.target.value)}
+                placeholder="e.g. the user didn't join, a technical issue came up…"
               />
-              {isPastChoice(followUpTime) && (
-                <p className="request-card__time-warning">This time has already passed. Pick a time later than now.</p>
-              )}
               <div className="request-card__actions">
-                <Button type="button" disabled={isPastOrEmpty(followUpTime) || closing} onClick={handleCloseFollowUp}>
-                  {closing ? "Saving…" : "Save"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outlined"
-                  disabled={closing}
-                  onClick={() => setShowFollowUp(false)}
-                >
-                  Cancel
+                <Button type="button" disabled={!missedReason.trim() || closing} onClick={handleConfirmMissed}>
+                  {closing ? "Saving…" : "Confirm"}
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="request-card__actions">
-              <Button type="button" disabled={closing} onClick={handleCloseComplete}>
-                {closing ? "Closing…" : "Close & Complete Session"}
-              </Button>
-              <Button
-                type="button"
-                variant="outlined"
-                disabled={closing}
-                onClick={() => setShowFollowUp(true)}
-              >
-                Close &amp; Follow-up Session
-              </Button>
-            </div>
+            <>
+              <div className="request-card__summary">
+                <label>Session summary</label>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  disabled={!sessionStarted}
+                  onClick={() => setSummaryFocusMode(true)}
+                >
+                  View Summary
+                </Button>
+                {!sessionStarted && (
+                  <p className="request-card__summary-hint">
+                    Available once the session starts
+                    {booking.scheduledAt ? ` (${new Date(booking.scheduledAt).toLocaleString()})` : ""}.
+                  </p>
+                )}
+              </div>
+
+              {showFollowUp ? (
+                <div className="request-card__schedule">
+                  <label htmlFor={`followup-${booking.id}`}>Follow-up session time</label>
+                  <DateTimePicker
+                    id={`followup-${booking.id}`}
+                    min={nowValue}
+                    value={followUpTime}
+                    onChange={setFollowUpTime}
+                  />
+                  {isPastChoice(followUpTime) && (
+                    <p className="request-card__time-warning">This time has already passed. Pick a time later than now.</p>
+                  )}
+                  <div className="request-card__actions">
+                    <Button type="button" disabled={isPastOrEmpty(followUpTime) || closing} onClick={handleCloseFollowUp}>
+                      {closing ? "Saving…" : "Save"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outlined"
+                      disabled={closing}
+                      onClick={() => setShowFollowUp(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="request-card__actions">
+                  <Button type="button" disabled={closing} onClick={handleCloseComplete}>
+                    {closing ? "Closing…" : "Close & Complete Session"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    disabled={closing}
+                    onClick={() => setShowFollowUp(true)}
+                  >
+                    Close &amp; Follow-up Session
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -401,7 +442,16 @@ export function RequestDetailModal({
 
       {booking.status === "completed" && (
         <div className="request-card__completed">
-          <p>{booking.outcome === "followup" ? "Follow-up session scheduled." : "Session complete."}</p>
+          <p>
+            {booking.outcome === "followup"
+              ? "Follow-up session scheduled."
+              : booking.outcome === "missed"
+                ? "Session was not held."
+                : "Session complete."}
+          </p>
+          {booking.outcome === "missed" && booking.missedReason && (
+            <p className="request-card__summary-readonly">{booking.missedReason}</p>
+          )}
           {intake?.summary && (
             <Button type="button" variant="outlined" onClick={() => setSummaryFocusMode(true)}>
               View Summary
