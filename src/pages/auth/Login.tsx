@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signIn } from "../../services/firebase/auth";
+import { authErrorMessage, sendPasswordReset, signIn } from "../../services/firebase/auth";
 import { useAuth } from "../../hooks/useAuth";
 import { dashboardPathForRole } from "../../utils/roleRedirect";
 import "./AuthForm.css";
@@ -14,6 +14,12 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const [mode, setMode] = useState<"signin" | "reset">("signin");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSubmitting, setResetSubmitting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     if (!loading && currentUser) {
@@ -33,6 +39,27 @@ export function Login() {
     }
   }
 
+  function openReset() {
+    setMode("reset");
+    setResetEmail(email);
+    setResetSent(false);
+    setResetError(null);
+  }
+
+  async function handleResetSubmit(event: FormEvent) {
+    event.preventDefault();
+    setResetError(null);
+    setResetSubmitting(true);
+    try {
+      await sendPasswordReset(resetEmail.trim());
+      setResetSent(true);
+    } catch (err) {
+      setResetError(authErrorMessage(err, "Could not send reset email. Check the address and try again."));
+    } finally {
+      setResetSubmitting(false);
+    }
+  }
+
   return (
     <div className="auth-wrapper">
       <div className="auth-bg" />
@@ -41,68 +68,116 @@ export function Login() {
       <div className="auth-glass-card">
         <div className="auth-header">
           <Link to="/" className="auth-logo-link">
-            <img src="/favicon.png" alt="Vishnu Logo" className="auth-logo-img" />
-            <span className="auth-logo-text">Vishnu Wellness</span>
+            <img src="/favicon.png" alt="Vishnu Wellness Center Logo" className="auth-logo-img" />
+            <span className="auth-logo-text">Vishnu Wellness Center</span>
           </Link>
-          <h1 className="auth-card__title">Welcome Back</h1>
-          <p className="auth-card__subtitle">Enter your details to sign in to your workspace</p>
+          <h1 className="auth-card__title">{mode === "signin" ? "Welcome Back" : "Reset your password"}</h1>
+          <p className="auth-card__subtitle">
+            {mode === "signin"
+              ? "Enter your details to sign in to your workspace"
+              : "Enter your email and we'll send you a reset link"}
+          </p>
         </div>
 
-        {error && <div className="auth-error">{error}</div>}
+        {mode === "signin" ? (
+          <>
+            {error && <div className="auth-error">{error}</div>}
 
-        <form onSubmit={handleSubmit}>
-          <div className="auth-field">
-            <label htmlFor="email">Email Address</label>
-            <input
-              id="email"
-              type="email"
-              placeholder="name@company.com"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+            <form onSubmit={handleSubmit}>
+              <div className="auth-field">
+                <label htmlFor="email">Email Address</label>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="name@company.com"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
 
-          <div className="auth-field">
-            <label htmlFor="password">Password</label>
-            <div className="auth-field__password-wrap">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                className="auth-field__toggle-visibility"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                onClick={() => setShowPassword((v) => !v)}
-              >
-                {showPassword ? (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2z" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                  </svg>
-                )}
+              <div className="auth-field">
+                <label htmlFor="password">Password</label>
+                <div className="auth-field__password-wrap">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="auth-field__toggle-visibility"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2z" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <button className="auth-card__submit" type="submit" disabled={submitting}>
+                {submitting ? "Signing in…" : "Sign In →"}
               </button>
-            </div>
-          </div>
+            </form>
 
-          <button className="auth-card__submit" type="submit" disabled={submitting}>
-            {submitting ? "Signing in…" : "Sign In →"}
-          </button>
-        </form>
+            <p className="auth-card__switch">
+              <button type="button" className="auth-card__link" onClick={openReset}>
+                Forgot password?
+              </button>
+            </p>
 
-        <p className="auth-card__switch">
-          Don't have an account? <Link to="/signup">Sign up</Link>
-        </p>
+            <p className="auth-card__switch">
+              Don't have an account? <Link to="/signup">Sign up</Link>
+            </p>
+          </>
+        ) : (
+          <>
+            {resetError && <div className="auth-error">{resetError}</div>}
+
+            {resetSent ? (
+              <p className="auth-card__subtitle">
+                If an account exists for {resetEmail}, a password reset link has been sent. Check your inbox.
+              </p>
+            ) : (
+              <form onSubmit={handleResetSubmit}>
+                <div className="auth-field">
+                  <label htmlFor="reset-email">Email Address</label>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    placeholder="name@company.com"
+                    autoComplete="email"
+                    required
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                  />
+                </div>
+                <button className="auth-card__submit" type="submit" disabled={resetSubmitting}>
+                  {resetSubmitting ? "Sending…" : "Send reset link"}
+                </button>
+              </form>
+            )}
+
+            <p className="auth-card__switch">
+              <button type="button" className="auth-card__link" onClick={() => setMode("signin")}>
+                ← Back to sign in
+              </button>
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

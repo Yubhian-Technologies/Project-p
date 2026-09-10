@@ -49,7 +49,7 @@ export function GroupSessionsPanel({ campusId }: GroupSessionsPanelProps) {
           <div>
             <p className="analytics-group__title">{event.title}</p>
             <p className="analytics-group__meta">
-              {event.organizerName} • {new Date(event.eventDate).toLocaleString()}
+              {event.organizerNames.join(", ") || "No organizer"} • {new Date(event.eventDate).toLocaleString()}
             </p>
           </div>
           <div className="analytics-group__attendance">

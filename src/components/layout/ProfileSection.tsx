@@ -10,6 +10,7 @@ import {
   updateUserIntakeInfo,
   updateCounsellorProfile,
 } from "../../services/firebase/firestore";
+import { authErrorMessage, changeOwnPassword } from "../../services/firebase/auth";
 import { defaultAvailabilitySchedule } from "../../types/availability";
 import type { DayAvailability } from "../../types/availability";
 import { Card } from "../common/Card";
@@ -71,6 +72,13 @@ export function ProfileSection() {
     profile?.availabilitySchedule ?? defaultAvailabilitySchedule(),
   );
   const [savingCounsellorProfile, setSavingCounsellorProfile] = useState(false);
+
+  const [currentPasswordDraft, setCurrentPasswordDraft] = useState("");
+  const [newPasswordDraft, setNewPasswordDraft] = useState("");
+  const [confirmPasswordDraft, setConfirmPasswordDraft] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   if (!profile || !currentUser) return null;
 
@@ -157,6 +165,31 @@ export function ProfileSection() {
       await refreshProfile();
     } finally {
       setSavingCounsellorProfile(false);
+    }
+  }
+
+  async function handleChangePassword() {
+    setPasswordError(null);
+    setPasswordSuccess(false);
+    if (newPasswordDraft.length < 6) {
+      setPasswordError("New password must be at least 6 characters.");
+      return;
+    }
+    if (newPasswordDraft !== confirmPasswordDraft) {
+      setPasswordError("New password and confirmation do not match.");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await changeOwnPassword(currentPasswordDraft, newPasswordDraft);
+      setCurrentPasswordDraft("");
+      setNewPasswordDraft("");
+      setConfirmPasswordDraft("");
+      setPasswordSuccess(true);
+    } catch (err) {
+      setPasswordError(authErrorMessage(err, "Could not update your password. Please try again."));
+    } finally {
+      setChangingPassword(false);
     }
   }
 
@@ -427,6 +460,52 @@ export function ProfileSection() {
                 onClick={handleSaveBio}
               >
                 {savingBio ? "Saving…" : "Save bio"}
+              </Button>
+            </div>
+
+            <div className="profile-section__password">
+              <p className="profile-section__subheading">Change password</p>
+              <div className="profile-section__field">
+                <label htmlFor="current-password">Current password</label>
+                <input
+                  id="current-password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={currentPasswordDraft}
+                  onChange={(e) => setCurrentPasswordDraft(e.target.value)}
+                />
+              </div>
+              <div className="profile-section__field">
+                <label htmlFor="new-password">New password</label>
+                <input
+                  id="new-password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={6}
+                  value={newPasswordDraft}
+                  onChange={(e) => setNewPasswordDraft(e.target.value)}
+                />
+              </div>
+              <div className="profile-section__field">
+                <label htmlFor="confirm-password">Confirm new password</label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={6}
+                  value={confirmPasswordDraft}
+                  onChange={(e) => setConfirmPasswordDraft(e.target.value)}
+                />
+              </div>
+              {passwordError && <p className="profile-section__error">{passwordError}</p>}
+              {passwordSuccess && <p className="profile-section__success">Password updated successfully.</p>}
+              <Button
+                type="button"
+                variant="outlined"
+                disabled={changingPassword || !currentPasswordDraft || newPasswordDraft.length < 6 || !confirmPasswordDraft}
+                onClick={handleChangePassword}
+              >
+                {changingPassword ? "Updating…" : "Change password"}
               </Button>
             </div>
           </>

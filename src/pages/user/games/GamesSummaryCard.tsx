@@ -78,9 +78,9 @@ export function GamesSummaryCard({ onPlay }: GamesSummaryCardProps) {
       className="games-summary-bento"
       span={4}
       icon={<GamepadIcon />}
-      title="Puzzles & Games"
+      title="Wellness Exercise"
       subtitle="Take a short break with a few relaxing mind games."
-      action={{ label: "Play Games →", onClick: onPlay }}
+      action={{ label: "Play Wellness Exercise →", onClick: onPlay }}
     >
       <div className="games-summary__carousel">
         <div className="games-summary">

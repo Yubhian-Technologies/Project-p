@@ -35,6 +35,12 @@
   break-inside: avoid;
 }
 
+@media (max-width: 480px) {
+  .import-sessions-modal__field-guide ul {
+    columns: 1;
+  }
+}
+
 .import-sessions-modal__template-link {
   align-self: flex-start;
   background: none;

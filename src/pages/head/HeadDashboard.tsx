@@ -7,7 +7,14 @@ import { useAuth } from "../../hooks/useAuth";
 import { BookingRequestsSection } from "../counsellor/BookingRequestsSection";
 import { TeamManagementSection } from "./TeamManagementSection";
 import { EventsProgramsSection } from "./EventsProgramsSection";
+import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAlertsSection";
+import { TransferRequestsSection } from "./TransferRequestsSection";
+import { CommunitySection } from "../user/community/CommunitySection";
+import { MonthlyReportsSection } from "./MonthlyReportsSection";
+import { GamesSection } from "../user/games/GamesSection";
+import { JournalSection } from "../user/journal/JournalSection";
 import { DailyQuoteCard } from "../../components/common/DailyQuoteCard";
+import type { Notification } from "../../types/notification";
 import "../../styles/bento-grid.css";
 
 const SECTIONS = [
@@ -15,18 +22,44 @@ const SECTIONS = [
   { id: "requests", label: "Requests" },
   { id: "team-management", label: "Team Management" },
   { id: "events", label: "Events & Programs" },
+  { id: "transfer-requests", label: "Transfer Requests" },
+  { id: "monthly-reports", label: "Monthly Reports" },
+  { id: "games", label: "Wellness Exercise" },
+  { id: "journal", label: "Counselling Journal" },
+  { id: "community", label: "Wellness Community" },
+  { id: "emergency", label: "Emergency Alerts", variant: "urgent" as const },
 ];
 
 export function HeadDashboard() {
   const { profile } = useAuth();
   const [activeSection, setActiveSection] = useState("overview");
   const [showImport, setShowImport] = useState(false);
+  const [pendingBookingId, setPendingBookingId] = useState<string | undefined>();
+
+  function handleNotificationClick(notification: Notification) {
+    if (notification.type === "emergency_sos") {
+      setActiveSection("emergency");
+      return;
+    }
+    if (notification.type === "transfer_requested") {
+      setActiveSection("transfer-requests");
+      return;
+    }
+    setPendingBookingId(notification.bookingId);
+    setActiveSection("requests");
+  }
 
   const titleBySection: Record<string, string> = {
     profile: "Profile",
     requests: "Booking Requests",
     "team-management": "Team Management",
     events: "Events & Programs",
+    "transfer-requests": "Transfer Requests",
+    "monthly-reports": "Monthly Reports",
+    games: "Wellness Exercise",
+    journal: "Counselling Journal",
+    community: "Wellness Community",
+    emergency: "Emergency Alerts",
   };
   const title = titleBySection[activeSection] ?? "Head Dashboard";
 
@@ -43,13 +76,24 @@ export function HeadDashboard() {
       sections={SECTIONS}
       activeSection={activeSection}
       onSelectSection={setActiveSection}
+      onNotificationClick={handleNotificationClick}
     >
       {activeSection === "profile" && <ProfileSection />}
       {activeSection === "requests" && (
-        <BookingRequestsSection importOpen={showImport} onImportClose={() => setShowImport(false)} />
+        <BookingRequestsSection
+          importOpen={showImport}
+          onImportClose={() => setShowImport(false)}
+          initialSelectedId={pendingBookingId}
+        />
       )}
       {activeSection === "team-management" && <TeamManagementSection />}
       {activeSection === "events" && <EventsProgramsSection />}
+      {activeSection === "transfer-requests" && <TransferRequestsSection />}
+      {activeSection === "monthly-reports" && <MonthlyReportsSection />}
+      {activeSection === "games" && <GamesSection />}
+      {activeSection === "journal" && <JournalSection />}
+      {activeSection === "community" && <CommunitySection />}
+      {activeSection === "emergency" && <EmergencyAlertsSection />}
       {activeSection === "overview" && (
         <div className="bento-grid">
           <BentoCard

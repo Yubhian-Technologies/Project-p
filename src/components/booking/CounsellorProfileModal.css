@@ -307,5 +307,10 @@
   .counsellor-profile__badge {
     align-self: center;
   }
+
+  .counsellor-profile__footer .md-button {
+    min-width: 0;
+    width: 100%;
+  }
 }
 

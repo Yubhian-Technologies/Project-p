@@ -1,6 +1,6 @@
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { db } from "./config";
-import type { UserProfile } from "../../types/user";
+import type { Role, UserProfile } from "../../types/user";
 import type { DayAvailability } from "../../types/availability";
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -8,8 +8,34 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   return snapshot.exists() ? (snapshot.data() as UserProfile) : null;
 }
 
+export async function listCampusLogins(campusId: string): Promise<UserProfile[]> {
+  const q = query(collection(db, "users"), where("campusId", "==", campusId));
+  const snapshot = await getDocs(q);
+  return snapshot.docs
+    .map((d) => d.data() as UserProfile)
+    .filter((p) => p.role === "counsellor" || p.role === "head");
+}
+
 export async function createUserProfile(profile: UserProfile): Promise<void> {
   await setDoc(doc(db, "users", profile.uid), profile);
+}
+
+export async function listUsersByRole(role: Role): Promise<UserProfile[]> {
+  const q = query(collection(db, "users"), where("role", "==", role));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => d.data() as UserProfile);
+}
+
+// Super Admin fixing a student ("user" role) account's campus/college and basic
+// details — e.g. accounts created before Campus/College existed, which have no
+// other admin UI path to reach them.
+export async function updateUserAccount(
+  uid: string,
+  updates: Partial<
+    Pick<UserProfile, "displayName" | "campusId" | "collegeId" | "studentOrProfessional" | "whatsappNumber">
+  >,
+): Promise<void> {
+  await updateDoc(doc(db, "users", uid), updates);
 }
 
 export async function updateUserPhoto(uid: string, photoURL: string): Promise<void> {

@@ -52,6 +52,19 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
   const [loading, setLoading] = useState(true);
   const [reassigningId, setReassigningId] = useState<string | null>(null);
   const [targetId, setTargetId] = useState("");
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  function toggleExpanded(id: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
 
   async function load() {
     const [bookings, profiles] = await Promise.all([
@@ -97,7 +110,12 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
       {groups.length === 0 && <p>No sessions yet.</p>}
 
       {groups.map((group) => {
-        const completedCount = group.bookings.filter((b) => b.status === "completed").length;
+        const completedCount = group.bookings.filter(
+          (b) => b.status === "completed" && b.outcome !== "missed",
+        ).length;
+        const missedCount = group.bookings.filter(
+          (b) => b.status === "completed" && b.outcome === "missed",
+        ).length;
         const cancelledCount = group.bookings.filter((b) => b.status === "cancelled").length;
         return (
           <Card key={group.userId} className="counsellor-session-detail__user-card">
@@ -105,16 +123,27 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
               <p className="counsellor-session-detail__user-email">{group.userEmail}</p>
               <span className="counsellor-session-detail__tally">
                 {group.bookings.length} session{group.bookings.length === 1 ? "" : "s"} · {completedCount} completed
+                {missedCount > 0 ? ` · ${missedCount} missed` : ""}
                 {cancelledCount > 0 ? ` · ${cancelledCount} cancelled` : ""}
               </span>
             </div>
 
             <div className="counsellor-session-detail__timeline">
-              {group.bookings.map((b) => (
+              {group.bookings.map((b) => {
+                const isExpanded = expandedIds.has(b.id);
+                return (
                 <div key={b.id} className="counsellor-session-detail__entry">
-                  <div className="counsellor-session-detail__entry-header">
-                    <span className={`counsellor-session-detail__status counsellor-session-detail__status--${b.status}`}>
-                      {b.status}
+                  <button
+                    type="button"
+                    className="counsellor-session-detail__entry-header"
+                    onClick={() => toggleExpanded(b.id)}
+                  >
+                    <span
+                      className={`counsellor-session-detail__status counsellor-session-detail__status--${
+                        b.outcome === "missed" ? "missed" : b.status
+                      }`}
+                    >
+                      {b.outcome === "missed" ? "missed" : b.status}
                     </span>
                     {b.followUpOfBookingId && (
                       <span className="counsellor-session-detail__followup-tag">(follow-up)</span>
@@ -124,13 +153,23 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
                         {new Date(b.scheduledAt).toLocaleString()} ({SESSION_DURATION_LABEL})
                       </span>
                     )}
-                  </div>
+                    <span className="counsellor-session-detail__hint">
+                      {isExpanded ? "Hide" : "View Details"} →
+                    </span>
+                  </button>
 
-                  {b.status === "completed" && (
+                  {isExpanded && b.status === "completed" && (
                     <div className="counsellor-session-detail__completed">
                       <p className="counsellor-session-detail__outcome">
-                        {b.outcome === "followup" ? "Ended with a follow-up scheduled." : "Session ended."}
+                        {b.outcome === "followup"
+                          ? "Ended with a follow-up scheduled."
+                          : b.outcome === "missed"
+                            ? "Session was not held."
+                            : "Session ended."}
                       </p>
+                      {b.outcome === "missed" && b.missedReason && (
+                        <p className="counsellor-session-detail__summary">"{b.missedReason}"</p>
+                      )}
                       {summaries[b.id] && (
                         <p className="counsellor-session-detail__summary">"{summaries[b.id]}"</p>
                       )}
@@ -171,7 +210,7 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
                     </div>
                   )}
 
-                  {b.status === "cancelled" && (
+                  {isExpanded && b.status === "cancelled" && (
                     <div className="counsellor-session-detail__cancelled">
                       <p>
                         Cancelled by {b.cancelledBy === "user" ? "the user" : "the counsellor"}
@@ -203,7 +242,8 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
                     </div>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
         );

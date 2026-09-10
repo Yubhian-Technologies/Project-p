@@ -42,3 +42,26 @@
   color: var(--neu-text-muted, #718096);
 }
 
+@media (max-width: 480px) {
+  .availability-editor__row {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    border-radius: 20px;
+  }
+
+  .availability-editor__day {
+    flex: 1 1 100%;
+    width: auto;
+  }
+
+  .availability-editor__row .md-timepicker {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .availability-editor__to {
+    flex: 0 0 auto;
+  }
+}
+

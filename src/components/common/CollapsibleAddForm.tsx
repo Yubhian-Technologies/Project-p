@@ -15,7 +15,7 @@ export function CollapsibleAddForm({ label, title, children }: CollapsibleAddFor
 
   if (!open) {
     return (
-      <Button type="button" onClick={() => setOpen(true)}>
+      <Button type="button" className="collapsible-add-form__trigger" onClick={() => setOpen(true)}>
         {label}
       </Button>
     );

@@ -1,0 +1,13 @@
+.events-programs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.events-programs__error {
+  font-size: 13px;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0;
+}

@@ -1,0 +1,105 @@
+.journal-calendar {
+  background: var(--neu-bg, #E8ECF2);
+  border-radius: 20px;
+  box-shadow: var(--neu-shadow-extruded-sm);
+  padding: 18px;
+  box-sizing: border-box;
+  max-width: 360px;
+}
+
+.journal-calendar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.journal-calendar__month-label {
+  font-family: var(--md-sys-typescale-font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.journal-calendar__nav {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-extruded-sm);
+  color: var(--neu-text-primary, #2D3748);
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.15s ease;
+}
+
+.journal-calendar__nav:hover {
+  box-shadow: var(--neu-shadow-extruded);
+}
+
+.journal-calendar__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.journal-calendar__weekdays span {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--neu-text-muted, #718096);
+  text-transform: uppercase;
+}
+
+.journal-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.journal-calendar__day {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--neu-text-primary, #2D3748);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.journal-calendar__day:hover {
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.journal-calendar__day--selected {
+  background: linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.journal-calendar__day--due {
+  box-shadow: inset 0 0 0 2px #d97706;
+}
+
+.journal-calendar__dot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--neu-accent-primary, #2563EB);
+}
+
+.journal-calendar__day--selected .journal-calendar__dot {
+  background: #ffffff;
+}

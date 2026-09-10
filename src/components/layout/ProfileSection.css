@@ -46,6 +46,12 @@
   box-shadow: var(--neu-shadow-sunken-sm);
 }
 
+@media (max-width: 480px) {
+  .profile-section__list {
+    grid-template-columns: 1fr;
+  }
+}
+
 .profile-section__list dt {
   font-size: 13px;
   color: var(--neu-text-muted, #718096);
@@ -93,6 +99,36 @@
 
 .profile-section__bio .md-button {
   align-self: flex-start;
+}
+
+.profile-section__password {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 360px;
+}
+
+.profile-section__subheading {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.profile-section__password .md-button {
+  align-self: flex-start;
+}
+
+.profile-section__password .profile-section__error {
+  max-width: none;
+  text-align: left;
+}
+
+.profile-section__success {
+  color: #2f855a;
+  font-size: 13px;
+  margin: 0;
+  font-weight: 600;
 }
 
 .profile-section__intake {

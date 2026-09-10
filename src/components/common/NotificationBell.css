@@ -26,6 +26,19 @@
   box-shadow: var(--neu-shadow-sunken-sm);
 }
 
+.notification-bell__trigger--emergency {
+  animation: notification-bell-ring 1.4s ease-in-out infinite;
+}
+
+@keyframes notification-bell-ring {
+  0%, 100% {
+    box-shadow: var(--neu-shadow-extruded-sm), 0 0 0 0 rgba(220, 38, 38, 0.5);
+  }
+  50% {
+    box-shadow: var(--neu-shadow-extruded-sm), 0 0 0 6px rgba(220, 38, 38, 0);
+  }
+}
+
 .notification-bell__icon {
   width: 20px;
   height: 20px;
@@ -46,6 +59,14 @@
   font-weight: 800;
   line-height: 18px;
   text-align: center;
+}
+
+.notification-bell__badge--emergency {
+  min-width: 20px;
+  height: 20px;
+  line-height: 20px;
+  font-size: 12px;
+  box-shadow: 0 0 0 2px #fff;
 }
 
 .notification-bell__panel {
@@ -117,6 +138,18 @@
   background: rgba(37, 99, 235, 0.06);
 }
 
+.notification-bell__item--emergency {
+  border-left: 3px solid #dc2626;
+}
+
+.notification-bell__item--emergency.notification-bell__item--unread {
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.notification-bell__item--emergency .notification-bell__item-title {
+  color: #dc2626;
+}
+
 .notification-bell__item-title {
   font-size: 13px;
   font-weight: 700;
@@ -131,6 +164,10 @@
   border-radius: 9999px;
   background: var(--neu-accent-primary, #2563EB);
   margin-right: 6px;
+}
+
+.notification-bell__item--emergency.notification-bell__item--unread .notification-bell__item-title::before {
+  background: #dc2626;
 }
 
 .notification-bell__item-message {

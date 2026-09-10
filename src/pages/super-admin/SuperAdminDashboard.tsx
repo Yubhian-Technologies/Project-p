@@ -4,16 +4,22 @@ import { ProfileSection } from "../../components/layout/ProfileSection";
 import { BentoCard } from "../../components/common/BentoCard";
 import { useAuth } from "../../hooks/useAuth";
 import { CampusManagementSection } from "./CampusManagementSection";
+import { LoginsManagementSection } from "./LoginsManagementSection";
+import { UsersManagementSection } from "./UsersManagementSection";
 import "../../styles/bento-grid.css";
 
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "campuses", label: "Campuses" },
+  { id: "logins", label: "Logins" },
+  { id: "users", label: "Users" },
 ];
 
 const TITLES: Record<string, string> = {
   profile: "Profile",
   campuses: "Campuses",
+  logins: "Logins",
+  users: "Users",
 };
 
 export function SuperAdminDashboard() {
@@ -31,6 +37,10 @@ export function SuperAdminDashboard() {
         <ProfileSection />
       ) : activeSection === "campuses" ? (
         <CampusManagementSection />
+      ) : activeSection === "logins" ? (
+        <LoginsManagementSection />
+      ) : activeSection === "users" ? (
+        <UsersManagementSection />
       ) : (
         <div className="bento-grid">
           <BentoCard

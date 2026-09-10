@@ -18,8 +18,8 @@ export function LandingPage() {
         {/* Top Glass Navigation */}
         <header className="landing-nav">
           <Link to="/" className="landing-brand">
-            <img src="/favicon.png" alt="Vishnu Universal Learning logo" className="landing-brand__logo" />
-            <span className="landing-brand__name">Vishnu Wellness</span>
+            <img src="/favicon.png" alt="Vishnu Wellness Center logo" className="landing-brand__logo" />
+            <span className="landing-brand__name">Vishnu Wellness Center</span>
           </Link>
 
           <ul className="landing-nav__links">
@@ -61,7 +61,7 @@ export function LandingPage() {
 
               <section className="landing-hero">
                 <h1 className="landing-headline">
-                  Elevate Your Mind, Body & Soul. <br />
+                  Elevate Your Mind, Body &amp; Soul.{" "}
                   <span className="landing-headline__gradient">Redefined.</span>
                 </h1>
 
@@ -106,13 +106,13 @@ export function LandingPage() {
         {/* About / Guidelines Section with Floating Photos */}
         <section className="landing-about" id="about">
           <div className="landing-about__text">
-            <span className="landing-about__eyebrow">About Vishnu Wellness</span>
+            <span className="landing-about__eyebrow">About Vishnu Wellness Center</span>
             {/* Placeholder copy — replace with real content */}
             <h2 className="landing-about__title">
               A calm, judgment-free space to work through what's on your mind
             </h2>
             <p className="landing-about__body">
-              Vishnu Wellness connects students and working professionals with licensed
+              Vishnu Wellness Center connects students and working professionals with licensed
               counsellors for private, one-on-one support. Every session follows a simple set
               of principles designed to keep the experience safe, consistent, and genuinely
               helpful.
@@ -147,7 +147,7 @@ export function LandingPage() {
         <section className="landing-team" id="team">
           <div className="landing-section-heading">
             <span className="landing-about__eyebrow">Our Team</span>
-            <h2 className="landing-section-heading__title">The people behind Vishnu Wellness</h2>
+            <h2 className="landing-section-heading__title">The people behind Vishnu Wellness Center</h2>
           </div>
 
           <div className="team-overview-card">
@@ -161,7 +161,7 @@ export function LandingPage() {
         {/* Features Section — placeholder highlights, replace with real specifics */}
         <section className="landing-features" id="features">
           <div className="landing-section-heading">
-            <span className="landing-about__eyebrow">Why Vishnu Wellness</span>
+            <span className="landing-about__eyebrow">Why Vishnu Wellness Center</span>
             <h2 className="landing-section-heading__title">Everything you need for your wellness journey</h2>
           </div>
 
@@ -312,7 +312,7 @@ export function LandingPage() {
         {/* Footer Section with Social Media Icons */}
         <footer className="landing-footer">
           <div className="landing-footer__copy">
-            &copy; 2026 Vishnu Wellness &bull; All rights reserved.
+            &copy; 2026 Vishnu Wellness Center &bull; All rights reserved.
           </div>
 
           <div className="landing-social-links">

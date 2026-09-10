@@ -1,49 +1,46 @@
-.campus-logins-detail {
+.logins-management {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 600px;
+  width: 100%;
 }
 
-.campus-logins-detail__heading {
+.logins-management__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.logins-management__heading {
   margin: 0;
   font-family: var(--md-sys-typescale-font-display);
+  font-weight: 800;
   font-size: 20px;
-  font-weight: 800;
   color: var(--neu-text-primary, #2D3748);
 }
 
-.campus-logins-detail__add-form form {
+.logins-management__filters {
   display: flex;
-  flex-direction: column;
   gap: 16px;
-  background: var(--neu-bg, #E8ECF2);
-  border-radius: 24px;
-  box-shadow: var(--neu-shadow-extruded-lg);
-  padding: 24px 28px;
+  flex-wrap: wrap;
 }
 
-.campus-logins-detail__form-title {
-  margin: 0 0 6px 0;
-  font-weight: 800;
-  font-size: 15px;
-  color: var(--neu-text-primary, #2D3748);
-}
-
-.campus-logins-detail__field {
+.logins-management__field {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 220px;
 }
 
-.campus-logins-detail__field label {
+.logins-management__field label {
   font-size: 12px;
   font-weight: 700;
   color: var(--neu-text-muted, #718096);
 }
 
-.campus-logins-detail__field input,
-.campus-logins-detail__field select {
+.logins-management__field input {
   font-family: inherit;
   font-size: 14px;
   padding: 12px 18px;
@@ -55,19 +52,24 @@
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.campus-logins-detail__field input:focus,
-.campus-logins-detail__field select:focus {
+.logins-management__field input:focus {
   box-shadow: var(--neu-shadow-sunken-focus);
 }
 
-.campus-logins-detail__error {
+.logins-management__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.logins-management__error {
   margin: 0;
   font-size: 13px;
   font-weight: 700;
   color: #e53e3e;
 }
 
-.campus-logins-detail__row {
+.logins-management__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -80,7 +82,7 @@
   box-shadow: var(--neu-shadow-extruded);
 }
 
-.campus-logins-detail__name {
+.logins-management__name {
   margin: 0;
   font-family: var(--md-sys-typescale-font-display);
   font-weight: 700;
@@ -88,30 +90,23 @@
   color: var(--neu-text-primary, #2D3748);
 }
 
-.campus-logins-detail__role {
-  margin: 0;
+.logins-management__role {
+  margin: 4px 0 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--neu-text-muted, #718096);
 }
 
-.campus-logins-detail__college {
-  margin: 4px 0 0 0;
+.logins-management__college {
+  margin: 4px 0 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--neu-accent-primary, #2563EB);
 }
 
-.campus-logins-detail__edit-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.campus-logins-detail__row-actions {
+.logins-management__row-actions {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
-

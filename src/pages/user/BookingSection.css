@@ -40,6 +40,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 20px;
   flex-direction: row;
   background: var(--neu-bg, #E8ECF2);
@@ -75,7 +76,8 @@
 }
 
 .booking-section__status--rejected,
-.booking-section__status--cancelled {
+.booking-section__status--cancelled,
+.booking-section__status--missed {
   color: #e53e3e;
 }
 
@@ -89,7 +91,24 @@
 .booking-section__row-right {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 14px;
+}
+
+.booking-section__extra {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
+}
+
+.booking-section__reschedule-note {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neu-text-body, #4A5568);
 }
 
 .booking-section__field {

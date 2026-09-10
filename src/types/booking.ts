@@ -6,7 +6,26 @@ export type BookingStatus =
   | "cancelled"
   | "completed";
 
-export type BookingOutcome = "completed" | "followup";
+export type BookingOutcome = "completed" | "followup" | "missed";
+
+export interface RescheduleProposal {
+  proposedBy: "user" | "counsellor";
+  proposedAt: number; // epoch ms of the newly proposed session time
+  reason?: string;
+  createdAt: number;
+}
+
+export interface TransferRequest {
+  requestedBy: string; // counsellor uid
+  requestedByEmail: string;
+  reason?: string;
+  suggestedTargetId?: string;
+  suggestedTargetEmail?: string;
+  status: "pending" | "approved" | "declined";
+  createdAt: number;
+  decidedBy?: string; // head uid
+  decisionNote?: string;
+}
 
 export interface Booking {
   id: string;
@@ -21,12 +40,19 @@ export interface Booking {
   followUpOfBookingId?: string;
   cancelledBy?: "user" | "counsellor";
   cancellationReason?: string;
+  missedReason?: string;
+  missedNotified?: boolean;
   transferredFrom?: string;
   userRatingOfCounsellor?: number;
   userReviewText?: string;
   counsellorRatingOfUser?: number;
   counsellorNoteOnUser?: string;
   sessionMode?: "online" | "offline";
+  isEmergency?: boolean;
+  campusId?: string; // set on every booking so campus staff (e.g. the Head) can find it
+  proposedSlots?: [number, number]; // the two times the student proposed at request time
+  rescheduleProposal?: RescheduleProposal;
+  transferRequest?: TransferRequest;
   createdAt: number;
   updatedAt: number;
 }

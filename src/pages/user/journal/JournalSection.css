@@ -1,0 +1,115 @@
+.journal-section__intro {
+  color: var(--neu-text-muted, #718096);
+  font-size: 14px;
+  margin: 0 0 20px 0;
+  max-width: 640px;
+}
+
+.journal-section__reminders {
+  background: var(--neu-bg, #E8ECF2);
+  border-radius: 16px;
+  box-shadow: var(--neu-shadow-extruded-sm);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+
+.journal-section__reminders-title {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #d97706;
+}
+
+.journal-section__reminder-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--neu-text-primary, #2D3748);
+  font-size: 13px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.journal-section__reminder-item:hover {
+  text-decoration: underline;
+}
+
+.journal-section__body {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.journal-section__calendar-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 0 1 360px;
+  min-width: 0;
+}
+
+.journal-editor {
+  flex: 1 1 320px;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.journal-editor__heading {
+  margin: 0 0 14px 0;
+  font-size: 16px;
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.journal-editor__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 14px;
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-sunken);
+  padding: 14px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--neu-text-primary, #2D3748);
+  resize: vertical;
+  flex: 1;
+  min-height: 380px;
+  margin-bottom: 12px;
+}
+
+.journal-editor__textarea:focus-visible {
+  box-shadow: var(--neu-shadow-sunken-focus);
+  outline: none;
+}
+
+.journal-editor__reminder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.journal-editor__actions {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .journal-section__body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .journal-section__calendar-col {
+    flex-basis: auto;
+  }
+}

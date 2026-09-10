@@ -59,6 +59,12 @@
   box-sizing: border-box;
 }
 
+@media (max-width: 480px) {
+  .md-timepicker__popup {
+    width: min(220px, calc(100vw - 32px));
+  }
+}
+
 .md-timepicker__row {
   display: flex;
   gap: 8px;

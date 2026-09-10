@@ -5,6 +5,7 @@ import "./Sidebar.css";
 export interface SidebarSection {
   id: string;
   label: string;
+  variant?: "urgent";
 }
 
 interface SidebarProps {
@@ -32,9 +33,16 @@ export function Sidebar({ sections, activeSection, onSelectSection, open, onClos
             <li key={section.id}>
               <button
                 type="button"
-                className={`sidebar__item ${activeSection === section.id ? "sidebar__item--active" : ""}`}
+                className={[
+                  "sidebar__item",
+                  activeSection === section.id ? "sidebar__item--active" : "",
+                  section.variant === "urgent" ? "sidebar__item--urgent" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 onClick={() => select(section.id)}
               >
+                {section.variant === "urgent" && <span className="sidebar__item-dot" aria-hidden="true" />}
                 {section.label}
               </button>
             </li>

@@ -9,6 +9,16 @@
   padding: 36px !important;
 }
 
+@media (max-width: 480px) {
+  .request-detail-modal {
+    padding: 20px !important;
+  }
+
+  .request-card__intake {
+    grid-template-columns: 1fr;
+  }
+}
+
 .request-card__summary-hint {
   margin: 0;
   font-size: 12px;
@@ -139,6 +149,10 @@
   color: #16a34a;
 }
 
+.request-card__status--missed {
+  color: #d97706;
+}
+
 .request-card__followup-tag {
   font-size: 12px;
   font-style: italic;
@@ -234,7 +248,8 @@
   font-weight: 700;
 }
 
-.request-card__transfer select {
+.request-card__transfer textarea {
+  width: 100%;
   font-family: inherit;
   font-size: 14px;
   padding: 12px 18px;
@@ -243,12 +258,27 @@
   background: var(--neu-bg, #E8ECF2);
   box-shadow: var(--neu-shadow-sunken);
   color: var(--neu-text-primary, #2D3748);
-  min-width: 220px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  resize: vertical;
+  box-sizing: border-box;
 }
 
-.request-card__transfer select:focus {
-  box-shadow: var(--neu-shadow-sunken-focus);
+.request-card__reschedule-proposal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-sunken);
+}
+
+.request-card__reschedule-proposal p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neu-text-primary, #2D3748);
 }
 
 .request-card__cancel-reason {
@@ -374,6 +404,20 @@
   font-size: 13px;
   color: var(--neu-text-muted, #718096);
   font-weight: 700;
+}
+
+.request-card__schedule textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 12px 18px;
+  border-radius: 16px;
+  border: none;
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-sunken);
+  color: var(--neu-text-primary, #2D3748);
+  resize: vertical;
+  box-sizing: border-box;
 }
 
 .request-card__scheduled-time {

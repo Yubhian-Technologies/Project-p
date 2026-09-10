@@ -44,7 +44,7 @@ export function GamesSection() {
     return (
       <div className="games-section">
         <Button type="button" variant="outlined" onClick={() => setActiveGame(null)}>
-          ← Back to Games
+          ← Back to Wellness Exercise
         </Button>
         {activeGame === "memory-match" && <MemoryMatchGame />}
         {activeGame === "breathe-focus" && <BreatheFocusGame />}

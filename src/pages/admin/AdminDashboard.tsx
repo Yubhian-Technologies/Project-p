@@ -4,19 +4,28 @@ import { ProfileSection } from "../../components/layout/ProfileSection";
 import { BentoCard } from "../../components/common/BentoCard";
 import { useAuth } from "../../hooks/useAuth";
 import { CampusManagementSection } from "../super-admin/CampusManagementSection";
+import { LoginsManagementSection } from "../super-admin/LoginsManagementSection";
 import { AnalyticsSection } from "./analytics/AnalyticsSection";
+import { EventsOverviewSection } from "./EventsOverviewSection";
+import { MonthlyReportsViewSection } from "./MonthlyReportsViewSection";
 import "../../styles/bento-grid.css";
 
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "campuses", label: "Campuses" },
+  { id: "logins", label: "Logins" },
+  { id: "events", label: "Events & Programs" },
   { id: "analytics", label: "Analytics" },
+  { id: "monthly-reports", label: "Monthly Reports" },
 ];
 
 const TITLES: Record<string, string> = {
   profile: "Profile",
   campuses: "Campuses",
+  logins: "Logins",
+  events: "Events & Programs",
   analytics: "Analytics",
+  "monthly-reports": "Monthly Reports",
 };
 
 export function AdminDashboard() {
@@ -34,15 +43,21 @@ export function AdminDashboard() {
         <ProfileSection />
       ) : activeSection === "campuses" ? (
         <CampusManagementSection />
+      ) : activeSection === "logins" ? (
+        <LoginsManagementSection />
+      ) : activeSection === "events" ? (
+        <EventsOverviewSection />
       ) : activeSection === "analytics" ? (
         <AnalyticsSection />
+      ) : activeSection === "monthly-reports" ? (
+        <MonthlyReportsViewSection />
       ) : (
         <div className="bento-grid">
           <BentoCard
             span={12}
             variant="hero"
             title={`Welcome, ${profile?.displayName || profile?.email || "Administrator"}`}
-            subtitle="Vishnu Wellness Platform Administration"
+            subtitle="Vishnu Wellness Center Platform Administration"
           >
             <div style={{ marginTop: "16px", fontSize: "14px", lineHeight: "1.6" }}>
               Overseeing platform user accounts, counsellor access permissions, and platform administration.

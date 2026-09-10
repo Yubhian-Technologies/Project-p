@@ -6,7 +6,14 @@ export type NotificationType =
   | "booking_cancelled"
   | "booking_transferred"
   | "booking_completed"
-  | "followup_scheduled";
+  | "booking_missed"
+  | "session_needs_review"
+  | "followup_scheduled"
+  | "emergency_sos"
+  | "reschedule_requested"
+  | "reschedule_accepted"
+  | "transfer_requested"
+  | "transfer_declined";
 
 export interface Notification {
   id: string;
