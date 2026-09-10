@@ -1,19 +1,16 @@
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
-import { listCampuses, createCampus, deleteCampus } from "../../services/firebase/campuses";
+import { listCampuses, deleteCampus } from "../../services/firebase/campuses";
 import type { Campus } from "../../types/campus";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
-import { CollapsibleAddForm } from "../../components/common/CollapsibleAddForm";
-import { CampusLoginsDetail } from "./CampusLoginsDetail";
-import { CampusCollegesSection } from "./CampusCollegesSection";
+import { AddCampusModal } from "./AddCampusModal";
+import { CampusDetailSection } from "./CampusDetailSection";
 import "./CampusManagementSection.css";
 
 export function CampusManagementSection() {
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [loading, setLoading] = useState(true);
-  const [nameField, setNameField] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [selectedCampus, setSelectedCampus] = useState<Campus | null>(null);
@@ -27,19 +24,6 @@ export function CampusManagementSection() {
     load();
   }, []);
 
-  async function handleCreate(event: FormEvent) {
-    event.preventDefault();
-    if (!nameField.trim()) return;
-    setCreating(true);
-    try {
-      await createCampus(nameField.trim());
-      setNameField("");
-      await load();
-    } finally {
-      setCreating(false);
-    }
-  }
-
   async function handleDelete(id: string) {
     setDeletingId(id);
     try {
@@ -52,26 +36,19 @@ export function CampusManagementSection() {
   }
 
   if (selectedCampus) {
-    return <CampusLoginsDetail campus={selectedCampus} onBack={() => setSelectedCampus(null)} />;
+    return <CampusDetailSection campus={selectedCampus} onBack={() => setSelectedCampus(null)} />;
   }
 
   if (loading) return null;
 
   return (
     <div className="campus-management">
-      <CollapsibleAddForm label="+ Add Campus" title="Add a new campus">
-        <form onSubmit={handleCreate} className="campus-management__form">
-          <input
-            type="text"
-            placeholder="Campus name, e.g. Test Campus"
-            value={nameField}
-            onChange={(e) => setNameField(e.target.value)}
-          />
-          <Button type="submit" disabled={creating || !nameField.trim()}>
-            {creating ? "Adding…" : "Add campus"}
-          </Button>
-        </form>
-      </CollapsibleAddForm>
+      <div className="campus-management__header">
+        <h2 className="campus-management__heading">Campuses</h2>
+        <Button type="button" onClick={() => setAddOpen(true)}>
+          + Add Campus
+        </Button>
+      </div>
 
       {campuses.length === 0 && <p>No campuses yet.</p>}
 
@@ -99,12 +76,10 @@ export function CampusManagementSection() {
               </Button>
             )}
           </div>
-
-          <div className="campus-management__colleges" onClick={(e) => e.stopPropagation()}>
-            <CampusCollegesSection campus={campus} />
-          </div>
         </Card>
       ))}
+
+      {addOpen && <AddCampusModal onClose={() => setAddOpen(false)} onCreated={load} />}
     </div>
   );
 }

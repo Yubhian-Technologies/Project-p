@@ -1,39 +1,45 @@
-.campus-colleges-section {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.campus-colleges-section__add-form form {
+.campus-detail-section {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: var(--neu-bg, #E8ECF2);
-  border-radius: 24px;
-  box-shadow: var(--neu-shadow-extruded-lg);
-  padding: 24px 28px;
+  width: 100%;
 }
 
-.campus-colleges-section__form-title {
-  margin: 0 0 6px 0;
+.campus-detail-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.campus-detail-section__heading {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
   font-weight: 800;
-  font-size: 15px;
+  font-size: 20px;
   color: var(--neu-text-primary, #2D3748);
 }
 
-.campus-colleges-section__field {
+.campus-detail-section__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.campus-detail-section__field {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.campus-colleges-section__field label {
+.campus-detail-section__field label {
   font-size: 12px;
   font-weight: 700;
   color: var(--neu-text-muted, #718096);
 }
 
-.campus-colleges-section__field input {
+.campus-detail-section__field input {
   font-family: inherit;
   font-size: 14px;
   padding: 12px 18px;
@@ -45,11 +51,11 @@
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.campus-colleges-section__field input:focus {
+.campus-detail-section__field input:focus {
   box-shadow: var(--neu-shadow-sunken-focus);
 }
 
-.campus-colleges-section__row {
+.campus-detail-section__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -62,7 +68,7 @@
   box-shadow: var(--neu-shadow-extruded);
 }
 
-.campus-colleges-section__name {
+.campus-detail-section__name {
   margin: 0;
   font-family: var(--md-sys-typescale-font-display);
   font-weight: 700;

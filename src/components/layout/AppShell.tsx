@@ -6,6 +6,7 @@ import { Button } from "../common/Button";
 import { NotificationBell } from "../common/NotificationBell";
 import { Sidebar } from "./Sidebar";
 import type { SidebarSection } from "./Sidebar";
+import type { Notification } from "../../types/notification";
 import "./AppShell.css";
 
 interface AppShellProps {
@@ -14,10 +15,19 @@ interface AppShellProps {
   sections: SidebarSection[];
   activeSection: string;
   onSelectSection: (id: string) => void;
+  onNotificationClick?: (notification: Notification) => void;
   children: ReactNode;
 }
 
-export function AppShell({ title, headerAction, sections, activeSection, onSelectSection, children }: AppShellProps) {
+export function AppShell({
+  title,
+  headerAction,
+  sections,
+  activeSection,
+  onSelectSection,
+  onNotificationClick,
+  children,
+}: AppShellProps) {
   const { profile, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -35,8 +45,8 @@ export function AppShell({ title, headerAction, sections, activeSection, onSelec
               ☰
             </button>
             <div className="app-shell__brand flex-row">
-              <img src="/favicon.png" alt="Vishnu Logo" className="app-shell__logo" />
-              <span>Vishnu Wellness</span>
+              <img src="/favicon.png" alt="Vishnu Wellness Center Logo" className="app-shell__logo" />
+              <span>Vishnu Wellness Center</span>
             </div>
           </div>
           <div className="flex-row app-shell__topbar-right">
@@ -45,7 +55,7 @@ export function AppShell({ title, headerAction, sections, activeSection, onSelec
             )}
             {profile &&
               (profile.role === "user" || profile.role === "counsellor" || profile.role === "head") && (
-                <NotificationBell />
+                <NotificationBell onNotificationClick={onNotificationClick} />
               )}
             <Button variant="outlined" onClick={() => logout()}>
               Log out

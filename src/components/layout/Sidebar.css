@@ -59,6 +59,34 @@
   font-weight: 800;
 }
 
+.sidebar__item--urgent {
+  color: #dc2626;
+}
+
+.sidebar__item--urgent.sidebar__item--active {
+  color: #dc2626 !important;
+}
+
+.sidebar__item-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #dc2626;
+  flex-shrink: 0;
+  animation: sidebar-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes sidebar-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.75);
+  }
+}
+
 .sidebar__profile {
   margin-top: auto;
   border-top: none;

@@ -3,10 +3,13 @@ import { useAuth } from "../../hooks/useAuth";
 import {
   listBookingsForCounsellor,
   listBookableProfiles,
-  acceptBooking,
+  acceptProposedSlot,
   rejectBooking,
   scheduleBooking,
+  requestReschedule,
+  acceptRescheduleProposal,
   cancelBooking,
+  requestBookingTransfer,
   transferBooking,
   saveSessionSummary,
   closeBooking,
@@ -51,16 +54,22 @@ interface HistoryState {
 interface BookingRequestsSectionProps {
   importOpen?: boolean;
   onImportClose?: () => void;
+  initialSelectedId?: string;
 }
 
-export function BookingRequestsSection({ importOpen = false, onImportClose }: BookingRequestsSectionProps) {
+export function BookingRequestsSection({ importOpen = false, onImportClose, initialSelectedId }: BookingRequestsSectionProps) {
   const { currentUser, profile } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [transferCandidates, setTransferCandidates] = useState<UserProfile[]>([]);
+  const [campusHead, setCampusHead] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("new");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [historyState, setHistoryState] = useState<HistoryState | null>(null);
+
+  useEffect(() => {
+    if (initialSelectedId) setSelectedId(initialSelectedId);
+  }, [initialSelectedId]);
 
   async function refresh() {
     if (!currentUser) return;
@@ -70,6 +79,10 @@ export function BookingRequestsSection({ importOpen = false, onImportClose }: Bo
     ]);
     setBookings(myBookings);
     setTransferCandidates(allBookable.filter((p) => p.uid !== currentUser.uid));
+    setCampusHead(
+      allBookable.find((p) => p.role === "head" && p.campusId === profile?.campusId && p.uid !== currentUser.uid) ??
+        null,
+    );
     setLoading(false);
 
     const newlyPending = myBookings.filter((b) => isSessionEndedPending(b) && !b.missedNotified);
@@ -182,10 +195,12 @@ export function BookingRequestsSection({ importOpen = false, onImportClose }: Bo
         <RequestDetailModal
           booking={selectedBooking}
           transferCandidates={transferCandidates}
+          campusHead={campusHead}
+          viewerRole={profile?.role === "head" ? "head" : "counsellor"}
           onClose={() => setSelectedId(null)}
           onViewSummary={showViewSummary ? () => handleViewSummary(selectedBooking) : undefined}
-          onAccept={async () => {
-            await acceptBooking(selectedBooking);
+          onAcceptSlot={async (chosenAt) => {
+            await acceptProposedSlot(selectedBooking, chosenAt);
             await refresh();
           }}
           onReject={async () => {
@@ -196,16 +211,31 @@ export function BookingRequestsSection({ importOpen = false, onImportClose }: Bo
             await scheduleBooking(selectedBooking, scheduledAt);
             await refresh();
           }}
+          onRequestReschedule={async (proposedAt, reason) => {
+            await requestReschedule(selectedBooking, "counsellor", proposedAt, reason);
+            await refresh();
+          }}
+          onAcceptReschedule={async () => {
+            await acceptRescheduleProposal(selectedBooking);
+            await refresh();
+          }}
           onCancel={async (reason) => {
             await cancelBooking(selectedBooking, "counsellor", reason);
             await refresh();
           }}
-          onTransfer={async (target) => {
-            await transferBooking(
+          onRequestTransfer={async (reason, suggestedTarget) => {
+            if (!currentUser || !campusHead) return;
+            await requestBookingTransfer(
               selectedBooking,
-              { uid: target.uid, email: target.email },
-              selectedBooking.counsellorId,
+              { uid: currentUser.uid, email: profile?.email ?? "" },
+              campusHead.uid,
+              reason,
+              suggestedTarget ? { uid: suggestedTarget.uid, email: suggestedTarget.email } : undefined,
             );
+            await refresh();
+          }}
+          onDirectTransfer={async (target) => {
+            await transferBooking(selectedBooking, { uid: target.uid, email: target.email }, selectedBooking.counsellorId);
             await refresh();
           }}
           onSaveSummary={async (summary) => {

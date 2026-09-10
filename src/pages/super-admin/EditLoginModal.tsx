@@ -6,7 +6,7 @@ import { Select } from "../../components/common/Select";
 import { functionsErrorMessage, updateCampusLogin } from "../../services/firebase/functions";
 import type { College } from "../../types/college";
 import type { UserProfile } from "../../types/user";
-import "./CampusLoginsDetail.css";
+import "./LoginForms.css";
 
 interface EditLoginModalProps {
   login: UserProfile;

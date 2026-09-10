@@ -33,10 +33,17 @@ service cloud.firestore {
       return isSignedIn() && myRole() in ['admin', 'super-admin'];
     }
 
-    // Counsellors can view (but not manage) the Events & Programs calendar
-    // alongside Head/Admin/Super Admin.
+    // Head, Admin, Super Admin, and Counsellor can all view the Events & Programs
+    // calendar.
     function canViewEventsCalendar() {
       return isStaff() || isRole('counsellor');
+    }
+
+    // Head and Counsellor jointly manage a campus's Events & Programs calendar —
+    // either can create/edit/delete any year/month/event on their own campus, not
+    // just ones they personally created.
+    function canEditEventsCalendar() {
+      return isSignedIn() && myRole() in ['head', 'counsellor'];
     }
 
     // ---------- users ----------
@@ -63,11 +70,35 @@ service cloud.firestore {
           // Head/Admin/Super Admin toggling a counsellor's/head's availability badge.
           isStaff() &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['available'])
+        ) || (
+          // Super Admin fixing a student ("user" role) account's campus/college and
+          // basic details — e.g. accounts created before Campus/College existed,
+          // which have no other admin UI path to reach them. Role/email/uid can
+          // never change here, and only "user" role accounts are touched — staff
+          // accounts stay exclusively managed via the createCampusLogin/
+          // updateCampusLogin Cloud Functions.
+          isRole('super-admin') &&
+          resource.data.role == 'user' &&
+          request.resource.data.role == 'user' &&
+          request.resource.data.uid == resource.data.uid &&
+          request.resource.data.email == resource.data.email &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['campusId', 'collegeId', 'displayName', 'studentOrProfessional', 'whatsappNumber'])
         )
       );
 
       // No client-side deletes. deleteCampusLogin Cloud Function (Admin SDK) handles this.
       allow delete: if false;
+
+      // Private index of a user's own anonymous community posts/comments —
+      // lets their own client show a "Delete" button on their own anonymous
+      // content without ever exposing authorship to anyone else.
+      match /myCommunityPosts/{postId} {
+        allow read, write: if isSelf(uid);
+      }
+      match /myCommunityComments/{commentId} {
+        allow read, write: if isSelf(uid);
+      }
     }
 
     // ---------- campuses ----------
@@ -89,64 +120,66 @@ service cloud.firestore {
       // (this is what powers Admin's Group Sessions analytics).
       allow read: if canViewEventsCalendar();
 
-      // Only the Head who created an event can create/update/delete it, and only for
-      // their own campus + a college that actually belongs to that campus.
-      allow create: if isRole('head')
+      // Head or Counsellor can create an event, only for their own campus + a
+      // college that actually belongs to that campus.
+      allow create: if canEditEventsCalendar()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId
                     && get(/databases/$(database)/documents/colleges/$(request.resource.data.collegeId)).data.campusId == myProfile().campusId;
 
-      // Updates may change event details/status/report fields, but never move the
-      // event to a different campus/college or reassign who created it.
-      allow update: if isRole('head')
-                    && resource.data.createdBy == request.auth.uid
+      // Any Head/Counsellor on the same campus can update the event (not just its
+      // creator), but updates may never move it to a different campus/college/year
+      // container or reassign who created it.
+      allow update: if canEditEventsCalendar()
+                    && resource.data.campusId == myProfile().campusId
                     && request.resource.data.campusId == resource.data.campusId
                     && request.resource.data.collegeId == resource.data.collegeId
                     && request.resource.data.calendarYearId == resource.data.calendarYearId
                     && request.resource.data.calendarMonthId == resource.data.calendarMonthId
                     && request.resource.data.createdBy == resource.data.createdBy;
 
-      allow delete: if isRole('head') && resource.data.createdBy == request.auth.uid;
+      allow delete: if canEditEventsCalendar() && resource.data.campusId == myProfile().campusId;
     }
 
     // ---------- calendarYears ----------
     match /calendarYears/{yearId} {
       // Head, Admin, Super Admin, and Counsellor can all view the academic years
-      // a Head has written for a college; only the owning Head can create one.
+      // written for a college; Head or Counsellor on that campus can create one.
       allow read: if canViewEventsCalendar();
-      allow create: if isRole('head')
+      allow create: if canEditEventsCalendar()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId
                     && get(/databases/$(database)/documents/colleges/$(request.resource.data.collegeId)).data.campusId == myProfile().campusId;
 
-      // The owning Head can rename a year or delete it, but never reassign it to a
-      // different campus/college/owner.
-      allow update: if isRole('head')
-                    && resource.data.createdBy == request.auth.uid
+      // Any Head/Counsellor on the same campus can rename or delete a year, but
+      // never reassign it to a different campus/college/owner.
+      allow update: if canEditEventsCalendar()
+                    && resource.data.campusId == myProfile().campusId
                     && request.resource.data.campusId == resource.data.campusId
                     && request.resource.data.collegeId == resource.data.collegeId
                     && request.resource.data.createdBy == resource.data.createdBy;
-      allow delete: if isRole('head') && resource.data.createdBy == request.auth.uid;
+      allow delete: if canEditEventsCalendar() && resource.data.campusId == myProfile().campusId;
     }
 
     // ---------- calendarMonths ----------
     match /calendarMonths/{monthId} {
-      // Same shape as calendarYears — Head adds months one at a time under a year.
+      // Same shape as calendarYears — Head or Counsellor adds months one at a time.
       allow read: if canViewEventsCalendar();
-      allow create: if isRole('head')
+      allow create: if canEditEventsCalendar()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId
                     && get(/databases/$(database)/documents/colleges/$(request.resource.data.collegeId)).data.campusId == myProfile().campusId;
 
-      // The owning Head can change which month/year this row represents or delete
-      // it, but never move it to a different year container/campus/college/owner.
-      allow update: if isRole('head')
-                    && resource.data.createdBy == request.auth.uid
+      // Any Head/Counsellor on the same campus can change which month/year this row
+      // represents or delete it, but never move it to a different year
+      // container/campus/college/owner.
+      allow update: if canEditEventsCalendar()
+                    && resource.data.campusId == myProfile().campusId
                     && request.resource.data.campusId == resource.data.campusId
                     && request.resource.data.collegeId == resource.data.collegeId
                     && request.resource.data.yearId == resource.data.yearId
                     && request.resource.data.createdBy == resource.data.createdBy;
-      allow delete: if isRole('head') && resource.data.createdBy == request.auth.uid;
+      allow delete: if canEditEventsCalendar() && resource.data.campusId == myProfile().campusId;
     }
 
     // ---------- bookings ----------
@@ -159,7 +192,10 @@ service cloud.firestore {
         // (BookingSection.tsx) purely to compute a counsellor's live "in session"
         // badge. Only "scheduled" bookings are exposed this way; the sensitive
         // intake subcollection below stays locked to the two parties + staff.
-        resource.data.status == 'scheduled'
+        resource.data.status == 'scheduled' ||
+        // A Counsellor can see every emergency SOS booking on their own campus
+        // (the Emergency Alerts section), not just ones formally assigned to them.
+        (resource.data.isEmergency == true && isRole('counsellor') && resource.data.campusId == myProfile().campusId)
       );
 
       allow create: if isSignedIn() && (
@@ -172,7 +208,23 @@ service cloud.firestore {
       allow update: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.counsellorId == request.auth.uid ||
-        isStaff()
+        isStaff() ||
+        (
+          // Any Counsellor on the same campus can claim (accept) a still-pending
+          // emergency SOS, not just whoever it was auto-assigned to — speed
+          // matters more than the original best-guess pick in a crisis. (Head is
+          // already covered by isStaff() above.)
+          isRole('counsellor') &&
+          resource.data.isEmergency == true &&
+          resource.data.status == 'pending' &&
+          resource.data.campusId == myProfile().campusId &&
+          request.resource.data.counsellorId == request.auth.uid &&
+          request.resource.data.counsellorEmail == myProfile().email &&
+          request.resource.data.status == 'accepted' &&
+          request.resource.data.userId == resource.data.userId &&
+          request.resource.data.campusId == resource.data.campusId &&
+          request.resource.data.isEmergency == true
+        )
       );
 
       allow delete: if false;
@@ -182,7 +234,12 @@ service cloud.firestore {
         allow read: if isSignedIn() && (
           get(/databases/$(database)/documents/bookings/$(bookingId)).data.userId == request.auth.uid ||
           get(/databases/$(database)/documents/bookings/$(bookingId)).data.counsellorId == request.auth.uid ||
-          isStaff()
+          isStaff() ||
+          (
+            get(/databases/$(database)/documents/bookings/$(bookingId)).data.isEmergency == true &&
+            isRole('counsellor') &&
+            get(/databases/$(database)/documents/bookings/$(bookingId)).data.campusId == myProfile().campusId
+          )
         );
         allow write: if isSignedIn() && (
           get(/databases/$(database)/documents/bookings/$(bookingId)).data.userId == request.auth.uid ||
@@ -203,18 +260,151 @@ service cloud.firestore {
       allow create: if isSignedIn() &&
         request.resource.data.read == false &&
         (
-          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.auth.uid ||
-          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.auth.uid
-        ) &&
-        (
-          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.resource.data.recipientId ||
-          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.resource.data.recipientId
+          (
+            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.auth.uid ||
+            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.auth.uid
+          ) &&
+          (
+            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.resource.data.recipientId ||
+            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.resource.data.recipientId
+          )
+        ) || (
+          // Crisis SOS broadcast: the dispatching student notifies EVERY
+          // Head/Counsellor on their own campus, not just the one formally
+          // assigned to the booking.
+          request.resource.data.type == 'emergency_sos' &&
+          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.auth.uid &&
+          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.isEmergency == true &&
+          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.campusId == myProfile().campusId &&
+          get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId &&
+          get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role in ['head', 'counsellor']
+        ) || (
+          // A Counsellor requesting their own campus Head's approval to
+          // transfer a booking — the Head isn't a party to the booking.
+          request.resource.data.type == 'transfer_requested' &&
+          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.auth.uid &&
+          get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role == 'head' &&
+          get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
+        ) || (
+          // Staff (a Head, approving/declining a transfer request, etc.) acting
+          // administratively on a booking can notify either party even though
+          // the staff member isn't a party to the booking themselves.
+          isStaff() &&
+          (
+            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.resource.data.recipientId ||
+            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.resource.data.recipientId
+          )
         );
 
       allow update: if isSignedIn() && resource.data.recipientId == request.auth.uid
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
 
       allow delete: if false;
+    }
+
+    // ---------- journalEntries ----------
+    // Fully private diary — unlike bookings, staff have ZERO visibility here.
+    // One doc per calendar day; the doc id IS the "YYYY-MM-DD" date, which
+    // doubles as the reminder trigger date when isReminder is set. Ownership
+    // is structural (uid is a path segment) so no field-level check is needed.
+    match /journalEntries/{uid}/entries/{dateId} {
+      allow read, write: if isSelf(uid);
+    }
+
+    // ---------- communityPosts ----------
+    // Anonymous social feed. CRITICAL: nobody — not staff, not other users,
+    // not even a raw REST/SDK call bypassing the app's UI — may ever learn
+    // who authored a post/comment/like, while the author must still be able
+    // to delete their own anonymous content.
+    //
+    // Firestore rules cannot hide a single field on an otherwise-readable
+    // document, so authorId is NOT a field on the public post/comment docs.
+    // It lives on a nested private/author doc (same shape as
+    // bookings/{id}/private/details) whose own read rule only ever succeeds
+    // for the author themselves — no role exception. The public doc's delete
+    // rule uses get() against that private doc, so the owner can delete
+    // without authorId ever appearing on any doc another party can read.
+    //
+    // Likes are communityPosts/{postId}/likes/{uid}: the liker's own uid IS
+    // the doc id, so "one like per user" and "only I can touch my own like"
+    // fall out of isSelf(likeId) with no extra field. list is denied so
+    // nobody can enumerate who liked a post.
+    match /communityPosts/{postId} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+                    && request.resource.data.keys().hasOnly(['text', 'likeCount', 'commentCount', 'createdAt'])
+                    && request.resource.data.text is string
+                    && request.resource.data.text.size() > 0
+                    && request.resource.data.text.size() <= 2000
+                    && request.resource.data.likeCount == 0
+                    && request.resource.data.commentCount == 0;
+
+      // Only the like-toggle and comment-count transactions touch this doc
+      // after creation, each moving exactly one counter by exactly 1.
+      allow update: if isSignedIn() && (
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount']) &&
+          (request.resource.data.likeCount == resource.data.likeCount + 1 ||
+           request.resource.data.likeCount == resource.data.likeCount - 1)) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount']) &&
+          (request.resource.data.commentCount == resource.data.commentCount + 1 ||
+           request.resource.data.commentCount == resource.data.commentCount - 1))
+      );
+
+      allow delete: if isSignedIn()
+                    && get(/databases/$(database)/documents/communityPosts/$(postId)/private/author).data.authorId == request.auth.uid;
+
+      match /private/author {
+        allow get: if isSelf(resource.data.authorId);
+        allow list: if false;
+        allow create: if isSignedIn()
+                      && request.resource.data.authorId == request.auth.uid
+                      && request.resource.data.keys().hasOnly(['authorId']);
+        allow update: if false;
+        allow delete: if isSelf(resource.data.authorId);
+      }
+
+      match /comments/{commentId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn()
+                      && request.resource.data.keys().hasOnly(['postId', 'text', 'createdAt'])
+                      && request.resource.data.postId == postId
+                      && request.resource.data.text is string
+                      && request.resource.data.text.size() > 0
+                      && request.resource.data.text.size() <= 1000;
+        allow update: if false;
+        allow delete: if isSignedIn()
+                      && get(/databases/$(database)/documents/communityPosts/$(postId)/comments/$(commentId)/private/author).data.authorId == request.auth.uid;
+
+        match /private/author {
+          allow get: if isSelf(resource.data.authorId);
+          allow list: if false;
+          allow create: if isSignedIn()
+                        && request.resource.data.authorId == request.auth.uid
+                        && request.resource.data.keys().hasOnly(['authorId']);
+          allow update: if false;
+          allow delete: if isSelf(resource.data.authorId);
+        }
+      }
+
+      match /likes/{likeId} {
+        allow get: if isSelf(likeId);
+        allow list: if false;
+        allow create: if isSelf(likeId);
+        allow delete: if isSelf(likeId);
+        allow update: if false;
+      }
+    }
+
+    // ---------- monthlyReports ----------
+    // Heads upload/delete their campus's monthly report; Head, Admin, and
+    // Super Admin can all view the platform-wide list (Admin's Monthly
+    // Reports tab has no upload/delete UI — view + download only).
+    match /monthlyReports/{reportId} {
+      allow read: if isStaff();
+      allow create: if isRole('head') && request.resource.data.uploadedByUid == request.auth.uid;
+      allow update: if false;
+      allow delete: if isRole('head');
     }
 
     // ---------- everything else ----------
@@ -226,6 +416,8 @@ service cloud.firestore {
     //   - "public reference data, staff-only writes" -> copy campuses/colleges
     //   - "record owned by one user, readable by staff too" -> copy bookings
     //   - "recipient-only, spam-guarded via a linked record" -> copy notifications
+    //   - "fully private, single-owner data with zero staff access" -> copy journalEntries
+    //   - "anonymous public content with a hidden-authorship private link" -> copy communityPosts
     match /{document=**} {
       allow read, write: if false;
     }

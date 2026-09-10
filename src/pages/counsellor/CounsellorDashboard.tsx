@@ -6,19 +6,38 @@ import { Button } from "../../components/common/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { BookingRequestsSection } from "./BookingRequestsSection";
 import { EventsProgramsSection } from "./EventsProgramsSection";
+import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAlertsSection";
+import { CommunitySection } from "../user/community/CommunitySection";
+import { GamesSection } from "../user/games/GamesSection";
+import { JournalSection } from "../user/journal/JournalSection";
 import { DailyQuoteCard } from "../../components/common/DailyQuoteCard";
+import type { Notification } from "../../types/notification";
 import "../../styles/bento-grid.css";
 
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
   { id: "events", label: "Events & Programs" },
+  { id: "games", label: "Wellness Exercise" },
+  { id: "journal", label: "Counselling Journal" },
+  { id: "community", label: "Wellness Community" },
+  { id: "emergency", label: "Emergency Alerts", variant: "urgent" as const },
 ];
 
 export function CounsellorDashboard() {
   const { profile } = useAuth();
   const [activeSection, setActiveSection] = useState("overview");
   const [showImport, setShowImport] = useState(false);
+  const [pendingBookingId, setPendingBookingId] = useState<string | undefined>();
+
+  function handleNotificationClick(notification: Notification) {
+    if (notification.type === "emergency_sos") {
+      setActiveSection("emergency");
+      return;
+    }
+    setPendingBookingId(notification.bookingId);
+    setActiveSection("requests");
+  }
 
   const title =
     activeSection === "profile"
@@ -27,7 +46,15 @@ export function CounsellorDashboard() {
         ? "Booking Requests"
         : activeSection === "events"
           ? "Events & Programs"
-          : "Counsellor Dashboard";
+          : activeSection === "games"
+            ? "Wellness Exercise"
+            : activeSection === "journal"
+              ? "Counselling Journal"
+              : activeSection === "community"
+                ? "Wellness Community"
+                : activeSection === "emergency"
+                  ? "Emergency Alerts"
+                  : "Counsellor Dashboard";
 
   return (
     <AppShell
@@ -42,12 +69,21 @@ export function CounsellorDashboard() {
       sections={SECTIONS}
       activeSection={activeSection}
       onSelectSection={setActiveSection}
+      onNotificationClick={handleNotificationClick}
     >
       {activeSection === "profile" && <ProfileSection />}
       {activeSection === "requests" && (
-        <BookingRequestsSection importOpen={showImport} onImportClose={() => setShowImport(false)} />
+        <BookingRequestsSection
+          importOpen={showImport}
+          onImportClose={() => setShowImport(false)}
+          initialSelectedId={pendingBookingId}
+        />
       )}
       {activeSection === "events" && <EventsProgramsSection />}
+      {activeSection === "games" && <GamesSection />}
+      {activeSection === "journal" && <JournalSection />}
+      {activeSection === "community" && <CommunitySection />}
+      {activeSection === "emergency" && <EmergencyAlertsSection />}
       {activeSection === "overview" && (
         <div className="bento-grid">
           <BentoCard

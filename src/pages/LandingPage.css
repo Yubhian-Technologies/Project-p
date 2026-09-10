@@ -90,7 +90,8 @@ body {
 .landing-brand__logo {
   width: 38px;
   height: 38px;
-  object-fit: contain;
+  border-radius: 50%;
+  object-fit: cover;
   filter: drop-shadow(-2px -2px 4px rgba(255, 255, 255, 0.8)) drop-shadow(2px 2px 4px rgba(163, 177, 198, 0.6));
 }
 

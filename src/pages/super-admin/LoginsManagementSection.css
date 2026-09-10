@@ -1,0 +1,112 @@
+.logins-management {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.logins-management__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.logins-management__heading {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.logins-management__filters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.logins-management__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.logins-management__field label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neu-text-muted, #718096);
+}
+
+.logins-management__field input {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 12px 18px;
+  border-radius: 16px;
+  border: none;
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-sunken);
+  color: var(--neu-text-primary, #2D3748);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.logins-management__field input:focus {
+  box-shadow: var(--neu-shadow-sunken-focus);
+}
+
+.logins-management__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.logins-management__error {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e53e3e;
+}
+
+.logins-management__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: var(--neu-bg, #E8ECF2);
+  border: none;
+  border-radius: 20px;
+  padding: 18px 24px;
+  box-shadow: var(--neu-shadow-extruded);
+}
+
+.logins-management__name {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.logins-management__role {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neu-text-muted, #718096);
+}
+
+.logins-management__college {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neu-accent-primary, #2563EB);
+}
+
+.logins-management__row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}

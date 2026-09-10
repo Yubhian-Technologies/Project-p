@@ -26,11 +26,16 @@ function isPastChoice(value: string): boolean {
 interface RequestDetailModalProps {
   booking: Booking;
   transferCandidates: UserProfile[];
-  onAccept: () => void;
+  campusHead: UserProfile | null;
+  viewerRole: "head" | "counsellor";
+  onAcceptSlot: (chosenAt: number) => void;
   onReject: () => void;
   onSchedule: (scheduledAt: number) => void;
+  onRequestReschedule: (proposedAt: number, reason?: string) => void;
+  onAcceptReschedule: () => void;
   onCancel: (reason: string) => void;
-  onTransfer: (target: UserProfile) => void;
+  onRequestTransfer: (reason: string, suggestedTarget?: UserProfile) => void;
+  onDirectTransfer: (target: UserProfile) => void;
   onSaveSummary: (summary: string) => Promise<void>;
   onCloseComplete: (summary: string) => Promise<void>;
   onCloseFollowUp: (summary: string, scheduledAt: number) => Promise<void>;
@@ -43,11 +48,16 @@ interface RequestDetailModalProps {
 export function RequestDetailModal({
   booking,
   transferCandidates,
-  onAccept,
+  campusHead,
+  viewerRole,
+  onAcceptSlot,
   onReject,
   onSchedule,
+  onRequestReschedule,
+  onAcceptReschedule,
   onCancel,
-  onTransfer,
+  onRequestTransfer,
+  onDirectTransfer,
   onSaveSummary,
   onCloseComplete,
   onCloseFollowUp,
@@ -56,13 +66,19 @@ export function RequestDetailModal({
   onViewSummary,
   onClose,
 }: RequestDetailModalProps) {
-  const [editingTime, setEditingTime] = useState(false);
+  const [showProposeTime, setShowProposeTime] = useState(false);
   const [timeValue, setTimeValue] = useState(
     booking.scheduledAt ? toDateTimeLocalValue(booking.scheduledAt) : "",
   );
   const [intake, setIntake] = useState<BookingIntake | null>(null);
-  const [showTransfer, setShowTransfer] = useState(false);
-  const [transferTargetId, setTransferTargetId] = useState("");
+  const [showReschedulePropose, setShowReschedulePropose] = useState(false);
+  const [rescheduleTimeValue, setRescheduleTimeValue] = useState("");
+  const [rescheduleReasonValue, setRescheduleReasonValue] = useState("");
+  const [showTransferRequest, setShowTransferRequest] = useState(false);
+  const [transferReasonField, setTransferReasonField] = useState("");
+  const [transferSuggestedId, setTransferSuggestedId] = useState("");
+  const [showDirectTransfer, setShowDirectTransfer] = useState(false);
+  const [directTransferTargetId, setDirectTransferTargetId] = useState("");
   const [summaryDraft, setSummaryDraft] = useState("");
   const [summaryFocusMode, setSummaryFocusMode] = useState(false);
   const [savingSummary, setSavingSummary] = useState(false);
@@ -102,14 +118,32 @@ export function RequestDetailModal({
   function handleConfirmSchedule() {
     if (!timeValue) return;
     onSchedule(new Date(timeValue).getTime());
-    setEditingTime(false);
+    setShowProposeTime(false);
   }
 
-  function handleTransfer() {
-    const target = transferCandidates.find((c) => c.uid === transferTargetId);
+  function handleProposeReschedule() {
+    if (!rescheduleTimeValue) return;
+    onRequestReschedule(new Date(rescheduleTimeValue).getTime(), rescheduleReasonValue.trim() || undefined);
+    setShowReschedulePropose(false);
+    setRescheduleTimeValue("");
+    setRescheduleReasonValue("");
+  }
+
+  function handleRequestTransfer() {
+    if (!transferReasonField.trim()) return;
+    const suggested = transferCandidates.find((c) => c.uid === transferSuggestedId);
+    onRequestTransfer(transferReasonField.trim(), suggested);
+    setShowTransferRequest(false);
+    setTransferReasonField("");
+    setTransferSuggestedId("");
+  }
+
+  function handleDirectTransfer() {
+    const target = transferCandidates.find((c) => c.uid === directTransferTargetId);
     if (!target) return;
-    onTransfer(target);
-    setShowTransfer(false);
+    onDirectTransfer(target);
+    setShowDirectTransfer(false);
+    setDirectTransferTargetId("");
   }
 
   async function handleCloseFollowUp() {
@@ -148,7 +182,88 @@ export function RequestDetailModal({
     }
   }
 
-  const canCancelOrTransfer = booking.status === "accepted" || booking.status === "scheduled";
+  const canCancelOrRequestTransfer = booking.status === "accepted" || booking.status === "scheduled";
+
+  function renderTransferControls() {
+    if (viewerRole === "head") {
+      return showDirectTransfer ? (
+        <div className="request-card__transfer">
+          <label htmlFor={`direct-transfer-${booking.id}`}>Transfer to</label>
+          <Select id={`direct-transfer-${booking.id}`} value={directTransferTargetId} onChange={setDirectTransferTargetId}>
+            <option value="">Select a counsellor…</option>
+            {transferCandidates.map((c) => (
+              <option key={c.uid} value={c.uid}>
+                {c.displayName || c.email}
+              </option>
+            ))}
+          </Select>
+          <div className="request-card__actions">
+            <Button type="button" disabled={!directTransferTargetId} onClick={handleDirectTransfer}>
+              Confirm transfer
+            </Button>
+            <Button type="button" variant="outlined" onClick={() => setShowDirectTransfer(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button type="button" variant="outlined" onClick={() => setShowDirectTransfer(true)}>
+          Transfer
+        </Button>
+      );
+    }
+
+    return (
+      <>
+        {booking.transferRequest?.status === "pending" && (
+          <p className="request-card__summary-hint">Transfer request sent — awaiting Head approval.</p>
+        )}
+
+        {showTransferRequest && (
+          <div className="request-card__transfer">
+            <label htmlFor={`transfer-reason-${booking.id}`}>Why do you want to transfer this?</label>
+            <textarea
+              id={`transfer-reason-${booking.id}`}
+              rows={2}
+              value={transferReasonField}
+              onChange={(e) => setTransferReasonField(e.target.value)}
+              placeholder="Let the Head know why you'd like this reassigned…"
+            />
+            <label htmlFor={`transfer-suggest-${booking.id}`}>Suggested counsellor (optional)</label>
+            <Select id={`transfer-suggest-${booking.id}`} value={transferSuggestedId} onChange={setTransferSuggestedId}>
+              <option value="">No suggestion</option>
+              {transferCandidates.map((c) => (
+                <option key={c.uid} value={c.uid}>
+                  {c.displayName || c.email}
+                </option>
+              ))}
+            </Select>
+            {!campusHead && (
+              <p className="request-card__time-warning">No Head found for your campus — contact a Super Admin.</p>
+            )}
+            <div className="request-card__actions">
+              <Button
+                type="button"
+                disabled={!transferReasonField.trim() || !campusHead}
+                onClick={handleRequestTransfer}
+              >
+                Send request to Head
+              </Button>
+              <Button type="button" variant="outlined" onClick={() => setShowTransferRequest(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!showTransferRequest && booking.transferRequest?.status !== "pending" && (
+          <Button type="button" variant="outlined" onClick={() => setShowTransferRequest(true)}>
+            Request Transfer to Head
+          </Button>
+        )}
+      </>
+    );
+  }
 
   if (summaryFocusMode) {
     const readOnly = booking.status !== "scheduled";
@@ -226,13 +341,56 @@ export function RequestDetailModal({
       )}
 
       {booking.status === "pending" && (
-        <div className="request-card__actions">
-          <Button type="button" onClick={onAccept}>
-            Accept
-          </Button>
-          <Button type="button" variant="outlined" onClick={onReject}>
-            Reject
-          </Button>
+        <div className="request-card__schedule">
+          {booking.proposedSlots && (
+            <>
+              <p>Proposed times:</p>
+              <div className="request-card__actions">
+                <Button
+                  type="button"
+                  disabled={isPastChoice(toDateTimeLocalValue(booking.proposedSlots[0]))}
+                  onClick={() => onAcceptSlot(booking.proposedSlots![0])}
+                >
+                  Accept: {new Date(booking.proposedSlots[0]).toLocaleString()}
+                </Button>
+                <Button
+                  type="button"
+                  disabled={isPastChoice(toDateTimeLocalValue(booking.proposedSlots[1]))}
+                  onClick={() => onAcceptSlot(booking.proposedSlots![1])}
+                >
+                  Accept: {new Date(booking.proposedSlots[1]).toLocaleString()}
+                </Button>
+              </div>
+            </>
+          )}
+
+          {showProposeTime ? (
+            <>
+              <label htmlFor={`propose-${booking.id}`}>Propose a different time</label>
+              <DateTimePicker id={`propose-${booking.id}`} min={nowValue} value={timeValue} onChange={setTimeValue} />
+              {isPastChoice(timeValue) && (
+                <p className="request-card__time-warning">This time has already passed. Pick a time later than now.</p>
+              )}
+              <div className="request-card__actions">
+                <Button type="button" disabled={isPastOrEmpty(timeValue)} onClick={handleConfirmSchedule}>
+                  Confirm
+                </Button>
+                <Button type="button" variant="outlined" onClick={() => setShowProposeTime(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </>
+          ) : (
+            <Button type="button" variant="outlined" onClick={() => setShowProposeTime(true)}>
+              Propose a different time
+            </Button>
+          )}
+
+          <div className="request-card__actions">
+            <Button type="button" variant="outlined" onClick={onReject}>
+              Reject
+            </Button>
+          </div>
         </div>
       )}
 
@@ -256,37 +414,65 @@ export function RequestDetailModal({
 
       {booking.status === "scheduled" && (
         <div className="request-card__schedule">
-          {editingTime ? (
-            <>
-              <label htmlFor={`schedule-${booking.id}`}>Pick a new session time</label>
+          <p className="request-card__scheduled-time">
+            Scheduled for {booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleString() : "—"} (
+            {SESSION_DURATION_LABEL})
+          </p>
+
+          {booking.rescheduleProposal?.proposedBy === "counsellor" && (
+            <p className="request-card__summary-hint">Reschedule proposed — awaiting student response.</p>
+          )}
+
+          {booking.rescheduleProposal?.proposedBy === "user" && !showReschedulePropose && (
+            <div className="request-card__reschedule-proposal">
+              <p>
+                Student proposed a new time: {new Date(booking.rescheduleProposal.proposedAt).toLocaleString()}
+                {booking.rescheduleProposal.reason ? ` — ${booking.rescheduleProposal.reason}` : ""}
+              </p>
+              <div className="request-card__actions">
+                <Button type="button" onClick={onAcceptReschedule}>
+                  Accept new time
+                </Button>
+                <Button type="button" variant="outlined" onClick={() => setShowReschedulePropose(true)}>
+                  Propose different time
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {!booking.rescheduleProposal && !showReschedulePropose && (
+            <Button type="button" variant="outlined" onClick={() => setShowReschedulePropose(true)}>
+              Propose new time
+            </Button>
+          )}
+
+          {showReschedulePropose && (
+            <div className="request-card__schedule">
+              <label htmlFor={`reschedule-${booking.id}`}>New proposed time</label>
               <DateTimePicker
-                id={`schedule-${booking.id}`}
+                id={`reschedule-${booking.id}`}
                 min={nowValue}
-                value={timeValue}
-                onChange={setTimeValue}
+                value={rescheduleTimeValue}
+                onChange={setRescheduleTimeValue}
               />
-              {isPastChoice(timeValue) && (
+              {isPastChoice(rescheduleTimeValue) && (
                 <p className="request-card__time-warning">This time has already passed. Pick a time later than now.</p>
               )}
+              <textarea
+                rows={2}
+                placeholder="Reason (optional)"
+                value={rescheduleReasonValue}
+                onChange={(e) => setRescheduleReasonValue(e.target.value)}
+              />
               <div className="request-card__actions">
-                <Button type="button" disabled={isPastOrEmpty(timeValue)} onClick={handleConfirmSchedule}>
-                  Save
+                <Button type="button" disabled={isPastOrEmpty(rescheduleTimeValue)} onClick={handleProposeReschedule}>
+                  Send
                 </Button>
-                <Button type="button" variant="outlined" onClick={() => setEditingTime(false)}>
+                <Button type="button" variant="outlined" onClick={() => setShowReschedulePropose(false)}>
                   Cancel
                 </Button>
               </div>
-            </>
-          ) : (
-            <>
-              <p className="request-card__scheduled-time">
-                Scheduled for {booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleString() : "—"} (
-                {SESSION_DURATION_LABEL})
-              </p>
-              <Button type="button" variant="outlined" onClick={() => setEditingTime(true)}>
-                Reschedule
-              </Button>
-            </>
+            </div>
           )}
 
           {sessionEnded ? (
@@ -373,29 +559,9 @@ export function RequestDetailModal({
         </div>
       )}
 
-      {canCancelOrTransfer && (
+      {canCancelOrRequestTransfer && (
         <div className="request-card__danger-zone">
-          {showTransfer && (
-            <div className="request-card__transfer">
-              <label htmlFor={`transfer-${booking.id}`}>Transfer to</label>
-              <Select id={`transfer-${booking.id}`} value={transferTargetId} onChange={setTransferTargetId}>
-                <option value="">Select a counsellor…</option>
-                {transferCandidates.map((c) => (
-                  <option key={c.uid} value={c.uid}>
-                    {c.displayName || c.email}
-                  </option>
-                ))}
-              </Select>
-              <div className="request-card__actions">
-                <Button type="button" disabled={!transferTargetId} onClick={handleTransfer}>
-                  Confirm transfer
-                </Button>
-                <Button type="button" variant="outlined" onClick={() => setShowTransfer(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
+          {!showCancelReason && renderTransferControls()}
 
           {showCancelReason && (
             <div className="request-card__cancel-reason">
@@ -418,11 +584,8 @@ export function RequestDetailModal({
             </div>
           )}
 
-          {!showTransfer && !showCancelReason && (
+          {!showTransferRequest && !showDirectTransfer && !showCancelReason && (
             <div className="request-card__actions">
-              <Button type="button" variant="outlined" onClick={() => setShowTransfer(true)}>
-                Transfer
-              </Button>
               <Button type="button" variant="outlined" onClick={() => setShowCancelReason(true)}>
                 Cancel session
               </Button>
@@ -440,18 +603,17 @@ export function RequestDetailModal({
         </div>
       )}
 
-      {booking.status === "completed" && (
+      {booking.status === "completed" && booking.outcome === "missed" && (
         <div className="request-card__completed">
-          <p>
-            {booking.outcome === "followup"
-              ? "Follow-up session scheduled."
-              : booking.outcome === "missed"
-                ? "Session was not held."
-                : "Session complete."}
-          </p>
-          {booking.outcome === "missed" && booking.missedReason && (
-            <p className="request-card__summary-readonly">{booking.missedReason}</p>
-          )}
+          <p>Session was not held.</p>
+          {booking.missedReason && <p className="request-card__summary-readonly">{booking.missedReason}</p>}
+          {renderTransferControls()}
+        </div>
+      )}
+
+      {booking.status === "completed" && booking.outcome !== "missed" && (
+        <div className="request-card__completed">
+          <p>{booking.outcome === "followup" ? "Follow-up session scheduled." : "Session complete."}</p>
           {intake?.summary && (
             <Button type="button" variant="outlined" onClick={() => setSummaryFocusMode(true)}>
               View Summary

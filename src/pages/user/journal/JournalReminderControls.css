@@ -1,0 +1,34 @@
+.journal-reminder {
+  background: var(--neu-bg, #E8ECF2);
+  border-radius: 20px;
+  box-shadow: var(--neu-shadow-extruded-sm);
+  padding: 16px 18px;
+  box-sizing: border-box;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.journal-reminder__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neu-text-primary, #2D3748);
+  cursor: pointer;
+}
+
+.journal-reminder__time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.journal-reminder__time-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neu-text-muted, #718096);
+  flex-shrink: 0;
+}

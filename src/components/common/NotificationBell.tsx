@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useNotifications } from "../../hooks/useNotifications";
+import type { Notification } from "../../types/notification";
 import "./NotificationBell.css";
 
-export function NotificationBell() {
+interface NotificationBellProps {
+  onNotificationClick?: (notification: Notification) => void;
+}
+
+export function NotificationBell({ onNotificationClick }: NotificationBellProps) {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const hasUnreadEmergency = notifications.some((n) => n.type === "emergency_sos" && !n.read);
 
   useEffect(() => {
     if (!open) return;
@@ -31,7 +38,7 @@ export function NotificationBell() {
     <div className="notification-bell" ref={containerRef}>
       <button
         type="button"
-        className="notification-bell__trigger"
+        className={`notification-bell__trigger${hasUnreadEmergency ? " notification-bell__trigger--emergency" : ""}`}
         aria-label="Notifications"
         onClick={() => setOpen((value) => !value)}
       >
@@ -48,7 +55,13 @@ export function NotificationBell() {
           <path d="M6 8a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6.5H4c.5-1 2-2.5 2-6.5" />
           <path d="M10 19a2 2 0 0 0 4 0" />
         </svg>
-        {unreadCount > 0 && <span className="notification-bell__badge">{unreadCount}</span>}
+        {unreadCount > 0 && (
+          <span
+            className={`notification-bell__badge${hasUnreadEmergency ? " notification-bell__badge--emergency" : ""}`}
+          >
+            {unreadCount}
+          </span>
+        )}
       </button>
 
       {open && (
@@ -73,12 +86,20 @@ export function NotificationBell() {
                 className={[
                   "notification-bell__item",
                   notification.read ? "" : "notification-bell__item--unread",
+                  notification.type === "emergency_sos" ? "notification-bell__item--emergency" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
-                onClick={() => markAsRead(notification.id)}
+                onClick={() => {
+                  markAsRead(notification.id);
+                  onNotificationClick?.(notification);
+                  setOpen(false);
+                }}
               >
-                <span className="notification-bell__item-title">{notification.title}</span>
+                <span className="notification-bell__item-title">
+                  {notification.type === "emergency_sos" && "🚨 "}
+                  {notification.title}
+                </span>
                 <span className="notification-bell__item-message">{notification.message}</span>
                 <span className="notification-bell__item-time">
                   {new Date(notification.createdAt).toLocaleString()}

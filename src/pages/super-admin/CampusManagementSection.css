@@ -5,20 +5,19 @@
   width: 100%;
 }
 
-.campus-management__add-form {
+.campus-management__header {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: var(--neu-bg, #E8ECF2);
-  border-radius: 20px;
-  box-shadow: var(--neu-shadow-extruded);
-  padding: 20px 24px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.campus-management__form-title {
+.campus-management__heading {
   margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
   font-weight: 800;
-  font-size: 15px;
+  font-size: 20px;
   color: var(--neu-text-primary, #2D3748);
 }
 
@@ -79,14 +78,6 @@
   font-size: 13px;
   color: var(--neu-text-muted, #718096);
   font-weight: 600;
-}
-
-.campus-management__colleges {
-  flex-basis: 100%;
-  cursor: default;
-  padding-top: 14px;
-  margin-top: 4px;
-  border-top: 1px solid rgba(163, 177, 198, 0.3);
 }
 
 .campus-management__confirm {

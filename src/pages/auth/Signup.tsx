@@ -46,6 +46,14 @@ export function Signup() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+    if (!campusId) {
+      setError("Please select your Campus.");
+      return;
+    }
+    if (!collegeId) {
+      setError("Please select your College.");
+      return;
+    }
     setSubmitting(true);
     try {
       await signUp(email, password, campusId, collegeId);
@@ -63,18 +71,18 @@ export function Signup() {
       <div className="auth-glass-card">
         <div className="auth-header">
           <Link to="/" className="auth-logo-link">
-            <img src="/favicon.png" alt="Vishnu Logo" className="auth-logo-img" />
-            <span className="auth-logo-text">Vishnu Wellness</span>
+            <img src="/favicon.png" alt="Vishnu Wellness Center Logo" className="auth-logo-img" />
+            <span className="auth-logo-text">Vishnu Wellness Center</span>
           </Link>
           <h1 className="auth-card__title">Create Account</h1>
-          <p className="auth-card__subtitle">Join Vishnu Wellness and start your journey today</p>
+          <p className="auth-card__subtitle">Join Vishnu Wellness Center and start your journey today</p>
         </div>
 
         {error && <div className="auth-error">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="auth-field">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email">Email Address <span className="auth-field__required">*</span></label>
             <input
               id="email"
               type="email"
@@ -87,7 +95,7 @@ export function Signup() {
           </div>
 
           <div className="auth-field">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">Password <span className="auth-field__required">*</span></label>
             <div className="auth-field__password-wrap">
               <input
                 id="password"
@@ -119,7 +127,7 @@ export function Signup() {
           </div>
 
           <div className="auth-field">
-            <label htmlFor="campus">Campus</label>
+            <label htmlFor="campus">Campus <span className="auth-field__required">*</span></label>
             <Select id="campus" value={campusId} onChange={setCampusId}>
               <option value="" disabled>
                 Select your campus…
@@ -133,7 +141,7 @@ export function Signup() {
           </div>
 
           <div className="auth-field">
-            <label htmlFor="college">College</label>
+            <label htmlFor="college">College <span className="auth-field__required">*</span></label>
             <Select id="college" disabled={!campusId} value={collegeId} onChange={setCollegeId}>
               <option value="" disabled>
                 {campusId ? "Select your college…" : "Select a campus first"}

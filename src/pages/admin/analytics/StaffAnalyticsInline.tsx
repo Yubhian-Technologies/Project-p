@@ -8,7 +8,6 @@ interface Stats {
   sessionsTaken: number;
   ratingCount: number;
   avgRating: number;
-  totalHours: number;
 }
 
 const TAKEN_STATUSES = ["accepted", "scheduled", "completed"];
@@ -28,8 +27,7 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
         rated.length > 0
           ? rated.reduce((sum, b) => sum + (b.userRatingOfCounsellor ?? 0), 0) / rated.length
           : 0;
-      const totalHours = taken.reduce((sum, b) => sum + b.durationMinutes, 0) / 60;
-      setStats({ sessionsTaken: taken.length, ratingCount: rated.length, avgRating, totalHours });
+      setStats({ sessionsTaken: taken.length, ratingCount: rated.length, avgRating });
     });
   }, [staff.uid]);
 
@@ -52,10 +50,6 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
           <span className="analytics-inline__stat-value">—</span>
         )}
         <span className="analytics-inline__stat-label">Overall rating</span>
-      </div>
-      <div className="analytics-inline__stat">
-        <span className="analytics-inline__stat-value">{stats.totalHours.toFixed(1)}</span>
-        <span className="analytics-inline__stat-label">Total hours</span>
       </div>
     </div>
   );

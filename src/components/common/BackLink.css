@@ -1,0 +1,22 @@
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: none;
+  padding: 4px 0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--neu-accent-primary, #2563EB);
+  cursor: pointer;
+}
+
+.back-link:hover {
+  color: var(--neu-accent-hover, #1D4ED8);
+}
+
+.back-link__arrow {
+  font-size: 15px;
+  line-height: 1;
+}

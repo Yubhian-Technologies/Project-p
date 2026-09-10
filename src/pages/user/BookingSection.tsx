@@ -7,6 +7,9 @@ import {
   createBooking,
   cancelBooking,
   rateCounsellor,
+  requestReschedule,
+  acceptRescheduleProposal,
+  isSessionEndedPending,
   SESSION_DURATION_LABEL,
 } from "../../services/firebase/bookings";
 import type { UserProfile } from "../../types/user";
@@ -19,11 +22,21 @@ import { Button } from "../../components/common/Button";
 import { Modal } from "../../components/common/Modal";
 import { Select } from "../../components/common/Select";
 import { StarRating } from "../../components/common/StarRating";
+import { DateTimePicker } from "../../components/common/DateTimePicker";
 import "./BookingSection.css";
+
+function nowValue(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 const ACTIVE_STATUSES = ["pending", "accepted", "scheduled"];
 
 function statusLabel(booking: Booking): string {
+  if (booking.status === "scheduled" && isSessionEndedPending(booking)) {
+    return "Missed — the scheduled time has passed";
+  }
   switch (booking.status) {
     case "pending":
       return "Pending";
@@ -36,8 +49,17 @@ function statusLabel(booking: Booking): string {
     case "cancelled":
       return `Cancelled by ${booking.cancelledBy === "user" ? "you" : "the counsellor"}${booking.cancellationReason ? `: ${booking.cancellationReason}` : ""}`;
     case "completed":
+      if (booking.outcome === "missed") {
+        return `Missed${booking.missedReason ? `: ${booking.missedReason}` : ""}`;
+      }
       return booking.outcome === "followup" ? "Completed — follow-up scheduled" : "Completed";
   }
+}
+
+function statusClass(booking: Booking): string {
+  if (booking.status === "scheduled" && isSessionEndedPending(booking)) return "missed";
+  if (booking.status === "completed" && booking.outcome === "missed") return "missed";
+  return booking.status;
 }
 
 export function BookingSection() {
@@ -62,6 +84,14 @@ export function BookingSection() {
   const [occupationField, setOccupationField] = useState<"student" | "professional">("student");
   const [whatsappField, setWhatsappField] = useState("");
   const [issueField, setIssueField] = useState("");
+  const [slot1Field, setSlot1Field] = useState("");
+  const [slot2Field, setSlot2Field] = useState("");
+
+  const [rescheduleTarget, setRescheduleTarget] = useState<Booking | null>(null);
+  const [rescheduleTimeField, setRescheduleTimeField] = useState("");
+  const [rescheduleReasonField, setRescheduleReasonField] = useState("");
+  const [requestingReschedule, setRequestingReschedule] = useState(false);
+  const [acceptingRescheduleId, setAcceptingRescheduleId] = useState<string | null>(null);
 
   async function refresh() {
     if (!currentUser) return;
@@ -80,7 +110,7 @@ export function BookingSection() {
     refresh();
   }, [currentUser]);
 
-  const activeBooking = bookings.find((b) => ACTIVE_STATUSES.includes(b.status));
+  const activeBooking = bookings.find((b) => ACTIVE_STATUSES.includes(b.status) && !isSessionEndedPending(b));
 
   function openConsent(counsellor: UserProfile) {
     setViewingProfile(null);
@@ -90,9 +120,18 @@ export function BookingSection() {
     setOccupationField(profile?.studentOrProfessional ?? "student");
     setWhatsappField(profile?.whatsappNumber ?? "");
     setIssueField("");
+    setSlot1Field("");
+    setSlot2Field("");
   }
 
-  const formValid = nameField.trim() && whatsappField.trim() && issueField.trim() && agreed;
+  const formValid =
+    nameField.trim() &&
+    whatsappField.trim() &&
+    issueField.trim() &&
+    agreed &&
+    slot1Field &&
+    slot2Field &&
+    slot1Field !== slot2Field;
 
   async function confirmBooking() {
     if (!currentUser || !profile || !target || !formValid) return;
@@ -104,11 +143,50 @@ export function BookingSection() {
         whatsappNumber: whatsappField.trim(),
         issue: issueField.trim(),
       };
-      await createBooking({ uid: currentUser.uid, email: profile.email }, { uid: target.uid, email: target.email }, intake);
+      await createBooking(
+        { uid: currentUser.uid, email: profile.email },
+        { uid: target.uid, email: target.email },
+        intake,
+        [new Date(slot1Field).getTime(), new Date(slot2Field).getTime()],
+        profile.campusId,
+      );
       setTarget(null);
       await refresh();
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  function openRescheduleRequest(booking: Booking) {
+    setRescheduleTarget(booking);
+    setRescheduleTimeField("");
+    setRescheduleReasonField("");
+  }
+
+  async function confirmRescheduleRequest() {
+    if (!rescheduleTarget || !rescheduleTimeField) return;
+    setRequestingReschedule(true);
+    try {
+      await requestReschedule(
+        rescheduleTarget,
+        "user",
+        new Date(rescheduleTimeField).getTime(),
+        rescheduleReasonField.trim() || undefined,
+      );
+      setRescheduleTarget(null);
+      await refresh();
+    } finally {
+      setRequestingReschedule(false);
+    }
+  }
+
+  async function handleAcceptReschedule(booking: Booking) {
+    setAcceptingRescheduleId(booking.id);
+    try {
+      await acceptRescheduleProposal(booking);
+      await refresh();
+    } finally {
+      setAcceptingRescheduleId(null);
     }
   }
 
@@ -171,10 +249,10 @@ export function BookingSection() {
                 {b.followUpOfBookingId && <span className="booking-section__followup-tag">(follow-up)</span>}
               </span>
               <div className="booking-section__row-right">
-                <span className={`booking-section__status booking-section__status--${b.status}`}>
+                <span className={`booking-section__status booking-section__status--${statusClass(b)}`}>
                   {statusLabel(b)}
                 </span>
-                {ACTIVE_STATUSES.includes(b.status) && (
+                {ACTIVE_STATUSES.includes(b.status) && !isSessionEndedPending(b) && (
                   <Button
                     type="button"
                     variant="outlined"
@@ -203,6 +281,50 @@ export function BookingSection() {
                     </Button>
                   ))}
               </div>
+
+              {b.status === "pending" && b.proposedSlots && (
+                <div className="booking-section__extra">
+                  Proposed times: {new Date(b.proposedSlots[0]).toLocaleString()} or{" "}
+                  {new Date(b.proposedSlots[1]).toLocaleString()}
+                </div>
+              )}
+
+              {b.status === "scheduled" && !isSessionEndedPending(b) && b.rescheduleProposal && (
+                <div className="booking-section__extra">
+                  {b.rescheduleProposal.proposedBy === "counsellor" ? (
+                    <>
+                      <p className="booking-section__reschedule-note">
+                        Counsellor proposed a new time: {new Date(b.rescheduleProposal.proposedAt).toLocaleString()}
+                        {b.rescheduleProposal.reason ? ` — ${b.rescheduleProposal.reason}` : ""}
+                      </p>
+                      <div className="booking-section__row-right">
+                        <Button
+                          type="button"
+                          disabled={acceptingRescheduleId === b.id}
+                          onClick={() => handleAcceptReschedule(b)}
+                        >
+                          {acceptingRescheduleId === b.id ? "Accepting…" : "Accept new time"}
+                        </Button>
+                        <Button type="button" variant="outlined" onClick={() => openRescheduleRequest(b)}>
+                          Propose different time
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="booking-section__reschedule-note">
+                      Reschedule requested — awaiting counsellor response.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {b.status === "scheduled" && !isSessionEndedPending(b) && !b.rescheduleProposal && (
+                <div className="booking-section__extra">
+                  <Button type="button" variant="outlined" onClick={() => openRescheduleRequest(b)}>
+                    Request reschedule
+                  </Button>
+                </div>
+              )}
             </Card>
           ))}
         </div>
@@ -262,6 +384,17 @@ export function BookingSection() {
               onChange={(e) => setIssueField(e.target.value)}
             />
           </div>
+          <div className="booking-section__field">
+            <label htmlFor="booking-slot-1">Preferred time — option 1</label>
+            <DateTimePicker id="booking-slot-1" min={nowValue()} value={slot1Field} onChange={setSlot1Field} />
+          </div>
+          <div className="booking-section__field">
+            <label htmlFor="booking-slot-2">Preferred time — option 2</label>
+            <DateTimePicker id="booking-slot-2" min={nowValue()} value={slot2Field} onChange={setSlot2Field} />
+          </div>
+          {slot1Field && slot2Field && slot1Field === slot2Field && (
+            <p className="booking-section__legal-note">Please pick two different times.</p>
+          )}
 
           <label className="booking-section__agree">
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
@@ -320,6 +453,40 @@ export function BookingSection() {
               {rating ? "Submitting…" : "Submit rating"}
             </Button>
             <Button type="button" variant="outlined" onClick={() => setRateTarget(null)}>
+              Back
+            </Button>
+          </div>
+        </Modal>
+      )}
+
+      {rescheduleTarget && (
+        <Modal title="Request a reschedule" onClose={() => setRescheduleTarget(null)}>
+          <p>
+            Propose a new time for your session with <strong>{rescheduleTarget.counsellorEmail}</strong>. They'll be
+            able to accept it or propose a different time back.
+          </p>
+          <div className="booking-section__field">
+            <label htmlFor="reschedule-time">New proposed time</label>
+            <DateTimePicker id="reschedule-time" min={nowValue()} value={rescheduleTimeField} onChange={setRescheduleTimeField} />
+          </div>
+          <div className="booking-section__field">
+            <label htmlFor="reschedule-reason">Reason (optional)</label>
+            <textarea
+              id="reschedule-reason"
+              rows={3}
+              value={rescheduleReasonField}
+              onChange={(e) => setRescheduleReasonField(e.target.value)}
+            />
+          </div>
+          <div className="booking-section__modal-actions">
+            <Button
+              type="button"
+              disabled={!rescheduleTimeField || requestingReschedule}
+              onClick={confirmRescheduleRequest}
+            >
+              {requestingReschedule ? "Sending…" : "Send reschedule request"}
+            </Button>
+            <Button type="button" variant="outlined" onClick={() => setRescheduleTarget(null)}>
               Back
             </Button>
           </div>
