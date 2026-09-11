@@ -3,7 +3,6 @@
   flex-direction: column;
   gap: 16px;
   width: 100%;
-  max-width: 720px;
 }
 
 .transfer-requests__intro {
@@ -28,9 +27,17 @@
 
 .transfer-requests__row {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px 24px;
   padding: 18px 22px;
+}
+
+.transfer-requests__info {
+  flex: 1 1 260px;
+  min-width: 0;
 }
 
 .transfer-requests__title {
@@ -57,8 +64,10 @@
 .transfer-requests__actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 .transfer-requests__actions > .md-select {
@@ -70,6 +79,7 @@
   flex-direction: column;
   gap: 10px;
   align-items: flex-start;
+  flex-basis: 100%;
 }
 
 .transfer-requests__decline textarea {
@@ -84,4 +94,20 @@
   color: var(--neu-text-primary, #2D3748);
   resize: vertical;
   box-sizing: border-box;
+}
+
+@media (max-width: 560px) {
+  .transfer-requests__actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .transfer-requests__actions > .md-select {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .transfer-requests__actions > .md-button {
+    flex: 1 1 auto;
+  }
 }

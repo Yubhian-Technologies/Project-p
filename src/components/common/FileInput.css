@@ -1,0 +1,54 @@
+.md-file-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.md-file-input__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: none;
+  background: var(--neu-bg, #E8ECF2);
+  box-shadow: var(--neu-shadow-extruded-sm);
+  color: var(--neu-text-primary, #2D3748);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.md-file-input__trigger:hover {
+  box-shadow: var(--neu-shadow-extruded);
+}
+
+.md-file-input__trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.md-file-input__trigger svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.md-file-input__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neu-accent-primary, #2563EB);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.md-file-input__placeholder {
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
+}

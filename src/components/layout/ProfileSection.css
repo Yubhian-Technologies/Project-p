@@ -119,6 +119,11 @@
   align-self: flex-start;
 }
 
+.profile-section__password-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .profile-section__password .profile-section__error {
   max-width: none;
   text-align: left;

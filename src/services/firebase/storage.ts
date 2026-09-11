@@ -7,8 +7,8 @@ export async function uploadAvatar(uid: string, file: File): Promise<string> {
   return getDownloadURL(avatarRef);
 }
 
-export async function uploadEventReport(eventId: string, file: File): Promise<string> {
-  const reportRef = ref(storage, `event-reports/${eventId}/report`);
+export async function uploadEventReport(eventId: string, uploaderUid: string, file: File): Promise<string> {
+  const reportRef = ref(storage, `event-reports/${eventId}/${uploaderUid}/report`);
   await uploadBytes(reportRef, file);
   return getDownloadURL(reportRef);
 }

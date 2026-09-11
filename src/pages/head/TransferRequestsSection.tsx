@@ -104,7 +104,7 @@ export function TransferRequestsSection() {
       <div className="transfer-requests__list">
         {requests.map((booking) => (
           <Card key={booking.id} className="transfer-requests__row">
-            <div>
+            <div className="transfer-requests__info">
               <p className="transfer-requests__title">{booking.userEmail}'s session</p>
               <p className="transfer-requests__meta">
                 Requested by {booking.transferRequest?.requestedByEmail} • currently {booking.counsellorEmail}
@@ -136,7 +136,7 @@ export function TransferRequestsSection() {
                 disabled={!targetByBooking[booking.id] || busyId === booking.id}
                 onClick={() => handleApprove(booking)}
               >
-                {busyId === booking.id ? "Approving…" : "Approve & Transfer"}
+                {busyId === booking.id ? "Approving…" : "Approve"}
               </Button>
               <Button
                 type="button"

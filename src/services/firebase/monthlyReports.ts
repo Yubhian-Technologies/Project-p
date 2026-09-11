@@ -8,7 +8,7 @@ import {
   orderBy,
   serverTimestamp,
 } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage } from "./config";
 
 export interface MonthlyReport {
@@ -36,23 +36,12 @@ export async function uploadMonthlyReport(
   uploadedByUid: string,
   onProgress?: (pct: number) => void,
 ): Promise<MonthlyReport> {
-  const storagePath = `monthly-reports/${year}/${String(month).padStart(2, "0")}/${Date.now()}_${file.name}`;
+  const storagePath = `monthly-reports/${uploadedByUid}/${year}/${String(month).padStart(2, "0")}/${Date.now()}_${file.name}`;
   const storageRef = ref(storage, storagePath);
 
-  // Upload with progress
-  await new Promise<void>((resolve, reject) => {
-    const task = uploadBytesResumable(storageRef, file);
-    task.on(
-      "state_changed",
-      (snap) => {
-        if (onProgress) {
-          onProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100));
-        }
-      },
-      reject,
-      () => resolve(),
-    );
-  });
+  onProgress?.(0);
+  await uploadBytes(storageRef, file);
+  onProgress?.(100);
 
   const downloadURL = await getDownloadURL(storageRef);
 

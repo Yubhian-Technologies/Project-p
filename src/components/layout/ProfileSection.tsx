@@ -73,6 +73,7 @@ export function ProfileSection() {
   );
   const [savingCounsellorProfile, setSavingCounsellorProfile] = useState(false);
 
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPasswordDraft, setCurrentPasswordDraft] = useState("");
   const [newPasswordDraft, setNewPasswordDraft] = useState("");
   const [confirmPasswordDraft, setConfirmPasswordDraft] = useState("");
@@ -463,51 +464,6 @@ export function ProfileSection() {
               </Button>
             </div>
 
-            <div className="profile-section__password">
-              <p className="profile-section__subheading">Change password</p>
-              <div className="profile-section__field">
-                <label htmlFor="current-password">Current password</label>
-                <input
-                  id="current-password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={currentPasswordDraft}
-                  onChange={(e) => setCurrentPasswordDraft(e.target.value)}
-                />
-              </div>
-              <div className="profile-section__field">
-                <label htmlFor="new-password">New password</label>
-                <input
-                  id="new-password"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={6}
-                  value={newPasswordDraft}
-                  onChange={(e) => setNewPasswordDraft(e.target.value)}
-                />
-              </div>
-              <div className="profile-section__field">
-                <label htmlFor="confirm-password">Confirm new password</label>
-                <input
-                  id="confirm-password"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={6}
-                  value={confirmPasswordDraft}
-                  onChange={(e) => setConfirmPasswordDraft(e.target.value)}
-                />
-              </div>
-              {passwordError && <p className="profile-section__error">{passwordError}</p>}
-              {passwordSuccess && <p className="profile-section__success">Password updated successfully.</p>}
-              <Button
-                type="button"
-                variant="outlined"
-                disabled={changingPassword || !currentPasswordDraft || newPasswordDraft.length < 6 || !confirmPasswordDraft}
-                onClick={handleChangePassword}
-              >
-                {changingPassword ? "Updating…" : "Change password"}
-              </Button>
-            </div>
           </>
         )}
 
@@ -550,6 +506,77 @@ export function ProfileSection() {
             </Button>
           </div>
         )}
+
+        <div className="profile-section__password">
+          <p className="profile-section__subheading">Security</p>
+          {!showPasswordForm ? (
+            <Button type="button" variant="outlined" onClick={() => setShowPasswordForm(true)}>
+              Change password
+            </Button>
+          ) : (
+            <>
+              <div className="profile-section__field">
+                <label htmlFor="current-password">Current password</label>
+                <input
+                  id="current-password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={currentPasswordDraft}
+                  onChange={(e) => setCurrentPasswordDraft(e.target.value)}
+                />
+              </div>
+              <div className="profile-section__field">
+                <label htmlFor="new-password">New password</label>
+                <input
+                  id="new-password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={6}
+                  value={newPasswordDraft}
+                  onChange={(e) => setNewPasswordDraft(e.target.value)}
+                />
+              </div>
+              <div className="profile-section__field">
+                <label htmlFor="confirm-password">Confirm new password</label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={6}
+                  value={confirmPasswordDraft}
+                  onChange={(e) => setConfirmPasswordDraft(e.target.value)}
+                />
+              </div>
+              {passwordError && <p className="profile-section__error">{passwordError}</p>}
+              {passwordSuccess && <p className="profile-section__success">Password updated successfully.</p>}
+              <div className="profile-section__password-actions">
+                <Button
+                  type="button"
+                  variant="outlined"
+                  disabled={changingPassword || !currentPasswordDraft || newPasswordDraft.length < 6 || !confirmPasswordDraft}
+                  onClick={handleChangePassword}
+                >
+                  {changingPassword ? "Updating…" : "Change password"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  disabled={changingPassword}
+                  onClick={() => {
+                    setShowPasswordForm(false);
+                    setCurrentPasswordDraft("");
+                    setNewPasswordDraft("");
+                    setConfirmPasswordDraft("");
+                    setPasswordError(null);
+                    setPasswordSuccess(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </Card>
   );

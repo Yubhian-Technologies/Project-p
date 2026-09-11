@@ -6,6 +6,17 @@ import {
   deleteMonthlyReport,
   type MonthlyReport,
 } from "../../services/firebase/monthlyReports";
+import { Select } from "../../components/common/Select";
+import {
+  FolderOpenIcon,
+  PaperclipIcon,
+  CalendarIcon,
+  DownloadIcon,
+  TrashIcon,
+  RefreshIcon,
+  CheckIcon,
+  AlertTriangleIcon,
+} from "../../components/common/icons";
 import "./MonthlyReportsSection.css";
 
 const MONTHS = [
@@ -113,7 +124,8 @@ export function MonthlyReportsSection() {
       if (fileInputRef.current) fileInputRef.current.value = "";
       await loadReports();
     } catch (err) {
-      setUploadError("Upload failed. Please try again.");
+      const code = err && typeof err === "object" && "code" in err ? ` (${(err as { code: string }).code})` : "";
+      setUploadError(`Upload failed${code}. Please try again.`);
       console.error(err);
     } finally {
       setUploading(false);
@@ -138,7 +150,9 @@ export function MonthlyReportsSection() {
       {/* ── Upload Card ─────────────────────────────────────────────── */}
       <div className="mr-upload-card">
         <h2 className="mr-upload-card__title">
-          <span className="mr-upload-card__title-icon">📤</span>
+          <span className="mr-upload-card__title-icon">
+            <FolderOpenIcon />
+          </span>
           Upload Monthly Report
         </h2>
 
@@ -164,18 +178,13 @@ export function MonthlyReportsSection() {
             <label className="mr-upload-card__label" htmlFor="mr-month">
               Month
             </label>
-            <select
-              id="mr-month"
-              className="mr-upload-card__input"
-              value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
-            >
+            <Select id="mr-month" value={String(month)} onChange={(v) => setMonth(Number(v))}>
               {MONTHS.map((m, i) => (
-                <option key={m} value={i + 1}>
+                <option key={m} value={String(i + 1)}>
                   {m}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Year */}
@@ -183,18 +192,13 @@ export function MonthlyReportsSection() {
             <label className="mr-upload-card__label" htmlFor="mr-year">
               Year
             </label>
-            <select
-              id="mr-year"
-              className="mr-upload-card__input"
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-            >
+            <Select id="mr-year" value={String(year)} onChange={(v) => setYear(Number(v))}>
               {YEARS.map((y) => (
-                <option key={y} value={y}>
+                <option key={y} value={String(y)}>
                   {y}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Drop-zone */}
@@ -208,10 +212,14 @@ export function MonthlyReportsSection() {
               onDrop={handleDrop}
             >
               {file ? (
-                <span className="mr-upload-card__selected-file">📎 {file.name}</span>
+                <span className="mr-upload-card__selected-file">
+                  <PaperclipIcon /> {file.name}
+                </span>
               ) : (
                 <>
-                  <span className="mr-upload-card__dropzone-icon">📁</span>
+                  <span className="mr-upload-card__dropzone-icon">
+                    <FolderOpenIcon />
+                  </span>
                   <span className="mr-upload-card__dropzone-text">
                     Click or drag &amp; drop to select file
                   </span>
@@ -263,8 +271,16 @@ export function MonthlyReportsSection() {
                 Clear
               </button>
             )}
-            {uploadError && <span className="mr-upload-card__error">⚠ {uploadError}</span>}
-            {uploadSuccess && <span className="mr-upload-card__success">✓ {uploadSuccess}</span>}
+            {uploadError && (
+              <span className="mr-upload-card__error">
+                <AlertTriangleIcon /> {uploadError}
+              </span>
+            )}
+            {uploadSuccess && (
+              <span className="mr-upload-card__success">
+                <CheckIcon /> {uploadSuccess}
+              </span>
+            )}
           </div>
         </form>
       </div>
@@ -274,7 +290,7 @@ export function MonthlyReportsSection() {
         <div className="mr-list__header">
           <h3 className="mr-list__title">Uploaded Reports</h3>
           <button type="button" className="mr-btn mr-btn--ghost" onClick={loadReports}>
-            ↻ Refresh
+            <RefreshIcon /> Refresh
           </button>
         </div>
 
@@ -282,7 +298,9 @@ export function MonthlyReportsSection() {
           <p style={{ color: "var(--neu-text-muted)", fontSize: 14 }}>Loading…</p>
         ) : reports.length === 0 ? (
           <div className="mr-list__empty">
-            <div style={{ fontSize: 40, marginBottom: 8 }}>📋</div>
+            <div className="mr-list__empty-icon">
+              <FolderOpenIcon strokeWidth={1.5} />
+            </div>
             <p>No reports uploaded yet.</p>
           </div>
         ) : (
@@ -292,12 +310,12 @@ export function MonthlyReportsSection() {
                 <div className="mr-list__row-info">
                   <span className="mr-list__row-title">{r.title}</span>
                   <span className="mr-list__row-meta">
-                    📅 {monthLabel(r.month)} {r.year} &nbsp;·&nbsp; 📁 {r.fileName} &nbsp;·&nbsp; Uploaded {formatDate(r.uploadedAt)}
+                    <CalendarIcon /> {monthLabel(r.month)} {r.year} &nbsp;·&nbsp; <FolderOpenIcon /> {r.fileName} &nbsp;·&nbsp; Uploaded {formatDate(r.uploadedAt)}
                   </span>
                 </div>
                 <div className="mr-list__row-actions">
                   <span className="mr-list__row-badge">
-                    📅 {monthLabel(r.month)} {r.year}
+                    <CalendarIcon /> {monthLabel(r.month)} {r.year}
                   </span>
                   <a
                     href={r.downloadURL}
@@ -305,7 +323,7 @@ export function MonthlyReportsSection() {
                     rel="noopener noreferrer"
                     className="mr-btn mr-btn--download"
                   >
-                    ⬇ Download
+                    <DownloadIcon /> Download
                   </a>
                   <button
                     type="button"
@@ -313,7 +331,7 @@ export function MonthlyReportsSection() {
                     disabled={deletingId === r.id}
                     onClick={() => handleDelete(r)}
                   >
-                    {deletingId === r.id ? "Deleting…" : "🗑 Delete"}
+                    <TrashIcon /> {deletingId === r.id ? "Deleting…" : "Delete"}
                   </button>
                 </div>
               </div>
