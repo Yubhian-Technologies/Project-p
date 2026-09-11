@@ -1,5 +1,16 @@
 import { useEffect, useState } from "react";
 import { listMonthlyReports, type MonthlyReport } from "../../services/firebase/monthlyReports";
+import { Select } from "../../components/common/Select";
+import {
+  FolderOpenIcon,
+  CalendarIcon,
+  UserIcon,
+  ClockIcon,
+  DownloadIcon,
+  RefreshIcon,
+  XIcon,
+  CheckIcon,
+} from "../../components/common/icons";
 import "./MonthlyReportsViewSection.css";
 
 const MONTHS = [
@@ -54,14 +65,16 @@ export function MonthlyReportsViewSection() {
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="mrv-header">
         <div className="mrv-header__title-block">
-          <div className="mrv-header__icon">📋</div>
+          <div className="mrv-header__icon">
+            <FolderOpenIcon />
+          </div>
           <div>
             <h2 className="mrv-header__title">Monthly Reports</h2>
             <p className="mrv-header__sub">Reports submitted by Department Heads</p>
           </div>
         </div>
         <button type="button" className="mrv-refresh-btn" onClick={load}>
-          ↻ Refresh
+          <RefreshIcon /> Refresh
         </button>
       </div>
 
@@ -69,32 +82,22 @@ export function MonthlyReportsViewSection() {
       <div className="mrv-filters">
         <div className="mrv-filters__field">
           <label className="mrv-filters__label" htmlFor="mrv-filter-month">Month</label>
-          <select
-            id="mrv-filter-month"
-            className="mrv-filters__select"
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(Number(e.target.value))}
-          >
-            <option value={0}>All months</option>
+          <Select id="mrv-filter-month" value={String(filterMonth)} onChange={(v) => setFilterMonth(Number(v))}>
+            <option value="0">All months</option>
             {MONTHS.map((m, i) => (
-              <option key={m} value={i + 1}>{m}</option>
+              <option key={m} value={String(i + 1)}>{m}</option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div className="mrv-filters__field">
           <label className="mrv-filters__label" htmlFor="mrv-filter-year">Year</label>
-          <select
-            id="mrv-filter-year"
-            className="mrv-filters__select"
-            value={filterYear}
-            onChange={(e) => setFilterYear(Number(e.target.value))}
-          >
-            <option value={0}>All years</option>
+          <Select id="mrv-filter-year" value={String(filterYear)} onChange={(v) => setFilterYear(Number(v))}>
+            <option value="0">All years</option>
             {YEARS.map((y) => (
-              <option key={y} value={y}>{y}</option>
+              <option key={y} value={String(y)}>{y}</option>
             ))}
-          </select>
+          </Select>
         </div>
 
         {(filterMonth !== 0 || filterYear !== 0) && (
@@ -103,7 +106,7 @@ export function MonthlyReportsViewSection() {
             className="mrv-filters__clear"
             onClick={() => { setFilterMonth(0); setFilterYear(0); }}
           >
-            ✕ Clear filters
+            <XIcon /> Clear filters
           </button>
         )}
 
@@ -117,7 +120,9 @@ export function MonthlyReportsViewSection() {
         <p style={{ color: "var(--neu-text-muted)", fontSize: 14 }}>Loading reports…</p>
       ) : filtered.length === 0 ? (
         <div className="mrv-list__empty">
-          <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
+          <div className="mrv-list__empty-icon">
+            <FolderOpenIcon strokeWidth={1.5} />
+          </div>
           <p>
             {reports.length === 0
               ? "No monthly reports have been uploaded yet."
@@ -131,10 +136,10 @@ export function MonthlyReportsViewSection() {
               <div className="mrv-list__row-left">
                 <span className="mrv-list__row-title">{r.title}</span>
                 <div className="mrv-list__row-meta">
-                  <span className="mrv-list__row-meta-item">📅 {monthLabel(r.month)} {r.year}</span>
-                  <span className="mrv-list__row-meta-item">👤 {r.uploadedBy}</span>
-                  <span className="mrv-list__row-meta-item">🕒 Uploaded {formatDate(r.uploadedAt)}</span>
-                  <span className="mrv-list__row-meta-item">📁 {r.fileName}</span>
+                  <span className="mrv-list__row-meta-item"><CalendarIcon /> {monthLabel(r.month)} {r.year}</span>
+                  <span className="mrv-list__row-meta-item"><UserIcon /> {r.uploadedBy}</span>
+                  <span className="mrv-list__row-meta-item"><ClockIcon /> Uploaded {formatDate(r.uploadedAt)}</span>
+                  <span className="mrv-list__row-meta-item"><FolderOpenIcon /> {r.fileName}</span>
                 </div>
               </div>
 
@@ -143,7 +148,7 @@ export function MonthlyReportsViewSection() {
                   {monthLabel(r.month)} {r.year}
                 </span>
                 <span className="mrv-badge mrv-badge--green">
-                  ✓ By Head
+                  <CheckIcon /> By Head
                 </span>
                 <a
                   href={r.downloadURL}
@@ -151,7 +156,7 @@ export function MonthlyReportsViewSection() {
                   rel="noopener noreferrer"
                   className="mrv-btn-download"
                 >
-                  ⬇ View / Download
+                  <DownloadIcon /> View / Download
                 </a>
               </div>
             </div>

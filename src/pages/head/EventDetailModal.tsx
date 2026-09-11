@@ -2,10 +2,12 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import type { EventCategory, EventProgram } from "../../types/event";
 import type { UserProfile } from "../../types/user";
+import { useAuth } from "../../hooks/useAuth";
 import { createEvent, deleteEvent, updateEvent } from "../../services/firebase/events";
 import { uploadEventReport } from "../../services/firebase/storage";
 import { Modal } from "../../components/common/Modal";
 import { Button } from "../../components/common/Button";
+import { FileInput } from "../../components/common/FileInput";
 import { Select } from "../../components/common/Select";
 import { MultiSelect } from "../../components/common/MultiSelect";
 import { DateTimePicker } from "../../components/common/DateTimePicker";
@@ -63,6 +65,7 @@ export function EventDetailModal({
   calendarYearId,
   calendarMonthId,
 }: EventDetailModalProps) {
+  const { profile } = useAuth();
   const [title, setTitle] = useState(event?.title ?? "");
   const [description, setDescription] = useState(event?.description ?? "");
   const [category, setCategory] = useState<EventCategory>(event?.category ?? defaultCategory ?? "main-program");
@@ -170,7 +173,7 @@ export function EventDetailModal({
       let reportFileName: string | undefined;
       let reportUploadedAt: number | undefined;
       if (reportFile) {
-        reportUrl = await uploadEventReport(event.id, reportFile);
+        reportUrl = await uploadEventReport(event.id, profile?.uid ?? "", reportFile);
         reportFileName = reportFile.name;
         reportUploadedAt = Date.now();
       }
@@ -192,7 +195,7 @@ export function EventDetailModal({
     setActionBusy(true);
     setError("");
     try {
-      const reportUrl = await uploadEventReport(event.id, reportFile);
+      const reportUrl = await uploadEventReport(event.id, profile?.uid ?? "", reportFile);
       await updateEvent(event.id, {
         reportUrl,
         reportFileName: reportFile.name,
@@ -502,11 +505,11 @@ export function EventDetailModal({
               {actionMode === "complete" && (
                 <div className="event-detail-modal__subpanel">
                   <label htmlFor="ed-report">Upload report (optional now, can add later)</label>
-                  <input
+                  <FileInput
                     id="ed-report"
-                    type="file"
                     accept="application/pdf,image/*"
-                    onChange={(e) => setReportFile(e.target.files?.[0] ?? null)}
+                    file={reportFile}
+                    onChange={setReportFile}
                   />
                   <Button type="button" disabled={actionBusy} onClick={handleConfirmComplete}>
                     {actionBusy ? "Saving…" : "Confirm completion"}
@@ -562,11 +565,11 @@ export function EventDetailModal({
           {event.phase === "completed" && !event.reportUrl && (
             <div className="event-detail-modal__subpanel">
               <label htmlFor="ed-report-only">Upload report</label>
-              <input
+              <FileInput
                 id="ed-report-only"
-                type="file"
                 accept="application/pdf,image/*"
-                onChange={(e) => setReportFile(e.target.files?.[0] ?? null)}
+                file={reportFile}
+                onChange={setReportFile}
               />
               <Button type="button" disabled={actionBusy || !reportFile} onClick={handleUploadReportOnly}>
                 {actionBusy ? "Uploading…" : "Upload report"}
@@ -577,11 +580,11 @@ export function EventDetailModal({
           {event.phase === "completed" && event.reportUrl && (
             <div className="event-detail-modal__subpanel">
               <label htmlFor="ed-report-replace">Replace report</label>
-              <input
+              <FileInput
                 id="ed-report-replace"
-                type="file"
                 accept="application/pdf,image/*"
-                onChange={(e) => setReportFile(e.target.files?.[0] ?? null)}
+                file={reportFile}
+                onChange={setReportFile}
               />
               <Button type="button" disabled={actionBusy || !reportFile} onClick={handleUploadReportOnly}>
                 {actionBusy ? "Uploading…" : "Replace report"}

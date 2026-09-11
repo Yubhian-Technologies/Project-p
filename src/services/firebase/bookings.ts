@@ -467,10 +467,14 @@ export async function declineBookingTransfer(
 
 export async function listPendingTransferRequestsForCampus(campusId: string): Promise<Booking[]> {
   const q = query(bookingsCollection, where("transferRequest.status", "==", "pending"));
-  const snapshot = await getDocs(q);
+  const [snapshot, staff] = await Promise.all([getDocs(q), listBookableProfiles()]);
+  // Older bookings predate campusId being stamped on every booking — fall back
+  // to the requesting counsellor's current campus so those don't silently
+  // disappear from the Head's queue.
+  const campusByCounsellorId = new Map(staff.map((p) => [p.uid, p.campusId]));
   return snapshot.docs
     .map((d) => toBooking(d.id, d.data()))
-    .filter((b) => b.campusId === campusId)
+    .filter((b) => (b.campusId ?? campusByCounsellorId.get(b.counsellorId)) === campusId)
     .sort((a, b) => (b.transferRequest?.createdAt ?? 0) - (a.transferRequest?.createdAt ?? 0));
 }
 

@@ -7,6 +7,13 @@
   width: 100%;
 }
 
+.mr-section svg {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+  flex-shrink: 0;
+}
+
 /* ── Upload Card ───────────────────────────────────────────────────── */
 .mr-upload-card {
   background: var(--neu-bg, #EBF0F5);
@@ -37,6 +44,11 @@
   font-size: 18px;
   color: #fff;
   box-shadow: var(--neu-shadow-accent);
+}
+
+.mr-upload-card__title-icon svg {
+  width: 18px;
+  height: 18px;
 }
 
 .mr-upload-card__form {
@@ -110,8 +122,20 @@
 }
 
 .mr-upload-card__dropzone-icon {
-  font-size: 32px;
-  line-height: 1;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+  color: #fff;
+  box-shadow: var(--neu-shadow-accent);
+}
+
+.mr-upload-card__dropzone-icon svg {
+  width: 22px;
+  height: 22px;
 }
 
 .mr-upload-card__dropzone-text {
@@ -195,6 +219,18 @@
   background: var(--neu-bg, #EBF0F5);
   border-radius: 20px;
   box-shadow: var(--neu-shadow-sunken-sm);
+}
+
+.mr-list__empty-icon {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 8px;
+  color: var(--neu-text-muted, #64748B);
+}
+
+.mr-list__empty-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .mr-list {

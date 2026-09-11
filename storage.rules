@@ -16,17 +16,39 @@ service firebase.storage {
     }
 
     // Event completion reports: src/services/firebase/storage.ts uploads to
-    // event-reports/{eventId}/report. Head, Admin, Super Admin, and Counsellor can
-    // all view reports (mirrors the Firestore "events" read rule); Head or
-    // Counsellor uploads/replaces (mirrors the Firestore "events" write rule).
-    match /event-reports/{eventId}/{fileName} {
-      allow read: if request.auth != null &&
-        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['head', 'admin', 'super-admin', 'counsellor'];
-      allow write: if request.auth != null &&
-        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['head', 'counsellor'] &&
+    // event-reports/{eventId}/{uploaderUid}/report. Scoped by the uploader's
+    // own uid — like avatars/{uid} above — rather than a firestore.get() role
+    // lookup: that cross-service check proved unreliable (see monthly-reports
+    // below, which hit the identical storage/unauthorized failure). The real
+    // access control lives in the Firestore "events" rule (only Head/
+    // Counsellor on the event's own campus can update it); any signed-in user
+    // can read here (the download link is only ever reached through that
+    // already-gated event data — students have no UI path to events at all).
+    match /event-reports/{eventId}/{uid}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid &&
         request.resource.size < 15 * 1024 * 1024 &&
         request.resource.contentType.matches('application/pdf|image/.*');
       allow delete: if false;
+    }
+
+    // Monthly reports: src/services/firebase/monthlyReports.ts uploads to
+    // monthly-reports/{uploaderUid}/{year}/{month}/{fileName}. Scoped by the
+    // uploader's own uid — like avatars/{uid} above — rather than a
+    // firestore.get() role lookup: that cross-service check proved unreliable
+    // here (uploads came back storage/unauthorized even for a genuine Head).
+    // The real access control lives in the Firestore "monthlyReports" rule
+    // (isRole('head') to create a listing, isStaff() to read the list) — a
+    // signed-in user can only write/delete under their own uid segment here,
+    // and any signed-in user can read (matches avatars' read rule; the
+    // download link is only ever reached through the already-gated Firestore
+    // listing). No contentType allowlist since Heads legitimately upload PDF,
+    // Word, Excel, PowerPoint, CSV, and plain text reports.
+    match /monthly-reports/{uid}/{year}/{month}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid &&
+        request.resource.size < 20 * 1024 * 1024;
+      allow delete: if request.auth != null && request.auth.uid == uid;
     }
 
     // Deny everything else by default.
