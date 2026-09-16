@@ -7,18 +7,18 @@
 .booking-section__heading {
   font-family: var(--md-sys-typescale-font-display);
   font-size: 22px;
-  font-weight: 700;
-  color: var(--neu-text-primary, #2D3748);
+  font-weight: 800;
+  color: #1E1E1E;
   margin-bottom: 20px;
 }
 
 .booking-section__notice {
-  background: var(--neu-bg, #E8ECF2);
-  color: var(--neu-text-primary, #2D3748);
-  border: none;
-  border-radius: 20px;
-  box-shadow: var(--neu-shadow-extruded-sm);
-  padding: 18px 24px;
+  background: #F8F4EA;
+  color: #1E1E1E;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  box-shadow: 3px 3px 0px #2B2B2B;
+  padding: 20px 26px;
   font-size: 14px;
   font-weight: 700;
   margin-bottom: 24px;
@@ -43,36 +43,36 @@
   flex-wrap: wrap;
   gap: 20px;
   flex-direction: row;
-  background: var(--neu-bg, #E8ECF2);
-  border: none;
-  border-radius: 24px;
-  padding: 20px 24px;
-  box-shadow: var(--neu-shadow-extruded);
+  background: #F8F4EA;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  padding: 22px 26px;
+  box-shadow: 3px 3px 0px #2B2B2B;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .booking-section__booking-row:hover {
-  box-shadow: var(--neu-shadow-extruded-hover);
-  transform: translateY(-1px);
+  box-shadow: 5px 5px 0px #2B2B2B;
+  transform: translate(-2px, -2px);
 }
 
 .booking-section__status {
   font-size: 12px;
   font-weight: 800;
   padding: 6px 16px;
-  border-radius: 9999px;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-extruded-sm);
+  border-radius: 0px;
+  border: 1.5px solid #2B2B2B;
+  background: #FFFFFF;
+  box-shadow: 2px 2px 0px #2B2B2B;
   color: var(--neu-text-body, #4A5568);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .booking-section__status--scheduled {
-  color: var(--neu-accent-primary, #2563EB);
-  box-shadow: var(--neu-shadow-accent);
-  background: linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%);
   color: #ffffff;
+  border-color: #2B2B2B;
+  background: #2563EB;
 }
 
 .booking-section__status--rejected,
@@ -86,6 +86,37 @@
   font-size: 12px;
   font-style: italic;
   color: var(--neu-text-muted, #718096);
+}
+
+.booking-section__feedback-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 0px;
+  border: 2px solid #2B2B2B;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  color: #2563EB;
+  background: #FFFFFF;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.booking-section__feedback-link::after {
+  content: "↗";
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.booking-section__feedback-link:hover {
+  box-shadow: var(--neu-shadow-extruded);
+  color: #1E40AF;
+  transform: translateY(-1px);
 }
 
 .booking-section__row-right {
@@ -121,6 +152,12 @@
 .booking-section__field label {
   font-size: 13px;
   color: var(--neu-text-muted, #718096);
+  font-weight: 700;
+}
+
+.booking-section__required {
+  color: #e53e3e;
+  margin-left: 2px;
   font-weight: 700;
 }
 
@@ -165,5 +202,111 @@
 .booking-section__modal-actions {
   display: flex;
   gap: 14px;
+}
+
+.booking-section__modal {
+  max-width: 700px;
+}
+
+/* ── Terms & Conditions step ─────────────────────────────────────── */
+.booking-section__tnc-body {
+  max-height: 400px;
+  overflow-y: auto;
+  background: var(--neu-bg, #E8ECF2);
+  border-radius: 16px;
+  box-shadow: var(--neu-shadow-sunken-sm);
+  padding: 20px 22px;
+  margin-bottom: 18px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--neu-text-body, #4A5568);
+  scroll-behavior: smooth;
+}
+
+.booking-section__tnc-body p {
+  margin: 0 0 12px 0;
+}
+
+.booking-section__tnc-list {
+  margin: 0 0 12px 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.booking-section__tnc-list li {
+  margin: 0;
+}
+
+/* Commitment callout at the top of T&C */
+.booking-section__tnc-commitment {
+  background: var(--neu-accent-light, #DBEAFE);
+  border-left: 3px solid var(--neu-accent-primary, #2563EB);
+  border-radius: 10px;
+  padding: 12px 16px !important;
+  font-weight: 600;
+  color: #1e3a8a !important;
+  font-style: italic;
+  margin-bottom: 16px !important;
+}
+
+.booking-section__tnc-heading {
+  margin: 0 0 14px 0;
+  font-size: 15px;
+  font-weight: 800;
+  font-family: var(--md-sys-typescale-font-display);
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.booking-section__tnc-sub {
+  margin: 16px 0 6px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--neu-accent-primary, #2563EB);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Step 2 accepted banner */
+.booking-section__step-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 18px;
+}
+
+.booking-section__rating-feedback-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.booking-section__rate-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--neu-bg, #E8ECF2);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  box-shadow: var(--neu-shadow-extruded-sm);
+}
+
+.booking-section__rate-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--neu-text-body, #4A5568);
+}
+
+.booking-section__rated-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 

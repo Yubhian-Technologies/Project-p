@@ -24,9 +24,10 @@
   height: 190px;
   max-width: 100%;
   text-align: center;
-  background: var(--neu-bg, #E8ECF2);
-  border-radius: 20px;
-  box-shadow: var(--neu-shadow-sunken-sm);
+  background: #FFFFFF;
+  border-radius: 24px;
+  border: 1.5px solid rgba(30, 30, 30, 0.06);
+  box-shadow: 0 6px 18px rgba(30, 30, 30, 0.04);
   padding: 16px;
   box-sizing: border-box;
 }
@@ -35,36 +36,38 @@
   font-family: var(--md-sys-typescale-font-display);
   font-weight: 800;
   font-size: 17px;
-  color: var(--neu-text-primary, #2D3748);
+  color: #1E1E1E;
 }
 
 .games-summary__score {
   font-size: 13px;
   font-weight: 600;
-  color: var(--neu-text-muted, #718096);
+  color: #6B7280;
 }
 
 .games-summary__score--best {
-  color: var(--neu-accent-primary, #2563EB);
+  color: #8B5CF6;
+  font-weight: 700;
 }
 
 .games-summary__arrow {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border: none;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(30, 30, 30, 0.08);
   border-radius: 9999px;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-extruded-sm);
-  color: var(--neu-accent-primary, #2563EB);
-  font-size: 20px;
+  background: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(30, 30, 30, 0.06);
+  color: #8B5CF6;
+  font-size: 18px;
   line-height: 1;
   cursor: pointer;
-  transition: box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .games-summary__arrow:hover {
-  box-shadow: var(--neu-shadow-extruded);
+  background: #F3E8FF;
+  transform: scale(1.08);
 }
 
 .games-summary__dots {
@@ -75,12 +78,12 @@
 }
 
 .games-summary__dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   padding: 0;
   border: none;
   border-radius: 9999px;
-  background: var(--neu-text-muted, #718096);
+  background: #6B7280;
   opacity: 0.35;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -88,8 +91,8 @@
 
 .games-summary__dot--active {
   opacity: 1;
-  background: var(--neu-accent-primary, #2563EB);
-  width: 14px;
+  background: #8B5CF6;
+  width: 16px;
   border-radius: 9999px;
 }
 

@@ -1,13 +1,13 @@
 .app-shell {
   min-height: 100vh;
-  background-color: var(--neu-bg, #E8ECF2);
-  color: var(--neu-text-body, #4A5568);
+  background-color: var(--theme-amber, #F9BA32);
+  color: var(--theme-charcoal, #1E1E1E);
 }
 
 .app-shell__topbar {
-  background: var(--neu-bg, #E8ECF2);
+  background: var(--theme-amber, #F9BA32);
   border-bottom: none;
-  box-shadow: var(--neu-shadow-extruded);
+  box-shadow: none;
   position: sticky;
   top: 0;
   z-index: 50;
@@ -17,8 +17,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 70px;
-  padding: 0 28px;
+  height: 76px;
+  padding: 0 32px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -31,41 +31,38 @@
 
 .app-shell__brand {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 800;
-  color: #0f172a;
+  color: #1E1E1E;
   white-space: nowrap;
-  gap: 10px;
+  gap: 12px;
+  letter-spacing: -0.01em;
 }
 
 .app-shell__logo {
-  height: 36px;
-  width: 36px;
+  height: 40px;
+  width: 40px;
   border-radius: 50%;
   object-fit: cover;
-  filter: drop-shadow(-2px -2px 4px rgba(255, 255, 255, 0.8)) drop-shadow(2px 2px 4px rgba(163, 177, 198, 0.6));
+  box-shadow: 0 4px 12px rgba(30, 30, 30, 0.12);
 }
 
 .app-shell__menu-toggle {
   display: none;
-  background: var(--neu-bg, #E8ECF2);
-  border: none;
+  background: #FFFFFF;
+  border: 1.5px solid rgba(30, 30, 30, 0.1);
   font-size: 18px;
   line-height: 1;
   padding: 10px 14px;
   border-radius: 9999px;
-  box-shadow: var(--neu-shadow-extruded-sm);
-  color: var(--neu-text-primary, #2D3748);
+  box-shadow: 0 4px 12px rgba(30, 30, 30, 0.08);
+  color: #1E1E1E;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .app-shell__menu-toggle:hover {
-  box-shadow: var(--neu-shadow-extruded);
-}
-
-.app-shell__menu-toggle:active {
-  box-shadow: var(--neu-shadow-sunken-sm);
+  transform: scale(1.05);
 }
 
 .app-shell__topbar-right {
@@ -75,28 +72,51 @@
 }
 
 .app-shell__role-badge {
-  background: var(--neu-bg, #E8ECF2);
-  color: var(--neu-accent-primary, #2563EB);
-  box-shadow: var(--neu-shadow-extruded-sm);
+  background: #FFFFFF;
+  color: #8B5CF6;
+  border: 1.5px solid rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.12);
   border-radius: 9999px;
   padding: 6px 16px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
+/* ── Organic Wave Divider ────────────────────────────────────────── */
+.app-shell__wave-wrap {
+  width: 100%;
+  height: 40px;
+  overflow: hidden;
+  line-height: 0;
+  margin-top: -2px;
+  background: var(--theme-amber, #F9BA32);
+}
+
+.app-shell__wave-svg {
+  width: 100%;
+  height: 40px;
+  display: block;
+}
+
+/* ── Content Sheet Container (Overlapping rounded card) ───────────── */
 .app-shell__body {
   display: flex;
   align-items: flex-start;
-  min-height: calc(100vh - 70px);
+  min-height: calc(100vh - 116px);
   width: 100%;
+  background: var(--theme-bg, #F8F9FA);
+  border-radius: 0;
+  box-shadow: 0 -10px 30px rgba(30, 30, 30, 0.06);
+  position: relative;
+  z-index: 10;
 }
 
-.app-shell__content {
+.app-shell__content-sheet {
   flex: 1;
   min-width: 0;
-  padding: 36px 36px 56px 36px;
+  padding: 36px;
   box-sizing: border-box;
 }
 
@@ -106,7 +126,7 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .app-shell__title {
@@ -114,7 +134,7 @@
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: var(--neu-text-primary, #2D3748);
+  color: var(--theme-charcoal, #1E1E1E);
   margin: 0;
 }
 
@@ -133,7 +153,7 @@
     justify-content: center;
   }
 
-  .app-shell__content {
+  .app-shell__content-sheet {
     padding: 24px 18px;
   }
 }
@@ -153,11 +173,6 @@
 
   .app-shell__topbar-right {
     gap: 8px;
-  }
-
-  .app-shell__topbar-right .md-button {
-    padding: 8px 14px;
-    font-size: 13px;
   }
 }
 

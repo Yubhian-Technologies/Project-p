@@ -20,7 +20,7 @@
 body {
   font-family: var(--font-main);
   color: var(--color-text-main);
-  background-color: var(--neu-bg, #E8ECF2);
+  background-color: var(--theme-bg, #F8F4EA);
   margin: 0;
   padding: 0;
 }

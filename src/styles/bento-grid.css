@@ -3,23 +3,23 @@
 @import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@500,700,900&display=swap');
 
 :root {
-  --bento-bg: var(--neu-bg, #E8ECF2);
-  --bento-bg-subtle: var(--neu-bg, #E8ECF2);
-  --bento-border: none;
-  --bento-border-highlight: none;
-  --bento-shadow: var(--neu-shadow-extruded, -4px -4px 10px rgba(255, 255, 255, 0.4), 5px 5px 12px rgba(163, 177, 198, 0.4));
-  --bento-shadow-hover: var(--neu-shadow-extruded-hover, -5px -5px 14px rgba(255, 255, 255, 0.45), 7px 7px 16px rgba(163, 177, 198, 0.5));
-  --bento-radius: 24px;
+  --bento-bg: #F8F4EA;
+  --bento-bg-subtle: #FFFFFF;
+  --bento-border: 2px solid #2B2B2B;
+  --bento-border-highlight: 2px solid #2B2B2B;
+  --bento-shadow: 3px 3px 0px #2B2B2B;
+  --bento-shadow-hover: 5px 5px 0px #2B2B2B;
+  --bento-radius: 0px;
   
   /* Typography Tokens */
-  --bento-font-title: 'General Sans', 'Satoshi', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --bento-font-body: 'Plus Jakarta Sans', 'Inter', 'General Sans', 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --bento-font-title: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --bento-font-body: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  --bento-primary: var(--neu-accent-primary, #2563EB);
-  --bento-primary-hover: var(--neu-accent-hover, #1D4ED8);
-  --bento-accent: #1E3A8A;
-  --bento-success: #2e7d32;
-  --bento-warning: #ed6c02;
+  --bento-primary: #8B5CF6;
+  --bento-primary-hover: #7C3AED;
+  --bento-accent: #F9BA32;
+  --bento-success: #059669;
+  --bento-warning: #D97706;
 }
 
 /* Master Grid Container */
@@ -29,28 +29,28 @@
   gap: 24px;
   width: 100%;
   box-sizing: border-box;
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 /* Individual Bento Card */
 .bento-card {
-  background: var(--neu-bg, #E8ECF2);
-  border: none;
-  border-radius: var(--bento-radius);
-  box-shadow: var(--bento-shadow);
+  background: #F8F4EA;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  box-shadow: 3px 3px 0px #2B2B2B;
   padding: 28px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
 }
 
 .bento-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--bento-shadow-hover);
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #2B2B2B;
 }
 
 /* Grid Column Spans */
@@ -62,18 +62,24 @@
 
 /* Hero Variant */
 .bento-card--hero {
-  background: linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%);
-  color: #ffffff;
-  border: none;
-  box-shadow: var(--neu-shadow-accent, -4px -4px 12px rgba(255, 255, 255, 0.6), 4px 4px 14px rgba(37, 99, 235, 0.45));
+  background: linear-gradient(135deg, #F9BA32 0%, #F59E0B 100%);
+  color: #1E1E1E;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  box-shadow: 3px 3px 0px #2B2B2B;
+}
+
+.bento-card--hero:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #2B2B2B;
 }
 
 .bento-card--hero .bento-card__title {
-  color: #ffffff;
+  color: #1E1E1E;
 }
 
 .bento-card--hero .bento-card__subtitle {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(30, 30, 30, 0.85);
 }
 
 /* Card Header */
@@ -156,11 +162,12 @@
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border-radius: 9999px;
+  border-radius: 0px;
+  border: 1.5px solid #2B2B2B;
   font-family: var(--bento-font-body);
   font-size: 12px;
   font-weight: 700;
-  box-shadow: var(--neu-shadow-extruded-sm);
+  box-shadow: 2px 2px 0px #2B2B2B;
   background: var(--neu-bg, #E8ECF2);
 }
 
@@ -195,9 +202,9 @@
   justify-content: space-between;
   padding: 12px 18px;
   background: var(--neu-bg, #E8ECF2);
-  border-radius: 16px;
-  box-shadow: var(--neu-shadow-sunken);
-  border: none;
+  border-radius: 0px;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
   font-family: var(--bento-font-body);
   font-size: 13px;
   color: var(--neu-text-body, #4A5568);
@@ -214,15 +221,15 @@
   font-size: 13px;
   font-weight: 700;
   padding: 10px 22px;
-  border-radius: 9999px;
-  border: none;
+  border-radius: 0px;
+  border: 2px solid #2B2B2B;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-extruded-sm);
+  box-shadow: 3px 3px 0px #2B2B2B;
   color: var(--neu-text-primary, #2D3748);
 }
 
@@ -259,11 +266,18 @@
 /* On a dark/colored hero card, the light neumorphic shadow above reads as a glow
    against the saturated background, so give it a grounded shadow instead. */
 .bento-card--hero .bento-btn--secondary {
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+  background: #FFFFFF;
+  color: #8B5CF6;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  font-weight: 800;
 }
 
 .bento-card--hero .bento-btn--secondary:hover {
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.3);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B;
+  color: #7C3AED;
 }
 
 

@@ -14,6 +14,40 @@
   flex-shrink: 0;
 }
 
+/* ── Campus / College selector card ──────────────────────────────── */
+.mrv-selector-card {
+  background: var(--neu-bg, #EBF0F5);
+  border-radius: 20px;
+  padding: 22px 26px;
+  box-shadow: var(--neu-shadow-extruded);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mrv-selector-card__row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.mrv-selector-card__row .mrv-filters__field {
+  min-width: 200px;
+  flex: 1;
+}
+
+.mrv-selector-card__hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--neu-text-muted, #64748B);
+  font-style: italic;
+  padding: 10px 14px;
+  background: var(--neu-bg, #EBF0F5);
+  border-radius: 10px;
+  box-shadow: var(--neu-shadow-sunken-sm);
+}
+
 /* ── Filter bar ───────────────────────────────────────────────────── */
 .mrv-filters {
   display: flex;
@@ -266,20 +300,21 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 9px 18px;
-  border-radius: 12px;
+  padding: 8px 16px;
+  border-radius: 0px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  border: none;
-  background: var(--neu-bg, #EBF0F5);
+  border: 2px solid #2B2B2B;
+  background: #FFFFFF;
   color: var(--neu-text-body, #475569);
-  box-shadow: var(--neu-shadow-extruded-sm);
+  box-shadow: 2px 2px 0px #2B2B2B;
   transition: all 0.18s ease;
   font-family: var(--md-sys-typescale-font-body);
 }
 
 .mrv-refresh-btn:hover {
-  box-shadow: var(--neu-shadow-extruded);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B;
   color: var(--neu-text-primary);
 }

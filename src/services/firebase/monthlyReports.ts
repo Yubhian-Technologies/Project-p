@@ -6,6 +6,7 @@ import {
   doc,
   query,
   orderBy,
+  where,
   serverTimestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
@@ -18,6 +19,8 @@ export interface MonthlyReport {
   year: number;
   uploadedBy: string; // displayName or email of the head
   uploadedByUid: string;
+  campusId: string;   // campus the head belongs to
+  collegeId: string;  // college the head belongs to
   downloadURL: string;
   storagePath: string;
   fileName: string;
@@ -35,6 +38,8 @@ export async function uploadMonthlyReport(
   uploadedBy: string,
   uploadedByUid: string,
   onProgress?: (pct: number) => void,
+  campusId = "",
+  collegeId = "",
 ): Promise<MonthlyReport> {
   const storagePath = `monthly-reports/${uploadedByUid}/${year}/${String(month).padStart(2, "0")}/${Date.now()}_${file.name}`;
   const storageRef = ref(storage, storagePath);
@@ -51,6 +56,8 @@ export async function uploadMonthlyReport(
     year,
     uploadedBy,
     uploadedByUid,
+    campusId,
+    collegeId,
     downloadURL,
     storagePath,
     fileName: file.name,
@@ -64,6 +71,8 @@ export async function uploadMonthlyReport(
     year,
     uploadedBy,
     uploadedByUid,
+    campusId,
+    collegeId,
     downloadURL,
     storagePath,
     fileName: file.name,
@@ -75,21 +84,22 @@ export async function uploadMonthlyReport(
 export async function listMonthlyReports(): Promise<MonthlyReport[]> {
   const q = query(collection(db, COLLECTION), orderBy("uploadedAt", "desc"));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => {
-    const data = d.data();
-    return {
-      id: d.id,
-      title: data.title ?? "",
-      month: data.month ?? 1,
-      year: data.year ?? new Date().getFullYear(),
-      uploadedBy: data.uploadedBy ?? "",
-      uploadedByUid: data.uploadedByUid ?? "",
-      downloadURL: data.downloadURL ?? "",
-      storagePath: data.storagePath ?? "",
-      fileName: data.fileName ?? "",
-      uploadedAt: data.uploadedAt?.toDate?.()?.toISOString?.() ?? new Date().toISOString(),
-    } satisfies MonthlyReport;
-  });
+  return snap.docs.map((d) => docToReport(d.id, d.data()));
+}
+
+/** Fetch reports filtered by campus + college (for admin view). */
+export async function listMonthlyReportsByCampusCollege(
+  campusId: string,
+  collegeId: string,
+): Promise<MonthlyReport[]> {
+  const q = query(
+    collection(db, COLLECTION),
+    where("campusId", "==", campusId),
+    where("collegeId", "==", collegeId),
+    orderBy("uploadedAt", "desc"),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => docToReport(d.id, d.data()));
 }
 
 /** Delete a report from both Firestore and Storage. */
@@ -100,4 +110,24 @@ export async function deleteMonthlyReport(id: string, storagePath: string): Prom
   } catch {
     // Storage object may already be gone — ignore
   }
+}
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+function docToReport(id: string, data: Record<string, unknown>): MonthlyReport {
+  return {
+    id,
+    title: (data.title as string) ?? "",
+    month: (data.month as number) ?? 1,
+    year: (data.year as number) ?? new Date().getFullYear(),
+    uploadedBy: (data.uploadedBy as string) ?? "",
+    uploadedByUid: (data.uploadedByUid as string) ?? "",
+    campusId: (data.campusId as string) ?? "",
+    collegeId: (data.collegeId as string) ?? "",
+    downloadURL: (data.downloadURL as string) ?? "",
+    storagePath: (data.storagePath as string) ?? "",
+    fileName: (data.fileName as string) ?? "",
+    uploadedAt:
+      (data.uploadedAt as { toDate?: () => Date })?.toDate?.()?.toISOString?.() ??
+      new Date().toISOString(),
+  };
 }

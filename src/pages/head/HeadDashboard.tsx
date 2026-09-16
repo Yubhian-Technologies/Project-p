@@ -11,9 +11,11 @@ import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAler
 import { TransferRequestsSection } from "./TransferRequestsSection";
 import { CommunitySection } from "../user/community/CommunitySection";
 import { MonthlyReportsSection } from "./MonthlyReportsSection";
+import { TeamReportsSection } from "./TeamReportsSection";
+import { FlashQASection } from "./FlashQASection";
 import { GamesSection } from "../user/games/GamesSection";
 import { JournalSection } from "../user/journal/JournalSection";
-import { DailyQuoteCard } from "../../components/common/DailyQuoteCard";
+import { HeadAnalyticsOverview } from "./HeadAnalyticsOverview";
 import type { Notification } from "../../types/notification";
 import "../../styles/bento-grid.css";
 
@@ -24,7 +26,9 @@ const SECTIONS = [
   { id: "events", label: "Events & Programs" },
   { id: "transfer-requests", label: "Transfer Requests" },
   { id: "monthly-reports", label: "Monthly Reports" },
+  { id: "team-reports", label: "Team Reports" },
   { id: "games", label: "Wellness Exercise" },
+  { id: "flash-qa", label: "Flash Q/A" },
   { id: "journal", label: "Counselling Journal" },
   { id: "community", label: "Wellness Community" },
   { id: "emergency", label: "Emergency Alerts", variant: "urgent" as const },
@@ -56,7 +60,9 @@ export function HeadDashboard() {
     events: "Events & Programs",
     "transfer-requests": "Transfer Requests",
     "monthly-reports": "Monthly Reports",
+    "team-reports": "Team Reports",
     games: "Wellness Exercise",
+    "flash-qa": "Flash Q/A",
     journal: "Counselling Journal",
     community: "Wellness Community",
     emergency: "Emergency Alerts",
@@ -90,7 +96,9 @@ export function HeadDashboard() {
       {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "transfer-requests" && <TransferRequestsSection />}
       {activeSection === "monthly-reports" && <MonthlyReportsSection />}
+      {activeSection === "team-reports" && <TeamReportsSection />}
       {activeSection === "games" && <GamesSection />}
+      {activeSection === "flash-qa" && <FlashQASection />}
       {activeSection === "journal" && <JournalSection />}
       {activeSection === "community" && <CommunitySection />}
       {activeSection === "emergency" && <EmergencyAlertsSection />}
@@ -111,7 +119,8 @@ export function HeadDashboard() {
               Monitor team workload, review cancellations, and oversee booking requests across your department.
             </div>
           </BentoCard>
-          <DailyQuoteCard />
+
+          <HeadAnalyticsOverview />
         </div>
       )}
     </AppShell>

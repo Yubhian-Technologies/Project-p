@@ -13,10 +13,10 @@
   font-family: inherit;
   font-size: 14px;
   padding: 12px 18px;
-  border-radius: 16px;
-  border: none;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-sunken);
+  border-radius: 0px;
+  border: 2px solid #2B2B2B;
+  background: #FFFFFF;
+  box-shadow: 2px 2px 0px #2B2B2B;
   color: var(--neu-text-primary, #2D3748);
   cursor: pointer;
   text-align: left;
@@ -29,7 +29,8 @@
 }
 
 .md-timepicker__control:focus-visible {
-  box-shadow: var(--neu-shadow-sunken-focus);
+  box-shadow: 3px 3px 0px #2B2B2B;
+  border-color: #8B5CF6;
   outline: none;
 }
 
@@ -51,17 +52,18 @@
   z-index: 40;
   top: calc(100% + 8px);
   left: 0;
-  width: 220px;
-  padding: 16px;
-  background: var(--neu-bg, #E8ECF2);
-  border-radius: 20px;
-  box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.35), 0 8px 24px rgba(15, 23, 42, 0.2);
+  width: 240px;
+  padding: 18px;
+  background: #FFFFFF;
+  border-radius: 0px;
+  border: 2.5px solid #2B2B2B;
+  box-shadow: 5px 5px 0px #2B2B2B;
   box-sizing: border-box;
 }
 
 @media (max-width: 480px) {
   .md-timepicker__popup {
-    width: min(220px, calc(100vw - 32px));
+    width: min(240px, calc(100vw - 32px));
   }
 }
 
@@ -72,24 +74,30 @@
 }
 
 .md-timepicker__row .md-select__control {
-  padding: 10px 12px;
+  padding: 8px 12px;
   font-size: 13px;
+  border-radius: 0px !important;
+  border: 2px solid #2B2B2B !important;
+  box-shadow: 2px 2px 0px #2B2B2B !important;
+  background: #FFFFFF !important;
 }
 
 .md-timepicker__footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  border-top: 2px solid #2B2B2B;
   padding-top: 12px;
 }
 
 .md-timepicker__text-btn {
-  border: none;
-  background: none;
-  color: var(--neu-accent-primary, #2563EB);
-  font-size: 13px;
-  font-weight: 700;
+  border: 2px solid #2B2B2B;
+  background: #FFFFFF;
+  color: #1E1E1E;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  font-size: 12px;
+  font-weight: 800;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 6px 10px;
+  border-radius: 0px;
 }

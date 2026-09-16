@@ -9,9 +9,10 @@
   align-items: center;
   gap: 14px;
   background: var(--neu-bg, #E8ECF2);
-  padding: 8px 16px;
-  border-radius: 9999px;
-  box-shadow: var(--neu-shadow-extruded-sm);
+  padding: 10px 16px;
+  border-radius: 0px;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
 }
 
 .availability-editor__day {

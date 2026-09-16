@@ -48,14 +48,16 @@ export function Sidebar({ sections, activeSection, onSelectSection, open, onClos
             </li>
           ))}
         </ul>
-        <button
-          type="button"
-          className={`sidebar__item sidebar__profile ${activeSection === "profile" ? "sidebar__item--active" : ""}`}
-          onClick={() => select("profile")}
-        >
-          <Avatar photoURL={profile?.photoURL} label={profile?.email ?? "?"} size="small" />
-          Profile
-        </button>
+        <div className="sidebar__profile-wrapper">
+          <button
+            type="button"
+            className={`sidebar__item sidebar__profile ${activeSection === "profile" ? "sidebar__item--active" : ""}`}
+            onClick={() => select("profile")}
+          >
+            <Avatar photoURL={profile?.photoURL} label={profile?.email ?? "?"} size="small" />
+            Profile
+          </button>
+        </div>
       </nav>
     </>
   );

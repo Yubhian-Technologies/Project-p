@@ -34,7 +34,7 @@ function computeStats(profiles: UserProfile[], bookings: Booking[]): CounsellorS
     const followedUp = own.filter((b) => b.status === "completed" && b.outcome === "followup").length;
     const missed = own.filter((b) => b.status === "completed" && b.outcome === "missed").length;
     const cancelled = bookings.filter((b) => b.counsellorId === profile.uid && b.status === "cancelled").length;
-    const rated = own.filter((b) => b.userRatingOfCounsellor !== undefined);
+    const rated = own.filter((b) => b.status === "completed" && b.outcome !== "missed" && b.userRatingOfCounsellor !== undefined);
     const avgRating =
       rated.length > 0
         ? rated.reduce((sum, b) => sum + (b.userRatingOfCounsellor ?? 0), 0) / rated.length

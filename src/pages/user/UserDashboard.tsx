@@ -10,6 +10,8 @@ import { JournalSection } from "./journal/JournalSection";
 import { CommunitySection } from "./community/CommunitySection";
 import { CrisisSosSection } from "./CrisisSosSection";
 import { DailyQuoteCard } from "../../components/common/DailyQuoteCard";
+import { FlashQACard } from "../../components/common/FlashQACard";
+import { MoodTrackerCard } from "../../components/common/MoodTrackerCard";
 import type { Notification } from "../../types/notification";
 import "../../styles/bento-grid.css";
 
@@ -71,8 +73,11 @@ export function UserDashboard() {
               Connect with certified psychologists, manage your upcoming counselling sessions, and track your wellness journey.
             </div>
           </BentoCard>
+
           <GamesSummaryCard onPlay={() => setActiveSection("games")} />
           <DailyQuoteCard />
+          <FlashQACard />
+          <MoodTrackerCard />
         </div>
       )}
     </AppShell>

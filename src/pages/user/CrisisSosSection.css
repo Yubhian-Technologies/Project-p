@@ -5,7 +5,7 @@
 }
 
 .crisis-sos__intro {
-  color: var(--neu-text-muted, #718096);
+  color: #6B7280;
   font-size: 14px;
   line-height: 1.6;
   margin: 0 0 20px 0;
@@ -16,22 +16,23 @@
   width: 100%;
   box-sizing: border-box;
   border: none;
-  border-radius: 18px;
-  padding: 18px 24px;
-  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-  box-shadow: -4px -4px 12px rgba(255, 255, 255, 0.6), 4px 4px 14px rgba(220, 38, 38, 0.45);
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 700;
+  border-radius: 9999px;
+  padding: 18px 28px;
+  background: #DC2626;
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+  color: #FFFFFF;
+  font-size: 16.5px;
+  font-weight: 800;
   text-align: center;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   margin-bottom: 24px;
 }
 
 .crisis-sos__dispatch:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: -4px -4px 14px rgba(255, 255, 255, 0.65), 6px 6px 18px rgba(220, 38, 38, 0.5);
+  transform: translateY(-3px);
+  background: #B91C1C;
+  box-shadow: 0 12px 30px rgba(220, 38, 38, 0.5);
 }
 
 .crisis-sos__dispatch:disabled {
@@ -42,11 +43,12 @@
 .crisis-sos__confirmation {
   width: 100%;
   box-sizing: border-box;
-  border-radius: 16px;
-  padding: 16px 20px;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-sunken);
-  color: #15803d;
+  border-radius: 24px;
+  padding: 18px 22px;
+  background: #F0FDF4;
+  border: 1.5px solid #BBF7D0;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08);
+  color: #15803D;
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 24px;

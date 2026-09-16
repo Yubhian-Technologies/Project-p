@@ -4,8 +4,9 @@
 
 /* Global thin scrollbar — applies to the page and every scrollable element (modals, dropdowns, lists) */
 html {
+  scroll-behavior: smooth;
   scrollbar-width: thin;
-  scrollbar-color: rgba(37, 99, 235, 0.35) transparent;
+  scrollbar-color: rgba(139, 92, 246, 0.4) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -18,26 +19,44 @@ html {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(37, 99, 235, 0.35);
+  background: rgba(139, 92, 246, 0.4);
   border-radius: 9999px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(37, 99, 235, 0.55);
+  background: rgba(139, 92, 246, 0.75);
+}
+
+:root {
+  --theme-amber: #F9BA32;
+  --theme-amber-light: #FDE68A;
+  --theme-bg: #FFFFFF;
+  --theme-charcoal: #1E1E1E;
+  --theme-text-muted: #6B7280;
+  --theme-lavender: #8B5CF6;
+  --theme-lavender-subtle: #F3E8FF;
+  --theme-card-bg: #F8F4EA;
+  --theme-shadow: 0 10px 30px rgba(30, 30, 30, 0.06);
+  --theme-shadow-hover: 0 16px 36px rgba(30, 30, 30, 0.12);
+  --neu-bg: #FFFFFF;
+  --neu-text-primary: #1E1E1E;
+  --neu-text-body: #374151;
+  --neu-text-muted: #6B7280;
+  --neu-accent-primary: #8B5CF6;
 }
 
 html,
 body,
 #root {
   min-height: 100%;
-  background-color: var(--neu-bg, #E8ECF2);
+  background-color: var(--theme-amber);
 }
 
 body {
   margin: 0;
   font-family: var(--md-sys-typescale-font-body);
-  background-color: var(--neu-bg, #E8ECF2);
-  color: var(--neu-text-body, #4A5568);
+  background-color: var(--theme-amber);
+  color: var(--theme-charcoal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -64,7 +83,7 @@ button, input, select, textarea {
   outline: none;
 }
 
-/* Global Neumorphic Input Utilities */
+/* Global Sketchbook Input Utilities */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -74,11 +93,11 @@ input[type="date"],
 input[type="time"],
 select,
 textarea {
-  background: var(--neu-bg, #E8ECF2);
-  border: none;
-  border-radius: 16px;
-  box-shadow: var(--neu-shadow-sunken);
-  color: var(--neu-text-primary, #2D3748);
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  color: var(--neu-text-primary, #1E1E1E);
   padding: 12px 18px;
   font-size: 14px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -87,7 +106,8 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  box-shadow: var(--neu-shadow-sunken-focus);
+  box-shadow: 3px 3px 0px #2B2B2B;
+  border-color: #8B5CF6;
 }
 
 input::placeholder,

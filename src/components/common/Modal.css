@@ -12,18 +12,16 @@
 }
 
 .modal__panel {
-  background: var(--neu-bg, #E8ECF2);
-  border: none;
-  border-radius: 28px;
-  /* Grounded shadow (no bright highlight) since this sits on a dark scrim, not the light page
-     background — the neumorphic dual-light shadows read as a glow in that context. */
-  box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.35), 0 8px 24px rgba(15, 23, 42, 0.2);
+  background: #F8F4EA;
+  border: 2.5px solid #2B2B2B;
+  border-radius: 0px;
+  box-shadow: 5px 5px 0px #2B2B2B;
   width: 100%;
   max-width: 480px;
   max-height: calc(100vh - 48px);
   overflow-y: auto;
   padding: 32px;
-  color: var(--neu-text-primary, #2D3748);
+  color: var(--neu-text-primary, #1E1E1E);
 }
 
 .modal__header {
@@ -34,12 +32,17 @@
   margin-bottom: 20px;
 }
 
+.modal__title,
 .md-modal__title {
   font-family: var(--md-sys-typescale-font-display);
   font-size: 20px;
   font-weight: 800;
   color: var(--neu-accent-primary, #2563EB);
   margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .modal__close {

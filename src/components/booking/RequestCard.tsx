@@ -8,6 +8,8 @@ interface RequestCardProps {
 }
 
 export function RequestCard({ booking, onClick }: RequestCardProps) {
+  const isTransfer = booking.status === "pending" && !!booking.transferredFrom;
+
   return (
     <Card className="request-card request-card--collapsed" onClick={onClick}>
       <p className="request-card__name">
@@ -15,8 +17,14 @@ export function RequestCard({ booking, onClick }: RequestCardProps) {
         {booking.sessionMode === "offline" && (
           <span className="request-card__offline-tag">Offline</span>
         )}
+        {isTransfer && (
+          <span className="request-card__status request-card__status--transfer" style={{ marginLeft: 8 }}>
+            Transfer
+          </span>
+        )}
       </p>
       <span className="request-card__hint">View Details →</span>
     </Card>
   );
 }
+

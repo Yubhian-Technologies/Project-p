@@ -110,6 +110,11 @@ export function RequestDetailModal({
     setSavingSummary(true);
     try {
       await onSaveSummary(summaryDraft);
+      setIntake((prev) =>
+        prev
+          ? { ...prev, summary: summaryDraft }
+          : { username: "", occupation: "student", whatsappNumber: "", issue: "", summary: summaryDraft },
+      );
     } finally {
       setSavingSummary(false);
     }
@@ -302,30 +307,46 @@ export function RequestDetailModal({
     );
   }
 
+  const isTransferredPending =
+    booking.status === "pending" && !!booking.transferredFrom;
+
+  const statusBadgeLabel = isTransferredPending
+    ? "transfer"
+    : booking.outcome === "missed"
+      ? "missed"
+      : booking.status;
+
+  const modalTitle = (
+    <div className="request-detail-modal__header-title">
+      <span className="request-detail-modal__email">{booking.userEmail}</span>
+      <span
+        className={`request-card__status request-card__status--${
+          isTransferredPending ? "transfer" : booking.outcome === "missed" ? "missed" : booking.status
+        }`}
+      >
+        {statusBadgeLabel}
+      </span>
+      {booking.sessionMode === "offline" && (
+        <span className="request-card__offline-tag">Offline</span>
+      )}
+      {booking.followUpOfBookingId && (
+        <span className="request-card__followup-tag">(follow-up)</span>
+      )}
+      {isTransferredPending && (
+        <span className="request-card__offline-tag">Transferred to you</span>
+      )}
+    </div>
+  );
+
   return (
-    <Modal title={booking.userEmail} onClose={onClose} className="request-detail-modal">
-      <div className="request-card__header">
-        {(booking.followUpOfBookingId || onViewSummary) && (
-          <p className="request-card__requester">
-            {booking.followUpOfBookingId && <span className="request-card__followup-tag">(follow-up)</span>}
-            {onViewSummary && (
-              <Button type="button" variant="outlined" onClick={onViewSummary}>
-                View Summary
-              </Button>
-            )}
-          </p>
-        )}
-        {booking.sessionMode === "offline" && (
-          <span className="request-card__offline-tag">Offline</span>
-        )}
-        <span
-          className={`request-card__status request-card__status--${
-            booking.outcome === "missed" ? "missed" : booking.status
-          }`}
-        >
-          {booking.outcome === "missed" ? "missed" : booking.status}
-        </span>
-      </div>
+    <Modal title={modalTitle} onClose={onClose} className="request-detail-modal">
+      {onViewSummary && (
+        <div className="request-detail-modal__top-actions">
+          <Button type="button" variant="outlined" onClick={onViewSummary}>
+            View Summary
+          </Button>
+        </div>
+      )}
 
       {intake && booking.status !== "pending" && (
         <dl className="request-card__intake">
@@ -340,7 +361,7 @@ export function RequestDetailModal({
         </dl>
       )}
 
-      {booking.status === "pending" && (
+      {booking.status === "pending" && !isTransferredPending && (
         <div className="request-card__schedule">
           {booking.proposedSlots && (
             <>
@@ -394,6 +415,65 @@ export function RequestDetailModal({
         </div>
       )}
 
+      {/* ── Transferred session: Schedule or Cancel ─────────────────── */}
+      {isTransferredPending && (
+        <div className="request-card__schedule">
+          <p className="request-card__summary-hint">
+            This session was transferred to you. Please schedule a time or cancel if you cannot take it.
+          </p>
+
+          <label htmlFor={`schedule-transfer-${booking.id}`}>
+            Schedule session time ({SESSION_DURATION_LABEL})
+          </label>
+          <DateTimePicker
+            id={`schedule-transfer-${booking.id}`}
+            min={nowValue}
+            value={timeValue}
+            onChange={setTimeValue}
+          />
+          {isPastChoice(timeValue) && (
+            <p className="request-card__time-warning">This time has already passed. Pick a time later than now.</p>
+          )}
+
+          {showCancelReason ? (
+            <div className="request-card__cancel-reason">
+              <label htmlFor={`cancel-transfer-${booking.id}`}>Reason for cancelling</label>
+              <textarea
+                id={`cancel-transfer-${booking.id}`}
+                rows={2}
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Let the head know why you cannot take this session…"
+              />
+              <div className="request-card__actions">
+                <Button
+                  type="button"
+                  disabled={!cancelReason.trim()}
+                  onClick={() => {
+                    onCancel(cancelReason.trim());
+                    setShowCancelReason(false);
+                  }}
+                >
+                  Confirm cancellation
+                </Button>
+                <Button type="button" variant="outlined" onClick={() => setShowCancelReason(false)}>
+                  Back
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="request-card__actions">
+              <Button type="button" disabled={isPastOrEmpty(timeValue)} onClick={handleConfirmSchedule}>
+                Schedule
+              </Button>
+              <Button type="button" variant="outlined" onClick={() => setShowCancelReason(true)}>
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       {booking.status === "accepted" && (
         <div className="request-card__schedule">
           <label htmlFor={`schedule-${booking.id}`}>Pick a session time ({SESSION_DURATION_LABEL})</label>
@@ -434,7 +514,7 @@ export function RequestDetailModal({
                   Accept new time
                 </Button>
                 <Button type="button" variant="outlined" onClick={() => setShowReschedulePropose(true)}>
-                  Propose different time
+                  Reschedule
                 </Button>
               </div>
             </div>
@@ -442,7 +522,7 @@ export function RequestDetailModal({
 
           {!booking.rescheduleProposal && !showReschedulePropose && (
             <Button type="button" variant="outlined" onClick={() => setShowReschedulePropose(true)}>
-              Propose new time
+              Reschedule
             </Button>
           )}
 
@@ -503,7 +583,7 @@ export function RequestDetailModal({
                   disabled={!sessionStarted}
                   onClick={() => setSummaryFocusMode(true)}
                 >
-                  View Summary
+                  {intake?.summary ? "View Summary" : "Take Summary"}
                 </Button>
                 {!sessionStarted && (
                   <p className="request-card__summary-hint">
@@ -561,9 +641,7 @@ export function RequestDetailModal({
 
       {canCancelOrRequestTransfer && (
         <div className="request-card__danger-zone">
-          {!showCancelReason && renderTransferControls()}
-
-          {showCancelReason && (
+          {showCancelReason ? (
             <div className="request-card__cancel-reason">
               <label htmlFor={`cancel-reason-${booking.id}`}>Reason for cancelling</label>
               <textarea
@@ -582,10 +660,9 @@ export function RequestDetailModal({
                 </Button>
               </div>
             </div>
-          )}
-
-          {!showTransferRequest && !showDirectTransfer && !showCancelReason && (
+          ) : (
             <div className="request-card__actions">
+              {renderTransferControls()}
               <Button type="button" variant="outlined" onClick={() => setShowCancelReason(true)}>
                 Cancel session
               </Button>

@@ -22,23 +22,27 @@
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  padding: 10px 18px;
+  padding: 10px 20px;
   border-radius: 9999px;
-  border: none;
+  border: 1.5px solid rgba(30, 30, 30, 0.08);
   cursor: pointer;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-extruded-sm);
-  color: var(--neu-text-body, #4A5568);
+  background: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(30, 30, 30, 0.04);
+  color: #1E1E1E;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .booking-requests-section__tab:hover {
-  box-shadow: var(--neu-shadow-extruded);
+  background: #F3E8FF;
+  color: #8B5CF6;
+  transform: translateY(-2px);
 }
 
 .booking-requests-section__tab--active {
-  box-shadow: var(--neu-shadow-sunken) !important;
-  color: var(--neu-accent-primary, #2563EB);
+  background: #8B5CF6 !important;
+  color: #FFFFFF !important;
+  border-color: #8B5CF6 !important;
+  box-shadow: 0 6px 18px rgba(139, 92, 246, 0.35) !important;
 }
 
 .booking-requests-section__group {

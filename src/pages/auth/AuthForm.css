@@ -10,7 +10,7 @@
   padding: 24px;
   box-sizing: border-box;
   font-family: var(--font-main);
-  background-color: var(--neu-bg, #E8ECF2);
+  background-color: #F8F4EA;
 }
 
 .auth-bg {
@@ -26,12 +26,12 @@
   z-index: 2;
   width: 100%;
   max-width: 460px;
-  background: var(--neu-bg, #E8ECF2);
-  border: none;
-  border-radius: 32px;
+  background: #F8F4EA;
+  border: 2.5px solid #2B2B2B;
+  border-radius: 0px;
   padding: 44px 40px;
   box-sizing: border-box;
-  box-shadow: var(--neu-shadow-extruded-lg);
+  box-shadow: 5px 5px 0px #2B2B2B;
   transform: translate3d(0, 0, 0);
   animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -43,7 +43,7 @@
 
   .auth-glass-card {
     padding: 28px 22px;
-    border-radius: 22px;
+    border-radius: 0px;
   }
 }
 
@@ -57,26 +57,23 @@
   align-items: center;
   gap: 12px;
   text-decoration: none;
-  color: var(--neu-text-primary, #2D3748);
+  color: #1E1E1E;
   margin-bottom: 20px;
 }
 
 .auth-logo-img {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  filter: drop-shadow(-2px -2px 4px rgba(255, 255, 255, 0.8)) drop-shadow(2px 2px 4px rgba(163, 177, 198, 0.6));
+  box-shadow: 0 4px 12px rgba(30, 30, 30, 0.12);
 }
 
 .auth-card__brand {
   font-family: var(--font-display);
   font-size: 24px;
   font-weight: 800;
-  background: linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: #2563EB;
+  color: #1E1E1E;
 }
 
 .auth-card__title {
@@ -118,26 +115,26 @@
 
 .auth-field input,
 .auth-field select {
-  font-family: var(--font-main);
-  font-size: 15px;
+  font-family: inherit;
+  font-size: 14px;
   padding: 14px 18px;
   border-radius: 16px;
-  border: none;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-sunken);
-  color: var(--neu-text-primary, #2D3748);
+  border: 1.5px solid rgba(30, 30, 30, 0.08);
+  background: #F8F4EA;
+  color: #1E1E1E;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
 }
 
 .auth-field input::placeholder {
-  color: var(--neu-text-muted, #718096);
+  color: #6B7280;
 }
 
 .auth-field input:focus,
 .auth-field select:focus {
   outline: none;
-  box-shadow: var(--neu-shadow-sunken-focus);
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
 .auth-field__password-wrap {
@@ -158,11 +155,10 @@
   width: 34px;
   height: 34px;
   padding: 0;
-  border: none;
-  background: var(--neu-bg, #E8ECF2);
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  background: #F8F4EA;
   border-radius: 50%;
-  box-shadow: var(--neu-shadow-extruded-sm);
-  color: var(--neu-text-muted, #718096);
+  color: #6B7280;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -171,12 +167,8 @@
 }
 
 .auth-field__toggle-visibility:hover {
-  box-shadow: var(--neu-shadow-extruded);
-  color: var(--neu-accent-primary, #2563EB);
-}
-
-.auth-field__toggle-visibility:active {
-  box-shadow: var(--neu-shadow-sunken-sm);
+  background: #F3E8FF;
+  color: #8B5CF6;
 }
 
 .auth-field__toggle-visibility svg {
@@ -186,9 +178,9 @@
 }
 
 .auth-error {
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-sunken-sm);
-  color: #e53e3e;
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #DC2626;
   font-size: 13px;
   font-weight: 700;
   padding: 12px 16px;
@@ -204,23 +196,23 @@
   padding: 14px;
   font-size: 15px;
   font-weight: 800;
-  color: #ffffff;
-  background: linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%);
+  color: #FFFFFF;
+  background: #8B5CF6;
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: 9999px;
   cursor: pointer;
-  box-shadow: var(--neu-shadow-accent);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 10px;
 }
 
 .auth-card__submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  background: #7C3AED;
+  box-shadow: 0 10px 24px rgba(139, 92, 246, 0.45);
 }
 
 .auth-card__submit:active:not(:disabled) {
-  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.35), inset -3px -3px 6px rgba(255, 255, 255, 0.3);
   transform: translateY(0);
 }
 

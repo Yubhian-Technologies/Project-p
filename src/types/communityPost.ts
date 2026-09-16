@@ -4,6 +4,7 @@ export interface CommunityPost {
   likeCount: number;
   commentCount: number;
   createdAt: number;
+  pinned?: boolean;
 }
 
 export interface CommunityComment {

@@ -6,6 +6,7 @@ import { Button } from "../../components/common/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { BookingRequestsSection } from "./BookingRequestsSection";
 import { EventsProgramsSection } from "./EventsProgramsSection";
+import { WorkReportsSection } from "./WorkReportsSection";
 import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAlertsSection";
 import { CommunitySection } from "../user/community/CommunitySection";
 import { GamesSection } from "../user/games/GamesSection";
@@ -17,6 +18,7 @@ import "../../styles/bento-grid.css";
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
+  { id: "work-reports", label: "Work Reports" },
   { id: "events", label: "Events & Programs" },
   { id: "games", label: "Wellness Exercise" },
   { id: "journal", label: "Counselling Journal" },
@@ -39,22 +41,17 @@ export function CounsellorDashboard() {
     setActiveSection("requests");
   }
 
-  const title =
-    activeSection === "profile"
-      ? "Profile"
-      : activeSection === "requests"
-        ? "Booking Requests"
-        : activeSection === "events"
-          ? "Events & Programs"
-          : activeSection === "games"
-            ? "Wellness Exercise"
-            : activeSection === "journal"
-              ? "Counselling Journal"
-              : activeSection === "community"
-                ? "Wellness Community"
-                : activeSection === "emergency"
-                  ? "Emergency Alerts"
-                  : "Counsellor Dashboard";
+  const titleBySection: Record<string, string> = {
+    profile: "Profile",
+    requests: "Booking Requests",
+    "work-reports": "Work Reports",
+    events: "Events & Programs",
+    games: "Wellness Exercise",
+    journal: "Counselling Journal",
+    community: "Wellness Community",
+    emergency: "Emergency Alerts",
+  };
+  const title = titleBySection[activeSection] ?? "Counsellor Dashboard";
 
   return (
     <AppShell
@@ -79,6 +76,7 @@ export function CounsellorDashboard() {
           initialSelectedId={pendingBookingId}
         />
       )}
+      {activeSection === "work-reports" && <WorkReportsSection />}
       {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "games" && <GamesSection />}
       {activeSection === "journal" && <JournalSection />}
