@@ -33,6 +33,7 @@ export function AppShell({
 
   return (
     <div className="app-shell">
+      {/* Organic Amber Header Bar */}
       <header className="app-shell__topbar">
         <div className="app-shell__topbar-inner">
           <div className="flex-row app-shell__topbar-left">
@@ -63,6 +64,17 @@ export function AppShell({
           </div>
         </div>
       </header>
+
+      {/* Organic Wave Divider */}
+      <div className="app-shell__wave-wrap" aria-hidden="true">
+        <svg viewBox="0 0 1440 60" fill="none" preserveAspectRatio="none" className="app-shell__wave-svg">
+          <path
+            d="M0,32 C280,60 560,10 840,42 C1120,68 1320,18 1440,32 L1440,60 L0,60 Z"
+            fill="#FFFFFF"
+          />
+        </svg>
+      </div>
+
       <div className="app-shell__body">
         <Sidebar
           sections={sections}
@@ -71,7 +83,7 @@ export function AppShell({
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
-        <main className="app-shell__content">
+        <main className="app-shell__content-sheet">
           {title && (
             <div className="app-shell__title-row">
               <h1 className="app-shell__title">{title}</h1>

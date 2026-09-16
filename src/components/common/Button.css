@@ -1,13 +1,13 @@
 .md-button {
-  border: none;
-  border-radius: 9999px;
-  padding: 12px 28px;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  padding: 10px 24px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  background: var(--neu-bg, #E8ECF2);
-  color: var(--neu-text-primary, #2D3748);
-  box-shadow: var(--neu-shadow-extruded);
+  background: #FFFFFF;
+  color: #1E1E1E;
+  box-shadow: 3px 3px 0px #2B2B2B;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
@@ -17,44 +17,51 @@
 }
 
 .md-button:hover {
-  box-shadow: var(--neu-shadow-extruded-hover);
-  transform: translateY(-1px);
+  box-shadow: 5px 5px 0px #2B2B2B;
+  transform: translate(-2px, -2px);
 }
 
 .md-button:active {
-  box-shadow: var(--neu-shadow-sunken);
-  transform: translateY(0);
+  box-shadow: 1px 1px 0px #2B2B2B;
+  transform: translate(1px, 1px);
 }
 
 .md-button--filled {
-  background: linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%);
-  color: #ffffff;
-  box-shadow: var(--neu-shadow-accent);
+  background: #8B5CF6;
+  color: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  box-shadow: 3px 3px 0px #2B2B2B;
 }
 
 .md-button--filled:hover {
-  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-  box-shadow: -3px -3px 7px rgba(255, 255, 255, 0.25), 4px 4px 10px rgba(30, 58, 138, 0.4);
+  background: #7C3AED;
+  box-shadow: 5px 5px 0px #2B2B2B;
+  transform: translate(-2px, -2px);
 }
 
 .md-button--filled:active {
-  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.35), inset -3px -3px 6px rgba(255, 255, 255, 0.3);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #2B2B2B;
 }
 
 .md-button--outlined {
-  background: var(--neu-bg, #E8ECF2);
-  color: var(--neu-accent-primary, #2563EB);
-  box-shadow: var(--neu-shadow-extruded-sm);
-  border: none;
+  background: #F8F4EA;
+  color: #1E1E1E;
+  border: 2px solid #2B2B2B;
+  box-shadow: 3px 3px 0px #2B2B2B;
 }
 
 .md-button--outlined:hover {
-  box-shadow: var(--neu-shadow-extruded);
-  color: var(--neu-accent-hover, #1D4ED8);
+  background: #F3E8FF;
+  border-color: #2B2B2B;
+  color: #7C3AED;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #2B2B2B;
 }
 
 .md-button--outlined:active {
-  box-shadow: var(--neu-shadow-sunken-sm);
+  box-shadow: 1px 1px 0px #2B2B2B;
+  transform: translate(1px, 1px);
 }
 
 .md-button:disabled {

@@ -465,6 +465,25 @@ export async function declineBookingTransfer(
   });
 }
 
+/**
+ * Called when a counsellor cancels a booking that was transferred TO them.
+ * Re-notifies the campus Head so they can reassign it to someone else.
+ */
+export async function notifyHeadTransferSessionCancelled(
+  booking: Booking,
+  headId: string,
+  cancellerEmail: string,
+  reason: string,
+): Promise<void> {
+  await createNotification({
+    recipientId: headId,
+    type: "transfer_requested",
+    bookingId: booking.id,
+    title: "Transferred session cancelled",
+    message: `${cancellerEmail} cancelled the transferred session with ${booking.userEmail}: "${reason}". Please reassign to another counsellor.`,
+  });
+}
+
 export async function listPendingTransferRequestsForCampus(campusId: string): Promise<Booking[]> {
   const q = query(bookingsCollection, where("transferRequest.status", "==", "pending"));
   const [snapshot, staff] = await Promise.all([getDocs(q), listBookableProfiles()]);

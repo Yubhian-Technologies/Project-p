@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Select } from "./Select";
 import { pad, to12Hour, to24Hour } from "../../utils/timeFormat";
 import "./DateTimePicker.css";
@@ -58,6 +59,7 @@ function formatDisplay(value: string): string {
 export function DateTimePicker({ id, value, onChange, min, max }: DateTimePickerProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
   const parsed = parseValue(value);
   const minParsed = min ? parseValue(min) : null;
   const maxParsed = max ? parseValue(max) : null;
@@ -67,14 +69,17 @@ export function DateTimePicker({ id, value, onChange, min, max }: DateTimePicker
   const [viewMonth, setViewMonth] = useState(parsed?.month ?? minParsed?.month ?? today.getMonth());
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+    if (!open) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
         setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
 
   function commit(next: Partial<ParsedValue>) {
     const base: ParsedValue = parsed ?? {
@@ -140,103 +145,111 @@ export function DateTimePicker({ id, value, onChange, min, max }: DateTimePicker
         </span>
       </button>
 
-      {open && (
-        <div className="md-datetime__popup" role="dialog">
-          <div className="md-datetime__calendar-header">
-            <button
-              type="button"
-              className="md-datetime__nav"
-              disabled={prevDisabled}
-              onClick={() => goToMonth(-1)}
-              aria-label="Previous month"
+      {open &&
+        createPortal(
+          <div className="md-datetime__modal-overlay" onClick={() => setOpen(false)}>
+            <div
+              className="md-datetime__popup"
+              role="dialog"
+              onClick={(e) => e.stopPropagation()}
             >
-              ‹
-            </button>
-            <span className="md-datetime__month-label">
-              {MONTH_LABELS[viewMonth]} {viewYear}
-            </span>
-            <button
-              type="button"
-              className="md-datetime__nav"
-              disabled={nextDisabled}
-              onClick={() => goToMonth(1)}
-              aria-label="Next month"
-            >
-              ›
-            </button>
-          </div>
-
-          <div className="md-datetime__weekdays">
-            {WEEKDAY_LABELS.map((w) => (
-              <span key={w}>{w}</span>
-            ))}
-          </div>
-
-          <div className="md-datetime__grid">
-            {cells.map((cell, index) => {
-              if (cell.day === 0) return <span key={`pad-${index}`} />;
-              const isSelected =
-                parsed && parsed.year === viewYear && parsed.month === viewMonth && parsed.day === cell.day;
-              return (
+              <div className="md-datetime__calendar-header">
                 <button
-                  key={cell.day}
                   type="button"
-                  disabled={cell.disabled}
-                  className={[
-                    "md-datetime__day",
-                    isSelected ? "md-datetime__day--selected" : "",
-                    cell.disabled ? "md-datetime__day--disabled" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  onClick={() => commit({ year: viewYear, month: viewMonth, day: cell.day })}
+                  className="md-datetime__nav"
+                  disabled={prevDisabled}
+                  onClick={() => goToMonth(-1)}
+                  aria-label="Previous month"
                 >
-                  {cell.day}
+                  ‹
                 </button>
-              );
-            })}
-          </div>
+                <span className="md-datetime__month-label">
+                  {MONTH_LABELS[viewMonth]} {viewYear}
+                </span>
+                <button
+                  type="button"
+                  className="md-datetime__nav"
+                  disabled={nextDisabled}
+                  onClick={() => goToMonth(1)}
+                  aria-label="Next month"
+                >
+                  ›
+                </button>
+              </div>
 
-          <div className="md-datetime__time-row">
-            <Select
-              value={String(hour12)}
-              onChange={(v) => commit({ hour: to24Hour(Number(v), ampm) })}
-            >
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
-                <option key={h} value={String(h)}>
-                  {h}
-                </option>
-              ))}
-            </Select>
-            <Select
-              value={String(parsed?.minute ?? 0)}
-              onChange={(v) => commit({ minute: Number(v) })}
-            >
-              {Array.from({ length: 60 }, (_, i) => i).map((m) => (
-                <option key={m} value={String(m)}>
-                  {pad(m)}
-                </option>
-              ))}
-            </Select>
-            <Select
-              value={ampm}
-              onChange={(v) => commit({ hour: to24Hour(hour12, v as "AM" | "PM") })}
-            >
-              <option value="AM">AM</option>
-              <option value="PM">PM</option>
-            </Select>
-          </div>
+              <div className="md-datetime__weekdays">
+                {WEEKDAY_LABELS.map((w) => (
+                  <span key={w}>{w}</span>
+                ))}
+              </div>
 
-          <div className="md-datetime__footer">
-            <button type="button" className="md-datetime__text-btn" onClick={() => onChange("")}>
-              Clear
-            </button>
-            <button type="button" className="md-datetime__text-btn" onClick={() => setOpen(false)}>
-              Done
-            </button>
-          </div>
-        </div>
-      )}
+              <div className="md-datetime__grid">
+                {cells.map((cell, index) => {
+                  if (cell.day === 0) return <span key={`pad-${index}`} />;
+                  const isSelected =
+                    parsed && parsed.year === viewYear && parsed.month === viewMonth && parsed.day === cell.day;
+                  return (
+                    <button
+                      key={cell.day}
+                      type="button"
+                      disabled={cell.disabled}
+                      className={[
+                        "md-datetime__day",
+                        isSelected ? "md-datetime__day--selected" : "",
+                        cell.disabled ? "md-datetime__day--disabled" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={() => commit({ year: viewYear, month: viewMonth, day: cell.day })}
+                    >
+                      {cell.day}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="md-datetime__time-row">
+                <Select
+                  value={String(hour12)}
+                  onChange={(v) => commit({ hour: to24Hour(Number(v), ampm) })}
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
+                    <option key={h} value={String(h)}>
+                      {h}
+                    </option>
+                  ))}
+                </Select>
+                <Select
+                  value={String(parsed?.minute ?? 0)}
+                  onChange={(v) => commit({ minute: Number(v) })}
+                >
+                  {Array.from({ length: 60 }, (_, i) => i).map((m) => (
+                    <option key={m} value={String(m)}>
+                      {pad(m)}
+                    </option>
+                  ))}
+                </Select>
+                <Select
+                  value={ampm}
+                  onChange={(v) => commit({ hour: to24Hour(hour12, v as "AM" | "PM") })}
+                >
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </Select>
+              </div>
+
+              <div className="md-datetime__footer">
+                <button type="button" className="md-datetime__text-btn" onClick={() => onChange("")}>
+                  Clear
+                </button>
+                <button type="button" className="md-datetime__text-btn" onClick={() => setOpen(false)}>
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

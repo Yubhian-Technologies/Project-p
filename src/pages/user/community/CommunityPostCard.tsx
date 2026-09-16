@@ -66,6 +66,15 @@ export function CommunityPostCard({
 
   return (
     <article className="ig-card">
+      {/* Pinned pushpin badge */}
+      {post.pinned && (
+        <div className="ig-card__pinned-badge" title="Pinned post" aria-label="Pinned post">
+          <svg viewBox="0 0 24 24" fill="#C84B31" width="22" height="22">
+            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6l1 1 1-1v-6h5v-2l-2-2z" />
+          </svg>
+        </div>
+      )}
+
       {/* Header */}
       <div className="ig-card__header">
         <div className="ig-card__avatar">A</div>

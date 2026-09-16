@@ -20,6 +20,7 @@ import {
   isSessionEndedPending,
   rateUser,
   getFollowUpHistory,
+  notifyHeadTransferSessionCancelled,
 } from "../../services/firebase/bookings";
 import type { Booking } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
@@ -221,6 +222,16 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
           }}
           onCancel={async (reason) => {
             await cancelBooking(selectedBooking, "counsellor", reason);
+            // If this was a transferred session that the counsellor couldn't take,
+            // re-notify the head so they can reassign it to another counsellor.
+            if (selectedBooking.transferredFrom && selectedBooking.status === "pending" && campusHead) {
+              await notifyHeadTransferSessionCancelled(
+                selectedBooking,
+                campusHead.uid,
+                profile?.email ?? "",
+                reason,
+              );
+            }
             await refresh();
           }}
           onRequestTransfer={async (reason, suggestedTarget) => {

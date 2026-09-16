@@ -13,10 +13,10 @@
   font-family: inherit;
   font-size: 14px;
   padding: 12px 18px;
-  border-radius: 16px;
-  border: none;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-sunken);
+  border-radius: 0px;
+  border: 2px solid #2B2B2B;
+  background: #FFFFFF;
+  box-shadow: 2px 2px 0px #2B2B2B;
   color: var(--neu-text-primary, #2D3748);
   cursor: pointer;
   text-align: left;
@@ -24,7 +24,8 @@
 }
 
 .md-select__control:focus-visible {
-  box-shadow: var(--neu-shadow-sunken-focus);
+  box-shadow: 3px 3px 0px #2B2B2B;
+  border-color: #8B5CF6;
   outline: none;
 }
 
@@ -65,18 +66,19 @@
   left: 0;
   right: 0;
   margin: 0;
-  padding: 8px;
+  padding: 6px;
   list-style: none;
   max-height: 260px;
   overflow-y: auto;
-  background: var(--neu-bg, #E8ECF2);
-  border-radius: 16px;
-  box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.35), 0 8px 24px rgba(15, 23, 42, 0.2);
+  background: #FFFFFF;
+  border-radius: 0px;
+  border: 2.5px solid #2B2B2B;
+  box-shadow: 5px 5px 0px #2B2B2B;
 }
 
 .md-select__option {
   padding: 10px 14px;
-  border-radius: 12px;
+  border-radius: 0px;
   font-size: 14px;
   color: var(--neu-text-primary, #2D3748);
   cursor: pointer;
@@ -84,13 +86,13 @@
 }
 
 .md-select__option:hover {
-  background: rgba(37, 99, 235, 0.1);
+  background: #F3E8FF;
 }
 
 .md-select__option--selected {
-  background: rgba(37, 99, 235, 0.14);
-  color: var(--neu-accent-primary, #2563EB);
-  font-weight: 700;
+  background: #F9BA32;
+  color: #1E1E1E;
+  font-weight: 800;
 }
 
 .md-select__option--disabled {

@@ -311,6 +311,11 @@ service cloud.firestore {
       allow read, write: if isSelf(uid);
     }
 
+    // ---------- moodLogs ----------
+    match /moodLogs/{uid}/entries/{dateId} {
+      allow read, write: if isSelf(uid);
+    }
+
     // ---------- communityPosts ----------
     // Anonymous social feed. CRITICAL: nobody — not staff, not other users,
     // not even a raw REST/SDK call bypassing the app's UI — may ever learn
@@ -405,6 +410,44 @@ service cloud.firestore {
       allow create: if isRole('head') && request.resource.data.uploadedByUid == request.auth.uid;
       allow update: if false;
       allow delete: if isRole('head');
+    }
+
+    // ---------- workReports ----------
+    // Counsellors submit their own work reports; head/admin/super-admin
+    // can read all reports and verify (update status, verifiedBy, headNotes).
+    match /workReports/{reportId} {
+      // Counsellor reads only their own; staff reads all
+      allow read: if isSignedIn()
+                  && (isStaff() || isRole('counsellor'));
+
+      // Only counsellors create; they can only set their own uid
+      allow create: if isRole('counsellor')
+                    && request.resource.data.submittedByUid == request.auth.uid
+                    && request.resource.data.status == 'pending';
+
+      // Only head/admin/super-admin can verify (update status → verified)
+      allow update: if isStaff()
+                    && request.resource.data.status == 'verified';
+
+      allow delete: if false;
+    }
+
+    // ---------- flash_qa ----------
+    // A student reads only their own campus's daily flash cards. Any Head,
+    // Admin, or Super Admin can preview every campus's cards from their
+    // management dashboards. A Head publishes only to their own campus
+    // (mirrors the events calendar's campus enforcement); Admin/Super Admin
+    // can manage any campus's cards.
+    match /flash_qa/{qaId} {
+      allow read: if isSignedIn() && (
+        resource.data.campusId == myProfile().campusId ||
+        isRole('head') || isRole('admin') || isRole('super-admin')
+      );
+
+      allow write: if isSignedIn() && (
+        (isRole('head') && request.resource.data.campusId == myProfile().campusId) ||
+        isRole('admin') || isRole('super-admin')
+      );
     }
 
     // ---------- everything else ----------

@@ -42,7 +42,7 @@ export function CounsellorProfileModal({
     });
   }, [profile.uid]);
 
-  const reviews = completedBookings.filter((b) => b.userRatingOfCounsellor !== undefined);
+  const reviews = completedBookings.filter((b) => b.outcome !== "missed" && b.userRatingOfCounsellor !== undefined);
   const avgRating =
     reviews.length > 0
       ? reviews.reduce((sum, b) => sum + (b.userRatingOfCounsellor ?? 0), 0) / reviews.length

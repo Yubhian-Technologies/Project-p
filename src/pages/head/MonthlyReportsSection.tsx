@@ -117,6 +117,8 @@ export function MonthlyReportsSection() {
         profile?.displayName || profile?.email || "Head",
         profile?.uid ?? "",
         setProgress,
+        profile?.campusId ?? "",
+        profile?.collegeId ?? "",
       );
       setUploadSuccess("Report uploaded successfully!");
       setTitle("");

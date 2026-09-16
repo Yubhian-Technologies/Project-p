@@ -86,8 +86,9 @@
   gap: 8px;
   padding: 14px 10px;
   background: var(--neu-bg, #E8ECF2);
-  border-radius: 16px;
-  box-shadow: var(--neu-shadow-sunken);
+  border-radius: 0px;
+  border: 1.5px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
 }
 
 .events-calendar__month-edit-form {
@@ -96,8 +97,9 @@
   gap: 8px;
   padding: 10px;
   background: var(--neu-bg, #E8ECF2);
-  border-radius: 16px;
-  box-shadow: var(--neu-shadow-sunken);
+  border-radius: 0px;
+  border: 1.5px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
 }
 
 .events-calendar__row-actions {

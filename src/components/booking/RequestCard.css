@@ -95,6 +95,26 @@
   white-space: nowrap;
 }
 
+.request-detail-modal__header-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.request-detail-modal__email {
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.request-detail-modal__top-actions {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .request-card__header {
   display: flex;
   align-items: center;
@@ -151,6 +171,12 @@
 
 .request-card__status--missed {
   color: #d97706;
+}
+
+.request-card__status--transfer {
+  color: #7c3aed;
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.18);
 }
 
 .request-card__followup-tag {

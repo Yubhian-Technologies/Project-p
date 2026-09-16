@@ -16,10 +16,11 @@
 
 /* ── Upload Card ───────────────────────────────────────────────────── */
 .mr-upload-card {
-  background: var(--neu-bg, #EBF0F5);
-  border-radius: 24px;
+  background: #F8F4EA;
+  border-radius: 0px;
+  border: 2px solid #2B2B2B;
   padding: 28px 32px;
-  box-shadow: var(--neu-shadow-extruded);
+  box-shadow: 3px 3px 0px #2B2B2B;
 }
 
 .mr-upload-card__title {
@@ -303,13 +304,13 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 18px;
-  border-radius: 12px;
+  padding: 8px 16px;
+  border-radius: 0px;
   font-size: 13px;
   font-weight: 700;
   font-family: var(--md-sys-typescale-font-body);
   cursor: pointer;
-  border: none;
+  border: 2px solid #2B2B2B;
   transition: all 0.18s var(--md-sys-motion-easing-standard);
   text-decoration: none;
 }
@@ -317,12 +318,13 @@
 .mr-btn--primary {
   background: linear-gradient(135deg, #2563EB, #1D4ED8);
   color: #fff;
-  box-shadow: var(--neu-shadow-accent);
+  box-shadow: 2px 2px 0px #2B2B2B;
 }
 
 .mr-btn--primary:hover {
   background: linear-gradient(135deg, #1D4ED8, #1E3A8A);
-  transform: translateY(-1px);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B;
 }
 
 .mr-btn--primary:disabled {
@@ -332,34 +334,37 @@
 }
 
 .mr-btn--ghost {
-  background: var(--neu-bg, #EBF0F5);
+  background: #FFFFFF;
   color: var(--neu-text-body, #475569);
-  box-shadow: var(--neu-shadow-extruded-sm);
+  box-shadow: 2px 2px 0px #2B2B2B;
 }
 
 .mr-btn--ghost:hover {
-  box-shadow: var(--neu-shadow-extruded);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B;
   color: var(--neu-text-primary, #0F172A);
 }
 
 .mr-btn--danger {
-  background: var(--neu-bg, #EBF0F5);
+  background: #FFFFFF;
   color: #dc2626;
-  box-shadow: var(--neu-shadow-extruded-sm);
+  box-shadow: 2px 2px 0px #2B2B2B;
 }
 
 .mr-btn--danger:hover {
   background: #fee2e2;
-  box-shadow: var(--neu-shadow-extruded);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B;
 }
 
 .mr-btn--download {
   background: linear-gradient(135deg, #059669, #047857);
   color: #fff;
-  box-shadow: -2px -2px 5px rgba(255,255,255,0.2), 3px 3px 8px rgba(5,150,105,0.3);
+  box-shadow: 2px 2px 0px #2B2B2B;
 }
 
 .mr-btn--download:hover {
   background: linear-gradient(135deg, #047857, #065f46);
-  transform: translateY(-1px);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B;
 }

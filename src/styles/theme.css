@@ -1,31 +1,39 @@
 :root {
-  /* Neumorphic Base Canvas & Surface Tokens */
-  --neu-bg: #EBF0F5;
-  --neu-surface: #EBF0F5;
+  /* Organic Base Canvas & Surface Tokens */
+  --neu-bg: #FFFFFF;
+  --neu-surface: #F8F4EA;
 
-  /* Neumorphic Dual Light Physics (Subtle non-glowing 135° top-left light source) */
-  --neu-shadow-extruded-sm: -3px -3px 8px rgba(255, 255, 255, 0.7), 3px 3px 8px rgba(163, 177, 198, 0.35);
-  --neu-shadow-extruded: -4px -4px 10px rgba(255, 255, 255, 0.7), 5px 5px 12px rgba(163, 177, 198, 0.4);
-  --neu-shadow-extruded-lg: -5px -5px 14px rgba(255, 255, 255, 0.75), 8px 8px 18px rgba(163, 177, 198, 0.45);
-  --neu-shadow-extruded-hover: -5px -5px 14px rgba(255, 255, 255, 0.8), 7px 7px 16px rgba(163, 177, 198, 0.5);
-  --neu-shadow-accent: -2px -2px 5px rgba(255, 255, 255, 0.25), 3px 3px 8px rgba(29, 78, 216, 0.35);
+  /* Doodle & Sketchbook Design Tokens */
+  --sketch-radius: 0px;
+  --sketch-border: 2px solid #2B2B2B;
+  --sketch-border-thick: 2.5px solid #2B2B2B;
+  --sketch-shadow-sm: 2px 2px 0px #2B2B2B;
+  --sketch-shadow: 3px 3px 0px #2B2B2B;
+  --sketch-shadow-lg: 5px 5px 0px #2B2B2B;
+  --sketch-shadow-hover: 5px 5px 0px #2B2B2B;
 
-  --neu-shadow-sunken: inset 4px 4px 8px rgba(163, 177, 198, 0.5), inset -4px -4px 8px rgba(255, 255, 255, 0.8);
-  --neu-shadow-sunken-focus: inset 5px 5px 10px rgba(163, 177, 198, 0.6), inset -5px -5px 10px rgba(255, 255, 255, 0.9), 0 0 0 2px rgba(37, 99, 235, 0.3);
-  --neu-shadow-sunken-sm: inset 2px 2px 4px rgba(163, 177, 198, 0.5), inset -2px -2px 4px rgba(255, 255, 255, 0.8);
+  /* Organic & Doodle Card Shadows */
+  --neu-shadow-extruded-sm: 2px 2px 0px #2B2B2B;
+  --neu-shadow-extruded: 3px 3px 0px #2B2B2B;
+  --neu-shadow-extruded-lg: 5px 5px 0px #2B2B2B;
+  --neu-shadow-extruded-hover: 5px 5px 0px #2B2B2B;
+  --neu-shadow-accent: 3px 3px 0px #2B2B2B;
 
-  /* Color Palette - Blue Shades Neumorphic Accents */
-  --neu-accent-primary: #2563EB;
-  --neu-accent-vivid: #1D4ED8;
-  --neu-accent-dark: #1E3A8A;
-  --neu-accent-hover: #1D4ED8;
-  --neu-accent-light: #DBEAFE;
+  --neu-shadow-sunken: inset 1px 1px 0px #2B2B2B;
+  --neu-shadow-sunken-focus: 0 0 0 2px #2B2B2B;
+  --neu-shadow-sunken-sm: inset 1px 1px 0px #2B2B2B;
 
+  /* Color Palette - Organic Illustrative Lavender & Amber Accents */
+  --neu-accent-primary: #8B5CF6;
+  --neu-accent-vivid: #7C3AED;
+  --neu-accent-dark: #6D28D9;
+  --neu-accent-hover: #7C3AED;
+  --neu-accent-light: #F3E8FF;
 
   /* Text Hierarchy Tokens */
-  --neu-text-primary: #0F172A;
-  --neu-text-body: #475569;
-  --neu-text-muted: #64748B;
+  --neu-text-primary: #1E1E1E;
+  --neu-text-body: #374151;
+  --neu-text-muted: #6B7280;
 
   /* Material 3 Legacy Variable Mappings for Compatibility */
   --md-sys-color-primary: var(--neu-accent-primary);
@@ -50,9 +58,9 @@
   --md-sys-color-outline: #CBD5E0;
 
   /* Shape Tokens */
-  --md-sys-shape-corner-small: 12px;
-  --md-sys-shape-corner-medium: 20px;
-  --md-sys-shape-corner-large: 24px;
+  --md-sys-shape-corner-small: 0px;
+  --md-sys-shape-corner-medium: 0px;
+  --md-sys-shape-corner-large: 0px;
   --md-sys-shape-corner-full: 9999px;
 
   /* Typography */
