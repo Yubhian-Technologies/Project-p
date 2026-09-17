@@ -517,7 +517,7 @@ service cloud.firestore {
                       && get(/databases/$(database)/documents/communityPosts/$(postId)/comments/$(commentId)/private/author).data.authorId == request.auth.uid;
 
         match /private/author {
-          allow get: if isSelf(resource.data.authorId);
+          allow get: if isSelf(resource.data.authorId) || canSeeCommunityAuthor();
           allow list: if false;
           allow create: if isSignedIn()
                         && request.resource.data.authorId == request.auth.uid

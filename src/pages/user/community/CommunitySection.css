@@ -743,6 +743,14 @@
   margin-bottom: 3px;
 }
 
+.community-comment-thread__author-email {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #C84B31;
+  margin-bottom: 2px;
+}
+
 .community-comment-thread__text {
   font-size: 13px;
   color: var(--neu-text-body, #475569);

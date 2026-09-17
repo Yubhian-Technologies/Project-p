@@ -9,6 +9,7 @@ interface CommunityPostCardProps {
   isOwnPost: boolean;
   myCommentIds: Set<string>;
   author?: CommunityPostAuthor;
+  showAuthors: boolean;
   onDelete: () => void;
   onCommentsChanged: () => void;
 }
@@ -27,6 +28,7 @@ export function CommunityPostCard({
   isOwnPost,
   myCommentIds,
   author,
+  showAuthors,
   onDelete,
   onCommentsChanged,
 }: CommunityPostCardProps) {
@@ -173,6 +175,7 @@ export function CommunityPostCard({
           postId={post.id}
           uid={uid}
           myCommentIds={myCommentIds}
+          showAuthors={showAuthors}
           onCommentsChanged={onCommentsChanged}
         />
       )}

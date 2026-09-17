@@ -77,6 +77,43 @@ export async function listCommunityPostAuthors(postIds: string[]): Promise<Map<s
   return result;
 }
 
+// Same moderation-only resolution for comment authors. Returns
+// Map<commentId, author> for the comments of one post.
+export async function listCommentAuthors(postId: string, commentIds: string[]): Promise<Map<string, CommunityPostAuthor>> {
+  const result = new Map<string, CommunityPostAuthor>();
+  if (commentIds.length === 0) return result;
+
+  const authorSnaps = await Promise.all(commentIds.map((commentId) => getDoc(commentAuthorDocRef(postId, commentId))));
+  const pairs: Array<{ commentId: string; authorId: string }> = [];
+  commentIds.forEach((commentId, i) => {
+    const snap = authorSnaps[i];
+    if (snap.exists()) {
+      const authorId = snap.data().authorId as string | undefined;
+      if (authorId) pairs.push({ commentId, authorId });
+    }
+  });
+
+  const uniqueIds = Array.from(new Set(pairs.map((p) => p.authorId)));
+  const profileSnaps = await Promise.all(uniqueIds.map((uid) => getDoc(doc(db, "users", uid))));
+  const identityByUid = new Map<string, { name: string; email: string }>();
+  uniqueIds.forEach((uid, i) => {
+    const snap = profileSnaps[i];
+    if (snap.exists()) {
+      const data = snap.data();
+      identityByUid.set(uid, {
+        name: (data.displayName as string) || (data.email as string) || "Anonymous",
+        email: (data.email as string) || "",
+      });
+    }
+  });
+
+  for (const { commentId, authorId } of pairs) {
+    const identity = identityByUid.get(authorId);
+    if (identity) result.set(commentId, { id: authorId, ...identity });
+  }
+  return result;
+}
+
 // Cross-referenced client-side against listCommunityPosts() so the feed can
 // show a "Delete" button on a user's own anonymous posts without the
 // community data itself ever exposing who wrote what.

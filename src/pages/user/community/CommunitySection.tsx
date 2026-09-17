@@ -129,6 +129,7 @@ export function CommunitySection() {
                 isOwnPost={myPostIds.has(post.id)}
                 myCommentIds={myCommentIds}
                 author={showAuthors ? authors.get(post.id) : undefined}
+                showAuthors={showAuthors}
                 onDelete={() => handleDelete(post.id)}
                 onCommentsChanged={refresh}
               />
