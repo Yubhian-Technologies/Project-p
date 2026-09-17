@@ -514,10 +514,12 @@ export async function listCompletedBookings(): Promise<Booking[]> {
 }
 
 export async function rateCounsellor(bookingId: string, rating: number, reviewText?: string): Promise<void> {
+  const now = Date.now();
   await updateDoc(doc(db, "bookings", bookingId), {
     userRatingOfCounsellor: rating,
     ...(reviewText ? { userReviewText: reviewText } : {}),
-    updatedAt: Date.now(),
+    ratedAt: now,
+    updatedAt: now,
   });
 }
 

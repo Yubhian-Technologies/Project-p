@@ -1,20 +1,10 @@
 import { useEffect, useState } from "react";
 import { BentoCard } from "./BentoCard";
+import { ZapIcon, RefreshIcon, CheckIcon } from "./icons";
 import { useAuth } from "../../hooks/useAuth";
 import { getFlashQAList, DEFAULT_FLASH_QA } from "../../services/firebase/flashQa";
 import type { FlashQAItem } from "../../types/flashQa";
 import "./FlashQACard.css";
-
-function FlashIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none">
-      <path
-        d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7ZM9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
 
 export function FlashQACard() {
   const { profile } = useAuth();
@@ -59,7 +49,7 @@ export function FlashQACard() {
     <BentoCard
       className="flash-qa-bento"
       span={4}
-      icon={<FlashIcon />}
+      icon={<ZapIcon />}
       title="Flash Q/A"
       subtitle="Tap card to flip between question & answer."
       badge={{ text: `Q${currentIndex + 1}`, variant: "primary" }}
@@ -92,9 +82,7 @@ export function FlashQACard() {
                 <p className="flash-qa__question">{currentItem.question}</p>
               </div>
               <span className="flash-qa__hint">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-                </svg>
+                <RefreshIcon width={12} height={12} strokeWidth={2.5} />
                 Tap to reveal answer
               </span>
             </div>
@@ -102,15 +90,14 @@ export function FlashQACard() {
             {/* Back: Answer */}
             <div className="flash-qa__face flash-qa__face--back">
               <span className="flash-qa__tag flash-qa__tag--back">
-                ✓ Answer
+                <CheckIcon width={12} height={12} strokeWidth={2.5} />
+                Answer
               </span>
               <div className="flash-qa__text-area">
                 <p className="flash-qa__answer">{currentItem.answer}</p>
               </div>
               <span className="flash-qa__hint">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-                </svg>
+                <RefreshIcon width={12} height={12} strokeWidth={2.5} />
                 Tap to flip back
               </span>
             </div>

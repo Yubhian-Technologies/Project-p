@@ -8,6 +8,7 @@ import {
 } from "../../services/firebase/bookings";
 import type { Booking, BookingIntake, BookingStatus } from "../../types/booking";
 import { Button } from "../common/Button";
+import { AlertTriangleIcon } from "../common/icons";
 import "./EmergencyAlertsSection.css";
 
 interface AlertRow {
@@ -127,7 +128,7 @@ function AlertCard({ booking, intake, accepting, onAccept }: AlertCardProps) {
   return (
     <div className={`emergency-alerts__card${isActive ? " emergency-alerts__card--active" : ""}`}>
       <div className="emergency-alerts__card-header">
-        <span className="emergency-alerts__badge">🚨 EMERGENCY</span>
+        <span className="emergency-alerts__badge"><AlertTriangleIcon /> EMERGENCY</span>
         <span className={`emergency-alerts__status emergency-alerts__status--${booking.status}`}>
           {STATUS_LABEL[booking.status]}
         </span>

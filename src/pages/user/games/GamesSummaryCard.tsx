@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { BentoCard } from "../../../components/common/BentoCard";
+import { GamepadIcon } from "../../../components/common/icons";
 import { useBestScore } from "../../../hooks/useBestScore";
 import "./GamesSummaryCard.css";
 
@@ -31,20 +32,6 @@ function initialIndex(): number {
 
 interface GamesSummaryCardProps {
   onPlay: () => void;
-}
-
-function GamepadIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none">
-      <path
-        d="M6.5 7C3.5 7 1 9.5 1 12.7v1.6C1 17.5 3.4 20 6.4 20c1.9 0 3.6-1 4.6-2.5l.3-.5h1.4l.3.5c1 1.5 2.7 2.5 4.6 2.5 3 0 5.4-2.5 5.4-5.7v-1.6C23 9.5 20.5 7 17.5 7c-2 0-3.8 1.1-4.7 2.7h-1.6C10.3 8.1 8.5 7 6.5 7Z"
-        fill="currentColor"
-      />
-      <circle cx="6.4" cy="13.5" r="2.1" fill="var(--neu-bg, #E8ECF2)" />
-      <circle cx="16.6" cy="11.3" r="1.1" fill="var(--neu-bg, #E8ECF2)" />
-      <circle cx="18.9" cy="14.1" r="1.1" fill="var(--neu-bg, #E8ECF2)" />
-    </svg>
-  );
 }
 
 function GameScoreCard({ id, label, better, unit }: GameSummaryConfig) {

@@ -6,12 +6,15 @@ import {
   type WorkReport,
   type WorkReportType,
 } from "../../services/firebase/workReports";
+import { Modal } from "../../components/common/Modal";
 import {
   CheckIcon,
   RefreshIcon,
   CalendarIcon,
   ClockIcon,
   UserIcon,
+  ClipboardListIcon,
+  EyeIcon,
 } from "../../components/common/icons";
 import "./TeamReportsSection.css";
 
@@ -22,18 +25,6 @@ const REPORT_TYPE_LABELS: Record<WorkReportType, string> = {
   weekly: "Weekly",
   other: "Other",
 };
-
-function ClipboardListIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
-      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
-      <rect x="9" y="3" width="6" height="4" rx="1" />
-      <line x1="9" y1="12" x2="15" y2="12" />
-      <line x1="9" y1="16" x2="13" y2="16" />
-    </svg>
-  );
-}
 
 function formatDate(iso: string) {
   try {
@@ -53,6 +44,7 @@ export function TeamReportsSection() {
   const [tab, setTab] = useState<Tab>("pending");
   const [reports, setReports] = useState<WorkReport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedReport, setSelectedReport] = useState<WorkReport | null>(null);
 
   // id of report with verify panel open
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
@@ -96,6 +88,15 @@ export function TeamReportsSection() {
         headNotes.trim(),
       );
       closeVerify();
+      if (selectedReport?.id === id) {
+        setSelectedReport((prev) => prev ? {
+          ...prev,
+          status: "verified",
+          verifiedBy: profile?.displayName || profile?.email || "Head",
+          verifiedAt: new Date().toISOString(),
+          headNotes: headNotes.trim(),
+        } : null);
+      }
       await loadReports();
     } finally {
       setSaving(false);
@@ -138,7 +139,7 @@ export function TeamReportsSection() {
         </div>
 
         {loading ? (
-          <p style={{ color: "var(--neu-text-muted)", fontSize: 14, marginTop: 12 }}>
+          <p style={{ color: "#64748B", fontSize: 14, marginTop: 12 }}>
             Loading reports…
           </p>
         ) : displayed.length === 0 ? (
@@ -177,71 +178,126 @@ export function TeamReportsSection() {
                       {r.status === "verified" ? <><CheckIcon /> Verified</> : "⏳ Pending"}
                     </span>
 
+                    <button
+                      type="button"
+                      className="tr-btn tr-btn--view"
+                      onClick={() => setSelectedReport(r)}
+                    >
+                      <EyeIcon /> View Details
+                    </button>
+
                     {r.status === "pending" && verifyingId !== r.id && (
                       <button
                         type="button"
                         className="tr-btn tr-btn--verify"
-                        onClick={() => openVerify(r.id)}
+                        onClick={() => {
+                          setSelectedReport(r);
+                          openVerify(r.id);
+                        }}
                       >
                         <CheckIcon /> Verify
                       </button>
                     )}
                   </div>
                 </div>
-
-                {/* Report body */}
-                <div className="tr-card__body">{r.body}</div>
-
-                {/* Verified stamp */}
-                {r.status === "verified" && (
-                  <div className="tr-card__verified-row">
-                    <UserIcon />
-                    <div>
-                      <strong>Verified by {r.verifiedBy}</strong>
-                      {r.verifiedAt ? ` on ${formatDate(r.verifiedAt)}` : ""}
-                      {r.headNotes ? ` — ${r.headNotes}` : ""}
-                    </div>
-                  </div>
-                )}
-
-                {/* Inline verify panel */}
-                {verifyingId === r.id && (
-                  <div className="tr-verify-panel">
-                    <label className="tr-verify-panel__label" htmlFor={`tr-notes-${r.id}`}>
-                      Notes / Feedback (optional)
-                    </label>
-                    <textarea
-                      id={`tr-notes-${r.id}`}
-                      className="tr-verify-panel__textarea"
-                      placeholder="Add any feedback or remarks for this report…"
-                      value={headNotes}
-                      onChange={(e) => setHeadNotes(e.target.value)}
-                    />
-                    <div className="tr-verify-panel__actions">
-                      <button
-                        type="button"
-                        className="tr-btn tr-btn--verify"
-                        disabled={saving}
-                        onClick={() => handleVerify(r.id)}
-                      >
-                        <CheckIcon /> {saving ? "Saving…" : "Confirm & Verify"}
-                      </button>
-                      <button
-                        type="button"
-                        className="tr-btn tr-btn--cancel"
-                        disabled={saving}
-                        onClick={closeVerify}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>
+
         )}
       </div>
+
+      {/* ── Report Details Modal ───────────────────────────────────────── */}
+      {selectedReport && (
+        <Modal
+          title={
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <span>{selectedReport.title}</span>
+            </div>
+          }
+          onClose={() => setSelectedReport(null)}
+        >
+          <div className="tr-modal__details">
+            <div className="tr-modal__badges">
+              <span className="tr-badge tr-badge--type">{REPORT_TYPE_LABELS[selectedReport.reportType]}</span>
+              <span className={`tr-badge tr-badge--${selectedReport.status}`}>
+                {selectedReport.status === "verified" ? <><CheckIcon /> Verified</> : "⏳ Pending"}
+              </span>
+            </div>
+
+            <div className="tr-modal__meta-grid">
+              <div className="tr-modal__meta-item">
+                <span className="tr-modal__meta-label">Submitted By</span>
+                <span className="tr-modal__meta-val"><UserIcon /> {selectedReport.submittedBy}</span>
+              </div>
+              <div className="tr-modal__meta-item">
+                <span className="tr-modal__meta-label">Period</span>
+                <span className="tr-modal__meta-val"><CalendarIcon /> {selectedReport.periodLabel}</span>
+              </div>
+              <div className="tr-modal__meta-item">
+                <span className="tr-modal__meta-label">Date Submitted</span>
+                <span className="tr-modal__meta-val"><ClockIcon /> {formatDate(selectedReport.submittedAt)}</span>
+              </div>
+            </div>
+
+            <div className="tr-modal__section">
+              <h4 className="tr-modal__section-title">Report Content</h4>
+              <div className="tr-modal__body-text">{selectedReport.body}</div>
+            </div>
+
+            {selectedReport.status === "verified" ? (
+              <div className="tr-modal__section tr-modal__section--verified">
+                <h4 className="tr-modal__section-title">Verification Info</h4>
+                <div className="tr-modal__verified-box">
+                  <UserIcon />
+                  <div>
+                    <strong>Verified by {selectedReport.verifiedBy}</strong>
+                    {selectedReport.verifiedAt ? ` on ${formatDate(selectedReport.verifiedAt)}` : ""}
+                    <p style={{ margin: "4px 0 0 0" }}>{selectedReport.headNotes || "No additional remarks."}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="tr-modal__section">
+                <h4 className="tr-modal__section-title">Verify Report</h4>
+                <div className="tr-verify-panel">
+                  <label className="tr-verify-panel__label" htmlFor={`tr-modal-notes-${selectedReport.id}`}>
+                    Notes / Feedback (optional)
+                  </label>
+                  <textarea
+                    id={`tr-modal-notes-${selectedReport.id}`}
+                    className="tr-verify-panel__textarea"
+                    placeholder="Add feedback before verifying…"
+                    value={headNotes}
+                    onChange={(e) => setHeadNotes(e.target.value)}
+                  />
+                  <div className="tr-verify-panel__actions">
+                    <button
+                      type="button"
+                      className="tr-btn tr-btn--verify"
+                      disabled={saving}
+                      onClick={() => handleVerify(selectedReport.id)}
+                    >
+                      <CheckIcon /> {saving ? "Saving…" : "Confirm & Verify"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="tr-modal__actions">
+              <button
+                type="button"
+                className="tr-btn tr-btn--ghost"
+                onClick={() => setSelectedReport(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
+

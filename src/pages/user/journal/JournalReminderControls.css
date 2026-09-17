@@ -1,14 +1,15 @@
 .journal-reminder {
-  background: #F8F4EA;
+  background: #FFFFFF;
   border-radius: 0px;
   border: 2px solid #2B2B2B;
   box-shadow: 3px 3px 0px #2B2B2B;
-  padding: 18px 20px;
+  padding: 14px 18px;
   box-sizing: border-box;
-  max-width: 360px;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  position: relative;
 }
 
 .journal-reminder__toggle {
@@ -32,7 +33,7 @@
 .journal-reminder__time-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -46,18 +47,29 @@
 .journal-reminder__time-row .md-select {
   flex: 1;
   min-width: 0;
+  position: relative;
 }
 
 .journal-reminder__time-row .md-select__control {
-  height: 38px;
-  padding: 0 12px;
+  height: 36px;
+  padding: 0 10px;
   border-radius: 0px !important;
   border: 2px solid #2B2B2B !important;
   background: #FFFFFF !important;
   box-shadow: 2px 2px 0px #2B2B2B !important;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13.5px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
+
+/* Dropdown menu opens UPWARDS over the reminder card so it never spills out */
+.journal-reminder__time-row .md-select__menu {
+  top: auto !important;
+  bottom: calc(100% + 6px) !important;
+  max-height: 160px !important;
+  z-index: 100 !important;
+  box-shadow: 4px 4px 0px #2B2B2B !important;
+}
+

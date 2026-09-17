@@ -1,0 +1,239 @@
+.wellness-test {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.wellness-test__header-card {
+  background: #F8F4EA !important;
+  border: 2px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 3px 3px 0px #2B2B2B !important;
+  padding: 24px !important;
+}
+
+.wellness-test__title {
+  margin: 0 0 8px;
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: #1E1E1E;
+}
+
+.wellness-test__subtitle {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4A5568;
+}
+
+.wellness-test__form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.wellness-test__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #F8F4EA;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  padding: 14px 18px;
+  box-shadow: 2px 2px 0px #2B2B2B;
+}
+
+.wellness-test__progress-text {
+  font-size: 13px;
+  color: #4A5568;
+}
+
+.wellness-test__progress-bar {
+  width: 100%;
+  height: 10px;
+  background: #FFFFFF;
+  border: 1.5px solid #2B2B2B;
+  border-radius: 0px;
+  overflow: hidden;
+}
+
+.wellness-test__progress-fill {
+  height: 100%;
+  background: #8B5CF6;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wellness-test__questions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wellness-test__question-card {
+  background: #FFFFFF !important;
+  border: 2px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 3px 3px 0px #2B2B2B !important;
+  padding: 20px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.wellness-test__question-text {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1E1E1E;
+  line-height: 1.5;
+}
+
+.wellness-test__question-num {
+  color: #8B5CF6;
+  font-weight: 800;
+}
+
+.wellness-test__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.wellness-test__option-btn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 18px;
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  color: #4A5568;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wellness-test__option-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B;
+  color: #1E1E1E;
+}
+
+.wellness-test__option-btn--active {
+  background: #2B2B2B !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.wellness-test__submit-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+}
+
+.wellness-test__incomplete-hint {
+  font-size: 13px;
+  font-weight: 600;
+  color: #718096;
+}
+
+/* ── Results View ────────────────────────────────────────────── */
+
+.wellness-test__result-card {
+  background: #F8F4EA !important;
+  border: 2px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 4px 4px 0px #2B2B2B !important;
+  padding: 28px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.wellness-test__result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.wellness-test__result-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 6px 14px;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  box-shadow: 2px 2px 0px #2B2B2B;
+}
+
+.wellness-test__result-score {
+  font-size: 14px;
+  font-weight: 700;
+  color: #4A5568;
+}
+
+.wellness-test__result-title {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: #1E1E1E;
+}
+
+.wellness-test__result-desc {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #2D3748;
+}
+
+.wellness-test__suggestions-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  padding: 20px;
+  box-shadow: 3px 3px 0px #2B2B2B;
+}
+
+.wellness-test__suggestions-heading {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #1E1E1E;
+}
+
+.wellness-test__suggestions-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wellness-test__suggestion-item {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #2D3748;
+  font-weight: 600;
+}
+
+.wellness-test__result-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 2px solid rgba(43, 43, 43, 0.1);
+}

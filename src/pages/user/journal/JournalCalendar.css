@@ -3,16 +3,16 @@
   border-radius: 0px;
   box-shadow: 3px 3px 0px #2B2B2B;
   border: 2px solid #2B2B2B;
-  padding: 20px;
+  padding: 18px 20px;
   box-sizing: border-box;
-  max-width: 360px;
+  width: 100%;
 }
 
 .journal-calendar__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .journal-calendar__month-label {
@@ -23,15 +23,15 @@
 }
 
 .journal-calendar__nav {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 0px;
   border: 2px solid #2B2B2B;
   background: #F8F9FA;
   color: #1E1E1E;
   box-shadow: 2px 2px 0px #2B2B2B;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -49,14 +49,14 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .journal-calendar__weekdays span {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 28px;
+  height: 24px;
   text-align: center;
   font-size: 11px;
   font-weight: 800;
@@ -73,7 +73,7 @@
 .journal-calendar__day {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
+  height: 32px;
   border: 1px solid rgba(43, 43, 43, 0.15);
   border-radius: 0px;
   background: #F8F9FA;

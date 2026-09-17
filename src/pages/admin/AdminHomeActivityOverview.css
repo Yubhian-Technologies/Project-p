@@ -1,0 +1,414 @@
+/* ── Admin Home Activity Overview (Neo-Brutalist) ─────────────────────────── */
+
+.aha-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  grid-column: 1 / -1;
+  margin-top: 12px;
+}
+
+.aha-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #F8F4EA;
+  border: 2px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 3px 3px 0px #2B2B2B !important;
+}
+
+.aha-header__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  font-family: var(--md-sys-typescale-font-display);
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.aha-header__title svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.aha-header button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.aha-header__sub {
+  margin: 2px 0 0 0;
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 600;
+}
+
+.aha-grid {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .aha-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aha-card {
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  padding: 22px 24px;
+  box-shadow: 3.5px 3.5px 0px #2B2B2B !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.aha-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #2B2B2B;
+}
+
+.aha-card__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.aha-card__icon {
+  font-size: 20px;
+}
+
+.aha-card__icon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.aha-card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  font-family: var(--md-sys-typescale-font-display);
+  color: #0F172A;
+}
+
+.aha-card__subtitle {
+  display: block;
+  font-size: 12px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.aha-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 0px !important;
+  border: 1.5px solid #2B2B2B;
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+}
+
+.aha-badge--blue {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.aha-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 0px !important;
+  border: 1px solid #2B2B2B;
+  font-size: 10.5px;
+  font-weight: 800;
+  box-shadow: 1px 1px 0px #2B2B2B;
+}
+
+.aha-tag--month {
+  background: #F1F5F9;
+  color: #334155;
+}
+
+.aha-tag--pending {
+  background: #FFFBEB;
+  color: #D97706;
+}
+
+.aha-tag--verified {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.aha-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aha-feed__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #F8FAFC;
+  border: 1.5px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px #2B2B2B !important;
+  transition: all 0.18s ease;
+}
+
+.aha-feed__item:hover {
+  background: #FFFFFF;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B !important;
+}
+
+.aha-feed__item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.aha-feed__item-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.aha-feed__item-title {
+  font-weight: 800;
+  font-size: 14px;
+  color: #0F172A;
+}
+
+.aha-feed__item-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 11.5px;
+  color: #64748B;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+
+.aha-feed__item-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.aha-feed__item-meta svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.aha-btn-dl svg {
+  width: 13px;
+  height: 13px;
+}
+
+.aha-btn-dl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #2563EB;
+  color: #FFFFFF;
+  border: 1.5px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 6px 12px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.aha-btn-dl:hover {
+  background: #1D4ED8;
+  transform: translate(-1px, -1px);
+  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+}
+
+.aha-card__footer {
+  margin-top: 4px;
+  text-align: right;
+}
+
+.aha-link-btn {
+  background: none;
+  border: none;
+  color: #2563EB;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.aha-loading, .aha-empty {
+  padding: 24px;
+  text-align: center;
+  color: #64748B;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.aha-mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aha-mini-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #F8FAFC;
+  border: 1.5px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+}
+
+.aha-mini-item__title {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.aha-mini-item__sub {
+  font-size: 11px;
+  color: #64748B;
+}
+
+.aha-btn-sm {
+  background: #FFFFFF;
+  border: 1.5px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.aha-btn-sm svg {
+  width: 12px;
+  height: 12px;
+}
+
+.aha-shortcuts {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 2px solid #2B2B2B;
+}
+
+.aha-shortcuts__label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #2B2B2B;
+  margin-bottom: 8px;
+}
+
+.aha-shortcuts__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.aha-shortcuts__grid button {
+  background: #FFFFFF;
+  border: 1.5px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 10px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.15s ease;
+}
+
+.aha-shortcuts__grid button svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.aha-shortcuts__grid button:hover {
+  background: #FEF3C7;
+  transform: translate(-1px, -1px);
+  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+}
+
+.aha-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.aha-modal__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+  background: #F8FAFC;
+  border: 1.5px solid #2B2B2B;
+  font-size: 12px;
+}
+
+.aha-modal__body h5 {
+  margin: 0 0 6px 0;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.aha-modal__content-box {
+  background: #FFFFFF;
+  border: 1.5px solid #2B2B2B;
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.aha-modal__notes {
+  background: #F0FDF4;
+  border: 1.5px solid #16A34A;
+  padding: 10px;
+  font-size: 12px;
+  color: #166534;
+}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Select } from "./Select";
+import { ClockIcon } from "./icons";
 import { pad, to12Hour, to24Hour } from "../../utils/timeFormat";
 import "./TimePicker.css";
 
@@ -62,7 +63,7 @@ export function TimePicker({ id, value, onChange, disabled }: TimePickerProps) {
           {value ? formatDisplay(value) : "--:-- --"}
         </span>
         <span className="md-timepicker__icon" aria-hidden="true">
-          🕐
+          <ClockIcon />
         </span>
       </button>
 

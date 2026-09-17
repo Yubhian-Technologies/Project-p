@@ -9,20 +9,26 @@ import {
   requestReschedule,
   acceptRescheduleProposal,
   isSessionEndedPending,
-  rateCounsellor,
+  getBookingIntake,
   SESSION_DURATION_LABEL,
 } from "../../services/firebase/bookings";
+import { listFeedbackForUser, createSessionFeedback } from "../../services/firebase/feedback";
+import { listSsiResultsForUser, submitSsiResult } from "../../services/firebase/ssiTest";
+import { sanitizePhoneInput, isValidWhatsappNumber } from "../../utils/phone";
+import { FEEDBACK_FORM } from "../../config/feedbackForm";
 import type { UserProfile } from "../../types/user";
 import type { Booking, BookingIntake } from "../../types/booking";
 import { computeLiveStatus } from "../../utils/counsellorStatus";
 import { CounsellorCard } from "../../components/booking/CounsellorCard";
 import { CounsellorProfileModal } from "../../components/booking/CounsellorProfileModal";
+import { SsiTestModal } from "../../components/booking/SsiTestModal";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { Modal } from "../../components/common/Modal";
 import { Select } from "../../components/common/Select";
-import { StarRating } from "../../components/common/StarRating";
 import { DateTimePicker } from "../../components/common/DateTimePicker";
+import { StarRating } from "../../components/common/StarRating";
+import { ChatModal } from "../../components/chat/ChatModal";
 import "./BookingSection.css";
 
 function nowValue(): string {
@@ -62,7 +68,13 @@ function statusClass(booking: Booking): string {
   return booking.status;
 }
 
-export function BookingSection() {
+export function BookingSection({
+  openChatBookingId,
+  onChatOpened,
+}: {
+  openChatBookingId?: string;
+  onChatOpened?: () => void;
+}) {
   const { currentUser, profile } = useAuth();
   const [counsellors, setCounsellors] = useState<UserProfile[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -76,6 +88,11 @@ export function BookingSection() {
   const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
   const [cancelReasonField, setCancelReasonField] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  const [submittedFeedbackIds, setSubmittedFeedbackIds] = useState<Set<string>>(new Set());
+  const [feedbackBooking, setFeedbackBooking] = useState<Booking | null>(null);
+  const [feedbackAnswers, setFeedbackAnswers] = useState<Record<string, string>>({});
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
   const [nameField, setNameField] = useState("");
   const [occupationField, setOccupationField] = useState<"student" | "professional">("student");
@@ -89,28 +106,52 @@ export function BookingSection() {
   const [rescheduleReasonField, setRescheduleReasonField] = useState("");
   const [requestingReschedule, setRequestingReschedule] = useState(false);
   const [acceptingRescheduleId, setAcceptingRescheduleId] = useState<string | null>(null);
+  const [chatTarget, setChatTarget] = useState<Booking | null>(null);
+  const [ssiSubmittedIds, setSsiSubmittedIds] = useState<Set<string>>(new Set());
+  const [ssiTarget, setSsiTarget] = useState<Booking | null>(null);
+  const [ssiIntakeWhatsapp, setSsiIntakeWhatsapp] = useState("");
 
-  const [ratingTarget, setRatingTarget] = useState<Booking | null>(null);
-  const [ratingValue, setRatingValue] = useState(0);
-  const [reviewText, setReviewText] = useState("");
-  const [submittingRating, setSubmittingRating] = useState(false);
+  async function openSsiTest(b: Booking) {
+    setSsiTarget(b);
+    setSsiIntakeWhatsapp("");
+    try {
+      const intake = await getBookingIntake(b.id);
+      setSsiIntakeWhatsapp(intake?.whatsappNumber ?? "");
+    } catch {
+      setSsiIntakeWhatsapp("");
+    }
+  }
 
   async function refresh() {
     if (!currentUser) return;
-    const [profiles, userBookings, liveBookings] = await Promise.all([
+    const [profiles, userBookings, liveBookings, feedback, ssiResults] = await Promise.all([
       listBookableProfiles(),
       listBookingsForUser(currentUser.uid),
       listScheduledBookings(),
+      listFeedbackForUser(currentUser.uid).catch(() => []),
+      listSsiResultsForUser(currentUser.uid).catch(() => []),
     ]);
     setCounsellors(profiles);
     setBookings(userBookings);
     setScheduledBookings(liveBookings);
+    setSubmittedFeedbackIds(new Set(feedback.map((f) => f.bookingId)));
+    setSsiSubmittedIds(new Set(ssiResults.map((r) => r.bookingId)));
     setLoading(false);
   }
 
   useEffect(() => {
     refresh();
   }, [currentUser]);
+
+  // Open a chat thread directly when the user taps a "chat_message" notification.
+  useEffect(() => {
+    if (!openChatBookingId) return;
+    const booking = bookings.find((b) => b.id === openChatBookingId);
+    if (booking) {
+      setChatTarget(booking);
+      onChatOpened?.();
+    }
+  }, [openChatBookingId, bookings, onChatOpened]);
 
   const activeBooking = bookings.find((b) => ACTIVE_STATUSES.includes(b.status) && !isSessionEndedPending(b));
 
@@ -129,7 +170,7 @@ export function BookingSection() {
 
   const formValid =
     nameField.trim() &&
-    whatsappField.trim() &&
+    isValidWhatsappNumber(whatsappField) &&
     issueField.trim() &&
     agreed &&
     slot1Field &&
@@ -205,6 +246,44 @@ export function BookingSection() {
     }
   }
 
+  function openFeedback(booking: Booking) {
+    setFeedbackBooking(booking);
+    setFeedbackAnswers({});
+    setFeedbackError(null);
+  }
+
+  const feedbackRequiredMissing = FEEDBACK_FORM.questions.some(
+    (q) => q.required && !(feedbackAnswers[q.id]?.trim()),
+  );
+
+  async function submitFeedback() {
+    const feedbackBookingRef = feedbackBooking;
+    const overallRating = Number(feedbackAnswers["overall"] ?? 0);
+    if (!feedbackBookingRef || !Number.isFinite(overallRating) || overallRating < 1 || overallRating > 5) {
+      setFeedbackError("Please complete all required questions.");
+      return;
+    }
+    setSubmittingFeedback(true);
+    setFeedbackError(null);
+    try {
+      const answers = FEEDBACK_FORM.questions
+        .map((q) => ({ q, value: feedbackAnswers[q.id]?.trim() ?? "" }))
+        .filter(({ value }) => value.length > 0)
+        .map(({ q, value }) => ({ label: q.label, value }));
+      const bookingId = await createSessionFeedback(feedbackBookingRef, overallRating, answers);
+      setSubmittedFeedbackIds((prev) => {
+        const next = new Set(prev);
+        next.add(bookingId);
+        return next;
+      });
+      setFeedbackBooking(null);
+    } catch {
+      setFeedbackError("Couldn't save your feedback. Please try again.");
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  }
+
   if (loading) return null;
 
   return (
@@ -243,6 +322,22 @@ export function BookingSection() {
                 <span className={`booking-section__status booking-section__status--${statusClass(b)}`}>
                   {statusLabel(b)}
                 </span>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={() => setChatTarget(b)}
+                >
+                  Chat
+                </Button>
+                {(b.status === "accepted" || (b.status === "scheduled" && !isSessionEndedPending(b))) && (
+                  ssiSubmittedIds.has(b.id) ? (
+                    <span className="booking-section__ssi-chip">✓ SSI test submitted</span>
+                  ) : (
+                    <Button type="button" variant="outlined" onClick={() => openSsiTest(b)}>
+                      Take SSI Test
+                    </Button>
+                  )
+                )}
                 {ACTIVE_STATUSES.includes(b.status) && !isSessionEndedPending(b) && (
                   <Button
                     type="button"
@@ -257,29 +352,14 @@ export function BookingSection() {
                 )}
                 {b.status === "completed" && b.outcome !== "missed" && (
                   <div className="booking-section__rating-feedback-block">
-                    {b.userRatingOfCounsellor === undefined ? (
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          setRatingTarget(b);
-                          setRatingValue(0);
-                          setReviewText("");
-                        }}
-                      >
-                        Rate Session
-                      </Button>
-                    ) : (
+                    {submittedFeedbackIds.has(b.id) ? (
                       <div className="booking-section__rated-box">
-                        <StarRating value={b.userRatingOfCounsellor} size="small" />
-                        <a
-                          href="https://docs.google.com/forms/d/e/1FAIpQLSe7qZzROzrkRwTozn-4alXrJvWtFt2FboI052tEGBk82O-SUg/viewform"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="booking-section__feedback-link"
-                        >
-                          Give Feedback
-                        </a>
+                        <span className="booking-section__feedback-submitted">✓ Feedback submitted</span>
                       </div>
+                    ) : (
+                      <Button type="button" onClick={() => openFeedback(b)}>
+                        Take Feedback
+                      </Button>
                     )}
                   </div>
                 )}
@@ -495,10 +575,16 @@ export function BookingSection() {
                 <input
                   id="booking-whatsapp"
                   type="tel"
+                  inputMode="numeric"
                   required
                   value={whatsappField}
-                  onChange={(e) => setWhatsappField(e.target.value)}
+                  onChange={(e) => setWhatsappField(sanitizePhoneInput(e.target.value))}
                 />
+                {whatsappField && !isValidWhatsappNumber(whatsappField) && (
+                  <p className="booking-section__field-hint">
+                    Enter a valid 10-digit mobile number (e.g. 98765 43210 or +91 98765 43210).
+                  </p>
+                )}
               </div>
               <div className="booking-section__field">
                 <label htmlFor="booking-issue">
@@ -599,60 +685,102 @@ export function BookingSection() {
         </Modal>
       )}
 
-      {ratingTarget && (
-        <Modal title="Rate Your Session" onClose={() => setRatingTarget(null)}>
-          <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "var(--neu-text-body, #4A5568)" }}>
-            How was your session with <strong>{ratingTarget.counsellorEmail}</strong>?
+      {chatTarget && currentUser && profile && (
+        <ChatModal
+          chatRoomId={chatTarget.id}
+          bookingId={chatTarget.id}
+          counterpartName={chatTarget.counsellorEmail}
+          counterpartRole="counsellor"
+          currentUser={{
+            uid: currentUser.uid,
+            email: profile.email,
+            displayName: profile.displayName,
+            role: profile.role,
+          }}
+          onClose={() => setChatTarget(null)}
+        />
+      )}
+
+      {feedbackBooking && (
+        <Modal title={FEEDBACK_FORM.title} className="booking-section__feedback-modal" onClose={() => setFeedbackBooking(null)}>
+          <p className="booking-section__feedback-intro">{FEEDBACK_FORM.intro}</p>
+          <p className="booking-section__feedback-counsellor">
+            Session with <strong>{feedbackBooking.counsellorEmail}</strong>
           </p>
 
-          <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 20px 0" }}>
-            <StarRating value={ratingValue} size="large" onChange={setRatingValue} />
-          </div>
+          {FEEDBACK_FORM.questions.map((q) => (
+            <div key={q.id} className="booking-section__feedback-field">
+              <span className="booking-section__feedback-label">
+                {q.label} {q.required && <span className="booking-section__required">*</span>}
+              </span>
+              {q.kind === "rating" && (
+                <StarRating
+                  value={Number(feedbackAnswers[q.id] ?? 0)}
+                  onChange={(v) => setFeedbackAnswers((prev) => ({ ...prev, [q.id]: String(v) }))}
+                />
+              )}
+              {q.kind === "choice" && (
+                <div className="booking-section__feedback-options">
+                  {q.options?.map((option) => {
+                    const selected = feedbackAnswers[q.id] === option;
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        aria-pressed={selected}
+                        className={`booking-section__feedback-option${selected ? " booking-section__feedback-option--active" : ""}`}
+                        onClick={() => setFeedbackAnswers((prev) => ({ ...prev, [q.id]: option }))}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {q.kind === "text" && (
+                <textarea
+                  rows={3}
+                  value={feedbackAnswers[q.id] ?? ""}
+                  placeholder={q.placeholder}
+                  onChange={(e) => setFeedbackAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
+                />
+              )}
+            </div>
+          ))}
 
-          <div className="booking-section__field">
-            <label htmlFor="rating-review">Review / Feedback (optional)</label>
-            <textarea
-              id="rating-review"
-              rows={3}
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Share your experience with this session..."
-            />
-          </div>
-
-          <div style={{ margin: "14px 0 20px 0", display: "flex", justifyContent: "center" }}>
-            <a
-              href="https://docs.google.com/forms/d/e/1FAIpQLSe7qZzROzrkRwTozn-4alXrJvWtFt2FboI052tEGBk82O-SUg/viewform"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="booking-section__feedback-link"
-            >
-              Open Detailed Feedback Form ↗
-            </a>
-          </div>
+          {feedbackError && (
+            <p role="alert" className="booking-section__feedback-error">
+              {feedbackError}
+            </p>
+          )}
 
           <div className="booking-section__modal-actions">
             <Button
               type="button"
-              disabled={ratingValue === 0 || submittingRating}
-              onClick={async () => {
-                setSubmittingRating(true);
-                try {
-                  await rateCounsellor(ratingTarget.id, ratingValue, reviewText.trim() || undefined);
-                  setRatingTarget(null);
-                  await refresh();
-                } finally {
-                  setSubmittingRating(false);
-                }
-              }}
+              disabled={feedbackRequiredMissing || submittingFeedback}
+              onClick={submitFeedback}
             >
-              {submittingRating ? "Submitting…" : "Submit Rating"}
+              {submittingFeedback ? "Submitting…" : FEEDBACK_FORM.submitLabel}
             </Button>
-            <Button type="button" variant="outlined" onClick={() => setRatingTarget(null)}>
+            <Button type="button" variant="outlined" onClick={() => setFeedbackBooking(null)}>
               Cancel
             </Button>
           </div>
         </Modal>
+      )}
+
+      {ssiTarget && profile && (
+        <SsiTestModal
+          booking={ssiTarget}
+          profile={profile}
+          initialWhatsappNumber={ssiIntakeWhatsapp}
+          onSubmit={async (input) => {
+            await submitSsiResult(input);
+            setSsiSubmittedIds((prev) => new Set(prev).add(ssiTarget.id));
+            await refresh();
+          }}
+          onClose={() => setSsiTarget(null)}
+        />
       )}
     </div>
   );

@@ -75,6 +75,14 @@
   font-weight: 900;
   letter-spacing: 0.04em;
   color: #dc2626;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.emergency-alerts__badge svg {
+  width: 13px;
+  height: 13px;
 }
 
 .emergency-alerts__status {

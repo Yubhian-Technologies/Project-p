@@ -28,6 +28,10 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
+    function bookingOf(bookingId) {
+      return get(/databases/$(database)/documents/bookings/$(bookingId)).data;
+    }
+
     // Admin and Super Admin both manage campuses/colleges/logins.
     function isCampusManager() {
       return isSignedIn() && myRole() in ['admin', 'super-admin'];
@@ -203,28 +207,50 @@ service cloud.firestore {
         request.resource.data.counsellorId == request.auth.uid
       );
 
-      // Covers accept/reject/schedule/cancel/close/rate/transfer — all performed by
-      // the user, the assigned counsellor, or Head/Admin/Super Admin oversight actions.
+      // Covers accept/reject/schedule/cancel/close/transfer — all performed by
+      // the user, the assigned counsellor, or Head/Admin/Super Admin oversight
+      // actions. Writes that touch the user's rating fields are excluded here
+      // (see the one-time rating rule below) so a rating can never be silently
+      // overwritten through the general party/staff branch.
       allow update: if isSignedIn() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.counsellorId == request.auth.uid ||
-        isStaff() ||
         (
-          // Any Counsellor on the same campus can claim (accept) a still-pending
-          // emergency SOS, not just whoever it was auto-assigned to — speed
-          // matters more than the original best-guess pick in a crisis. (Head is
-          // already covered by isStaff() above.)
-          isRole('counsellor') &&
-          resource.data.isEmergency == true &&
-          resource.data.status == 'pending' &&
-          resource.data.campusId == myProfile().campusId &&
-          request.resource.data.counsellorId == request.auth.uid &&
-          request.resource.data.counsellorEmail == myProfile().email &&
-          request.resource.data.status == 'accepted' &&
-          request.resource.data.userId == resource.data.userId &&
-          request.resource.data.campusId == resource.data.campusId &&
-          request.resource.data.isEmergency == true
-        )
+          resource.data.userId == request.auth.uid ||
+          resource.data.counsellorId == request.auth.uid ||
+          isStaff() ||
+          (
+            // Any Counsellor on the same campus can claim (accept) a still-pending
+            // emergency SOS, not just whoever it was auto-assigned to — speed
+            // matters more than the original best-guess pick in a crisis. (Head is
+            // already covered by isStaff() above.)
+            isRole('counsellor') &&
+            resource.data.isEmergency == true &&
+            resource.data.status == 'pending' &&
+            resource.data.campusId == myProfile().campusId &&
+            request.resource.data.counsellorId == request.auth.uid &&
+            request.resource.data.counsellorEmail == myProfile().email &&
+            request.resource.data.status == 'accepted' &&
+            request.resource.data.userId == resource.data.userId &&
+            request.resource.data.campusId == resource.data.campusId &&
+            request.resource.data.isEmergency == true
+          )
+        ) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'userRatingOfCounsellor', 'userReviewText', 'ratedAt'
+        ])
+      ) || (
+        // One-time user rating of a held session. The user may rate only their
+        // own completed, non-missed booking — and only once (the booking must
+        // carry no rating yet) — and only ever write the rating/review/timestamp
+        // keys. This is what ties each feedback form submission to the exact
+        // counsellor who took the session (booking.counsellorId) and powers the
+        // Admin Counsellor Ratings dashboard.
+        isSignedIn() &&
+        resource.data.userId == request.auth.uid &&
+        resource.data.status == 'completed' &&
+        resource.data.outcome != 'missed' &&
+        !('userRatingOfCounsellor' in resource.data) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'userRatingOfCounsellor', 'userReviewText', 'ratedAt', 'updatedAt'
+        ])
       );
 
       allow delete: if false;
@@ -246,6 +272,109 @@ service cloud.firestore {
           get(/databases/$(database)/documents/bookings/$(bookingId)).data.counsellorId == request.auth.uid
         );
       }
+    }
+
+    // ---------- sessionFeedback ----------
+    // One doc per held session (the doc id IS the booking id, so a session can
+    // receive at most one feedback — a second submission is a create conflict).
+    // Written directly by the app from the signed-in student's own account via
+    // the in-app feedback form (no external bridge).
+    //
+    // Reading is role-scoped: the student who gave the feedback, the counsellor
+    // who took the session (who should see the full details), and staff
+    // (Head/Admin/Super Admin — overall ratings and details) can all read it.
+    match /sessionFeedback/{bookingId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.counsellorId == request.auth.uid ||
+        isStaff()
+      );
+
+      // The sender must be the student of the matching booking; the booking
+      // must exist, be completed and not missed, and must belong to the
+      // counsellor the feedback names. Doc id === bookingId enforces one
+      // response per session.
+      allow create: if isSignedIn()
+                    && request.auth.uid == request.resource.data.userId
+                    && request.resource.data.bookingId == bookingId
+                    && request.resource.data.keys().hasOnly([
+                      'bookingId', 'userId', 'userEmail', 'counsellorId', 'counsellorEmail',
+                      'campusId', 'rating', 'answers', 'submittedAt'
+                    ])
+                    && request.resource.data.rating is number
+                    && request.resource.data.rating >= 1
+                    && request.resource.data.rating <= 5
+                    && get(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'completed'
+                    && get(/databases/$(database)/documents/bookings/$(bookingId)).data.outcome != 'missed'
+                    && get(/databases/$(database)/documents/bookings/$(bookingId)).data.userId == request.resource.data.userId
+                    && get(/databases/$(database)/documents/bookings/$(bookingId)).data.counsellorId == request.resource.data.counsellorId;
+
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ---------- ssi_results ----------
+    // One SSI (pre-session assessment) test per booking — the doc id IS the
+    // booking id, so a second submission is a create conflict (single attempt).
+    // The student takes it after the counsellor accepts the session and before
+    // it starts. Reading is scoped to the student, their assigned counsellor,
+    // and staff. counsellorId is live-reassigned via the booking, so whoever
+    // holds the session can view the result.
+    match /ssi_results/{bookingId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.counsellorId == request.auth.uid ||
+        isStaff()
+      );
+
+      allow create: if isSignedIn()
+                    && request.auth.uid == request.resource.data.userId
+                    && request.resource.data.bookingId == bookingId
+                    && request.resource.data.keys().hasOnly([
+                      'bookingId', 'userId', 'userEmail', 'counsellorId', 'counsellorEmail',
+                      'level1', 'likertAnswers', 'level3Answers', 'likertScore', 'likertMax',
+                      'depressionScore', 'anxietyScore', 'stressScore',
+                      'whatsappNumber', 'consentGiven', 'consentItems', 'submittedAt'
+                    ])
+                    && request.resource.data.likertScore is number
+                    && request.resource.data.likertScore >= 0
+                    && request.resource.data.depressionScore is number
+                    && request.resource.data.anxietyScore is number
+                    && request.resource.data.stressScore is number
+                    && request.resource.data.consentGiven == true
+                    && bookingOf(bookingId).userId == request.resource.data.userId
+                    && bookingOf(bookingId).counsellorId == request.resource.data.counsellorId
+                    && bookingOf(bookingId).status in ['accepted', 'scheduled'];
+
+      allow update: if false;
+      allow delete: if false;
+    }
+    // One private chat room per booking — each message stores chatRoomId = the
+    // booking id. Access is limited to the two parties: the student (userId)
+    // and the counsellor currently assigned to the booking. counsellorId is
+    // live-reassigned on transfer, follow-up, and emergency claim, so whoever
+    // actually owns the request can chat. Staff (Head/Admin/Super Admin) may
+    // read for oversight but never write into a private conversation.
+    match /chat_messages/{messageId} {
+      allow read: if isSignedIn() && (
+        isStaff() ||
+        bookingOf(resource.data.chatRoomId).userId == request.auth.uid ||
+        bookingOf(resource.data.chatRoomId).counsellorId == request.auth.uid
+      );
+
+      allow create: if isSignedIn()
+                    && request.resource.data.senderUid == request.auth.uid
+                    && request.resource.data.keys().hasOnly([
+                      'chatRoomId', 'bookingId', 'senderUid', 'senderEmail',
+                      'senderName', 'senderRole', 'text', 'createdAt'
+                    ])
+                    && (
+                      bookingOf(request.resource.data.chatRoomId).userId == request.auth.uid ||
+                      bookingOf(request.resource.data.chatRoomId).counsellorId == request.auth.uid
+                    );
+
+      allow update: if false;
+      allow delete: if false;
     }
 
     // ---------- notifications ----------
@@ -429,7 +558,10 @@ service cloud.firestore {
       allow update: if isStaff()
                     && request.resource.data.status == 'verified';
 
-      allow delete: if false;
+      // Report authors (counsellors) can delete their own reports;
+      // head/admin/super-admin can delete any report.
+      allow delete: if isSignedIn()
+                    && (resource.data.submittedByUid == request.auth.uid || isStaff());
     }
 
     // ---------- flash_qa ----------

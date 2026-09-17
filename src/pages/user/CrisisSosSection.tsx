@@ -1,11 +1,13 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { createEmergencySosBooking } from "../../services/firebase/bookings";
+import { PhoneIcon, MapPinIcon, ShieldIcon } from "../../components/common/icons";
 import "./CrisisSosSection.css";
 
 interface EmergencyLine {
   id: string;
-  icon: string;
+  icon: ReactNode;
   name: string;
   description: string;
   actionLabel: string;
@@ -19,16 +21,16 @@ interface EmergencyLine {
 const EMERGENCY_LINES: EmergencyLine[] = [
   {
     id: "campus-emergency",
-    icon: "📞",
+    icon: <PhoneIcon />,
     name: "Vishnu Campus Emergency Response",
-    description: "24/7 on-duty Vishnu College security & emergency health desk",
+    description: "24/7 on-duty Vishnu College security & emergency health desk (+91 88162 50864)",
     actionLabel: "CALL",
-    href: "tel:+910000000000",
+    href: "tel:+918816250864",
     accent: "red",
   },
   {
     id: "tele-manas",
-    icon: "📞",
+    icon: <PhoneIcon />,
     name: "Tele-MANAS National Mental Health",
     description: "Govt. of India 24/7 free institutional toll-free counseling helpline",
     actionLabel: "CALL",
@@ -37,7 +39,7 @@ const EMERGENCY_LINES: EmergencyLine[] = [
   },
   {
     id: "kiran",
-    icon: "📞",
+    icon: <PhoneIcon />,
     name: "KIRAN National Mental Health Helpline",
     description: "24/7 psychological support & early crisis intervention",
     actionLabel: "CALL",
@@ -46,7 +48,7 @@ const EMERGENCY_LINES: EmergencyLine[] = [
   },
   {
     id: "campus-counseling",
-    icon: "📍",
+    icon: <MapPinIcon />,
     name: "Vishnu Health & Counseling Center",
     description: "Walk-in confidential counseling on-campus (A-Block Ground Floor)",
     actionLabel: "CAMPUS",
@@ -98,7 +100,7 @@ export function CrisisSosSection() {
         </div>
       ) : (
         <button type="button" className="crisis-sos__dispatch" disabled={dispatching} onClick={handleDispatch}>
-          🛡️ {dispatching ? "Dispatching…" : "Dispatch Emergency SOS to On-Call Psychologist"}
+          <ShieldIcon /> {dispatching ? "Dispatching…" : "Dispatch Emergency SOS to On-Call Psychologist"}
         </button>
       )}
       {error && <p className="crisis-sos__error">{error}</p>}

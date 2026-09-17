@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { listBookableProfiles, listAllBookingsForStats, listScheduledBookings } from "../../services/firebase/bookings";
+import { getAllFeedback, aggregateAllCounsellorFeedback } from "../../services/firebase/feedback";
+import type { CounsellorFeedbackAggregate } from "../../services/firebase/feedback";
 import { setAvailability } from "../../services/firebase/firestore";
 import type { UserProfile } from "../../types/user";
 import type { Booking } from "../../types/booking";
@@ -58,17 +60,24 @@ function computeStats(profiles: UserProfile[], bookings: Booking[]): CounsellorS
 export function TeamManagementSection() {
   const [stats, setStats] = useState<CounsellorStats[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
+  const [feedbackAggregates, setFeedbackAggregates] = useState<Map<string, CounsellorFeedbackAggregate>>(
+    new Map(),
+  );
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [selectedCounsellor, setSelectedCounsellor] = useState<UserProfile | null>(null);
 
   async function load() {
-    const [profiles, bookings, liveBookings] = await Promise.all([
+    const [profiles, bookings, liveBookings, feedback] = await Promise.all([
       listBookableProfiles(),
       listAllBookingsForStats(),
       listScheduledBookings(),
+      getAllFeedback().catch(() => []),
     ]);
     setStats(computeStats(profiles, bookings));
+    setFeedbackAggregates(
+      new Map(aggregateAllCounsellorFeedback(feedback).map((a) => [a.counsellorId, a])),
+    );
     setScheduledBookings(liveBookings);
     setLoading(false);
   }
@@ -98,6 +107,9 @@ export function TeamManagementSection() {
       {stats.length === 0 && <p>No counsellors or heads are set up yet.</p>}
       {stats.map(({ profile, sessionsTaken, usersServed, completed, followedUp, missed, cancelled, avgRating, ratingCount, totalHours }) => {
         const status = computeLiveStatus(profile, scheduledBookings);
+        const feedbackAgg = feedbackAggregates.get(profile.uid);
+        const displayedAvg = feedbackAgg ? feedbackAgg.average : avgRating;
+        const displayedCount = feedbackAgg ? feedbackAgg.count : ratingCount;
         return (
           <Card
             key={profile.uid}
@@ -110,7 +122,7 @@ export function TeamManagementSection() {
                 <span className="team-management__verified-tag">✓ Verified</span>
               </p>
               <p className="team-management__role">{ROLE_LABELS[profile.role]}</p>
-              {ratingCount > 0 && <StarRating value={avgRating} count={ratingCount} />}
+              {displayedCount > 0 && <StarRating value={displayedAvg} count={displayedCount} />}
             </div>
             <div className="team-management__stats">
               <span>

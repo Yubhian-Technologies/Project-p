@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Select } from "./Select";
+import { CalendarIcon } from "./icons";
 import { pad, to12Hour, to24Hour } from "../../utils/timeFormat";
 import "./DateTimePicker.css";
 
@@ -141,7 +142,7 @@ export function DateTimePicker({ id, value, onChange, min, max }: DateTimePicker
           {value ? formatDisplay(value) : "Select date & time…"}
         </span>
         <span className="md-datetime__icon" aria-hidden="true">
-          📅
+          <CalendarIcon />
         </span>
       </button>
 

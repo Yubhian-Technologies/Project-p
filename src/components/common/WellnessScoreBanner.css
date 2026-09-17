@@ -1,0 +1,79 @@
+.ws-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px !important;
+  padding: 8px 16px;
+  box-shadow: 2.5px 2.5px 0px #2B2B2B;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.ws-banner__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-family: var(--md-sys-typescale-font-body);
+}
+
+.ws-banner__icon {
+  font-size: 15px;
+  display: inline-flex;
+}
+
+.ws-banner__icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.ws-banner__label {
+  color: #475569;
+  font-weight: 700;
+}
+
+.ws-banner__val {
+  color: #0F172A;
+  font-weight: 800;
+}
+
+.ws-banner__item--score .ws-banner__val {
+  color: #D97706;
+}
+
+.ws-banner__item--streak .ws-banner__val {
+  color: #DC2626;
+}
+
+.ws-banner__item--challenges .ws-banner__val {
+  color: #2563EB;
+}
+
+.ws-banner__divider {
+  width: 2px;
+  height: 16px;
+  background: #2B2B2B;
+  opacity: 0.3;
+}
+
+.ws-banner__badge {
+  background: #D1FAE5;
+  color: #065F46;
+  border: 1.5px solid #065F46;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 0px !important;
+}
+
+@media (max-width: 640px) {
+  .ws-banner {
+    gap: 8px;
+    padding: 6px 12px;
+  }
+  .ws-banner__divider {
+    display: none;
+  }
+}

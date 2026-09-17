@@ -40,6 +40,12 @@
 .md-datetime__icon {
   flex-shrink: 0;
   font-size: 14px;
+  display: inline-flex;
+}
+
+.md-datetime__icon svg {
+  width: 15px;
+  height: 15px;
 }
 
 .md-datetime__modal-overlay {

@@ -5,8 +5,11 @@ import { Select } from "../common/Select";
 import { DateTimePicker } from "../common/DateTimePicker";
 import { StarRating } from "../common/StarRating";
 import { getBookingIntake, SESSION_DURATION_LABEL } from "../../services/firebase/bookings";
+import { getSsiResult, type SsiResult } from "../../services/firebase/ssiTest";
 import type { Booking, BookingIntake } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
+import { useAuth } from "../../hooks/useAuth";
+import { ChatModal } from "../chat/ChatModal";
 import "./RequestCard.css";
 
 function toDateTimeLocalValue(epochMs: number): string {
@@ -66,6 +69,8 @@ export function RequestDetailModal({
   onViewSummary,
   onClose,
 }: RequestDetailModalProps) {
+  const { currentUser } = useAuth();
+  const [showChatModal, setShowChatModal] = useState(false);
   const [showProposeTime, setShowProposeTime] = useState(false);
   const [timeValue, setTimeValue] = useState(
     booking.scheduledAt ? toDateTimeLocalValue(booking.scheduledAt) : "",
@@ -91,13 +96,17 @@ export function RequestDetailModal({
   const [rateUserNote, setRateUserNote] = useState("");
   const [closing, setClosing] = useState(false);
   const [missedReason, setMissedReason] = useState("");
+  const [ssiResult, setSsiResult] = useState<SsiResult | null>(null);
+  const [showSsiResult, setShowSsiResult] = useState(false);
 
   useEffect(() => {
-    if (booking.status === "pending") return;
     getBookingIntake(booking.id).then((data) => {
       setIntake(data);
       setSummaryDraft(data?.summary ?? "");
     });
+    getSsiResult(booking.id)
+      .then((result) => setSsiResult(result))
+      .catch(() => setSsiResult(null));
   }, [booking.id, booking.status]);
 
   const [now] = useState(() => Date.now());
@@ -270,6 +279,96 @@ export function RequestDetailModal({
     );
   }
 
+  if (ssiResult && showSsiResult) {
+    const likertPct = ssiResult.likertMax > 0 ? Math.round((ssiResult.likertScore / ssiResult.likertMax) * 100) : 0;
+    const subscales = [
+      { key: "D", label: "Depression", value: ssiResult.depressionScore },
+      { key: "A", label: "Anxiety", value: ssiResult.anxietyScore },
+      { key: "S", label: "Stress", value: ssiResult.stressScore },
+    ];
+    const subscaleMax = Math.round((ssiResult.likertMax / 3));
+    return (
+      <Modal title={`SSI Test Result — ${booking.userEmail}`} onClose={onClose} className="request-detail-modal">
+        <div className="request-card__ssi-back">
+          <Button type="button" variant="outlined" onClick={() => setShowSsiResult(false)}>
+            ← Back
+          </Button>
+        </div>
+
+        <div className="request-card__ssi-score">
+          <span className="request-card__ssi-score-val">
+            {ssiResult.likertScore}
+            <small> / {ssiResult.likertMax}</small>
+          </span>
+          <span className="request-card__ssi-score-pct">{likertPct}%</span>
+        </div>
+
+        <div className="request-card__ssi-subscales">
+          {subscales.map((s) => (
+            <div key={s.key} className="request-card__ssi-subscale" title={`${s.label} (subscale of the assessment)`}>
+              <span className="request-card__ssi-subscale-key">{s.key}</span>
+              <span className="request-card__ssi-subscale-name">{s.label}</span>
+              <span className="request-card__ssi-subscale-val">
+                {s.value}
+                <small> / {subscaleMax}</small>
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="request-card__ssi-section">
+          <h4 className="request-card__ssi-heading">Page 1 · About the student</h4>
+          <dl className="request-card__ssi-dl">
+            <dt>Name</dt>
+            <dd>{intake?.username || booking.userEmail || "—"}</dd>
+            <dt>Department</dt>
+            <dd>{ssiResult.level1.department || "—"}</dd>
+            <dt>Year</dt>
+            <dd>{ssiResult.level1.year || "—"}</dd>
+            <dt>Section</dt>
+            <dd>{ssiResult.level1.section || "—"}</dd>
+            <dt>Hostel / Day Scholar</dt>
+            <dd>{ssiResult.level1.hostelOrDayScholar || "—"}</dd>
+            <dt>Age</dt>
+            <dd>{ssiResult.level1.age || "—"}</dd>
+            <dt>WhatsApp</dt>
+            <dd>{ssiResult.whatsappNumber || "—"}</dd>
+            <dt>Submitted</dt>
+            <dd>{new Date(ssiResult.submittedAt).toLocaleString()}</dd>
+          </dl>
+        </div>
+
+        <div className="request-card__ssi-section">
+          <h4 className="request-card__ssi-heading">Page 2 · Assessment answers</h4>
+          {ssiResult.likertAnswers.map((a, i) => (
+            <div key={a.id} className="request-card__ssi-row">
+              <span className="request-card__ssi-q">
+                {i + 1}. {a.label}
+              </span>
+              <span className={`request-card__ssi-a${a.value !== undefined && (a.value ?? 0) >= 2 ? " request-card__ssi-a--high" : ""}`}>
+                {a.answer}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="request-card__ssi-section">
+          <h4 className="request-card__ssi-heading">Page 3 · Important questions</h4>
+          {ssiResult.level3Answers.map((a, i) => (
+            <div key={a.id} className="request-card__ssi-row">
+              <span className="request-card__ssi-q">
+                {i + 1}. {a.label}
+              </span>
+              <span className={`request-card__ssi-a${a.id === "l3_q1" && (a.answer === "Yes" || a.answer === "Maybe") ? " request-card__ssi-a--high" : ""}`}>
+                {a.answer || "—"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Modal>
+    );
+  }
+
   if (summaryFocusMode) {
     const readOnly = booking.status !== "scheduled";
     return (
@@ -340,15 +439,39 @@ export function RequestDetailModal({
 
   return (
     <Modal title={modalTitle} onClose={onClose} className="request-detail-modal">
-      {onViewSummary && (
-        <div className="request-detail-modal__top-actions">
+      <div className="request-detail-modal__top-actions" style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "16px" }}>
+        <Button type="button" variant="outlined" onClick={() => setShowChatModal(true)}>
+          Chat with Student
+        </Button>
+        {onViewSummary && (
           <Button type="button" variant="outlined" onClick={onViewSummary}>
             View Summary
           </Button>
-        </div>
+        )}
+        {ssiResult && (
+          <Button type="button" variant="outlined" onClick={() => setShowSsiResult(true)}>
+            SSI Test Result
+          </Button>
+        )}
+      </div>
+
+      {showChatModal && currentUser && (
+        <ChatModal
+          chatRoomId={booking.id}
+          bookingId={booking.id}
+          counterpartName={intake?.username || booking.userEmail}
+          counterpartRole="user"
+          currentUser={{
+            uid: currentUser.uid,
+            email: currentUser.email || "",
+            displayName: currentUser.displayName || undefined,
+            role: viewerRole,
+          }}
+          onClose={() => setShowChatModal(false)}
+        />
       )}
 
-      {intake && booking.status !== "pending" && (
+      {intake && (
         <dl className="request-card__intake">
           <dt>Name</dt>
           <dd>{intake.username}</dd>
@@ -402,16 +525,15 @@ export function RequestDetailModal({
               </div>
             </>
           ) : (
-            <Button type="button" variant="outlined" onClick={() => setShowProposeTime(true)}>
-              Propose a different time
-            </Button>
+            <div className="request-card__actions" style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+              <Button type="button" variant="outlined" onClick={() => setShowProposeTime(true)}>
+                Propose a different time
+              </Button>
+              <Button type="button" variant="outlined" onClick={onReject}>
+                Cancel
+              </Button>
+            </div>
           )}
-
-          <div className="request-card__actions">
-            <Button type="button" variant="outlined" onClick={onReject}>
-              Reject
-            </Button>
-          </div>
         </div>
       )}
 

@@ -3,6 +3,7 @@ import { Modal } from "../common/Modal";
 import { Avatar } from "../common/Avatar";
 import { Button } from "../common/Button";
 import { StarRating } from "../common/StarRating";
+import { MapPinIcon } from "../common/icons";
 import { listCompletedBookingsForCounsellor } from "../../services/firebase/bookings";
 import type { UserProfile } from "../../types/user";
 import type { Booking } from "../../types/booking";
@@ -66,7 +67,7 @@ export function CounsellorProfileModal({
               <p className="counsellor-profile__specialization">{profile.specialization}</p>
             )}
 
-            {profile.location && <p className="counsellor-profile__location">📍 {profile.location}</p>}
+            {profile.location && <p className="counsellor-profile__location"><MapPinIcon /> {profile.location}</p>}
 
             {!loadingReviews && reviews.length > 0 && <StarRating value={avgRating} count={reviews.length} />}
 

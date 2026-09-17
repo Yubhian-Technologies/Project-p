@@ -8,6 +8,8 @@ import { LoginsManagementSection } from "../super-admin/LoginsManagementSection"
 import { AnalyticsSection } from "./analytics/AnalyticsSection";
 import { EventsOverviewSection } from "./EventsOverviewSection";
 import { MonthlyReportsViewSection } from "./MonthlyReportsViewSection";
+import { CounsellorRatingsSection } from "./CounsellorRatingsSection";
+import { AdminHomeActivityOverview } from "./AdminHomeActivityOverview";
 import "../../styles/bento-grid.css";
 
 const SECTIONS = [
@@ -16,6 +18,7 @@ const SECTIONS = [
   { id: "logins", label: "Logins" },
   { id: "events", label: "Events & Programs" },
   { id: "analytics", label: "Analytics" },
+  { id: "counsellor-ratings", label: "Counsellor Ratings" },
   { id: "monthly-reports", label: "Monthly Reports" },
 ];
 
@@ -25,6 +28,7 @@ const TITLES: Record<string, string> = {
   logins: "Logins",
   events: "Events & Programs",
   analytics: "Analytics",
+  "counsellor-ratings": "Counsellor Ratings",
   "monthly-reports": "Monthly Reports",
 };
 
@@ -49,6 +53,8 @@ export function AdminDashboard() {
         <EventsOverviewSection />
       ) : activeSection === "analytics" ? (
         <AnalyticsSection />
+      ) : activeSection === "counsellor-ratings" ? (
+        <CounsellorRatingsSection />
       ) : activeSection === "monthly-reports" ? (
         <MonthlyReportsViewSection />
       ) : (
@@ -63,6 +69,8 @@ export function AdminDashboard() {
               Overseeing platform user accounts, counsellor access permissions, and platform administration.
             </div>
           </BentoCard>
+
+          <AdminHomeActivityOverview onSelectSection={setActiveSection} />
         </div>
       )}
     </AppShell>

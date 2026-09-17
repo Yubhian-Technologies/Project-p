@@ -8,6 +8,7 @@ import {
   listMyPostIds,
 } from "../../../services/firebase/community";
 import type { CommunityPost } from "../../../types/communityPost";
+import { LeafIcon } from "../../../components/common/icons";
 import { CommunityPostCard } from "./CommunityPostCard";
 import "./CommunitySection.css";
 
@@ -102,7 +103,7 @@ export function CommunitySection() {
       {/* Feed */}
       {posts.length === 0 ? (
         <div className="community-section__empty">
-          <span className="community-section__empty-icon">🌱</span>
+          <span className="community-section__empty-icon"><LeafIcon /></span>
           <p>No posts yet — be the first to share something.</p>
         </div>
       ) : (

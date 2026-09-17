@@ -3,10 +3,12 @@ import { useAuth } from "../../hooks/useAuth";
 import {
   submitWorkReport,
   listWorkReportsByUid,
+  deleteWorkReport,
   type WorkReport,
   type WorkReportType,
 } from "../../services/firebase/workReports";
 import { Select } from "../../components/common/Select";
+import { Modal } from "../../components/common/Modal";
 import {
   RefreshIcon,
   CheckIcon,
@@ -14,6 +16,9 @@ import {
   CalendarIcon,
   ClockIcon,
   UserIcon,
+  TrashIcon,
+  FileTextIcon,
+  EyeIcon,
 } from "../../components/common/icons";
 import "./WorkReportsSection.css";
 
@@ -22,19 +27,6 @@ const REPORT_TYPES: { value: WorkReportType; label: string }[] = [
   { value: "weekly", label: "Weekly Report" },
   { value: "other", label: "Other" },
 ];
-
-function FileTextIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
-      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-      <polyline points="10 9 9 9 8 9" />
-    </svg>
-  );
-}
 
 function formatDate(iso: string) {
   try {
@@ -67,12 +59,26 @@ export function WorkReportsSection() {
   // ── list state ──────────────────────────────────────────────────────
   const [reports, setReports] = useState<WorkReport[]>([]);
   const [loadingList, setLoadingList] = useState(true);
+  const [listError, setListError] = useState("");
+  const [selectedReport, setSelectedReport] = useState<WorkReport | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function loadReports() {
     if (!profile?.uid) return;
     setLoadingList(true);
+    setListError("");
     try {
-      setReports(await listWorkReportsByUid(profile.uid));
+      const next = await listWorkReportsByUid(profile.uid);
+      setReports((prev) => {
+        const map = new Map(prev.map((r) => [r.id, r]));
+        next.forEach((r) => map.set(r.id, r));
+        return [...map.values()].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+      });
+    } catch (err) {
+      console.warn("Failed to load work reports:", err);
+      setListError(
+        "Couldn't load your reports right now. If you just submitted one, it's saved — hit Refresh in a minute.",
+      );
     } finally {
       setLoadingList(false);
     }
@@ -83,19 +89,37 @@ export function WorkReportsSection() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.uid]);
 
+  // ── delete ──────────────────────────────────────────────────────────
+  async function handleDelete(report: WorkReport) {
+    if (!window.confirm(`Delete report "${report.title}"? This cannot be undone.`)) return;
+    setDeletingId(report.id);
+    try {
+      await deleteWorkReport(report.id);
+      setReports((prev) => prev.filter((r) => r.id !== report.id));
+      if (selectedReport?.id === report.id) {
+        setSelectedReport(null);
+      }
+    } catch (err) {
+      console.error("Failed to delete report:", err);
+      alert("Failed to delete report. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   // ── submit ──────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitError("");
+    setSubmitSuccess("");
     if (!title.trim()) { setSubmitError("Please enter a report title."); return; }
     if (!body.trim()) { setSubmitError("Please enter the report content."); return; }
     if (!periodLabel.trim()) { setSubmitError("Please enter the period (e.g. Week 1, Sep 2026)."); return; }
 
     setSubmitting(true);
-    setSubmitError("");
-    setSubmitSuccess("");
 
     try {
-      await submitWorkReport(
+      const created = await submitWorkReport(
         title.trim(),
         body.trim(),
         reportType,
@@ -103,12 +127,19 @@ export function WorkReportsSection() {
         profile?.displayName || profile?.email || "Counsellor",
         profile?.uid ?? "",
       );
+      setSubmitError("");
       setSubmitSuccess("Report submitted successfully!");
       setTitle("");
       setBody("");
       setPeriodLabel("");
-      await loadReports();
+      setReports((prev) => [created, ...prev.filter((r) => r.id !== created.id)]);
+      try {
+        await loadReports();
+      } catch (err) {
+        console.warn("Report saved, but the list refresh failed:", err);
+      }
     } catch (err) {
+      setSubmitSuccess("");
       setSubmitError("Submission failed. Please try again.");
       console.error(err);
     } finally {
@@ -227,13 +258,20 @@ export function WorkReportsSection() {
         </div>
 
         {loadingList ? (
-          <p style={{ color: "var(--neu-text-muted)", fontSize: 14 }}>Loading…</p>
+          <p style={{ color: "#64748B", fontSize: 14 }}>Loading…</p>
+        ) : listError ? (
+          <div className="wr-list__empty">
+            <div className="wr-list__empty-icon">
+              <AlertTriangleIcon />
+            </div>
+            <p>{listError}</p>
+          </div>
         ) : reports.length === 0 ? (
           <div className="wr-list__empty">
             <div className="wr-list__empty-icon">
               <FileTextIcon />
             </div>
-            <p>No work reports submitted yet.</p>
+            <p>No reports submitted yet!</p>
           </div>
         ) : (
           <div className="wr-list">
@@ -248,30 +286,108 @@ export function WorkReportsSection() {
                       <ClockIcon /> {formatDate(r.submittedAt)}
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap", alignItems: "center" }}>
                     <span className="wr-badge wr-badge--type">{typeLabel(r.reportType)}</span>
                     <span className={`wr-badge wr-badge--${r.status}`}>
                       {r.status === "verified" ? <><CheckIcon /> Verified</> : "⏳ Pending"}
                     </span>
+                    <button
+                      type="button"
+                      className="wr-btn wr-btn--view"
+                      onClick={() => setSelectedReport(r)}
+                    >
+                      <EyeIcon /> View Details
+                    </button>
+                    <button
+                      type="button"
+                      className="wr-btn wr-btn--danger"
+                      disabled={deletingId === r.id}
+                      onClick={() => handleDelete(r)}
+                    >
+                      <TrashIcon /> {deletingId === r.id ? "Deleting…" : "Delete"}
+                    </button>
                   </div>
                 </div>
-
-                <div className="wr-list__row-body">{r.body}</div>
-
-                {r.status === "verified" && (
-                  <div className="wr-list__row-notes">
-                    <UserIcon />
-                    <div>
-                      <strong>Verified by {r.verifiedBy}</strong>
-                      {r.headNotes ? ` — ${r.headNotes}` : ""}
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* ── Report Details Modal ───────────────────────────────────────── */}
+      {selectedReport && (
+        <Modal
+          title={
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <span>{selectedReport.title}</span>
+            </div>
+          }
+          onClose={() => setSelectedReport(null)}
+        >
+          <div className="wr-modal__details">
+            <div className="wr-modal__badges">
+              <span className="wr-badge wr-badge--type">{typeLabel(selectedReport.reportType)}</span>
+              <span className={`wr-badge wr-badge--${selectedReport.status}`}>
+                {selectedReport.status === "verified" ? <><CheckIcon /> Verified</> : "⏳ Pending"}
+              </span>
+            </div>
+
+            <div className="wr-modal__meta-grid">
+              <div className="wr-modal__meta-item">
+                <span className="wr-modal__meta-label">Submitted By</span>
+                <span className="wr-modal__meta-val"><UserIcon /> {selectedReport.submittedBy}</span>
+              </div>
+              <div className="wr-modal__meta-item">
+                <span className="wr-modal__meta-label">Period</span>
+                <span className="wr-modal__meta-val"><CalendarIcon /> {selectedReport.periodLabel}</span>
+              </div>
+              <div className="wr-modal__meta-item">
+                <span className="wr-modal__meta-label">Date Submitted</span>
+                <span className="wr-modal__meta-val"><ClockIcon /> {formatDate(selectedReport.submittedAt)}</span>
+              </div>
+            </div>
+
+            <div className="wr-modal__section">
+              <h4 className="wr-modal__section-title">Report Content</h4>
+              <div className="wr-modal__body-text">{selectedReport.body}</div>
+            </div>
+
+            {selectedReport.status === "verified" && (
+              <div className="wr-modal__section wr-modal__section--verified">
+                <h4 className="wr-modal__section-title">Head Verification Notes</h4>
+                <div className="wr-modal__verified-box">
+                  <UserIcon />
+                  <div>
+                    <strong>Verified by {selectedReport.verifiedBy}</strong>
+                    {selectedReport.verifiedAt ? ` on ${formatDate(selectedReport.verifiedAt)}` : ""}
+                    <p style={{ margin: "4px 0 0 0" }}>{selectedReport.headNotes || "No additional remarks."}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="wr-modal__actions">
+              <button
+                type="button"
+                className="wr-btn wr-btn--danger"
+                disabled={deletingId === selectedReport.id}
+                onClick={() => handleDelete(selectedReport)}
+              >
+                <TrashIcon /> {deletingId === selectedReport.id ? "Deleting…" : "Delete Report"}
+              </button>
+              <button
+                type="button"
+                className="wr-btn wr-btn--ghost"
+                onClick={() => setSelectedReport(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
+
+

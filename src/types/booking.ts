@@ -45,6 +45,7 @@ export interface Booking {
   transferredFrom?: string;
   userRatingOfCounsellor?: number;
   userReviewText?: string;
+  ratedAt?: number;
   counsellorRatingOfUser?: number;
   counsellorNoteOnUser?: string;
   sessionMode?: "online" | "offline";
