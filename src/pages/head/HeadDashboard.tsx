@@ -5,6 +5,7 @@ import { BentoCard } from "../../components/common/BentoCard";
 import { Button } from "../../components/common/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { BookingRequestsSection } from "../counsellor/BookingRequestsSection";
+import { CounsellorFeedbackSection } from "../counsellor/CounsellorFeedbackSection";
 import { TeamManagementSection } from "./TeamManagementSection";
 import { EventsProgramsSection } from "./EventsProgramsSection";
 import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAlertsSection";
@@ -16,12 +17,14 @@ import { FlashQASection } from "./FlashQASection";
 import { GamesSection } from "../user/games/GamesSection";
 import { JournalSection } from "../user/journal/JournalSection";
 import { HeadAnalyticsOverview } from "./HeadAnalyticsOverview";
+import { HeadHomeActivityOverview } from "./HeadHomeActivityOverview";
 import type { Notification } from "../../types/notification";
 import "../../styles/bento-grid.css";
 
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
+  { id: "feedback", label: "My Feedback" },
   { id: "team-management", label: "Team Management" },
   { id: "events", label: "Events & Programs" },
   { id: "transfer-requests", label: "Transfer Requests" },
@@ -45,6 +48,10 @@ export function HeadDashboard() {
       setActiveSection("emergency");
       return;
     }
+    if (notification.type === "feedback_submitted") {
+      setActiveSection("feedback");
+      return;
+    }
     if (notification.type === "transfer_requested") {
       setActiveSection("transfer-requests");
       return;
@@ -56,6 +63,7 @@ export function HeadDashboard() {
   const titleBySection: Record<string, string> = {
     profile: "Profile",
     requests: "Booking Requests",
+    feedback: "My Feedback",
     "team-management": "Team Management",
     events: "Events & Programs",
     "transfer-requests": "Transfer Requests",
@@ -92,6 +100,7 @@ export function HeadDashboard() {
           initialSelectedId={pendingBookingId}
         />
       )}
+      {activeSection === "feedback" && <CounsellorFeedbackSection />}
       {activeSection === "team-management" && <TeamManagementSection />}
       {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "transfer-requests" && <TransferRequestsSection />}
@@ -115,14 +124,16 @@ export function HeadDashboard() {
               onClick: () => setActiveSection("team-management"),
             }}
           >
-            <div style={{ marginTop: "16px", fontSize: "14px", lineHeight: "1.6" }}>
+            <div style={{ fontSize: "14px", lineHeight: "1.6" }}>
               Monitor team workload, review cancellations, and oversee booking requests across your department.
             </div>
           </BentoCard>
 
           <HeadAnalyticsOverview />
+          <HeadHomeActivityOverview onSelectSection={setActiveSection} />
         </div>
       )}
     </AppShell>
   );
 }
+

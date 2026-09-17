@@ -7,17 +7,21 @@ import { useAuth } from "../../hooks/useAuth";
 import { BookingRequestsSection } from "./BookingRequestsSection";
 import { EventsProgramsSection } from "./EventsProgramsSection";
 import { WorkReportsSection } from "./WorkReportsSection";
+import { CounsellorFeedbackSection } from "./CounsellorFeedbackSection";
 import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAlertsSection";
 import { CommunitySection } from "../user/community/CommunitySection";
 import { GamesSection } from "../user/games/GamesSection";
 import { JournalSection } from "../user/journal/JournalSection";
+import { CounsellorOverview } from "./CounsellorOverview";
 import { DailyQuoteCard } from "../../components/common/DailyQuoteCard";
+import { CounsellorHomeActivityOverview } from "./CounsellorHomeActivityOverview";
 import type { Notification } from "../../types/notification";
 import "../../styles/bento-grid.css";
 
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
+  { id: "feedback", label: "My Feedback" },
   { id: "work-reports", label: "Work Reports" },
   { id: "events", label: "Events & Programs" },
   { id: "games", label: "Wellness Exercise" },
@@ -37,6 +41,10 @@ export function CounsellorDashboard() {
       setActiveSection("emergency");
       return;
     }
+    if (notification.type === "feedback_submitted") {
+      setActiveSection("feedback");
+      return;
+    }
     setPendingBookingId(notification.bookingId);
     setActiveSection("requests");
   }
@@ -44,6 +52,7 @@ export function CounsellorDashboard() {
   const titleBySection: Record<string, string> = {
     profile: "Profile",
     requests: "Booking Requests",
+    feedback: "My Feedback",
     "work-reports": "Work Reports",
     events: "Events & Programs",
     games: "Wellness Exercise",
@@ -76,6 +85,7 @@ export function CounsellorDashboard() {
           initialSelectedId={pendingBookingId}
         />
       )}
+      {activeSection === "feedback" && <CounsellorFeedbackSection />}
       {activeSection === "work-reports" && <WorkReportsSection />}
       {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "games" && <GamesSection />}
@@ -95,11 +105,13 @@ export function CounsellorDashboard() {
               onClick: () => setActiveSection("requests"),
             }}
           >
-            <div style={{ marginTop: "16px", fontSize: "14px", lineHeight: "1.6" }}>
+            <div style={{ fontSize: "14px", lineHeight: "1.6" }}>
               Review incoming session requests, update your availability, and manage your upcoming sessions.
             </div>
           </BentoCard>
+          <CounsellorOverview />
           <DailyQuoteCard />
+          <CounsellorHomeActivityOverview onSelectSection={setActiveSection} />
         </div>
       )}
     </AppShell>

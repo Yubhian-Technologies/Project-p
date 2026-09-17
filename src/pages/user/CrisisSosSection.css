@@ -12,7 +12,10 @@
 }
 
 .crisis-sos__dispatch {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   width: 100%;
   box-sizing: border-box;
   border: none;
@@ -27,6 +30,12 @@
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   margin-bottom: 24px;
+}
+
+.crisis-sos__dispatch svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .crisis-sos__dispatch:hover:not(:disabled) {
@@ -113,6 +122,11 @@
   justify-content: center;
   font-size: 16px;
   box-shadow: var(--neu-shadow-extruded-sm);
+}
+
+.crisis-sos__line-icon svg {
+  width: 19px;
+  height: 19px;
 }
 
 .crisis-sos__line-icon--red {

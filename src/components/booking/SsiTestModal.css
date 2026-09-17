@@ -1,0 +1,250 @@
+.ssi-modal__meta {
+  font-size: 13.5px;
+  color: #1e3a8a;
+  font-weight: 600;
+  margin: 2px 0 12px 0;
+}
+
+.ssi-modal__steps {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.ssi-modal__step-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  background: rgba(30, 58, 138, 0.08);
+  border: 1.5px solid rgba(30, 58, 138, 0.25);
+  color: #1e3a8a;
+}
+
+.ssi-modal__step-dot--done {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+
+.ssi-modal__step-dot--active {
+  background: #1e3a8a;
+  border-color: #1e3a8a;
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.12);
+}
+
+.ssi-modal__level-head {
+  background: rgba(30, 58, 138, 0.06);
+  border-left: 4px solid #1e3a8a;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.ssi-modal__level-title {
+  margin: 0 0 6px 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #1e3a8a;
+}
+
+.ssi-modal__consent {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: pre-line;
+}
+
+.ssi-modal__guidance {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #475569;
+  white-space: pre-line;
+}
+
+.ssi-modal__legend {
+  background: rgba(30, 58, 138, 0.05);
+  border: 1.5px solid rgba(30, 58, 138, 0.15);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ssi-modal__legend-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.ssi-modal__legend-num {
+  flex-shrink: 0;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #1e3a8a;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ssi-modal__note {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.ssi-modal__field-error {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #e11d48;
+}
+
+.ssi-modal__consent-note {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e3a8a;
+}
+
+.ssi-modal__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.ssi-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ssi-modal__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.ssi-modal__required {
+  color: #ec4899;
+}
+
+.ssi-modal__input,
+.ssi-modal__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(15, 23, 42, 0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  background: #fff;
+}
+
+.ssi-modal__textarea {
+  resize: vertical;
+}
+
+.ssi-modal__question {
+  margin-bottom: 16px;
+}
+
+.ssi-modal__q-label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+  white-space: pre-line;
+}
+
+.ssi-modal__likert {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ssi-modal__likert-opt,
+.ssi-modal__option {
+  border: 1.5px solid rgba(15, 23, 42, 0.2);
+  background: #fff;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ssi-modal__likert-opt--selected,
+.ssi-modal__option--selected {
+  background: #1e3a8a;
+  border-color: #1e3a8a;
+  color: #fff;
+}
+
+.ssi-modal__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ssi-modal__consent-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.ssi-modal__consent-check input {
+  margin-top: 2px;
+}
+
+.ssi-modal__error {
+  margin: 4px 0 0 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #e11d48;
+}
+
+.ssi-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.ssi-modal__done {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 14px;
+  color: #0f172a;
+}

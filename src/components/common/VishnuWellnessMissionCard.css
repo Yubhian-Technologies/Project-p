@@ -1,0 +1,234 @@
+/* ── Vishnu Wellness Mission Card (Neo-Brutalist) ─────────────────────────── */
+
+.vwm-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  grid-column: 1 / -1;
+  margin-top: 16px;
+  width: 100%;
+}
+
+.vwm-sos-btn {
+  width: 100%;
+  padding: 14px 20px;
+  background: #EF4444;
+  color: #FFFFFF;
+  border: 2px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 3px 3px 0px #2B2B2B !important;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.18s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.vwm-sos-btn:hover {
+  background: #DC2626;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px #2B2B2B !important;
+}
+
+.vwm-card {
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  padding: 28px 32px;
+  box-shadow: 4px 4px 0px #2B2B2B !important;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.vwm-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-bottom: 2px solid #2B2B2B;
+  padding-bottom: 20px;
+}
+
+.vwm-header__badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 4px 12px;
+  background: #F8F4EA;
+  border: 1.5px solid #2B2B2B;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #2B2B2B;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+}
+
+.vwm-header__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.vwm-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.vwm-header__logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  background: #FFFFFF;
+  padding: 4px;
+}
+
+.vwm-header__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  font-family: var(--md-sys-typescale-font-display);
+  color: #0F172A;
+}
+
+.vwm-header__tagline {
+  margin: 2px 0 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-style: italic;
+  color: #475569;
+}
+
+.vwm-btn-counsellors {
+  background: #F1F5F9;
+  color: #0F172A;
+  border: 2px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 9px 18px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.18s ease;
+}
+
+.vwm-btn-counsellors:hover {
+  background: #FEF3C7;
+  transform: translate(-1px, -1px);
+  box-shadow: 3.5px 3.5px 0px #2B2B2B !important;
+}
+
+/* ── Content Blocks ──────────────────────────────────────────────────────── */
+.vwm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vwm-block {
+  background: #F8FAFC;
+  border: 1.5px solid #2B2B2B;
+  padding: 18px 22px;
+  box-shadow: 2.5px 2.5px 0px #2B2B2B;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vwm-block__heading {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vwm-block__heading--vision {
+  color: #2563EB;
+}
+
+.vwm-block__heading--mission {
+  color: #059669;
+}
+
+.vwm-block__heading--pillars {
+  color: #D97706;
+}
+
+.vwm-block__text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #334155;
+  font-weight: 500;
+}
+
+/* Pillars */
+.vwm-pillars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.vwm-pill {
+  display: inline-flex;
+  padding: 4px 12px;
+  background: #FFFFFF;
+  border: 1.5px solid #2B2B2B;
+  font-size: 12px;
+  font-weight: 800;
+  color: #1E293B;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+}
+
+.vwm-pillars__sub {
+  margin: 6px 0 0 0;
+  font-size: 12.5px;
+  font-style: italic;
+  color: #64748B;
+  font-weight: 500;
+}
+
+/* Footer */
+.vwm-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 2px solid #2B2B2B;
+  font-size: 12px;
+  font-weight: 800;
+  color: #2B2B2B;
+}
+
+.vwm-footer__left {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.vwm-footer__right {
+  color: #64748B;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .vwm-card {
+    padding: 20px;
+  }
+  .vwm-header__main {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

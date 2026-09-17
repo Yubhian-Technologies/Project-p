@@ -4,6 +4,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  deleteDoc,
   query,
   orderBy,
   where,
@@ -66,15 +67,13 @@ export async function submitWorkReport(
   };
 }
 
-/** Counsellor fetches their own reports, newest first. */
+/** Counsellor fetches their own reports, newest first (client-sorted so no
+ *  composite index is required on the query). */
 export async function listWorkReportsByUid(uid: string): Promise<WorkReport[]> {
-  const q = query(
-    collection(db, COLLECTION),
-    where("submittedByUid", "==", uid),
-    orderBy("submittedAt", "desc"),
-  );
+  const q = query(collection(db, COLLECTION), where("submittedByUid", "==", uid));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => docToReport(d.id, d.data()));
+  const reports = snap.docs.map((d) => docToReport(d.id, d.data()));
+  return reports.sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
 }
 
 /** Head fetches all reports from all counsellors, newest first. */
@@ -99,6 +98,12 @@ export async function verifyWorkReport(
     verifiedAt: serverTimestamp(),
   });
 }
+
+/** Counsellor or Head deletes a work report. */
+export async function deleteWorkReport(id: string): Promise<void> {
+  await deleteDoc(doc(db, COLLECTION, id));
+}
+
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 

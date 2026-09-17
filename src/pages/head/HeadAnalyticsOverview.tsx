@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../services/firebase/config";
 import { useAuth } from "../../hooks/useAuth";
-import type { Booking } from "../../types/booking";
+import { getBookingIntake } from "../../services/firebase/bookings";
+import type { Booking, BookingIntake } from "../../types/booking";
 import "./HeadAnalyticsOverview.css";
 
 interface StatItem {
   id: string;
   label: string;
   value: string | number;
+  gauge?: number;
   icon: React.ReactNode;
   variant: "teal" | "purple" | "green" | "orange" | "red" | "navy";
 }
@@ -87,15 +89,109 @@ function IconUtilization() {
   );
 }
 
-const DEFAULT_TOPICS: TopicShare[] = [
-  { name: "Academic Stress", percentage: 28, color: "#F9BA32" },
-  { name: "Anxiety & Mood", percentage: 22, color: "#8B5CF6" },
-  { name: "Relationships", percentage: 18, color: "#EC4899" },
-  { name: "Sleep & Fatigue", percentage: 14, color: "#10B981" },
-  { name: "Career & Future", percentage: 10, color: "#3B82F6" },
-  { name: "Emotional Wellbeing", percentage: 5, color: "#F97316" },
-  { name: "Other Topics", percentage: 3, color: "#6B7280" },
+// Topic buckets used to anonymise free-text "issue" answers from the session
+// intake form into the chart — this is categorization config, not data.
+const TOPIC_DEFS: { name: string; color: string; pattern: RegExp }[] = [
+  { name: "Academic Stress", color: "#F9BA32", pattern: /academ|exam|study|syllabus|result|grade|class|semester|assignment|score|placement/ },
+  { name: "Anxiety & Mood", color: "#8B5CF6", pattern: /anxiet|worry|stress|mood|depress|sad|panic|overthink|fear|low/ },
+  { name: "Relationships", color: "#EC4899", pattern: /relationship|friend|parent|family|breakup|marriage|social|peer/ },
+  { name: "Sleep & Fatigue", color: "#10B981", pattern: /sleep|insomnia|fatigue|tired|energy|wake|rest/ },
+  { name: "Career & Future", color: "#3B82F6", pattern: /career|job|future|interview|profession|work|business|internship/ },
+  { name: "Emotional Wellbeing", color: "#F97316", pattern: /emotion|anger|angry|lonel|grief|loss|self|confiden|worth|motivat/ },
 ];
+
+const OTHER_TOPIC_COLOR = "#6B7280";
+
+function colorForTopic(name: string): string {
+  return TOPIC_DEFS.find((d) => d.name === name)?.color ?? OTHER_TOPIC_COLOR;
+}
+
+function matchTopic(issue: string): string {
+  const text = (issue || "").toLowerCase();
+  return TOPIC_DEFS.find((d) => d.pattern.test(text))?.name ?? "Other Topics";
+}
+
+function buildTopicDistribution(issues: string[]): TopicShare[] {
+  if (issues.length === 0) return [];
+
+  const counts = new Map<string, number>();
+  for (const issue of issues) {
+    const name = matchTopic(issue);
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+
+  const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  const names = sorted.map(([name]) => name);
+  const pcts = names.map((_, i) => Math.floor((sorted[i][1] / issues.length) * 100));
+  pcts[0] += 100 - pcts.reduce((sum, p) => sum + p, 0);
+
+  return names.map((name, i) => ({
+    name,
+    percentage: pcts[i],
+    color: colorForTopic(name),
+  }));
+}
+
+function dayLabelFromMs(ts: number): string {
+  const d = new Date(ts);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${mm}-${dd}`;
+}
+
+// ── Arc Gauge (radial % readout for rate KPIs) ─────────────────────────────
+function polar(cx: number, cy: number, r: number, deg: number): { x: number; y: number } {
+  const rad = (deg * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function arcPath(cx: number, cy: number, r: number, startDeg: number, endDeg: number): string {
+  const s = polar(cx, cy, r, startDeg);
+  const e = polar(cx, cy, r, endDeg);
+  const large = endDeg - startDeg > 180 ? 1 : 0;
+  return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
+}
+
+function Gauge({ value, variant }: { value: number; variant: "red" | "navy" }) {
+  const cx = 60;
+  const cy = 62;
+  const r = 46;
+  const start = 135;
+  const sweep = 270;
+  const pct = Math.min(100, Math.max(0, Math.round(value)));
+  const end = start + (sweep * pct) / 100;
+
+  return (
+    <svg viewBox="0 0 120 120" className={`head-analytics__gauge head-analytics__gauge--${variant}`}>
+      <path d={arcPath(cx, cy, r, start, start + sweep)} className="head-analytics__gauge-track" />
+      {pct > 0 && <path d={arcPath(cx, cy, r, start, end)} className="head-analytics__gauge-fg" />}
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => {
+        const a = start + 45 * i;
+        const p1 = polar(cx, cy, r - 8, a);
+        const p2 = polar(cx, cy, r - 13, a);
+        return <line key={i} x1={p1.x.toFixed(2)} y1={p1.y.toFixed(2)} x2={p2.x.toFixed(2)} y2={p2.y.toFixed(2)} className="head-analytics__gauge-tick" />;
+      })}
+      <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle" className="head-analytics__gauge-val">
+        {pct}%
+      </text>
+    </svg>
+  );
+}
+
+// ── Per-counsellor caseload helpers ────────────────────────────────────────
+interface CaseloadRow {
+  counsellor: string;
+  name: string;
+  completed: number;
+  missed: number;
+  pending: number;
+  total: number;
+}
+
+function counsellorLabel(email: string): string {
+  const local = (email || "").split("@")[0] || email || "Unassigned";
+  return local.replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export function HeadAnalyticsOverview() {
   const { profile } = useAuth();
@@ -107,70 +203,129 @@ export function HeadAnalyticsOverview() {
     noShowRate: number;
     utilization: number;
   }>({
-    studentsSupported: 6,
-    appointments: 25,
-    completed: 12,
-    pending: 9,
-    noShowRate: 16,
-    utilization: 48,
+    studentsSupported: 0,
+    appointments: 0,
+    completed: 0,
+    pending: 0,
+    noShowRate: 0,
+    utilization: 0,
   });
 
   const [trendData, setTrendData] = useState<TrendDay[]>([]);
+  const [topics, setTopics] = useState<TopicShare[]>([]);
+  const [analyzedCount, setAnalyzedCount] = useState(0);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [caseload, setCaseload] = useState<CaseloadRow[]>([]);
 
   useEffect(() => {
-    // Generate past 14 dates with baseline trends
-    const dates: TrendDay[] = [];
-    const now = new Date();
-    const apptValues = [0.8, 3.0, 0.0, 1.0, 0.0, 0.8, 2.0, 2.0, 2.0, 0.0, 1.0, 0.0, 0.0, 2.0];
-    const checkinValues = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 3.0];
+    const campusId = profile?.campusId;
+    if (!campusId) return;
 
-    for (let i = 13; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      const idx = 13 - i;
-      dates.push({
-        dateLabel: `${mm}-${dd}`,
-        appointments: apptValues[idx % apptValues.length],
-        checkins: checkinValues[idx % checkinValues.length],
-      });
-    }
-    setTrendData(dates);
+    let active = true;
 
-    if (!profile?.campusId) return;
-
-    // Fetch campus metrics from Firestore
+    // Fetch campus metrics from Firestore — every number below is computed
+    // from real booking data, with zero fake fallbacks.
     async function fetchCampusMetrics() {
       try {
-        const q = query(collection(db, "bookings"), where("campusId", "==", profile?.campusId));
+        const q = query(collection(db, "bookings"), where("campusId", "==", campusId));
         const snap = await getDocs(q);
         const bookings = snap.docs.map((d) => d.data() as Booking);
 
-        if (bookings.length > 0) {
-          const uniqueStudents = new Set(bookings.map((b) => b.userId)).size;
-          const completedCount = bookings.filter((b) => b.status === "completed" && b.outcome !== "missed").length;
-          const pendingCount = bookings.filter((b) => ["pending", "accepted", "scheduled"].includes(b.status)).length;
-          const missedCount = bookings.filter((b) => b.status === "completed" && b.outcome === "missed").length;
-          const totalTaken = completedCount + missedCount;
-          const noShowPct = totalTaken > 0 ? Math.round((missedCount / totalTaken) * 100) : 16;
-          const utilPct = Math.min(100, Math.round((bookings.length / Math.max(1, uniqueStudents * 3)) * 100));
+        const uniqueStudents = new Set(bookings.map((b) => b.userId)).size;
+        const completedCount = bookings.filter((b) => b.status === "completed" && b.outcome !== "missed").length;
+        const missedCount = bookings.filter((b) => b.status === "completed" && b.outcome === "missed").length;
+        const pendingCount = bookings.filter((b) => ["pending", "accepted", "scheduled"].includes(b.status)).length;
+        const totalTaken = completedCount + missedCount;
+        const noShowPct = totalTaken > 0 ? Math.round((missedCount / totalTaken) * 100) : 0;
+        const utilPct =
+          uniqueStudents > 0 ? Math.min(100, Math.round((bookings.length / (uniqueStudents * 3)) * 100)) : 0;
 
+        if (active) {
           setStats({
-            studentsSupported: uniqueStudents || 6,
-            appointments: bookings.length || 25,
-            completed: completedCount || 12,
-            pending: pendingCount || 9,
+            studentsSupported: uniqueStudents,
+            appointments: bookings.length,
+            completed: completedCount,
+            pending: pendingCount,
             noShowRate: noShowPct,
-            utilization: utilPct || 48,
+            utilization: utilPct,
           });
         }
+
+        // 14-day trend from real scheduled/completed session counts.
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const dayBuckets: TrendDay[] = [];
+        for (let i = 13; i >= 0; i--) {
+          const start = startOfToday - i * 24 * 60 * 60 * 1000;
+          const end = start + 24 * 60 * 60 * 1000;
+          const appointments = bookings.filter(
+            (b) =>
+              b.scheduledAt &&
+              b.scheduledAt >= start &&
+              b.scheduledAt < end &&
+              ["accepted", "scheduled", "completed"].includes(b.status),
+          ).length;
+          const checkins = bookings.filter(
+            (b) =>
+              b.scheduledAt &&
+              b.scheduledAt >= start &&
+              b.scheduledAt < end &&
+              b.status === "completed" &&
+              b.outcome !== "missed",
+          ).length;
+          dayBuckets.push({ dateLabel: dayLabelFromMs(start), appointments, checkins });
+        }
+        if (active) setTrendData(dayBuckets);
+
+        // Anonymised topic share from recent intake "issue" text.
+        const recent = [...bookings].sort((a, b) => b.createdAt - a.createdAt).slice(0, 25);
+        const intakes = await Promise.all(
+          recent.map((b) =>
+            getBookingIntake(b.id)
+              .then((i) => i)
+              .catch(() => null),
+          ),
+        );
+        const issues = intakes
+          .filter((i): i is BookingIntake => i !== null && Boolean(i.issue))
+          .map((i) => i.issue)
+          .filter(Boolean);
+        if (active) {
+          setAnalyzedCount(issues.length);
+          setTopics(buildTopicDistribution(issues));
+        }
+
+        // Per-counsellor workload: one stacked bar per staff member.
+        const perCounsellor = new Map<string, CaseloadRow>();
+        for (const b of bookings) {
+          const key = b.counsellorEmail || b.counsellorId || "Unassigned";
+          const row = perCounsellor.get(key) ?? {
+            counsellor: key,
+            name: counsellorLabel(b.counsellorEmail),
+            completed: 0,
+            missed: 0,
+            pending: 0,
+            total: 0,
+          };
+          if (b.status === "completed" && b.outcome !== "missed") row.completed += 1;
+          else if (b.status === "completed" && b.outcome === "missed") row.missed += 1;
+          else if (["pending", "accepted", "scheduled"].includes(b.status)) row.pending += 1;
+          else continue;
+          row.total += 1;
+          perCounsellor.set(key, row);
+        }
+        const caseloadRows = [...perCounsellor.values()].sort((a, b) => b.total - a.total);
+        if (active) setCaseload(caseloadRows);
       } catch (err) {
-        console.warn("Using baseline analytics:", err);
+        console.warn("Failed to load campus analytics:", err);
       }
     }
 
     fetchCampusMetrics();
+
+    return () => {
+      active = false;
+    };
   }, [profile?.campusId]);
 
   // Chart rendering parameters
@@ -182,7 +337,7 @@ export function HeadAnalyticsOverview() {
   const padB = 34;
   const iW = W - padL - padR;
   const iH = H - padT - padB;
-  const maxVal = 3.2;
+  const maxVal = Math.max(3.2, ...trendData.flatMap((d) => [d.appointments, d.checkins]), 1);
 
   const xPos = (i: number) => (i / Math.max(1, trendData.length - 1)) * iW;
   const yPos = (v: number) => iH - (v / maxVal) * iH;
@@ -202,16 +357,22 @@ export function HeadAnalyticsOverview() {
     return path;
   }
 
-  // SVG Donut Chart Math
-  let accumulatedAngle = 0;
+  // SVG Donut Chart Math (angles accumulated via reduce so no render-mutation)
+  const topicSegments = topics.reduce<Array<TopicShare & { start: number }>>((acc, t) => {
+    const start = acc.length === 0 ? 0 : acc[acc.length - 1].start + acc[acc.length - 1].percentage;
+    acc.push({ ...t, start });
+    return acc;
+  }, []);
+
+  const maxTotal = Math.max(1, ...caseload.map((c) => c.total));
 
   const statCards: StatItem[] = [
     { id: "students", label: "STUDENTS SUPPORTED", value: stats.studentsSupported, icon: <IconStudents />, variant: "teal" },
     { id: "appointments", label: "APPOINTMENTS", value: stats.appointments, icon: <IconAppointments />, variant: "purple" },
     { id: "completed", label: "COMPLETED", value: stats.completed, icon: <IconCompleted />, variant: "green" },
     { id: "pending", label: "PENDING", value: stats.pending, icon: <IconPending />, variant: "orange" },
-    { id: "noshow", label: "NO-SHOW RATE", value: `${stats.noShowRate}%`, icon: <IconNoShow />, variant: "red" },
-    { id: "utilization", label: "UTILIZATION", value: `${stats.utilization}%`, icon: <IconUtilization />, variant: "navy" },
+    { id: "noshow", label: "NO-SHOW RATE", value: `${stats.noShowRate}%`, gauge: stats.noShowRate, icon: <IconNoShow />, variant: "red" },
+    { id: "utilization", label: "UTILIZATION", value: `${stats.utilization}%`, gauge: stats.utilization, icon: <IconUtilization />, variant: "navy" },
   ];
 
   return (
@@ -226,7 +387,13 @@ export function HeadAnalyticsOverview() {
               </div>
               <span className="head-analytics__kpi-label">{card.label}</span>
             </div>
-            <span className="head-analytics__kpi-val">{card.value}</span>
+            {card.gauge !== undefined ? (
+              <div className="head-analytics__kpi-gauge">
+                <Gauge value={card.gauge} variant={card.variant === "navy" ? "navy" : "red"} />
+              </div>
+            ) : (
+              <span className="head-analytics__kpi-val">{card.value}</span>
+            )}
           </div>
         ))}
       </div>
@@ -264,7 +431,8 @@ export function HeadAnalyticsOverview() {
 
               <g transform={`translate(${padL},${padT})`}>
                 {/* Horizontal grid lines */}
-                {[0, 0.75, 1.5, 2.25, 3.0].map((val) => {
+                {[0, 0.25, 0.5, 0.75, 1].map((f) => {
+                  const val = Math.round(f * maxVal * 10) / 10;
                   const y = yPos(val);
                   return (
                     <g key={val}>
@@ -395,61 +563,119 @@ export function HeadAnalyticsOverview() {
           </div>
 
           <div className="head-analytics__donut-wrap">
-            <svg viewBox="0 0 200 200" className="head-analytics__donut-svg">
-              {DEFAULT_TOPICS.map((t) => {
-                const angle = (t.percentage / 100) * 360;
-                const startAngle = accumulatedAngle;
-                accumulatedAngle += angle;
+            {topicSegments.length === 0 ? (
+              <p className="head-analytics__topics-empty">No session data yet.</p>
+            ) : (
+              <svg viewBox="0 0 200 200" className="head-analytics__donut-svg">
+                {topicSegments.map((t) => {
+                  const angle = (t.percentage / 100) * 360;
+                  const r = 68;
+                  const cx = 100;
+                  const cy = 100;
+                  const strokeW = 26;
+                  const circumference = 2 * Math.PI * r;
+                  const strokeDasharray = `${(angle / 360) * circumference} ${circumference}`;
+                  const strokeDashoffset = -((t.start / 360) * circumference);
 
-                const r = 68;
-                const cx = 100;
-                const cy = 100;
-                const strokeW = 26;
-                const circumference = 2 * Math.PI * r;
-                const strokeDasharray = `${(angle / 360) * circumference} ${circumference}`;
-                const strokeDashoffset = -((startAngle / 360) * circumference);
-
-                return (
-                  <circle
-                    key={t.name}
-                    cx={cx}
-                    cy={cy}
-                    r={r}
-                    fill="none"
-                    stroke={t.color}
-                    strokeWidth={strokeW}
-                    strokeDasharray={strokeDasharray}
-                    strokeDashoffset={strokeDashoffset}
-                    transform={`rotate(-90 ${cx} ${cy})`}
-                    className="head-analytics__donut-segment"
-                  />
-                );
-              })}
-              {/* Donut Center Label */}
-              <text x="100" y="90" textAnchor="middle" dominantBaseline="middle" className="head-analytics__donut-center-lbl">
-                TOP TOPICS
-              </text>
-              <text x="100" y="112" textAnchor="middle" dominantBaseline="middle" className="head-analytics__donut-center-val">
-                100%
-              </text>
-            </svg>
+                  return (
+                    <circle
+                      key={t.name}
+                      cx={cx}
+                      cy={cy}
+                      r={r}
+                      fill="none"
+                      stroke={t.color}
+                      strokeWidth={strokeW}
+                      strokeDasharray={strokeDasharray}
+                      strokeDashoffset={strokeDashoffset}
+                      transform={`rotate(-90 ${cx} ${cy})`}
+                      className="head-analytics__donut-segment"
+                    />
+                  );
+                })}
+                {/* Donut Center Label */}
+                <text x="100" y="90" textAnchor="middle" dominantBaseline="middle" className="head-analytics__donut-center-lbl">
+                  SESSIONS
+                </text>
+                <text x="100" y="112" textAnchor="middle" dominantBaseline="middle" className="head-analytics__donut-center-val">
+                  {analyzedCount}
+                </text>
+              </svg>
+            )}
           </div>
 
           {/* Topic Neumorphic Pill Badges Grid */}
           <div className="head-analytics__topics-list">
-            {DEFAULT_TOPICS.map((t) => (
+            {topics.map((t) => (
               <div key={t.name} className="head-analytics__topic-pill">
                 <span className="head-analytics__topic-swatch" style={{ background: t.color }} />
                 <span className="head-analytics__topic-name">{t.name}</span>
                 <span className="head-analytics__topic-pct">{t.percentage}%</span>
               </div>
             ))}
+            {topics.length === 0 && <span className="head-analytics__topics-empty">No topics available yet.</span>}
           </div>
 
           <p className="head-analytics__disclaimer">
             Minimum group size ≥ 5 to prevent re-identification.
           </p>
         </div>
+      </div>
+
+      {/* ── Full-Width: Per-Counsellor Workload Stacked Bars ────────────────── */}
+      <div className="head-analytics__card">
+        <div className="head-analytics__card-header">
+          <span className="head-analytics__subtitle">CASELOAD DISTRIBUTION</span>
+          <h3 className="head-analytics__title">Workload per counsellor — completed · missed · pending</h3>
+        </div>
+
+        <div className="head-analytics__caseload-legend">
+          <span className="head-analytics__legend-pill">
+            <span className="head-analytics__legend-dot head-analytics__legend-dot--complete" />
+            Completed
+          </span>
+          <span className="head-analytics__legend-pill">
+            <span className="head-analytics__legend-dot head-analytics__legend-dot--miss" />
+            Missed
+          </span>
+          <span className="head-analytics__legend-pill">
+            <span className="head-analytics__legend-dot head-analytics__legend-dot--pend" />
+            Pending
+          </span>
+        </div>
+
+        {caseload.length === 0 ? (
+          <p className="head-analytics__topics-empty">No caseload data yet.</p>
+        ) : (
+          caseload.map((row) => (
+            <div key={row.counsellor} className="head-analytics__caseload-row">
+              <span className="head-analytics__caseload-name" title={row.counsellor}>
+                {row.name}
+              </span>
+              <div className="head-analytics__bar-track">
+                {row.completed > 0 && (
+                  <span
+                    className="head-analytics__bar-seg head-analytics__bar-seg--completed"
+                    style={{ width: `${(row.completed / maxTotal) * 100}%` }}
+                  />
+                )}
+                {row.missed > 0 && (
+                  <span
+                    className="head-analytics__bar-seg head-analytics__bar-seg--missed"
+                    style={{ width: `${(row.missed / maxTotal) * 100}%` }}
+                  />
+                )}
+                {row.pending > 0 && (
+                  <span
+                    className="head-analytics__bar-seg head-analytics__bar-seg--pending"
+                    style={{ width: `${(row.pending / maxTotal) * 100}%` }}
+                  />
+                )}
+              </div>
+              <span className="head-analytics__caseload-total">{row.total}</span>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

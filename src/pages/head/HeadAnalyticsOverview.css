@@ -185,7 +185,7 @@
 }
 
 .head-analytics__path--check {
-  stroke: #8B5CF6;
+  stroke: #0D9488;
 }
 
 .head-analytics__dot--appt {
@@ -195,7 +195,7 @@
 }
 
 .head-analytics__dot--check {
-  fill: #8B5CF6;
+  fill: #0D9488;
   stroke: #ffffff;
   stroke-width: 2;
 }
@@ -258,6 +258,21 @@
 .head-analytics__legend-dot--check {
   background: #0D9488;
   box-shadow: 0 0 8px rgba(13, 148, 136, 0.45);
+}
+
+.head-analytics__legend-dot--complete {
+  background: #10B981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.45);
+}
+
+.head-analytics__legend-dot--miss {
+  background: #EC4899;
+  box-shadow: 0 0 8px rgba(236, 72, 153, 0.45);
+}
+
+.head-analytics__legend-dot--pend {
+  background: #F9BA32;
+  box-shadow: 0 0 8px rgba(249, 186, 50, 0.5);
 }
 
 /* ── Support Demand Donut Chart ──────────────────────────────────── */
@@ -365,4 +380,128 @@
   color: var(--neu-text-muted, #64748B);
   border-top: 1px dashed rgba(15, 23, 42, 0.15);
   padding-top: 10px;
+}
+
+.head-analytics__topics-empty {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neu-text-muted, #64748B);
+  text-align: center;
+  padding: 16px;
+}
+
+/* ── Arc Gauge (rate KPI tiles) ─────────────────────────────────────── */
+.head-analytics__kpi-gauge {
+  display: flex;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.head-analytics__gauge {
+  width: 96px;
+  height: 96px;
+  display: block;
+}
+
+.head-analytics__gauge-track {
+  fill: none;
+  stroke: rgba(30, 30, 30, 0.08);
+  stroke-width: 11;
+  stroke-linecap: round;
+}
+
+.head-analytics__gauge-fg {
+  fill: none;
+  stroke-width: 11;
+  stroke-linecap: round;
+}
+
+.head-analytics__gauge--red .head-analytics__gauge-fg {
+  stroke: #EC4899;
+  filter: drop-shadow(0 2px 6px rgba(236, 72, 153, 0.45));
+}
+
+.head-analytics__gauge--navy .head-analytics__gauge-fg {
+  stroke: #3B82F6;
+  filter: drop-shadow(0 2px 6px rgba(59, 130, 246, 0.45));
+}
+
+.head-analytics__gauge-tick {
+  stroke: rgba(30, 30, 30, 0.28);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.head-analytics__gauge-val {
+  font-size: 23px;
+  font-weight: 900;
+  fill: #1E1E1E;
+  letter-spacing: -0.02em;
+  font-family: var(--font-heading, inherit);
+}
+
+/* ── Per-Counsellor Workload Bars ───────────────────────────────────── */
+.head-analytics__caseload-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.head-analytics__caseload-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.head-analytics__caseload-name {
+  min-width: 130px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #1E1E1E;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.head-analytics__bar-track {
+  flex: 1;
+  display: flex;
+  height: 18px;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2px 2px 0 #2B2B2B;
+  background: rgba(30, 30, 30, 0.04);
+  overflow: hidden;
+}
+
+.head-analytics__bar-seg {
+  height: 100%;
+  display: block;
+}
+
+.head-analytics__bar-seg--completed {
+  background: #10B981;
+}
+
+.head-analytics__bar-seg--missed {
+  background: #EC4899;
+}
+
+.head-analytics__bar-seg--pending {
+  background: #F9BA32;
+}
+
+.head-analytics__caseload-total {
+  min-width: 30px;
+  text-align: right;
+  font-size: 15px;
+  font-weight: 900;
+  color: #1E1E1E;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 600px) {
+  .head-analytics__caseload-name {
+    min-width: 88px;
+    font-size: 11.5px;
+  }
 }

@@ -1,0 +1,128 @@
+.chat-modal {
+  max-width: 580px;
+}
+
+.chat-modal__title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chat-modal__role-tag {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: #F3E8FF;
+  color: #8B5CF6;
+  border: 1.5px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  padding: 2px 8px;
+  border-radius: 0px;
+}
+
+.chat-modal__body {
+  display: flex;
+  flex-direction: column;
+  height: 420px;
+  gap: 16px;
+}
+
+.chat-modal__messages {
+  flex: 1;
+  overflow-y: auto;
+  background: #F8F9FA;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.chat-modal__empty {
+  margin: auto;
+  font-size: 13.5px;
+  color: #718096;
+  text-align: center;
+}
+
+.chat-modal__bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  max-width: 82%;
+}
+
+.chat-modal__bubble-wrap--mine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.chat-modal__bubble-wrap--them {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.chat-modal__sender-info {
+  font-size: 11px;
+  font-weight: 700;
+  color: #718096;
+  margin-bottom: 3px;
+}
+
+.chat-modal__bubble {
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1E1E1E;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  word-break: break-word;
+}
+
+.chat-modal__bubble--mine {
+  background: #F3E8FF;
+}
+
+.chat-modal__bubble--them {
+  background: #FFFFFF;
+}
+
+.chat-modal__timestamp {
+  font-size: 10px;
+  color: #A0AEC0;
+  margin-top: 3px;
+}
+
+.chat-modal__input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.chat-modal__error {
+  width: 100%;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #B91C1C;
+  background: #FEE2E2;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  padding: 8px 12px;
+}
+
+.chat-modal__input {
+  flex: 1;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1E1E1E;
+  outline: none;
+  background: #FFFFFF;
+}
+
+.chat-modal__input:focus {
+  border-color: #8B5CF6;
+  box-shadow: 3px 3px 0px #2B2B2B;
+}

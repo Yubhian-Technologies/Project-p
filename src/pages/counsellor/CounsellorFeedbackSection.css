@@ -1,0 +1,210 @@
+.counsellor-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.counsellor-feedback__loading {
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
+  padding: 12px 0;
+}
+
+.counsellor-feedback__overview {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  background: #F8F4EA;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  box-shadow: 3px 3px 0px #2B2B2B;
+}
+
+.counsellor-feedback__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.counsellor-feedback__stat-value {
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--neu-accent-primary, #2563EB);
+}
+
+.counsellor-feedback__stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--neu-text-muted, #718096);
+  text-align: center;
+}
+
+.counsellor-feedback__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.counsellor-feedback__row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #F8F4EA;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  padding: 18px 24px;
+  box-shadow: 3px 3px 0px #2B2B2B;
+}
+
+.counsellor-feedback__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.counsellor-feedback__student {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.counsellor-feedback__date {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
+  font-weight: 600;
+}
+
+.counsellor-feedback__actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 4px;
+}
+
+.counsellor-feedback__modal {
+  max-width: 680px;
+  width: 92%;
+}
+
+.counsellor-feedback__detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #F8F4EA;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px;
+  padding: 20px;
+  box-shadow: 4px 4px 0px #2B2B2B;
+}
+
+.counsellor-feedback__detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid rgba(43, 43, 43, 0.12);
+}
+
+.counsellor-feedback__detail-email {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: #1E1E1E;
+}
+
+.counsellor-feedback__detail-date {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #718096;
+}
+
+.counsellor-feedback__detail-rating {
+  flex-shrink: 0;
+}
+
+.counsellor-feedback__question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.counsellor-feedback__question-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: 2px 2px 0px rgba(43, 43, 43, 0.08);
+}
+
+.counsellor-feedback__question-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #4A5568;
+}
+
+.counsellor-feedback__question-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E1E1E;
+  line-height: 1.5;
+}
+
+.counsellor-feedback__answers {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.counsellor-feedback__answers li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--neu-bg, #E8ECF2);
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: var(--neu-shadow-extruded-sm);
+}
+
+.counsellor-feedback__answer-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--neu-text-muted, #718096);
+}
+
+.counsellor-feedback__answer-value {
+  font-size: 14px;
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.counsellor-feedback__empty {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--neu-text-muted, #718096);
+}

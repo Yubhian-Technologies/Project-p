@@ -1,0 +1,126 @@
+.boxb-shell {
+  background: #F8F4EA;
+  border: 2.5px solid #2B2B2B;
+  border-radius: 0px !important;
+  box-shadow: 4px 4px 0px #2B2B2B;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+.boxb-shell__header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.boxb-shell__title {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.boxb-shell__subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.boxb-stats {
+  display: flex;
+  gap: 24px;
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  padding: 10px 20px;
+  box-shadow: 2px 2px 0px #2B2B2B;
+}
+
+.boxb-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.boxb-stat__val {
+  font-size: 18px;
+  font-weight: 800;
+  color: #2563EB;
+}
+
+.boxb-stat__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+}
+
+/* Box visual */
+.boxb-box {
+  width: 200px;
+  height: 200px;
+  border: 3.5px solid #2B2B2B;
+  border-radius: 0px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #DBEAFE;
+  box-shadow: 4px 4px 0px #2B2B2B;
+  transition: all 0.6s ease-in-out;
+  margin: 12px 0;
+}
+
+.boxb-box--inhale {
+  transform: scale(1.15);
+  background: #BFDBFE;
+  border-color: #1D4ED8;
+}
+
+.boxb-box--hold1 {
+  transform: scale(1.15);
+  background: #FEF3C7;
+  border-color: #D97706;
+}
+
+.boxb-box--exhale {
+  transform: scale(0.9);
+  background: #D1FAE5;
+  border-color: #059669;
+}
+
+.boxb-box--hold2 {
+  transform: scale(0.9);
+  background: #EDE9FE;
+  border-color: #7C3AED;
+}
+
+.boxb-box__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px;
+}
+
+.boxb-box__timer {
+  font-size: 32px;
+  font-weight: 900;
+  color: #0F172A;
+}
+
+.boxb-box__label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #2B2B2B;
+}
+
+.boxb-actions {
+  margin-top: 8px;
+}

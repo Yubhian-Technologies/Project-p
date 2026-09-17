@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { BentoCard } from "./BentoCard";
+import { FlameIcon, TrophyIcon, CalendarIcon } from "./icons";
 import { useAuth } from "../../hooks/useAuth";
 import { computeStreakStats, getMoodLogs, logMood } from "../../services/firebase/mood";
 import type { MoodType, StreakStats } from "../../types/mood";
@@ -47,7 +48,7 @@ export function MoodTrackerCard() {
     try {
       await logMood(currentUser.uid, mood);
       await loadData();
-      setFeedback("Today's mood logged! Streak active 🔥");
+      setFeedback("Today's mood logged! Streak active");
       setTimeout(() => setFeedback(null), 4000);
     } catch (err) {
       console.error("Failed to log mood:", err);
@@ -67,7 +68,7 @@ export function MoodTrackerCard() {
         {/* Header streak badge */}
         <div className="mood-tracker__header">
           <div className="mood-tracker__streak-badge">
-            <span className="mood-tracker__flame">🔥</span>
+            <span className="mood-tracker__flame"><FlameIcon /></span>
             <span className="mood-tracker__streak-count">
               {stats ? `${stats.currentStreak} Day Streak!` : "0 Day Streak!"}
             </span>
@@ -137,15 +138,15 @@ export function MoodTrackerCard() {
         {stats && (
           <div className="mood-tracker__stats-footer">
             <div className="mood-tracker__stat">
-              <span className="mood-tracker__stat-val">🔥 {stats.currentStreak}</span>
+              <span className="mood-tracker__stat-val"><FlameIcon /> {stats.currentStreak}</span>
               <span className="mood-tracker__stat-lbl">Current Streak</span>
             </div>
             <div className="mood-tracker__stat">
-              <span className="mood-tracker__stat-val">🏆 {stats.longestStreak}</span>
+              <span className="mood-tracker__stat-val"><TrophyIcon /> {stats.longestStreak}</span>
               <span className="mood-tracker__stat-lbl">Best Streak</span>
             </div>
             <div className="mood-tracker__stat">
-              <span className="mood-tracker__stat-val">📅 {stats.totalLoggedDays}</span>
+              <span className="mood-tracker__stat-val"><CalendarIcon /> {stats.totalLoggedDays}</span>
               <span className="mood-tracker__stat-lbl">Active Days</span>
             </div>
           </div>

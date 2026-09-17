@@ -29,7 +29,13 @@
 
 .mood-tracker__flame {
   font-size: 16px;
+  display: inline-flex;
   animation: pulseFlame 1.8s infinite ease-in-out;
+}
+
+.mood-tracker__flame svg {
+  width: 16px;
+  height: 16px;
 }
 
 @keyframes pulseFlame {
@@ -204,6 +210,14 @@
   font-size: 14px;
   font-weight: 800;
   color: var(--neu-text-primary, #2D3748);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mood-tracker__stat-val svg {
+  width: 14px;
+  height: 14px;
 }
 
 .mood-tracker__stat-lbl {

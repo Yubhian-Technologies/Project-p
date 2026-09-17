@@ -1,0 +1,503 @@
+/* ── Head Home Activity Overview (Neo-Brutalist) ─────────────────────────── */
+
+.hha-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  grid-column: 1 / -1;
+  margin-top: 12px;
+}
+
+.hha-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #F8F4EA;
+  border: 2px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 3px 3px 0px #2B2B2B !important;
+}
+
+.hha-header__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  font-family: var(--md-sys-typescale-font-display);
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hha-header__title svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.hha-header button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.hha-header__sub {
+  margin: 2px 0 0 0;
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 600;
+}
+
+/* ── Bento Grid Layout ───────────────────────────────────────────────────── */
+.hha-grid {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .hha-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hha-card {
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  padding: 22px 24px;
+  box-shadow: 3.5px 3.5px 0px #2B2B2B !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hha-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #2B2B2B;
+}
+
+.hha-card__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hha-card__icon {
+  font-size: 20px;
+}
+
+.hha-card__icon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.hha-card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  font-family: var(--md-sys-typescale-font-display);
+  color: #0F172A;
+}
+
+.hha-card__subtitle {
+  display: block;
+  font-size: 12px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+/* ── Badges & Tags ───────────────────────────────────────────────────────── */
+.hha-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 0px !important;
+  border: 1.5px solid #2B2B2B;
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+}
+
+.hha-badge svg {
+  width: 12px;
+  height: 12px;
+}
+
+.hha-badge--pending {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.hha-badge--all-clear {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.hha-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 0px !important;
+  border: 1px solid #2B2B2B;
+  font-size: 10.5px;
+  font-weight: 800;
+  box-shadow: 1px 1px 0px #2B2B2B;
+}
+
+.hha-tag--pending {
+  background: #FFFBEB;
+  color: #D97706;
+}
+
+.hha-tag--verified {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+/* ── Work Reports Feed ───────────────────────────────────────────────────── */
+.hha-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hha-feed__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #F8FAFC;
+  border: 1.5px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px #2B2B2B !important;
+  transition: all 0.18s ease;
+}
+
+.hha-feed__item:hover {
+  background: #FFFFFF;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B !important;
+}
+
+.hha-feed__item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.hha-feed__item-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hha-feed__item-title {
+  font-weight: 800;
+  font-size: 14px;
+  color: #0F172A;
+}
+
+.hha-feed__item-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 11.5px;
+  color: #64748B;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+
+.hha-feed__item-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.hha-feed__item-meta svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.hha-btn-view {
+  background: #2563EB;
+  color: #FFFFFF;
+  border: 1.5px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.hha-btn-view svg {
+  width: 13px;
+  height: 13px;
+}
+
+.hha-btn-view:hover {
+  background: #1D4ED8;
+  transform: translate(-1px, -1px);
+  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+}
+
+.hha-card__footer {
+  margin-top: 4px;
+  text-align: right;
+}
+
+.hha-link-btn {
+  background: none;
+  border: none;
+  color: #2563EB;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.hha-loading, .hha-empty {
+  padding: 24px;
+  text-align: center;
+  color: #64748B;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Side Card Status List ───────────────────────────────────────────────── */
+.hha-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hha-status-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #F8FAFC;
+  border: 1.5px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px #2B2B2B !important;
+}
+
+.hha-status-item--urgent {
+  background: #FEF2F2;
+  border-color: #EF4444 !important;
+}
+
+.hha-status-item__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hha-status-icon {
+  font-size: 18px;
+}
+
+.hha-status-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.hha-status-item__left strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.hha-status-item__left p {
+  margin: 1px 0 0 0;
+  font-size: 11.5px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.hha-status-btn {
+  background: #FFFFFF;
+  border: 1.5px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.hha-status-btn:hover {
+  background: #F1F5F9;
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0px #2B2B2B !important;
+}
+
+.hha-status-btn--urgent {
+  background: #EF4444;
+  color: #FFFFFF;
+}
+
+.hha-status-btn--urgent:hover {
+  background: #DC2626;
+}
+
+/* Shortcuts */
+.hha-shortcuts {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 2px solid #2B2B2B;
+}
+
+.hha-shortcuts__label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #2B2B2B;
+  margin-bottom: 8px;
+}
+
+.hha-shortcuts__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.hha-shortcuts__grid button {
+  background: #FFFFFF;
+  border: 1.5px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 10px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.15s ease;
+}
+
+.hha-shortcuts__grid button svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.hha-shortcuts__grid button:hover {
+  background: #FEF3C7;
+  transform: translate(-1px, -1px);
+  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+}
+
+/* ── Modal Styling ───────────────────────────────────────────────────────── */
+.hha-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hha-modal__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+  background: #F8FAFC;
+  border: 1.5px solid #2B2B2B;
+}
+
+.hha-modal__chip {
+  font-size: 12px;
+  color: #1E293B;
+}
+
+.hha-modal__section-heading {
+  margin: 0 0 6px 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.hha-modal__content-box {
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  padding: 16px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #1E293B;
+  white-space: pre-wrap;
+  max-height: 280px;
+  overflow-y: auto;
+  box-shadow: 2px 2px 0px #2B2B2B;
+}
+
+.hha-modal__notes {
+  background: #F0FDF4;
+  border: 1.5px solid #16A34A;
+  padding: 12px;
+  font-size: 12.5px;
+  color: #166534;
+}
+
+.hha-modal__notes-by {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.hha-modal__action-area {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 2px solid #2B2B2B;
+}
+
+.hha-modal__verify-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hha-modal__verify-form label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #2B2B2B;
+}
+
+.hha-modal__verify-form textarea {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px !important;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.hha-modal__verify-btns {
+  display: flex;
+  gap: 10px;
+}

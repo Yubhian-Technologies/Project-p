@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
 import { deleteJournalEntry, isReminderDue, listJournalEntries, saveJournalEntry } from "../../../services/firebase/journal";
+import { completeJournalEntry } from "../../../services/wellnessScore";
 import type { JournalEntry } from "../../../types/journalEntry";
 import { toIsoDate } from "../../../utils/dateFormat";
 import { JournalCalendar } from "./JournalCalendar";
@@ -86,6 +87,7 @@ export function JournalSection() {
           onSave={async (note) => {
             if (!currentUser) return;
             await saveJournalEntry(currentUser.uid, selectedDate, { note, isReminder, reminderTime });
+            completeJournalEntry();
             await refresh();
           }}
           onDelete={async () => {
@@ -98,3 +100,4 @@ export function JournalSection() {
     </div>
   );
 }
+

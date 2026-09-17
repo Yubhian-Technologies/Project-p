@@ -8,16 +8,20 @@ import {
 } from "../../services/firebase/bookings";
 import type { Booking } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
+import type { SessionFeedback } from "../../types/feedback";
+import { listFeedbackForCounsellor } from "../../services/firebase/feedback";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { Select } from "../../components/common/Select";
 import { StarRating } from "../../components/common/StarRating";
+import { Modal } from "../../components/common/Modal";
 import "./CounsellorSessionDetail.css";
 
 interface CounsellorSessionDetailProps {
   counsellor: UserProfile;
   onBack: () => void;
 }
+
 
 interface UserGroup {
   userId: string;
@@ -48,11 +52,13 @@ function groupByUser(bookings: Booking[]): UserGroup[] {
 export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessionDetailProps) {
   const [groups, setGroups] = useState<UserGroup[]>([]);
   const [summaries, setSummaries] = useState<Record<string, string | undefined>>({});
+  const [feedbackByBooking, setFeedbackByBooking] = useState<Map<string, SessionFeedback>>(new Map());
   const [candidates, setCandidates] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [reassigningId, setReassigningId] = useState<string | null>(null);
   const [targetId, setTargetId] = useState("");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [selectedFeedback, setSelectedFeedback] = useState<SessionFeedback | null>(null);
 
   function toggleExpanded(id: string) {
     setExpandedIds((prev) => {
@@ -67,12 +73,14 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
   }
 
   async function load() {
-    const [bookings, profiles] = await Promise.all([
+    const [bookings, profiles, feedback] = await Promise.all([
       listBookingsForCounsellor(counsellor.uid),
       listBookableProfiles(),
+      listFeedbackForCounsellor(counsellor.uid).catch(() => []),
     ]);
     setGroups(groupByUser(bookings));
     setCandidates(profiles.filter((p) => p.uid !== counsellor.uid));
+    setFeedbackByBooking(new Map(feedback.map((f) => [f.bookingId, f])));
 
     const completed = bookings.filter((b) => b.status === "completed");
     const entries = await Promise.all(
@@ -131,6 +139,7 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
             <div className="counsellor-session-detail__timeline">
               {group.bookings.map((b) => {
                 const isExpanded = expandedIds.has(b.id);
+                const feedback = feedbackByBooking.get(b.id);
                 return (
                 <div key={b.id} className="counsellor-session-detail__entry">
                   <button
@@ -172,6 +181,26 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
                       )}
                       {summaries[b.id] && (
                         <p className="counsellor-session-detail__summary">"{summaries[b.id]}"</p>
+                      )}
+
+                      {feedback && (
+                        <div className="counsellor-session-detail__feedback">
+                          <p className="counsellor-session-detail__rating-label">Session feedback</p>
+                          <div className="counsellor-session-detail__feedback-row">
+                            <StarRating value={feedback.rating} />
+                            <span className="counsellor-session-detail__feedback-date">
+                              {new Date(feedback.submittedAt).toLocaleString()}
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outlined"
+                            style={{ marginTop: "8px" }}
+                            onClick={() => setSelectedFeedback(feedback)}
+                          >
+                            See feedback for this user
+                          </Button>
+                        </div>
                       )}
 
                       <div className="counsellor-session-detail__ratings">
@@ -248,6 +277,50 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
           </Card>
         );
       })}
+
+      {selectedFeedback && (
+        <Modal
+          title="User Session Feedback"
+          className="counsellor-feedback__modal"
+          onClose={() => setSelectedFeedback(null)}
+        >
+          <div className="counsellor-feedback__detail-card">
+            <div className="counsellor-feedback__detail-header">
+              <div>
+                <h4 className="counsellor-feedback__detail-email">
+                  {selectedFeedback.userEmail || "Student"}
+                </h4>
+                <p className="counsellor-feedback__detail-date">
+                  {new Date(selectedFeedback.submittedAt).toLocaleString()}
+                </p>
+              </div>
+              <div className="counsellor-feedback__detail-rating">
+                <StarRating value={selectedFeedback.rating} size="large" />
+              </div>
+            </div>
+
+            <div className="counsellor-feedback__question-list">
+              {selectedFeedback.answers && selectedFeedback.answers.length > 0 ? (
+                selectedFeedback.answers.map((answer, i) => (
+                  <div key={i} className="counsellor-feedback__question-card">
+                    <span className="counsellor-feedback__question-label">
+                      {answer.label.toUpperCase()}
+                    </span>
+                    <span className="counsellor-feedback__question-value">
+                      {answer.value}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="counsellor-feedback__question-card">
+                  <span className="counsellor-feedback__question-label">OVERALL SESSION RATING</span>
+                  <span className="counsellor-feedback__question-value">{selectedFeedback.rating} / 5</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

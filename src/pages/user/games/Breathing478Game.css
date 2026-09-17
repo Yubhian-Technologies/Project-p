@@ -1,0 +1,117 @@
+.b478-shell {
+  background: #F8F4EA;
+  border: 2.5px solid #2B2B2B;
+  border-radius: 0px !important;
+  box-shadow: 4px 4px 0px #2B2B2B;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+.b478-shell__header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.b478-shell__title {
+  margin: 0;
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.b478-shell__subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.b478-stats {
+  display: flex;
+  gap: 24px;
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  padding: 10px 20px;
+  box-shadow: 2px 2px 0px #2B2B2B;
+}
+
+.b478-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.b478-stat__val {
+  font-size: 18px;
+  font-weight: 800;
+  color: #7C3AED;
+}
+
+.b478-stat__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+}
+
+/* Circle animation */
+.b478-circle {
+  width: 200px;
+  height: 200px;
+  border: 3px solid #2B2B2B;
+  border-radius: 50% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #EDE9FE;
+  box-shadow: 4px 4px 0px #2B2B2B;
+  transition: transform 1s ease-in-out, background-color 0.8s ease;
+  margin: 12px 0;
+}
+
+.b478-circle--inhale {
+  transform: scale(1.22);
+  background: #DDD6FE;
+}
+
+.b478-circle--hold {
+  transform: scale(1.22);
+  background: #FEF3C7;
+}
+
+.b478-circle--exhale {
+  transform: scale(0.88);
+  background: #D1FAE5;
+}
+
+.b478-circle__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px;
+}
+
+.b478-circle__timer {
+  font-size: 32px;
+  font-weight: 900;
+  color: #0F172A;
+}
+
+.b478-circle__label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #2B2B2B;
+}
+
+.b478-actions {
+  margin-top: 8px;
+}

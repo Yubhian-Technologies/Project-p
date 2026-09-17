@@ -45,6 +45,12 @@
 .md-timepicker__icon {
   flex-shrink: 0;
   font-size: 14px;
+  display: inline-flex;
+}
+
+.md-timepicker__icon svg {
+  width: 15px;
+  height: 15px;
 }
 
 .md-timepicker__popup {
