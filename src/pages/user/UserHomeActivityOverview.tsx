@@ -2,6 +2,16 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { listBookingsForUser } from "../../services/firebase/bookings";
 import type { Booking } from "../../types/booking";
+import {
+  LeafIcon,
+  CalendarIcon,
+  SparklesIcon,
+  ClipboardListIcon,
+  GamepadIcon,
+  BookOpenIcon,
+  MessageCircleIcon,
+  AlertTriangleIcon,
+} from "../../components/common/icons";
 import "./UserHomeActivityOverview.css";
 
 interface UserHomeActivityOverviewProps {
@@ -30,7 +40,7 @@ export function UserHomeActivityOverview({ onSelectSection }: UserHomeActivityOv
     <div className="uha-overview">
       <div className="uha-header">
         <div>
-          <h3 className="uha-header__title">🌱 My Wellness Activity & Session Overview</h3>
+          <h3 className="uha-header__title"><LeafIcon /> My Wellness Activity & Session Overview</h3>
           <p className="uha-header__sub">
             Track your counselling appointments, stress tests, and daily self-care activities.
           </p>
@@ -42,7 +52,7 @@ export function UserHomeActivityOverview({ onSelectSection }: UserHomeActivityOv
         <div className="uha-card uha-card--main">
           <div className="uha-card__header">
             <div className="uha-card__title-wrap">
-              <span className="uha-card__icon">📅</span>
+              <span className="uha-card__icon"><CalendarIcon /></span>
               <div>
                 <h4 className="uha-card__title">My Counselling Sessions</h4>
                 <span className="uha-card__subtitle">Your upcoming & recent appointments</span>
@@ -82,8 +92,9 @@ export function UserHomeActivityOverview({ onSelectSection }: UserHomeActivityOv
                     <strong className="uha-feed__title">
                       Counselling Session {b.counsellorEmail ? `with ${b.counsellorEmail}` : ""}
                     </strong>
-                    <span className="uha-feed__meta">
-                      📅 {b.scheduledAt ? new Date(b.scheduledAt).toLocaleString("en-IN") : "Pending Schedule"} • Status:{" "}
+<span className="uha-feed__meta">
+  <CalendarIcon width={12} height={12} />
+  {b.scheduledAt ? new Date(b.scheduledAt).toLocaleString("en-IN") : "Pending Schedule"} • Status:{" "}
                       <span className={`uha-tag uha-tag--${b.status}`}>
                         {b.status.toUpperCase()}
                       </span>
@@ -106,7 +117,7 @@ export function UserHomeActivityOverview({ onSelectSection }: UserHomeActivityOv
         <div className="uha-card uha-card--side">
           <div className="uha-card__header">
             <div className="uha-card__title-wrap">
-              <span className="uha-card__icon">🚀</span>
+              <span className="uha-card__icon"><SparklesIcon /></span>
               <div>
                 <h4 className="uha-card__title">Quick Wellness Shortcuts</h4>
                 <span className="uha-card__subtitle">Instant access to features</span>
@@ -116,19 +127,19 @@ export function UserHomeActivityOverview({ onSelectSection }: UserHomeActivityOv
 
           <div className="uha-shortcuts__list">
             <button type="button" onClick={() => onSelectSection("wellness-test")}>
-              📋 Take Wellness Stress Test
+              <ClipboardListIcon /> Take Wellness Stress Test
             </button>
             <button type="button" onClick={() => onSelectSection("games")}>
-              🧘 4-7-8 & Box Breathing Exercises
+              <GamepadIcon /> 4-7-8 & Box Breathing Exercises
             </button>
             <button type="button" onClick={() => onSelectSection("journal")}>
-              📖 Counselling Journal
+              <BookOpenIcon /> Counselling Journal
             </button>
             <button type="button" onClick={() => onSelectSection("community")}>
-              💬 Wellness Community
+              <MessageCircleIcon /> Wellness Community
             </button>
             <button type="button" className="uha-btn-urgent" onClick={() => onSelectSection("emergency")}>
-              🚨 Emergency SOS Assistance
+              <AlertTriangleIcon /> Emergency SOS Assistance
             </button>
           </div>
         </div>

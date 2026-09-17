@@ -7,7 +7,19 @@ import {
 import { listBookingsForCounsellor } from "../../services/firebase/bookings";
 import type { Booking } from "../../types/booking";
 import { Modal } from "../../components/common/Modal";
-import { Button } from "../../components/common/Button";
+import {
+  TrendingUpIcon,
+  CalendarIcon,
+  CheckIcon,
+  ClipboardListIcon,
+  EyeIcon,
+  ZapIcon,
+  StarIcon,
+  SparklesIcon,
+  BookOpenIcon,
+  MessageCircleIcon,
+  AlertTriangleIcon,
+} from "../../components/common/icons";
 import "./CounsellorHomeActivityOverview.css";
 
 interface CounsellorHomeActivityOverviewProps {
@@ -45,7 +57,7 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
     <div className="cha-overview">
       <div className="cha-header">
         <div>
-          <h3 className="cha-header__title">📊 Workspace Activity & Notifications Feed</h3>
+          <h3 className="cha-header__title"><TrendingUpIcon /> Workspace Activity & Notifications Feed</h3>
           <p className="cha-header__sub">
             Recent session requests, work report statuses, and workspace shortcuts.
           </p>
@@ -57,7 +69,7 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
         <div className="cha-card cha-card--main">
           <div className="cha-card__header">
             <div className="cha-card__title-wrap">
-              <span className="cha-card__icon">📅</span>
+              <span className="cha-card__icon"><CalendarIcon /></span>
               <div>
                 <h4 className="cha-card__title">Incoming Session Requests</h4>
                 <span className="cha-card__subtitle">Student appointments awaiting review</span>
@@ -66,7 +78,7 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
             {pendingBookings.length > 0 ? (
               <span className="cha-badge cha-badge--pending">{pendingBookings.length} Active</span>
             ) : (
-              <span className="cha-badge cha-badge--clear">✓ All Clear</span>
+              <span className="cha-badge cha-badge--clear"><CheckIcon width={12} height={12} /> All Clear</span>
             )}
           </div>
 
@@ -78,9 +90,10 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
                 <div key={booking.id} className="cha-feed__item">
                   <div>
                     <strong className="cha-feed__title">{booking.userEmail}</strong>
-                    <span className="cha-feed__meta">
-                      📅 {booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleString("en-IN") : "Pending Slot"} • Status: {booking.status.toUpperCase()}
-                    </span>
+<span className="cha-feed__meta">
+  <CalendarIcon width={12} height={12} />
+  {booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleString("en-IN") : "Pending Slot"} • Status: {booking.status.toUpperCase()}
+</span>
                   </div>
                   <button
                     type="button"
@@ -97,7 +110,7 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
           {/* Submitted Work Reports Status Section */}
           <div className="cha-card__header" style={{ marginTop: 16 }}>
             <div className="cha-card__title-wrap">
-              <span className="cha-card__icon">📝</span>
+              <span className="cha-card__icon"><ClipboardListIcon /></span>
               <div>
                 <h4 className="cha-card__title">My Submitted Work Reports</h4>
                 <span className="cha-card__subtitle">Status of work reports shared with department head</span>
@@ -115,8 +128,9 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
                 <div key={report.id} className="cha-feed__item">
                   <div>
                     <strong className="cha-feed__title">{report.title}</strong>
-                    <span className="cha-feed__meta">
-                      📅 Submitted {new Date(report.submittedAt).toLocaleDateString("en-IN")} • Status:{" "}
+<span className="cha-feed__meta">
+  <CalendarIcon width={12} height={12} />
+  Submitted {new Date(report.submittedAt).toLocaleDateString("en-IN")} • Status:{" "}
                       <span className={`cha-tag cha-tag--${report.status}`}>
                         {report.status === "pending" ? "Pending Head Review" : "✓ Verified by Head"}
                       </span>
@@ -127,7 +141,7 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
                     className="cha-btn-view"
                     onClick={() => setSelectedReport(report)}
                   >
-                    👁️ View Report
+                    <EyeIcon width={13} height={13} /> View Report
                   </button>
                 </div>
               ))}
@@ -139,7 +153,7 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
         <div className="cha-card cha-card--side">
           <div className="cha-card__header">
             <div className="cha-card__title-wrap">
-              <span className="cha-card__icon">⚡</span>
+              <span className="cha-card__icon"><ZapIcon /></span>
               <div>
                 <h4 className="cha-card__title">Workspace Shortcuts</h4>
                 <span className="cha-card__subtitle">Jump to section</span>
@@ -148,27 +162,27 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
           </div>
 
           <div className="cha-shortcuts__list">
-            <button type="button" onClick={() => onSelectSection("requests")}>
-              📅 Session Requests ({pendingBookings.length})
-            </button>
-            <button type="button" onClick={() => onSelectSection("work-reports")}>
-              📝 Work Reports ({myReports.length})
-            </button>
-            <button type="button" onClick={() => onSelectSection("feedback")}>
-              ⭐ My Session Feedback
-            </button>
-            <button type="button" onClick={() => onSelectSection("events")}>
-              🎉 Events & Programs
-            </button>
-            <button type="button" onClick={() => onSelectSection("journal")}>
-              📖 Counselling Journal
-            </button>
-            <button type="button" onClick={() => onSelectSection("community")}>
-              💬 Wellness Community
-            </button>
-            <button type="button" className="cha-btn-urgent" onClick={() => onSelectSection("emergency")}>
-              🚨 Emergency Alerts
-            </button>
+<button type="button" onClick={() => onSelectSection("requests")}>
+  <CalendarIcon /> Session Requests ({pendingBookings.length})
+</button>
+<button type="button" onClick={() => onSelectSection("work-reports")}>
+  <ClipboardListIcon /> Work Reports ({myReports.length})
+</button>
+<button type="button" onClick={() => onSelectSection("feedback")}>
+  <StarIcon /> My Session Feedback
+</button>
+<button type="button" onClick={() => onSelectSection("events")}>
+  <SparklesIcon /> Events & Programs
+</button>
+<button type="button" onClick={() => onSelectSection("journal")}>
+  <BookOpenIcon /> Counselling Journal
+</button>
+<button type="button" onClick={() => onSelectSection("community")}>
+  <MessageCircleIcon /> Wellness Community
+</button>
+<button type="button" className="cha-btn-urgent" onClick={() => onSelectSection("emergency")}>
+  <AlertTriangleIcon /> Emergency Alerts
+</button>
           </div>
         </div>
       </div>
@@ -176,7 +190,6 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
       {/* ── View Work Report Modal ────────────────────────────── */}
       {selectedReport && (
         <Modal
-          isOpen={true}
           onClose={() => setSelectedReport(null)}
           title={`My Work Report: ${selectedReport.title}`}
         >
