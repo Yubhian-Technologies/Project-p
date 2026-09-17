@@ -49,9 +49,9 @@ export function CommunitySection() {
     setLoading(false);
   }
 
-  useEffect(() => {
-    refresh();
-  }, [currentUser]);
+useEffect(() => {
+  refresh();
+}, [currentUser, showAuthors]);
 
   function isGuidelinesAccepted(): boolean {
     if (!currentUser) return false;
