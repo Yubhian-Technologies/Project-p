@@ -3,18 +3,20 @@ import { useAuth } from "../../../hooks/useAuth";
 import {
   createCommunityPost,
   deleteCommunityPost,
+  listCommunityPostAuthors,
   listCommunityPosts,
   listMyCommentIds,
   listMyPostIds,
 } from "../../../services/firebase/community";
-import type { CommunityPost } from "../../../types/communityPost";
+import type { CommunityPost, CommunityPostAuthor } from "../../../types/communityPost";
 import { LeafIcon } from "../../../components/common/icons";
 import { CommunityPostCard } from "./CommunityPostCard";
 import "./CommunitySection.css";
 
 export function CommunitySection() {
-  const { currentUser } = useAuth();
+  const { currentUser, role } = useAuth();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [authors, setAuthors] = useState<Map<string, CommunityPostAuthor>>(new Map());
   const [myPostIds, setMyPostIds] = useState<Set<string>>(new Set());
   const [myCommentIds, setMyCommentIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -23,6 +25,8 @@ export function CommunitySection() {
   const [composeOpen, setComposeOpen] = useState(false);
   const [guidelinesAgreed, setGuidelinesAgreed] = useState(false);
   const [guidelinesModalOpen, setGuidelinesModalOpen] = useState(false);
+
+  const showAuthors = role === "head" || role === "counsellor";
 
   async function refresh() {
     if (!currentUser) return;
@@ -34,6 +38,14 @@ export function CommunitySection() {
     setPosts(allPosts);
     setMyPostIds(ownPostIds);
     setMyCommentIds(ownCommentIds);
+    if (showAuthors) {
+      try {
+        setAuthors(await listCommunityPostAuthors(allPosts.map((p) => p.id)));
+      } catch (err) {
+        console.error("Failed to load community post authors", err);
+        setAuthors(new Map());
+      }
+    }
     setLoading(false);
   }
 
@@ -116,6 +128,7 @@ export function CommunitySection() {
                 uid={currentUser.uid}
                 isOwnPost={myPostIds.has(post.id)}
                 myCommentIds={myCommentIds}
+                author={showAuthors ? authors.get(post.id) : undefined}
                 onDelete={() => handleDelete(post.id)}
                 onCommentsChanged={refresh}
               />

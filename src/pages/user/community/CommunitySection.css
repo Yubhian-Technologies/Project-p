@@ -511,6 +511,12 @@
   color: #1E1E1E;
 }
 
+.ig-card__author-email {
+  font-size: 12px;
+  font-weight: 600;
+  color: #C84B31;
+}
+
 .ig-card__time {
   font-size: 12px;
   font-weight: 600;

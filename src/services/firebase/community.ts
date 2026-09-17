@@ -1,6 +1,6 @@
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, runTransaction, setDoc } from "firebase/firestore";
 import { db } from "./config";
-import type { CommunityComment, CommunityPost } from "../../types/communityPost";
+import type { CommunityComment, CommunityPost, CommunityPostAuthor } from "../../types/communityPost";
 
 const postsCollection = collection(db, "communityPosts");
 
@@ -35,6 +35,46 @@ function myCommentMarkerRef(uid: string, commentId: string) {
 export async function listCommunityPosts(): Promise<CommunityPost[]> {
   const snapshot = await getDocs(postsCollection);
   return snapshot.docs.map((d) => toPost(d.id, d.data())).sort((a, b) => b.createdAt - a.createdAt);
+}
+
+// Resolves the real identity behind anonymous posts for Head/Counsellor
+// moderation visibility only. The public post docs stay identity-free; this
+// reads each post's private/author doc (firestore rules gate it to the poster
+// plus Head/Counsellor roles), then back-fills displayName/email from the
+// author's public user profile. Returns a Map<postId, author>.
+export async function listCommunityPostAuthors(postIds: string[]): Promise<Map<string, CommunityPostAuthor>> {
+  const result = new Map<string, CommunityPostAuthor>();
+  if (postIds.length === 0) return result;
+
+  const authorSnaps = await Promise.all(postIds.map((postId) => getDoc(authorDocRef(postId))));
+  const pairs: Array<{ postId: string; authorId: string }> = [];
+  postIds.forEach((postId, i) => {
+    const snap = authorSnaps[i];
+    if (snap.exists()) {
+      const authorId = snap.data().authorId as string | undefined;
+      if (authorId) pairs.push({ postId, authorId });
+    }
+  });
+
+  const uniqueIds = Array.from(new Set(pairs.map((p) => p.authorId)));
+  const profileSnaps = await Promise.all(uniqueIds.map((uid) => getDoc(doc(db, "users", uid))));
+  const identityByUid = new Map<string, { name: string; email: string }>();
+  uniqueIds.forEach((uid, i) => {
+    const snap = profileSnaps[i];
+    if (snap.exists()) {
+      const data = snap.data();
+      identityByUid.set(uid, {
+        name: (data.displayName as string) || (data.email as string) || "Anonymous",
+        email: (data.email as string) || "",
+      });
+    }
+  });
+
+  for (const { postId, authorId } of pairs) {
+    const identity = identityByUid.get(authorId);
+    if (identity) result.set(postId, { id: authorId, ...identity });
+  }
+  return result;
 }
 
 // Cross-referenced client-side against listCommunityPosts() so the feed can

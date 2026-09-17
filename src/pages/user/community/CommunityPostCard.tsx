@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { hasLiked, toggleLike } from "../../../services/firebase/community";
-import type { CommunityPost } from "../../../types/communityPost";
+import type { CommunityPost, CommunityPostAuthor } from "../../../types/communityPost";
 import { CommunityCommentThread } from "./CommunityCommentThread";
 
 interface CommunityPostCardProps {
@@ -8,6 +8,7 @@ interface CommunityPostCardProps {
   uid: string;
   isOwnPost: boolean;
   myCommentIds: Set<string>;
+  author?: CommunityPostAuthor;
   onDelete: () => void;
   onCommentsChanged: () => void;
 }
@@ -25,6 +26,7 @@ export function CommunityPostCard({
   uid,
   isOwnPost,
   myCommentIds,
+  author,
   onDelete,
   onCommentsChanged,
 }: CommunityPostCardProps) {
@@ -77,9 +79,10 @@ export function CommunityPostCard({
 
       {/* Header */}
       <div className="ig-card__header">
-        <div className="ig-card__avatar">A</div>
+        <div className="ig-card__avatar">{author ? author.name.charAt(0).toUpperCase() : "A"}</div>
         <div className="ig-card__meta">
-          <span className="ig-card__author">Anonymous</span>
+          <span className="ig-card__author">{author ? author.name : "Anonymous"}</span>
+          {author && <span className="ig-card__author-email">{author.email}</span>}
           <span className="ig-card__time">{timeAgo(post.createdAt)}</span>
         </div>
 

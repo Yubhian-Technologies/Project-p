@@ -13,3 +13,9 @@ export interface CommunityComment {
   text: string;
   createdAt: number;
 }
+
+export interface CommunityPostAuthor {
+  id: string;
+  name: string;
+  email: string;
+}

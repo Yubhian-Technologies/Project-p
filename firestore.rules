@@ -50,6 +50,12 @@ service cloud.firestore {
       return isSignedIn() && myRole() in ['head', 'counsellor'];
     }
 
+    // Head and Counsellor can resolve who authored anonymous community posts —
+    // moderation-only visibility. Regular users (and other roles) never see it.
+    function canSeeCommunityAuthor() {
+      return isSignedIn() && myRole() in ['head', 'counsellor'];
+    }
+
     // ---------- users ----------
     match /users/{uid} {
       allow get: if isSignedIn();
@@ -446,18 +452,18 @@ service cloud.firestore {
     }
 
     // ---------- communityPosts ----------
-    // Anonymous social feed. CRITICAL: nobody — not staff, not other users,
-    // not even a raw REST/SDK call bypassing the app's UI — may ever learn
-    // who authored a post/comment/like, while the author must still be able
-    // to delete their own anonymous content.
+    // Anonymous social feed. CRITICAL: other regular users — not even calls
+    // bypassing the app's UI — may ever learn who authored a post/comment/like,
+    // while the author must still be able to delete their own anonymous content.
     //
     // Firestore rules cannot hide a single field on an otherwise-readable
     // document, so authorId is NOT a field on the public post/comment docs.
     // It lives on a nested private/author doc (same shape as
     // bookings/{id}/private/details) whose own read rule only ever succeeds
-    // for the author themselves — no role exception. The public doc's delete
-    // rule uses get() against that private doc, so the owner can delete
-    // without authorId ever appearing on any doc another party can read.
+    // for the author themselves and for the Head/Counsellor moderation view
+    // (canSeeCommunityAuthor). The public doc's delete rule uses get() against
+    // that private doc, so the owner can delete without authorId ever appearing
+    // on any doc you can read.
     //
     // Likes are communityPosts/{postId}/likes/{uid}: the liker's own uid IS
     // the doc id, so "one like per user" and "only I can touch my own like"
@@ -489,7 +495,7 @@ service cloud.firestore {
                     && get(/databases/$(database)/documents/communityPosts/$(postId)/private/author).data.authorId == request.auth.uid;
 
       match /private/author {
-        allow get: if isSelf(resource.data.authorId);
+        allow get: if isSelf(resource.data.authorId) || canSeeCommunityAuthor();
         allow list: if false;
         allow create: if isSignedIn()
                       && request.resource.data.authorId == request.auth.uid
