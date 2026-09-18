@@ -3,55 +3,63 @@ import { useAuth } from "../../../hooks/useAuth";
 import {
   createCommunityPost,
   deleteCommunityPost,
-  listCommunityPostAuthors,
-  listCommunityPosts,
+  fetchCommunityFeed,
   listMyCommentIds,
   listMyPostIds,
 } from "../../../services/firebase/community";
-import type { CommunityPost, CommunityPostAuthor } from "../../../types/communityPost";
+import type { CommunityFeedCursor, CommunityPost } from "../../../types/communityPost";
 import { LeafIcon } from "../../../components/common/icons";
 import { CommunityPostCard } from "./CommunityPostCard";
 import "./CommunitySection.css";
 
+const FEED_PAGE_SIZE = 20;
+
 export function CommunitySection() {
-  const { currentUser, role } = useAuth();
+  const { currentUser, profile } = useAuth();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
-  const [authors, setAuthors] = useState<Map<string, CommunityPostAuthor>>(new Map());
   const [myPostIds, setMyPostIds] = useState<Set<string>>(new Set());
   const [myCommentIds, setMyCommentIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<CommunityFeedCursor | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [guidelinesAgreed, setGuidelinesAgreed] = useState(false);
   const [guidelinesModalOpen, setGuidelinesModalOpen] = useState(false);
 
-  const showAuthors = role === "head" || role === "counsellor";
-
   async function refresh() {
     if (!currentUser) return;
-    const [allPosts, ownPostIds, ownCommentIds] = await Promise.all([
-      listCommunityPosts(),
+    const [page, ownPostIds, ownCommentIds] = await Promise.all([
+      fetchCommunityFeed(null, FEED_PAGE_SIZE),
       listMyPostIds(currentUser.uid),
       listMyCommentIds(currentUser.uid),
     ]);
-    setPosts(allPosts);
+    setPosts(page.posts);
+    setHasMore(page.hasMore);
+    setNextCursor(page.nextCursor);
     setMyPostIds(ownPostIds);
     setMyCommentIds(ownCommentIds);
-    if (showAuthors) {
-      try {
-        setAuthors(await listCommunityPostAuthors(allPosts.map((p) => p.id)));
-      } catch (err) {
-        console.error("Failed to load community post authors", err);
-        setAuthors(new Map());
-      }
-    }
     setLoading(false);
   }
 
 useEffect(() => {
   refresh();
-}, [currentUser, showAuthors]);
+}, [currentUser]);
+
+  async function handleLoadMore() {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const page = await fetchCommunityFeed(nextCursor, FEED_PAGE_SIZE);
+      setPosts((prev) => [...prev, ...page.posts]);
+      setHasMore(page.hasMore);
+      setNextCursor(page.nextCursor);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   function isGuidelinesAccepted(): boolean {
     if (!currentUser) return false;
@@ -83,10 +91,10 @@ useEffect(() => {
   }
 
   async function handlePost() {
-    if (!currentUser || !text.trim() || !guidelinesAgreed) return;
+    if (!currentUser || !text.trim() || !guidelinesAgreed || !profile?.campusId) return;
     setPosting(true);
     try {
-      await createCommunityPost(currentUser.uid, text.trim());
+      await createCommunityPost(currentUser.uid, profile.campusId, text.trim());
       setText("");
       setGuidelinesAgreed(false);
       setComposeOpen(false);
@@ -128,12 +136,20 @@ useEffect(() => {
                 uid={currentUser.uid}
                 isOwnPost={myPostIds.has(post.id)}
                 myCommentIds={myCommentIds}
-                author={showAuthors ? authors.get(post.id) : undefined}
-                showAuthors={showAuthors}
                 onDelete={() => handleDelete(post.id)}
                 onCommentsChanged={refresh}
               />
             ) : null,
+          )}
+          {hasMore && (
+            <button
+              type="button"
+              className="community-section__load-more"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? "Loading…" : "Load more"}
+            </button>
           )}
         </div>
       )}

@@ -1,19 +1,12 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { onSchedule } from "firebase-functions/v2/scheduler";
-import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
-import { sendWhatsAppMessage } from "./whatsapp";
+import { getFirestore, FieldPath } from "firebase-admin/firestore";
 
 initializeApp();
 
 const auth = getAuth();
 const db = getFirestore();
-
-const whatsappAccessToken = defineSecret("WHATSAPP_ACCESS_TOKEN");
-const whatsappPhoneNumberId = defineSecret("WHATSAPP_PHONE_NUMBER_ID");
 
 function isCampusManagerRole(role: unknown): boolean {
   return role === "admin" || role === "super-admin";
@@ -154,87 +147,182 @@ export const updateCampusLogin = onCall<UpdateCampusLoginRequest>(async (request
   return { success: true };
 });
 
-// Fires whenever the client writes a new notification doc (createNotification() in
-// src/services/firebase/notifications.ts) — mirrors every in-app notification to WhatsApp.
-export const onNotificationCreated = onDocumentCreated(
-  { document: "notifications/{notificationId}", secrets: [whatsappAccessToken, whatsappPhoneNumberId] },
-  async (event) => {
-    const notification = event.data?.data();
-    if (!notification) return;
+// ── Community feed (server-side) ───────────────────────────────────────────
+// The anonymous community feed is intentionally NOT read via the client SDK:
+// the whole-collection scan + per-post author resolution would not scale to a
+// 7-campus deployment, and identity must only ever be attached server-side for
+// the viewer's own campus Head/Counsellor. These callables paginate the
+// campus-scoped feed and cache resolved identities in memory.
 
-    const recipientDoc = await db.collection("users").doc(notification.recipientId).get();
-    const recipient = recipientDoc.data();
-    if (!recipient?.whatsappNumber) return;
+const MAX_FEED_PAGE = 50;
+const MAX_COMMENT_PAGE = 100;
+const IDENTITY_CACHE_MAX = 5000;
+const identityCache = new Map<string, { name: string; email: string }>();
 
-    await sendWhatsAppMessage(
-      whatsappAccessToken.value(),
-      whatsappPhoneNumberId.value(),
-      recipient.whatsappNumber,
-      "session_update",
-      [recipient.displayName || "there", notification.message],
-    );
-  },
-);
-
-const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
-
-function todayRangeInIst(): { start: number; end: number } {
-  const nowIst = new Date(Date.now() + IST_OFFSET_MS);
-  const startOfDayIstMidnightUtc = Date.UTC(
-    nowIst.getUTCFullYear(),
-    nowIst.getUTCMonth(),
-    nowIst.getUTCDate(),
-    0,
-    0,
-    0,
-  );
-  const start = startOfDayIstMidnightUtc - IST_OFFSET_MS;
-  return { start, end: start + 24 * 60 * 60 * 1000 };
+interface CommunityCursor {
+  createdAt: number;
+  id: string;
 }
 
-// Runs daily and WhatsApps both parties on every booking scheduled for later today.
-export const sendSessionReminders = onSchedule(
-  { schedule: "0 8 * * *", timeZone: "Asia/Kolkata", secrets: [whatsappAccessToken, whatsappPhoneNumberId] },
-  async () => {
-    const { start, end } = todayRangeInIst();
-    const snapshot = await db
-      .collection("bookings")
-      .where("status", "==", "scheduled")
-      .where("scheduledAt", ">=", start)
-      .where("scheduledAt", "<", end)
-      .get();
+function canSeeCommunityAuthor(role: unknown): boolean {
+  return role === "head" || role === "counsellor";
+}
 
-    const accessToken = whatsappAccessToken.value();
-    const phoneNumberId = whatsappPhoneNumberId.value();
+async function resolveCommunityAuthor(
+  authorId: string | undefined,
+): Promise<{ name: string; email: string } | null> {
+  if (!authorId) return null;
+  const cached = identityCache.get(authorId);
+  if (cached) return cached;
+  const snap = await db.collection("users").doc(authorId).get();
+  const data = snap.data();
+  if (!data) return null;
+  const identity = {
+    name: (data.displayName as string) || (data.email as string) || "Anonymous",
+    email: (data.email as string) || "",
+  };
+  if (identityCache.size >= IDENTITY_CACHE_MAX) identityCache.clear();
+  identityCache.set(authorId, identity);
+  return identity;
+}
 
-    for (const doc of snapshot.docs) {
-      const booking = doc.data();
-      const timeLabel = new Date(booking.scheduledAt).toLocaleString("en-IN", {
-        timeZone: "Asia/Kolkata",
-        hour: "numeric",
-        minute: "2-digit",
-      });
+async function readCommunityCaller(request: {
+  auth?: { uid?: string } | null;
+}): Promise<{ callerUid: string; role: string | null; campusId: string | null }> {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) throw new HttpsError("unauthenticated", "You must be signed in.");
+  const userDoc = await db.collection("users").doc(callerUid).get();
+  const user = userDoc.data();
+  if (!user) throw new HttpsError("unauthenticated", "Your account profile was not found.");
+  return {
+    callerUid,
+    role: (user.role as string) ?? null,
+    campusId: (user.campusId as string) ?? null,
+  };
+}
 
-      const [userDoc, counsellorDoc] = await Promise.all([
-        db.collection("users").doc(booking.userId).get(),
-        db.collection("users").doc(booking.counsellorId).get(),
-      ]);
+export const getCommunityFeed = onCall<{
+  cursor?: CommunityCursor | null;
+  limit?: number;
+}>(async (request) => {
+  const { campusId, role } = await readCommunityCaller(request);
+  if (!campusId) {
+    throw new HttpsError("permission-denied", "Your account is not linked to a campus.");
+  }
+  const pageSize = Math.min(Math.max(request.data?.limit ?? 20, 1), MAX_FEED_PAGE);
 
-      const user = userDoc.data();
-      const counsellor = counsellorDoc.data();
+  let query: FirebaseFirestore.Query = db
+    .collection("communityPosts")
+    .where("campusId", "==", campusId)
+    .orderBy("createdAt", "desc")
+    .orderBy(FieldPath.documentId(), "desc")
+    .limit(pageSize + 1);
 
-      if (user?.whatsappNumber) {
-        await sendWhatsAppMessage(accessToken, phoneNumberId, user.whatsappNumber, "session_reminder", [
-          user.displayName || "there",
-          timeLabel,
-        ]);
+  if (request.data?.cursor) {
+    query = query.startAfter([request.data.cursor.createdAt, request.data.cursor.id]);
+  }
+
+  const snapshot = await query.get();
+  const docs = snapshot.docs;
+  const hasMore = docs.length > pageSize;
+  const pageDocs = docs.slice(0, pageSize);
+  const moderator = canSeeCommunityAuthor(role);
+
+  const posts = await Promise.all(
+    pageDocs.map(async (docRef) => {
+      const data = docRef.data();
+      const post: Record<string, unknown> = {
+        id: docRef.id,
+        text: data.text,
+        likeCount: data.likeCount,
+        commentCount: data.commentCount,
+        createdAt: data.createdAt,
+        campusId: data.campusId,
+        pinned: data.pinned ?? false,
+      };
+      if (!moderator) return post as FirebaseFirestore.DocumentData;
+
+      const authorSnap = await docRef.ref.collection("private").doc("author").get();
+      const identity = await resolveCommunityAuthor(authorSnap.data()?.authorId as string | undefined);
+      if (identity) {
+        post.authorName = identity.name;
+        post.authorEmail = identity.email;
       }
-      if (counsellor?.whatsappNumber) {
-        await sendWhatsAppMessage(accessToken, phoneNumberId, counsellor.whatsappNumber, "session_reminder", [
-          counsellor.displayName || "there",
-          timeLabel,
-        ]);
+      return post as FirebaseFirestore.DocumentData;
+    }),
+  );
+
+  const last = pageDocs[pageDocs.length - 1]?.data();
+  return {
+    posts,
+    hasMore,
+    nextCursor: pageDocs.length > 0 && last ? { createdAt: last.createdAt as number, id: pageDocs[pageDocs.length - 1].id } : null,
+  };
+});
+
+export const getCommentFeed = onCall<{
+  postId: string;
+  cursor?: CommunityCursor | null;
+  limit?: number;
+}>(async (request) => {
+  const { campusId, role } = await readCommunityCaller(request);
+  const postId = request.data?.postId;
+  if (!postId || typeof postId !== "string") {
+    throw new HttpsError("invalid-argument", "postId is required.");
+  }
+
+  const postSnap = await db.collection("communityPosts").doc(postId).get();
+  if (!postSnap.exists) {
+    throw new HttpsError("not-found", "Post not found.");
+  }
+  if (postSnap.data()?.campusId !== campusId) {
+    throw new HttpsError("permission-denied", "This post does not belong to your campus.");
+  }
+
+  const pageSize = Math.min(Math.max(request.data?.limit ?? 50, 1), MAX_COMMENT_PAGE);
+  let query: FirebaseFirestore.Query = db
+    .collection("communityPosts")
+    .doc(postId)
+    .collection("comments")
+    .orderBy("createdAt", "asc")
+    .orderBy(FieldPath.documentId(), "asc")
+    .limit(pageSize + 1);
+
+  if (request.data?.cursor) {
+    query = query.startAfter([request.data.cursor.createdAt, request.data.cursor.id]);
+  }
+
+  const snapshot = await query.get();
+  const docs = snapshot.docs;
+  const hasMore = docs.length > pageSize;
+  const pageDocs = docs.slice(0, pageSize);
+  const moderator = canSeeCommunityAuthor(role);
+
+  const comments = await Promise.all(
+    pageDocs.map(async (docRef) => {
+      const data = docRef.data();
+      const comment: Record<string, unknown> = {
+        id: docRef.id,
+        postId: data.postId,
+        text: data.text,
+        createdAt: data.createdAt,
+      };
+      if (!moderator) return comment as FirebaseFirestore.DocumentData;
+
+      const authorSnap = await docRef.ref.collection("private").doc("author").get();
+      const identity = await resolveCommunityAuthor(authorSnap.data()?.authorId as string | undefined);
+      if (identity) {
+        comment.authorName = identity.name;
+        comment.authorEmail = identity.email;
       }
-    }
-  },
-);
+      return comment as FirebaseFirestore.DocumentData;
+    }),
+  );
+
+  const last = pageDocs[pageDocs.length - 1];
+  return {
+    comments,
+    hasMore,
+    nextCursor: last ? { createdAt: last.data().createdAt as number, id: last.id } : null,
+  };
+});

@@ -1,16 +1,9 @@
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, runTransaction, setDoc } from "firebase/firestore";
-import { db } from "./config";
-import type { CommunityComment, CommunityPost, CommunityPostAuthor } from "../../types/communityPost";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "./config";
+import type { CommunityComment, CommunityFeedCursor, CommunityPost } from "../../types/communityPost";
 
 const postsCollection = collection(db, "communityPosts");
-
-function toPost(id: string, data: Record<string, unknown>): CommunityPost {
-  return { id, ...data } as CommunityPost;
-}
-
-function toComment(id: string, data: Record<string, unknown>): CommunityComment {
-  return { id, ...data } as CommunityComment;
-}
 
 function authorDocRef(postId: string) {
   return doc(db, "communityPosts", postId, "private", "author");
@@ -32,91 +25,9 @@ function myCommentMarkerRef(uid: string, commentId: string) {
   return doc(db, "users", uid, "myCommunityComments", commentId);
 }
 
-export async function listCommunityPosts(): Promise<CommunityPost[]> {
-  const snapshot = await getDocs(postsCollection);
-  return snapshot.docs.map((d) => toPost(d.id, d.data())).sort((a, b) => b.createdAt - a.createdAt);
-}
-
-// Resolves the real identity behind anonymous posts for Head/Counsellor
-// moderation visibility only. The public post docs stay identity-free; this
-// reads each post's private/author doc (firestore rules gate it to the poster
-// plus Head/Counsellor roles), then back-fills displayName/email from the
-// author's public user profile. Returns a Map<postId, author>.
-export async function listCommunityPostAuthors(postIds: string[]): Promise<Map<string, CommunityPostAuthor>> {
-  const result = new Map<string, CommunityPostAuthor>();
-  if (postIds.length === 0) return result;
-
-  const authorSnaps = await Promise.all(postIds.map((postId) => getDoc(authorDocRef(postId))));
-  const pairs: Array<{ postId: string; authorId: string }> = [];
-  postIds.forEach((postId, i) => {
-    const snap = authorSnaps[i];
-    if (snap.exists()) {
-      const authorId = snap.data().authorId as string | undefined;
-      if (authorId) pairs.push({ postId, authorId });
-    }
-  });
-
-  const uniqueIds = Array.from(new Set(pairs.map((p) => p.authorId)));
-  const profileSnaps = await Promise.all(uniqueIds.map((uid) => getDoc(doc(db, "users", uid))));
-  const identityByUid = new Map<string, { name: string; email: string }>();
-  uniqueIds.forEach((uid, i) => {
-    const snap = profileSnaps[i];
-    if (snap.exists()) {
-      const data = snap.data();
-      identityByUid.set(uid, {
-        name: (data.displayName as string) || (data.email as string) || "Anonymous",
-        email: (data.email as string) || "",
-      });
-    }
-  });
-
-  for (const { postId, authorId } of pairs) {
-    const identity = identityByUid.get(authorId);
-    if (identity) result.set(postId, { id: authorId, ...identity });
-  }
-  return result;
-}
-
-// Same moderation-only resolution for comment authors. Returns
-// Map<commentId, author> for the comments of one post.
-export async function listCommentAuthors(postId: string, commentIds: string[]): Promise<Map<string, CommunityPostAuthor>> {
-  const result = new Map<string, CommunityPostAuthor>();
-  if (commentIds.length === 0) return result;
-
-  const authorSnaps = await Promise.all(commentIds.map((commentId) => getDoc(commentAuthorDocRef(postId, commentId))));
-  const pairs: Array<{ commentId: string; authorId: string }> = [];
-  commentIds.forEach((commentId, i) => {
-    const snap = authorSnaps[i];
-    if (snap.exists()) {
-      const authorId = snap.data().authorId as string | undefined;
-      if (authorId) pairs.push({ commentId, authorId });
-    }
-  });
-
-  const uniqueIds = Array.from(new Set(pairs.map((p) => p.authorId)));
-  const profileSnaps = await Promise.all(uniqueIds.map((uid) => getDoc(doc(db, "users", uid))));
-  const identityByUid = new Map<string, { name: string; email: string }>();
-  uniqueIds.forEach((uid, i) => {
-    const snap = profileSnaps[i];
-    if (snap.exists()) {
-      const data = snap.data();
-      identityByUid.set(uid, {
-        name: (data.displayName as string) || (data.email as string) || "Anonymous",
-        email: (data.email as string) || "",
-      });
-    }
-  });
-
-  for (const { commentId, authorId } of pairs) {
-    const identity = identityByUid.get(authorId);
-    if (identity) result.set(commentId, { id: authorId, ...identity });
-  }
-  return result;
-}
-
-// Cross-referenced client-side against listCommunityPosts() so the feed can
-// show a "Delete" button on a user's own anonymous posts without the
-// community data itself ever exposing who wrote what.
+// Cross-referenced client-side against the feed so the UI can show a "Delete"
+// button on a user's own anonymous posts without the community data itself
+// ever exposing who wrote what.
 export async function listMyPostIds(uid: string): Promise<Set<string>> {
   const snapshot = await getDocs(collection(db, "users", uid, "myCommunityPosts"));
   return new Set(snapshot.docs.map((d) => d.id));
@@ -127,9 +38,15 @@ export async function listMyCommentIds(uid: string): Promise<Set<string>> {
   return new Set(snapshot.docs.map((d) => d.id));
 }
 
-export async function createCommunityPost(uid: string, text: string): Promise<string> {
+export async function createCommunityPost(uid: string, campusId: string, text: string): Promise<string> {
   const now = Date.now();
-  const docRef = await addDoc(postsCollection, { text, likeCount: 0, commentCount: 0, createdAt: now });
+  const docRef = await addDoc(postsCollection, {
+    text,
+    likeCount: 0,
+    commentCount: 0,
+    createdAt: now,
+    campusId,
+  });
   await setDoc(authorDocRef(docRef.id), { authorId: uid });
   await setDoc(myPostMarkerRef(uid, docRef.id), { createdAt: now });
   return docRef.id;
@@ -139,11 +56,6 @@ export async function deleteCommunityPost(uid: string, postId: string): Promise<
   await deleteDoc(doc(db, "communityPosts", postId));
   await deleteDoc(authorDocRef(postId));
   await deleteDoc(myPostMarkerRef(uid, postId));
-}
-
-export async function listComments(postId: string): Promise<CommunityComment[]> {
-  const snapshot = await getDocs(collection(db, "communityPosts", postId, "comments"));
-  return snapshot.docs.map((d) => toComment(d.id, d.data())).sort((a, b) => a.createdAt - b.createdAt);
 }
 
 export async function addComment(uid: string, postId: string, text: string): Promise<string> {
@@ -201,4 +113,47 @@ export async function toggleLike(uid: string, postId: string): Promise<boolean> 
     transaction.update(postRef, { likeCount: postSnap.data().likeCount + 1 });
     return true;
   });
+}
+
+// ── Server-side feed (Cloud Functions) ─────────────────────────────────────
+// The feed and comment reads run through callable functions that query the
+// caller's OWN campus only, paginate, and — exclusively for that campus's
+// Head/Counsellor — attach the real author identity. Regular users get the
+// same anonymous posts as before, with zero extra identity reads.
+
+export interface CommunityFeedPage {
+  posts: CommunityPost[];
+  hasMore: boolean;
+  nextCursor: CommunityFeedCursor | null;
+}
+
+export async function fetchCommunityFeed(
+  cursor: CommunityFeedCursor | null,
+  limit = 20,
+): Promise<CommunityFeedPage> {
+  const callable = httpsCallable<{ cursor: CommunityFeedCursor | null; limit: number }, CommunityFeedPage>(
+    functions,
+    "getCommunityFeed",
+  );
+  const result = await callable({ cursor, limit });
+  return result.data;
+}
+
+export interface CommunityCommentFeedPage {
+  comments: CommunityComment[];
+  hasMore: boolean;
+  nextCursor: CommunityFeedCursor | null;
+}
+
+export async function fetchCommentFeed(
+  postId: string,
+  cursor: CommunityFeedCursor | null,
+  limit = 50,
+): Promise<CommunityCommentFeedPage> {
+  const callable = httpsCallable<
+    { postId: string; cursor: CommunityFeedCursor | null; limit: number },
+    CommunityCommentFeedPage
+  >(functions, "getCommentFeed");
+  const result = await callable({ postId, cursor, limit });
+  return result.data;
 }
