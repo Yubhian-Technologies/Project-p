@@ -398,38 +398,50 @@ service cloud.firestore {
         request.resource.data.read == false &&
         (
           (
-            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.auth.uid ||
-            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.auth.uid
-          ) &&
-          (
-            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.resource.data.recipientId ||
-            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.resource.data.recipientId
-          )
-        ) || (
-          // Crisis SOS broadcast: the dispatching student notifies EVERY
-          // Head/Counsellor on their own campus, not just the one formally
-          // assigned to the booking.
-          request.resource.data.type == 'emergency_sos' &&
-          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.auth.uid &&
-          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.isEmergency == true &&
-          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.campusId == myProfile().campusId &&
-          get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId &&
-          get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role in ['head', 'counsellor']
-        ) || (
-          // A Counsellor requesting their own campus Head's approval to
-          // transfer a booking — the Head isn't a party to the booking.
-          request.resource.data.type == 'transfer_requested' &&
-          get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.auth.uid &&
-          get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role == 'head' &&
-          get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
-        ) || (
-          // Staff (a Head, approving/declining a transfer request, etc.) acting
-          // administratively on a booking can notify either party even though
-          // the staff member isn't a party to the booking themselves.
-          isStaff() &&
-          (
-            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.resource.data.recipientId ||
-            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.resource.data.recipientId
+            request.resource.data.keys().hasAll(['bookingId']) &&
+            (
+              get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.auth.uid ||
+              get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.auth.uid
+            ) &&
+            (
+              get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.resource.data.recipientId ||
+              get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.resource.data.recipientId
+            )
+          ) || (
+            // Crisis SOS broadcast: the dispatching student notifies EVERY
+            // Head/Counsellor on their own campus, not just the one formally
+            // assigned to the booking.
+            request.resource.data.keys().hasAll(['bookingId']) &&
+            request.resource.data.type == 'emergency_sos' &&
+            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.auth.uid &&
+            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.isEmergency == true &&
+            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.campusId == myProfile().campusId &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role in ['head', 'counsellor']
+          ) || (
+            // A Counsellor requesting their own campus Head's approval to
+            // transfer a booking — the Head isn't a party to the booking.
+            request.resource.data.keys().hasAll(['bookingId']) &&
+            request.resource.data.type == 'transfer_requested' &&
+            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.auth.uid &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role == 'head' &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
+          ) || (
+            // Staff (a Head, approving/declining a transfer request, etc.) acting
+            // administratively on a booking can notify either party even though
+            // the staff member isn't a party to the booking themselves.
+            request.resource.data.keys().hasAll(['bookingId']) &&
+            isStaff() &&
+            (
+              get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.resource.data.recipientId ||
+              get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.resource.data.recipientId
+            )
+          ) || (
+            // Platform-level alerts with NO booking link: Head/Counsellor/Admin
+            // events and monthly reports kept Admins informed across campuses.
+            request.resource.data.type in ['event_added', 'monthly_report_uploaded'] &&
+            isSignedIn() && myRole() in ['head', 'counsellor', 'admin', 'super-admin'] &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role == 'admin'
           )
         );
 

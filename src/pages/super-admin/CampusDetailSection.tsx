@@ -6,6 +6,7 @@ import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { BackLink } from "../../components/common/BackLink";
 import { AddCollegeModal } from "./AddCollegeModal";
+import { EditCollegeModal } from "./EditCollegeModal";
 import "./CampusDetailSection.css";
 
 interface CampusDetailSectionProps {
@@ -17,6 +18,7 @@ export function CampusDetailSection({ campus, onBack }: CampusDetailSectionProps
   const [colleges, setColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
+  const [editingCollege, setEditingCollege] = useState<College | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function load() {
@@ -57,19 +59,35 @@ export function CampusDetailSection({ campus, onBack }: CampusDetailSectionProps
       {colleges.map((college) => (
         <Card key={college.id} className="campus-detail-section__row">
           <p className="campus-detail-section__name">{college.name}</p>
-          <Button
-            type="button"
-            variant="outlined"
-            disabled={deletingId === college.id}
-            onClick={() => handleDelete(college.id)}
-          >
-            {deletingId === college.id ? "Deleting…" : "Delete"}
-          </Button>
+          <div className="campus-detail-section__actions">
+            <Button
+              type="button"
+              variant="outlined"
+              onClick={() => setEditingCollege(college)}
+            >
+              Edit
+            </Button>
+            <Button
+              type="button"
+              variant="outlined"
+              disabled={deletingId === college.id}
+              onClick={() => handleDelete(college.id)}
+            >
+              {deletingId === college.id ? "Deleting…" : "Delete"}
+            </Button>
+          </div>
         </Card>
       ))}
 
       {addOpen && (
         <AddCollegeModal campusId={campus.id} onClose={() => setAddOpen(false)} onCreated={load} />
+      )}
+      {editingCollege && (
+        <EditCollegeModal
+          college={editingCollege}
+          onClose={() => setEditingCollege(null)}
+          onUpdated={load}
+        />
       )}
     </div>
   );

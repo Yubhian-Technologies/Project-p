@@ -22,7 +22,7 @@ import "../../styles/bento-grid.css";
 
 const SECTIONS = [
   { id: "overview", label: "Home" },
-  { id: "booking", label: "Booking" },
+  { id: "booking", label: "Book Session" },
   { id: "wellness-test", label: "Wellness Test" },
   { id: "games", label: "Wellness Exercise" },
   { id: "journal", label: "Counselling Journal" },
@@ -44,7 +44,7 @@ export function UserDashboard() {
 
   const titleBySection: Record<string, string> = {
     profile: "Profile",
-    booking: "Booking",
+    booking: "Book Session",
     "wellness-test": "Wellness Stress Assessment",
     games: "Wellness Exercise",
     journal: "Counselling Journal",

@@ -52,14 +52,8 @@
 
 .aha-grid {
   display: grid;
-  grid-template-columns: 7fr 5fr;
+  grid-template-columns: 1fr;
   gap: 20px;
-}
-
-@media (max-width: 900px) {
-  .aha-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .aha-card {
@@ -153,6 +147,32 @@
 .aha-tag--verified {
   background: #DCFCE7;
   color: #15803D;
+}
+
+.aha-brief-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #F8FAFC;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2.5px 2.5px 0px #2B2B2B;
+  flex-wrap: wrap;
+}
+
+.aha-brief-box__info strong {
+  display: block;
+  font-size: 15px;
+  color: #0F172A;
+  font-weight: 700;
+}
+
+.aha-brief-box__info p {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 500;
 }
 
 .aha-feed {
@@ -411,4 +431,145 @@
   padding: 10px;
   font-size: 12px;
   color: #166534;
+}
+
+/* ── KPI Row ──────────────────────────────────────────────────────────── */
+
+.aha-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .aha-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .aha-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aha-kpi {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #F8FAFC;
+  border: 2px solid #2B2B2B !important;
+  border-radius: 0px !important;
+  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+}
+
+.aha-kpi__icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #2B2B2B;
+  border-radius: 0px !important;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+  flex-shrink: 0;
+}
+
+.aha-kpi__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.aha-kpi__value {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  font-family: var(--md-sys-typescale-font-display);
+  color: #0F172A;
+  line-height: 1.1;
+}
+
+.aha-kpi__label {
+  font-size: 11.5px;
+  color: #64748B;
+  font-weight: 700;
+}
+
+/* ── Per-Campus Breakdown Table ───────────────────────────────────────── */
+
+.aha-table-wrap {
+  overflow-x: auto;
+}
+
+.aha-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2.5px 2.5px 0px #2B2B2B;
+  background: #FFFFFF;
+}
+
+.aha-table th {
+  background: #F1F5F9;
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #334155;
+  border-bottom: 2px solid #2B2B2B;
+}
+
+.aha-table td {
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0F172A;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.aha-table tr:last-child td {
+  border-bottom: none;
+}
+
+.aha-table tr:hover td {
+  background: #F8FAFC;
+}
+
+.aha-table__campus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.aha-table__campus svg {
+  width: 15px;
+  height: 15px;
+  color: #2563EB;
+  flex-shrink: 0;
+}
+
+.aha-table__tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border: 1.5px solid #2B2B2B;
+  border-radius: 0px !important;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.aha-table__tag--submitted {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.aha-table__tag--pending {
+  background: #FFFBEB;
+  color: #D97706;
 }

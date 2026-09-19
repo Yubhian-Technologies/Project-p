@@ -3,26 +3,19 @@ import {
   listMonthlyReports,
   type MonthlyReport,
 } from "../../services/firebase/monthlyReports";
-import {
-  listAllWorkReports,
-  type WorkReport,
-} from "../../services/firebase/workReports";
-import { Modal } from "../../components/common/Modal";
+import { listCampuses } from "../../services/firebase/campuses";
+import type { Campus } from "../../types/campus";
 import { Button } from "../../components/common/Button";
 import {
   TrendingUpIcon,
   RefreshIcon,
   FolderOpenIcon,
-  ClipboardListIcon,
-  UserIcon,
-  CalendarIcon,
-  FileTextIcon,
-  DownloadIcon,
-  EyeIcon,
   BuildingIcon,
-  KeyIcon,
-  SparklesIcon,
-  StarIcon,
+  CheckCircleIcon,
+  AlertCircleIcon,
+  FileTextIcon,
+  MapPinIcon,
+  CalendarIcon,
 } from "../../components/common/icons";
 import "./AdminHomeActivityOverview.css";
 
@@ -32,19 +25,15 @@ interface AdminHomeActivityOverviewProps {
 
 export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivityOverviewProps) {
   const [monthlyReports, setMonthlyReports] = useState<MonthlyReport[]>([]);
-  const [workReports, setWorkReports] = useState<WorkReport[]>([]);
+  const [campuses, setCampuses] = useState<Campus[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedWorkReport, setSelectedWorkReport] = useState<WorkReport | null>(null);
 
   async function loadData() {
     setLoading(true);
     try {
-      const [mReports, wReports] = await Promise.all([
-        listMonthlyReports(),
-        listAllWorkReports(),
-      ]);
-      setMonthlyReports(mReports);
-      setWorkReports(wReports);
+      const [reports, campusList] = await Promise.all([listMonthlyReports(), listCampuses()]);
+      setMonthlyReports(reports);
+      setCampuses(campusList);
     } catch (err) {
       console.error("Failed to load admin home activity", err);
     } finally {
@@ -56,9 +45,51 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
     loadData();
   }, []);
 
-  const MONTHS = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+  const periodLabel = now.toLocaleString("en-IN", { month: "long", year: "numeric" });
+
+  const reportsThisMonth = monthlyReports.filter(
+    (r) => r.month === currentMonth && r.year === currentYear,
+  );
+
+  const submittedCampusIds = new Set(
+    reportsThisMonth.map((r) => r.campusId).filter((id): id is string => Boolean(id)),
+  );
+  const submittedCount = campuses.filter((c) => submittedCampusIds.has(c.id)).length;
+  const pendingCount = campuses.length - submittedCount;
+  const totalReports = monthlyReports.length;
+  const collegesCovered = new Set(monthlyReports.map((r) => r.collegeId).filter(Boolean)).size;
+
+  const campusRows = campuses
+    .map((campus) => {
+      const campusReports = monthlyReports.filter((r) => r.campusId === campus.id);
+      const lastUpload = campusReports.reduce((max, r) => {
+        const t = new Date(r.uploadedAt).getTime();
+        return Number.isNaN(t) ? max : Math.max(max, t);
+      }, 0);
+      return {
+        campus,
+        reportCount: campusReports.length,
+        submitted: submittedCampusIds.has(campus.id),
+        lastUpload,
+      };
+    })
+    .sort(
+      (a, b) =>
+        Number(b.submitted) - Number(a.submitted) ||
+        b.reportCount - a.reportCount ||
+        a.campus.name.localeCompare(b.campus.name),
+    );
+
+  const kpis = [
+    { label: "Total Campuses", value: campuses.length, icon: BuildingIcon, color: "#2563EB", bg: "#DBEAFE" },
+    { label: `Submitted (${periodLabel})`, value: submittedCount, icon: CheckCircleIcon, color: "#15803D", bg: "#DCFCE7" },
+    { label: "Campuses Pending", value: pendingCount, icon: AlertCircleIcon, color: "#D97706", bg: "#FFFBEB" },
+    { label: "Total Reports Uploaded", value: totalReports, icon: FileTextIcon, color: "#0D9488", bg: "#CCFBF1" },
+    { label: "Colleges Covered", value: collegesCovered, icon: MapPinIcon, color: "#7C3AED", bg: "#EDE9FE" },
+    { label: `Reports This Period`, value: reportsThisMonth.length, icon: CalendarIcon, color: "#1E3A8A", bg: "#E0E7FF" },
   ];
 
   return (
@@ -68,10 +99,10 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
         <div>
           <h3 className="aha-header__title">
             <TrendingUpIcon />
-            <span>System Activity & Submissions Overview</span>
+            <span>System Activity & Submission Analysis</span>
           </h3>
           <p className="aha-header__sub">
-            All submitted monthly reports, counsellor work reports, and platform section status.
+            Campus-wise monthly report submission analysis across the platform.
           </p>
         </div>
         <Button type="button" variant="outlined" onClick={loadData}>
@@ -81,7 +112,6 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
 
       {/* ── Main Bento Grid ───────────────────────────────────── */}
       <div className="aha-grid">
-        {/* Left Column: Monthly Reports Feed */}
         <div className="aha-card aha-card--main">
           <div className="aha-card__header">
             <div className="aha-card__title-wrap">
@@ -89,52 +119,79 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
               <div>
                 <h4 className="aha-card__title">Head Monthly Reports Submitted</h4>
                 <span className="aha-card__subtitle">
-                  Reports uploaded by department heads across all campuses
+                  Which campuses shared their reports for {periodLabel} — and which haven't yet.
                 </span>
               </div>
             </div>
             <span className="aha-badge aha-badge--blue">
-              {monthlyReports.length} Reports Total
+              {loading ? "…" : `${submittedCount} / ${campuses.length} Campuses Submitted`}
             </span>
           </div>
 
           {loading ? (
-            <p className="aha-loading">Loading submitted monthly reports…</p>
-          ) : monthlyReports.length === 0 ? (
-            <div className="aha-empty">
-              <p>No monthly reports uploaded by department heads yet.</p>
-            </div>
+            <p className="aha-loading">Loading campus submission analysis…</p>
           ) : (
-            <div className="aha-feed">
-              {monthlyReports.slice(0, 5).map((report) => (
-                <div key={report.id} className="aha-feed__item">
-                  <div className="aha-feed__item-left">
-                    <div className="aha-feed__item-top">
-                      <span className="aha-feed__item-title">{report.title}</span>
-                      <span className="aha-tag aha-tag--month">
-                        {MONTHS[(report.month - 1 + 12) % 12]} {report.year}
-                      </span>
-                    </div>
-                    <div className="aha-feed__item-meta">
-                      <span><UserIcon /> {report.uploadedBy || "Department Head"}</span>
-                      <span><CalendarIcon /> {new Date(report.uploadedAt).toLocaleDateString("en-IN")}</span>
-                      <span><FileTextIcon /> {report.fileName}</span>
+            <>
+              {/* ── KPI Row ─────────────────────────────────────── */}
+              <div className="aha-kpis">
+                {kpis.map((kpi) => (
+                  <div key={kpi.label} className="aha-kpi">
+                    <span className="aha-kpi__icon" style={{ background: kpi.bg, color: kpi.color }}>
+                      <kpi.icon />
+                    </span>
+                    <div>
+                      <strong className="aha-kpi__value">{kpi.value}</strong>
+                      <span className="aha-kpi__label">{kpi.label}</span>
                     </div>
                   </div>
+                ))}
+              </div>
 
-                  <div className="aha-feed__item-actions">
-                    <a
-                      href={report.downloadURL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="aha-btn-dl"
-                    >
-                      <DownloadIcon /> View / Download
-                    </a>
-                  </div>
+              {/* ── Per-Campus Breakdown ───────────────────────── */}
+              {campuses.length === 0 ? (
+                <div className="aha-empty">
+                  <p>No campuses defined yet.</p>
                 </div>
-              ))}
-            </div>
+              ) : monthlyReports.length === 0 ? (
+                <div className="aha-empty">
+                  <p>No monthly reports uploaded by department heads yet.</p>
+                </div>
+              ) : (
+                <div className="aha-table-wrap">
+                  <table className="aha-table">
+                    <thead>
+                      <tr>
+                        <th>Campus</th>
+                        <th>Status ({periodLabel})</th>
+                        <th>Reports Uploaded</th>
+                        <th>Last Upload</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {campusRows.map(({ campus, reportCount, submitted, lastUpload }) => (
+                        <tr key={campus.id}>
+                          <td className="aha-table__campus">
+                            <BuildingIcon />
+                            {campus.name}
+                          </td>
+                          <td>
+                            <span className={`aha-table__tag aha-table__tag--${submitted ? "submitted" : "pending"}`}>
+                              {submitted ? "✓ Submitted" : "Pending"}
+                            </span>
+                          </td>
+                          <td>{reportCount}</td>
+                          <td>
+                            {lastUpload > 0
+                              ? new Date(lastUpload).toLocaleDateString("en-IN")
+                              : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
 
           <div className="aha-card__footer">
@@ -143,110 +200,11 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
               className="aha-link-btn"
               onClick={() => onSelectSection("monthly-reports")}
             >
-              Go to Full Monthly Reports Section →
+              Open Monthly Reports Section →
             </button>
           </div>
         </div>
-
-        {/* Right Column: Work Reports & Shortcuts */}
-        <div className="aha-card aha-card--side">
-          <div className="aha-card__header">
-            <div className="aha-card__title-wrap">
-              <span className="aha-card__icon"><ClipboardListIcon /></span>
-              <div>
-                <h4 className="aha-card__title">Counsellor Work Reports</h4>
-                <span className="aha-card__subtitle">Recent submissions from counsellors</span>
-              </div>
-            </div>
-          </div>
-
-          {loading ? (
-            <p className="aha-loading">Loading work reports…</p>
-          ) : workReports.length === 0 ? (
-            <p className="aha-empty">No work reports submitted yet.</p>
-          ) : (
-            <div className="aha-mini-list">
-              {workReports.slice(0, 4).map((report) => (
-                <div key={report.id} className="aha-mini-item">
-                  <div>
-                    <strong className="aha-mini-item__title">{report.title}</strong>
-                    <span className="aha-mini-item__sub">
-                      By {report.submittedBy} • {new Date(report.submittedAt).toLocaleDateString("en-IN")}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    className="aha-btn-sm"
-                    onClick={() => setSelectedWorkReport(report)}
-                  >
-                    <EyeIcon /> View
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Section Shortcuts */}
-          <div className="aha-shortcuts">
-            <span className="aha-shortcuts__label">Admin Platform Shortcuts:</span>
-            <div className="aha-shortcuts__grid">
-              <button type="button" onClick={() => onSelectSection("campuses")}>
-                <BuildingIcon /> Campuses
-              </button>
-              <button type="button" onClick={() => onSelectSection("logins")}>
-                <KeyIcon /> Logins & Roles
-              </button>
-              <button type="button" onClick={() => onSelectSection("events")}>
-                <SparklesIcon /> Events Overview
-              </button>
-              <button type="button" onClick={() => onSelectSection("analytics")}>
-                <TrendingUpIcon /> Analytics
-              </button>
-              <button type="button" onClick={() => onSelectSection("counsellor-ratings")}>
-                <StarIcon /> Ratings
-              </button>
-              <button type="button" onClick={() => onSelectSection("monthly-reports")}>
-                <FolderOpenIcon /> Monthly Reports
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
-
-      {/* ── View Work Report Modal ────────────────────────────── */}
-      {selectedWorkReport && (
-        <Modal
-          onClose={() => setSelectedWorkReport(null)}
-          title={`Work Report: ${selectedWorkReport.title}`}
-        >
-          <div className="aha-modal">
-            <div className="aha-modal__meta">
-              <div><strong>Counsellor:</strong> {selectedWorkReport.submittedBy}</div>
-              <div><strong>Submitted:</strong> {new Date(selectedWorkReport.submittedAt).toLocaleString("en-IN")}</div>
-              <div><strong>Period:</strong> {selectedWorkReport.periodLabel || selectedWorkReport.reportType}</div>
-              <div>
-                <strong>Status:</strong>{" "}
-                <span className={`aha-tag aha-tag--${selectedWorkReport.status === "pending" ? "pending" : "verified"}`}>
-                  {selectedWorkReport.status === "pending" ? "Pending Review" : "Verified"}
-                </span>
-              </div>
-            </div>
-
-            <div className="aha-modal__body">
-              <h5>Report Content:</h5>
-              <div className="aha-modal__content-box">{selectedWorkReport.body}</div>
-            </div>
-
-            {selectedWorkReport.headNotes && (
-              <div className="aha-modal__notes">
-                <strong>Head Verification Notes:</strong>
-                <p>{selectedWorkReport.headNotes}</p>
-                <span>— Verified by {selectedWorkReport.verifiedBy}</span>
-              </div>
-            )}
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }

@@ -57,23 +57,25 @@ export function EventsOverviewSection() {
 
   return (
     <div className="events-overview">
-      <div className="events-overview__field">
-        <label htmlFor="events-overview-campus">Campus</label>
-        <Select id="events-overview-campus" value={campusId} onChange={setCampusId}>
-          <option value="" disabled>
-            Select a campus…
-          </option>
-          {campuses.map((campus) => (
-            <option key={campus.id} value={campus.id}>
-              {campus.name}
+      <div className="events-overview__filter-bar">
+        <div className="events-overview__field">
+          <label htmlFor="events-overview-campus">Campus</label>
+          <Select id="events-overview-campus" value={campusId} onChange={setCampusId}>
+            <option value="" disabled>
+              Select a campus…
             </option>
-          ))}
-        </Select>
+            {campuses.map((campus) => (
+              <option key={campus.id} value={campus.id}>
+                {campus.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        {campusId && <CollegePicker colleges={colleges} selectedId={collegeId} onSelect={setCollegeId} />}
       </div>
 
       {!campusId && <p>Select a campus to view its colleges' events and programs.</p>}
-
-      {campusId && <CollegePicker colleges={colleges} selectedId={collegeId} onSelect={setCollegeId} />}
 
       {collegeId && (
         <EventsCalendarGrid

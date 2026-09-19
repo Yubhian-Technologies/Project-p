@@ -1,6 +1,8 @@
-import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { db } from "./config";
 import type { EventProgram } from "../../types/event";
+import { createNotification } from "./notifications";
+import { listUsersByRole } from "./firestore";
 
 const eventsCollection = collection(db, "events");
 
@@ -29,6 +31,24 @@ export async function createEvent(
 ): Promise<string> {
   const now = Date.now();
   const docRef = await addDoc(eventsCollection, { ...input, createdAt: now, updatedAt: now });
+
+  // Platform-level alert for admins whenever a campus schedules a new event.
+  const campusName = await getCampusName(input.campusId);
+  const admins = await listUsersByRole("admin");
+  const campusLabel = campusName ? `${campusName} campus` : "A campus";
+  await Promise.all(
+    admins.map((admin) =>
+      createNotification({
+        recipientId: admin.uid,
+        type: "event_added",
+        title: "New event scheduled",
+        message: `${campusLabel} has a new event: ${input.title} (${
+          input.category === "group-session" ? "Group Session" : "Main Program"
+        }).`,
+      }),
+    ),
+  );
+
   return docRef.id;
 }
 
@@ -61,4 +81,13 @@ export async function updateEvent(
 
 export async function deleteEvent(id: string): Promise<void> {
   await deleteDoc(doc(db, "events", id));
+}
+
+async function getCampusName(campusId: string): Promise<string> {
+  try {
+    const snap = await getDoc(doc(db, "campuses", campusId));
+    return (snap.data() as { name?: string } | undefined)?.name ?? "";
+  } catch {
+    return "";
+  }
 }

@@ -75,3 +75,9 @@
   font-size: 16px;
   color: var(--neu-text-primary, #2D3748);
 }
+
+.campus-detail-section__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

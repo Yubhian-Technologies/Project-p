@@ -4,6 +4,7 @@ import {
   getDocs,
   deleteDoc,
   doc,
+  getDoc,
   query,
   orderBy,
   where,
@@ -11,6 +12,8 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage } from "./config";
+import { createNotification } from "./notifications";
+import { listUsersByRole } from "./firestore";
 
 export interface MonthlyReport {
   id: string;
@@ -64,6 +67,22 @@ export async function uploadMonthlyReport(
     uploadedAt: serverTimestamp(),
   });
 
+  // Platform-level alert for admins whenever a campus uploads a monthly report.
+  const campusName = await getCampusName(campusId);
+  const monthName = new Date(year, month - 1, 1).toLocaleString("en-IN", { month: "long" });
+  const admins = await listUsersByRole("admin");
+  const campusLabel = campusName ? `${campusName} campus` : "A campus";
+  await Promise.all(
+    admins.map((admin) =>
+      createNotification({
+        recipientId: admin.uid,
+        type: "monthly_report_uploaded",
+        title: "Monthly report available",
+        message: `${campusLabel} has a new monthly report: ${title} (${monthName} ${year}).`,
+      }),
+    ),
+  );
+
   return {
     id: docRef.id,
     title,
@@ -113,6 +132,15 @@ export async function deleteMonthlyReport(id: string, storagePath: string): Prom
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
+async function getCampusName(campusId: string): Promise<string> {
+  try {
+    const snap = await getDoc(doc(db, "campuses", campusId));
+    return (snap.data() as { name?: string } | undefined)?.name ?? "";
+  } catch {
+    return "";
+  }
+}
+
 function docToReport(id: string, data: Record<string, unknown>): MonthlyReport {
   return {
     id,

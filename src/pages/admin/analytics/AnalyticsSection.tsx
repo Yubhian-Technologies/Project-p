@@ -8,6 +8,7 @@ import type { College } from "../../../types/college";
 import type { UserProfile } from "../../../types/user";
 import { Card } from "../../../components/common/Card";
 import { Select } from "../../../components/common/Select";
+import { Modal } from "../../../components/common/Modal";
 import { ROLE_LABELS } from "../../../config/roles";
 import { StaffAnalyticsInline } from "./StaffAnalyticsInline";
 import { GroupSessionsPanel } from "./GroupSessionsPanel";
@@ -23,14 +24,14 @@ export function AnalyticsSection() {
   const [staff, setStaff] = useState<UserProfile[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
   const [loadingStaff, setLoadingStaff] = useState(false);
-  const [expandedUid, setExpandedUid] = useState<string | null>(null);
+  const [selectedStaffForModal, setSelectedStaffForModal] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     listCampuses().then(setCampuses);
   }, []);
 
   useEffect(() => {
-    setExpandedUid(null);
+    setSelectedStaffForModal(null);
     if (!campusId || mode !== "individual") return;
     setLoadingStaff(true);
     async function load() {
@@ -89,23 +90,43 @@ export function AnalyticsSection() {
           {staff.length === 0 && <p>No head or counsellors assigned to this campus yet.</p>}
           {staff.map((person) => {
             const college = colleges.find((c) => c.id === person.collegeId);
-            const expanded = expandedUid === person.uid;
             return (
               <Card
                 key={person.uid}
                 className="analytics-section__row"
-                onClick={() => setExpandedUid(expanded ? null : person.uid)}
+                onClick={() => setSelectedStaffForModal(person)}
               >
-                <div>
-                  <p className="analytics-section__name">{person.displayName || person.email}</p>
-                  <p className="analytics-section__role">{ROLE_LABELS[person.role]}</p>
-                  {college && <p className="analytics-section__college">{college.name}</p>}
+                <div className="analytics-section__row-content">
+                  <div>
+                    <p className="analytics-section__name">{person.displayName || person.email}</p>
+                    <p className="analytics-section__role">{ROLE_LABELS[person.role]}</p>
+                    {college && <p className="analytics-section__college">{college.name}</p>}
+                  </div>
+                  <button
+                    type="button"
+                    className="analytics-section__btn-view"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedStaffForModal(person);
+                    }}
+                  >
+                    View Analytics →
+                  </button>
                 </div>
-                {expanded && <StaffAnalyticsInline staff={person} />}
               </Card>
             );
           })}
         </div>
+      )}
+
+      {selectedStaffForModal && (
+        <Modal
+          title={`Analytics — ${selectedStaffForModal.displayName || selectedStaffForModal.email}`}
+          onClose={() => setSelectedStaffForModal(null)}
+          className="analytics-modal"
+        >
+          <StaffAnalyticsInline staff={selectedStaffForModal} />
+        </Modal>
       )}
 
       {campusId && mode === "group" && <GroupSessionsPanel campusId={campusId} />}

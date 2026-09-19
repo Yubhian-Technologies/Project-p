@@ -80,6 +80,21 @@
   color: var(--neu-accent-primary, #2563EB);
 }
 
+.team-management__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.team-management__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .team-management__status--available {
   color: #16a34a;
 }

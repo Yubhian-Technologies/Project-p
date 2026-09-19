@@ -31,7 +31,11 @@ function fromCsv(value: string): string[] {
     .filter(Boolean);
 }
 
-export function ProfileSection() {
+interface ProfileSectionProps {
+  onOpenFeedback?: () => void;
+}
+
+export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const { currentUser, profile, refreshProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -73,6 +77,7 @@ export function ProfileSection() {
   );
   const [savingCounsellorProfile, setSavingCounsellorProfile] = useState(false);
 
+  const [showEditProfileForm, setShowEditProfileForm] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPasswordDraft, setCurrentPasswordDraft] = useState("");
   const [newPasswordDraft, setNewPasswordDraft] = useState("");
@@ -265,244 +270,298 @@ export function ProfileSection() {
         </dl>
 
         {isCounsellorLike && (
-          <>
-            <div className="profile-section__intake">
-              <p className="profile-section__intake-hint">
-                This builds your public professional profile, shown to users browsing counsellors.
-              </p>
-
-              <div className="profile-section__field">
-                <label htmlFor="counsellor-name">Name (displayed to users)</label>
-                <input
-                  id="counsellor-name"
-                  type="text"
-                  value={counsellorNameDraft}
-                  onChange={(e) => setCounsellorNameDraft(e.target.value)}
-                />
-              </div>
-              <div className="profile-section__field">
-                <label htmlFor="specialization">Specialization / Title</label>
-                <input
-                  id="specialization"
-                  type="text"
-                  placeholder="e.g. Counselling Psychologist"
-                  value={specializationDraft}
-                  onChange={(e) => setSpecializationDraft(e.target.value)}
-                />
-              </div>
-              <div className="profile-section__field">
-                <label htmlFor="location">Location</label>
-                <input
-                  id="location"
-                  type="text"
-                  placeholder="e.g. Vishnu College"
-                  value={locationDraft}
-                  onChange={(e) => setLocationDraft(e.target.value)}
-                />
-              </div>
-              <div className="profile-section__field">
-                <label htmlFor="experience">Experience</label>
-                <input
-                  id="experience"
-                  type="text"
-                  placeholder="e.g. 5 years"
-                  value={experienceDraft}
-                  onChange={(e) => setExperienceDraft(e.target.value)}
-                />
-              </div>
-              <div className="profile-section__field">
-                <label htmlFor="counsellor-whatsapp">WhatsApp number</label>
-                <input
-                  id="counsellor-whatsapp"
-                  type="tel"
-                  value={counsellorWhatsappDraft}
-                  onChange={(e) => setCounsellorWhatsappDraft(e.target.value)}
-                />
-              </div>
-              <div className="profile-section__field">
-                <label htmlFor="additional-email">Additional email (optional)</label>
-                <input
-                  id="additional-email"
-                  type="email"
-                  placeholder={profile.email}
-                  value={additionalEmailDraft}
-                  onChange={(e) => setAdditionalEmailDraft(e.target.value)}
-                />
-              </div>
-
-              <p className="profile-section__subheading">Areas of expertise &amp; languages</p>
-              <div className="profile-section__field">
-                <label htmlFor="expertise">Areas of expertise (comma-separated)</label>
-                <input
-                  id="expertise"
-                  type="text"
-                  placeholder="Anxiety, Academic Stress, Relationships"
-                  value={expertiseDraft}
-                  onChange={(e) => setExpertiseDraft(e.target.value)}
-                />
-              </div>
-              <div className="profile-section__field">
-                <label htmlFor="languages">Languages (comma-separated)</label>
-                <input
-                  id="languages"
-                  type="text"
-                  placeholder="English, Telugu, Hindi"
-                  value={languagesDraft}
-                  onChange={(e) => setLanguagesDraft(e.target.value)}
-                />
-              </div>
-
-              <p className="profile-section__subheading">Qualifications &amp; credentials</p>
-              <div className="profile-section__field">
-                <label htmlFor="education-degree">Education</label>
-                <input
-                  id="education-degree"
-                  type="text"
-                  placeholder="e.g. M.Sc. in Psychology"
-                  value={educationDegreeDraft}
-                  onChange={(e) => setEducationDegreeDraft(e.target.value)}
-                />
-              </div>
-              <div className="profile-section__field">
-                <label htmlFor="education-institution">Institution</label>
-                <input
-                  id="education-institution"
-                  type="text"
-                  placeholder="University name"
-                  value={educationInstitutionDraft}
-                  onChange={(e) => setEducationInstitutionDraft(e.target.value)}
-                />
-              </div>
-              <div className="profile-section__field">
-                <label htmlFor="current-organization">Current organization</label>
-                <input
-                  id="current-organization"
-                  type="text"
-                  placeholder="Organization / institution"
-                  value={currentOrganizationDraft}
-                  onChange={(e) => setCurrentOrganizationDraft(e.target.value)}
-                />
-              </div>
-              <p className="profile-section__verified-note">✓ Verified Psychologist</p>
-
-              <p className="profile-section__subheading">My approach</p>
-              <div className="profile-section__field">
-                <label htmlFor="approach-empathetic">Empathetic</label>
-                <textarea
-                  id="approach-empathetic"
-                  rows={2}
-                  placeholder="Creates a safe and non-judgmental environment."
-                  value={approachEmpatheticDraft}
-                  onChange={(e) => setApproachEmpatheticDraft(e.target.value)}
-                />
-              </div>
-              <div className="profile-section__field">
-                <label htmlFor="approach-evidence">Evidence-based</label>
-                <textarea
-                  id="approach-evidence"
-                  rows={2}
-                  placeholder="Uses appropriate psychological techniques and structured interventions."
-                  value={approachEvidenceBasedDraft}
-                  onChange={(e) => setApproachEvidenceBasedDraft(e.target.value)}
-                />
-              </div>
-              <div className="profile-section__field">
-                <label htmlFor="approach-solution">Solution-focused</label>
-                <textarea
-                  id="approach-solution"
-                  rows={2}
-                  placeholder="Works collaboratively toward practical and achievable goals."
-                  value={approachSolutionFocusedDraft}
-                  onChange={(e) => setApproachSolutionFocusedDraft(e.target.value)}
-                />
-              </div>
-
-              <p className="profile-section__subheading">Consultation</p>
-              <div className="profile-section__field">
-                <label htmlFor="session-type">Session type</label>
-                <Select
-                  id="session-type"
-                  value={sessionTypeDraft}
-                  onChange={(v) => setSessionTypeDraft(v as "online" | "offline" | "both")}
-                >
-                  <option value="offline">Offline</option>
-                  <option value="online">Online</option>
-                  <option value="both">Online &amp; Offline</option>
-                </Select>
-              </div>
-              <div className="profile-section__field">
-                <label>Weekly availability</label>
-                <AvailabilityScheduleEditor value={scheduleDraft} onChange={setScheduleDraft} />
-              </div>
-
-              <Button
-                type="button"
-                variant="outlined"
-                disabled={savingCounsellorProfile || counsellorProfileUnchanged}
-                onClick={handleSaveCounsellorProfile}
-              >
-                {savingCounsellorProfile ? "Saving…" : "Save details"}
+          <div className="profile-section__toggle-block">
+            <p className="profile-section__subheading">Profile & Bio Details</p>
+            {!showEditProfileForm ? (
+              <Button type="button" variant="outlined" onClick={() => setShowEditProfileForm(true)}>
+                Edit profile &amp; bio
               </Button>
-            </div>
+            ) : (
+              <div className="profile-section__intake">
+                <p className="profile-section__intake-hint">
+                  This builds your public professional profile, shown to users browsing counsellors.
+                </p>
 
-            <div className="profile-section__bio">
-              <label htmlFor="bio">About</label>
-              <textarea
-                id="bio"
-                rows={3}
-                value={bioDraft}
-                onChange={(e) => setBioDraft(e.target.value)}
-                placeholder="Tell users a little about yourself…"
-              />
-              <Button
-                type="button"
-                variant="outlined"
-                disabled={savingBio || bioDraft === (profile.bio ?? "")}
-                onClick={handleSaveBio}
-              >
-                {savingBio ? "Saving…" : "Save bio"}
-              </Button>
-            </div>
+                <div className="profile-section__field">
+                  <label htmlFor="counsellor-name">Name (displayed to users)</label>
+                  <input
+                    id="counsellor-name"
+                    type="text"
+                    value={counsellorNameDraft}
+                    onChange={(e) => setCounsellorNameDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="specialization">Specialization / Title</label>
+                  <input
+                    id="specialization"
+                    type="text"
+                    placeholder="e.g. Counselling Psychologist"
+                    value={specializationDraft}
+                    onChange={(e) => setSpecializationDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="location">Location</label>
+                  <input
+                    id="location"
+                    type="text"
+                    placeholder="e.g. Vishnu College"
+                    value={locationDraft}
+                    onChange={(e) => setLocationDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="experience">Experience</label>
+                  <input
+                    id="experience"
+                    type="text"
+                    placeholder="e.g. 5 years"
+                    value={experienceDraft}
+                    onChange={(e) => setExperienceDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="counsellor-whatsapp">WhatsApp number</label>
+                  <input
+                    id="counsellor-whatsapp"
+                    type="tel"
+                    value={counsellorWhatsappDraft}
+                    onChange={(e) => setCounsellorWhatsappDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="additional-email">Additional email (optional)</label>
+                  <input
+                    id="additional-email"
+                    type="email"
+                    placeholder={profile.email}
+                    value={additionalEmailDraft}
+                    onChange={(e) => setAdditionalEmailDraft(e.target.value)}
+                  />
+                </div>
 
-          </>
+                <p className="profile-section__subheading">Areas of expertise &amp; languages</p>
+                <div className="profile-section__field">
+                  <label htmlFor="expertise">Areas of expertise (comma-separated)</label>
+                  <input
+                    id="expertise"
+                    type="text"
+                    placeholder="Anxiety, Academic Stress, Relationships"
+                    value={expertiseDraft}
+                    onChange={(e) => setExpertiseDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="languages">Languages (comma-separated)</label>
+                  <input
+                    id="languages"
+                    type="text"
+                    placeholder="English, Telugu, Hindi"
+                    value={languagesDraft}
+                    onChange={(e) => setLanguagesDraft(e.target.value)}
+                  />
+                </div>
+
+                <p className="profile-section__subheading">Qualifications &amp; credentials</p>
+                <div className="profile-section__field">
+                  <label htmlFor="education-degree">Education</label>
+                  <input
+                    id="education-degree"
+                    type="text"
+                    placeholder="e.g. M.Sc. in Psychology"
+                    value={educationDegreeDraft}
+                    onChange={(e) => setEducationDegreeDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="education-institution">Institution</label>
+                  <input
+                    id="education-institution"
+                    type="text"
+                    placeholder="University name"
+                    value={educationInstitutionDraft}
+                    onChange={(e) => setEducationInstitutionDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="current-organization">Current organization</label>
+                  <input
+                    id="current-organization"
+                    type="text"
+                    placeholder="Organization / institution"
+                    value={currentOrganizationDraft}
+                    onChange={(e) => setCurrentOrganizationDraft(e.target.value)}
+                  />
+                </div>
+                <p className="profile-section__verified-note">✓ Verified Psychologist</p>
+
+                <p className="profile-section__subheading">My approach</p>
+                <div className="profile-section__field">
+                  <label htmlFor="approach-empathetic">Empathetic</label>
+                  <textarea
+                    id="approach-empathetic"
+                    rows={2}
+                    placeholder="Creates a safe and non-judgmental environment."
+                    value={approachEmpatheticDraft}
+                    onChange={(e) => setApproachEmpatheticDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="approach-evidence">Evidence-based</label>
+                  <textarea
+                    id="approach-evidence"
+                    rows={2}
+                    placeholder="Uses appropriate psychological techniques and structured interventions."
+                    value={approachEvidenceBasedDraft}
+                    onChange={(e) => setApproachEvidenceBasedDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="approach-solution">Solution-focused</label>
+                  <textarea
+                    id="approach-solution"
+                    rows={2}
+                    placeholder="Works collaboratively toward practical and achievable goals."
+                    value={approachSolutionFocusedDraft}
+                    onChange={(e) => setApproachSolutionFocusedDraft(e.target.value)}
+                  />
+                </div>
+
+                <p className="profile-section__subheading">Consultation</p>
+                <div className="profile-section__field">
+                  <label htmlFor="session-type">Session type</label>
+                  <Select
+                    id="session-type"
+                    value={sessionTypeDraft}
+                    onChange={(v) => setSessionTypeDraft(v as "online" | "offline" | "both")}
+                  >
+                    <option value="offline">Offline</option>
+                    <option value="online">Online</option>
+                    <option value="both">Online &amp; Offline</option>
+                  </Select>
+                </div>
+                <div className="profile-section__field">
+                  <label>Weekly availability</label>
+                  <AvailabilityScheduleEditor value={scheduleDraft} onChange={setScheduleDraft} />
+                </div>
+
+                <div className="profile-section__bio">
+                  <label htmlFor="bio">About</label>
+                  <textarea
+                    id="bio"
+                    rows={3}
+                    value={bioDraft}
+                    onChange={(e) => setBioDraft(e.target.value)}
+                    placeholder="Tell users a little about yourself…"
+                  />
+                </div>
+
+                <div className="profile-section__edit-actions">
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    disabled={
+                      savingCounsellorProfile ||
+                      savingBio ||
+                      (counsellorProfileUnchanged && bioDraft === (profile.bio ?? ""))
+                    }
+                    onClick={async () => {
+                      await handleSaveCounsellorProfile();
+                      if (bioDraft !== (profile.bio ?? "")) {
+                        await handleSaveBio();
+                      }
+                      setShowEditProfileForm(false);
+                    }}
+                  >
+                    {savingCounsellorProfile || savingBio ? "Saving…" : "Save details"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    disabled={savingCounsellorProfile || savingBio}
+                    onClick={() => setShowEditProfileForm(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {isUser && (
-          <div className="profile-section__intake">
-            <p className="profile-section__intake-hint">
-              These details are shared with the counsellor once they accept a session request.
-            </p>
-            <div className="profile-section__field">
-              <label htmlFor="intake-name">Name</label>
-              <input
-                id="intake-name"
-                type="text"
-                value={nameDraft}
-                onChange={(e) => setNameDraft(e.target.value)}
-              />
-            </div>
-            <div className="profile-section__field">
-              <label htmlFor="intake-occupation">I am a</label>
-              <Select
-                id="intake-occupation"
-                value={occupationDraft}
-                onChange={(v) => setOccupationDraft(v as "student" | "professional")}
-              >
-                <option value="student">Student</option>
-                <option value="professional">Working professional</option>
-              </Select>
-            </div>
-            <div className="profile-section__field">
-              <label htmlFor="intake-whatsapp">WhatsApp number</label>
-              <input
-                id="intake-whatsapp"
-                type="tel"
-                value={whatsappDraft}
-                onChange={(e) => setWhatsappDraft(e.target.value)}
-              />
-            </div>
-            <Button type="button" variant="outlined" disabled={savingIntake || intakeUnchanged} onClick={handleSaveIntake}>
-              {savingIntake ? "Saving…" : "Save details"}
+          <div className="profile-section__toggle-block">
+            <p className="profile-section__subheading">Personal Details</p>
+            {!showEditProfileForm ? (
+              <Button type="button" variant="outlined" onClick={() => setShowEditProfileForm(true)}>
+                Edit details
+              </Button>
+            ) : (
+              <div className="profile-section__intake">
+                <p className="profile-section__intake-hint">
+                  These details are shared with the counsellor once they accept a session request.
+                </p>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-name">Name</label>
+                  <input
+                    id="intake-name"
+                    type="text"
+                    value={nameDraft}
+                    onChange={(e) => setNameDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-occupation">I am a</label>
+                  <Select
+                    id="intake-occupation"
+                    value={occupationDraft}
+                    onChange={(v) => setOccupationDraft(v as "student" | "professional")}
+                  >
+                    <option value="student">Student</option>
+                    <option value="professional">Working professional</option>
+                  </Select>
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-whatsapp">WhatsApp number</label>
+                  <input
+                    id="intake-whatsapp"
+                    type="tel"
+                    value={whatsappDraft}
+                    onChange={(e) => setWhatsappDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__edit-actions">
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    disabled={savingIntake || intakeUnchanged}
+                    onClick={async () => {
+                      await handleSaveIntake();
+                      setShowEditProfileForm(false);
+                    }}
+                  >
+                    {savingIntake ? "Saving…" : "Save details"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    disabled={savingIntake}
+                    onClick={() => setShowEditProfileForm(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {onOpenFeedback && (
+          <div className="profile-section__password">
+            <p className="profile-section__subheading">Workspace</p>
+            <Button type="button" variant="outlined" onClick={onOpenFeedback}>
+              My feedback
             </Button>
           </div>
         )}

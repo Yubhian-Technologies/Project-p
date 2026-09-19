@@ -199,6 +199,22 @@
   box-shadow: var(--neu-shadow-sunken-focus);
 }
 
+.profile-section__toggle-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-section__toggle-block .md-button {
+  align-self: flex-start;
+}
+
+.profile-section__edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
 .profile-section__intake .md-button {
   align-self: flex-start;
 }

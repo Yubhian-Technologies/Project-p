@@ -57,7 +57,15 @@ function computeStats(profiles: UserProfile[], bookings: Booking[]): CounsellorS
   });
 }
 
-export function TeamManagementSection() {
+interface TeamManagementSectionProps {
+  onOpenTransferRequests?: () => void;
+  onOpenTeamReports?: () => void;
+}
+
+export function TeamManagementSection({
+  onOpenTransferRequests,
+  onOpenTeamReports,
+}: TeamManagementSectionProps) {
   const [stats, setStats] = useState<CounsellorStats[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
   const [feedbackAggregates, setFeedbackAggregates] = useState<Map<string, CounsellorFeedbackAggregate>>(
@@ -104,6 +112,21 @@ export function TeamManagementSection() {
 
   return (
     <div className="team-management">
+      <div className="team-management__header">
+        <h3 className="team-management__heading">Team Management</h3>
+        <div className="team-management__actions">
+          {onOpenTeamReports && (
+            <Button type="button" variant="outlined" onClick={onOpenTeamReports}>
+              Team Reports →
+            </Button>
+          )}
+          {onOpenTransferRequests && (
+            <Button type="button" variant="outlined" onClick={onOpenTransferRequests}>
+              Transfer Requests →
+            </Button>
+          )}
+        </div>
+      </div>
       {stats.length === 0 && <p>No counsellors or heads are set up yet.</p>}
       {stats.map(({ profile, sessionsTaken, usersServed, completed, followedUp, missed, cancelled, avgRating, ratingCount, totalHours }) => {
         const status = computeLiveStatus(profile, scheduledBookings);

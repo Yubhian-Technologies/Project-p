@@ -24,12 +24,9 @@ import "../../styles/bento-grid.css";
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
-  { id: "feedback", label: "My Feedback" },
   { id: "team-management", label: "Team Management" },
   { id: "events", label: "Events & Programs" },
-  { id: "transfer-requests", label: "Transfer Requests" },
   { id: "monthly-reports", label: "Monthly Reports" },
-  { id: "team-reports", label: "Team Reports" },
   { id: "games", label: "Wellness Exercise" },
   { id: "flash-qa", label: "Flash Q/A" },
   { id: "journal", label: "Counselling Journal" },
@@ -92,7 +89,9 @@ export function HeadDashboard() {
       onSelectSection={setActiveSection}
       onNotificationClick={handleNotificationClick}
     >
-      {activeSection === "profile" && <ProfileSection />}
+      {activeSection === "profile" && (
+        <ProfileSection onOpenFeedback={() => setActiveSection("feedback")} />
+      )}
       {activeSection === "requests" && (
         <BookingRequestsSection
           importOpen={showImport}
@@ -101,7 +100,12 @@ export function HeadDashboard() {
         />
       )}
       {activeSection === "feedback" && <CounsellorFeedbackSection />}
-      {activeSection === "team-management" && <TeamManagementSection />}
+      {activeSection === "team-management" && (
+        <TeamManagementSection
+          onOpenTransferRequests={() => setActiveSection("transfer-requests")}
+          onOpenTeamReports={() => setActiveSection("team-reports")}
+        />
+      )}
       {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "transfer-requests" && <TransferRequestsSection />}
       {activeSection === "monthly-reports" && <MonthlyReportsSection />}

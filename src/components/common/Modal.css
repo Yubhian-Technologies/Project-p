@@ -5,9 +5,9 @@
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 92px 16px 40px 16px;
+  padding: 24px 16px;
   z-index: 1000;
   overflow-y: auto;
   box-sizing: border-box;
@@ -20,8 +20,8 @@
   box-shadow: 6px 6px 0px #2B2B2B;
   width: 100%;
   max-width: 540px;
-  max-height: calc(100vh - 132px);
-  margin: 0 auto;
+  max-height: calc(100vh - 48px);
+  margin: auto;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
