@@ -21,7 +21,6 @@ import "../../styles/bento-grid.css";
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
-  { id: "feedback", label: "My Feedback" },
   { id: "work-reports", label: "Work Reports" },
   { id: "events", label: "Events & Programs" },
   { id: "games", label: "Wellness Exercise" },
@@ -77,7 +76,9 @@ export function CounsellorDashboard() {
       onSelectSection={setActiveSection}
       onNotificationClick={handleNotificationClick}
     >
-      {activeSection === "profile" && <ProfileSection />}
+      {activeSection === "profile" && (
+        <ProfileSection onOpenFeedback={() => setActiveSection("feedback")} />
+      )}
       {activeSection === "requests" && (
         <BookingRequestsSection
           importOpen={showImport}

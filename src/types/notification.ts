@@ -16,13 +16,15 @@ export type NotificationType =
   | "reschedule_requested"
   | "reschedule_accepted"
   | "transfer_requested"
-  | "transfer_declined";
+  | "transfer_declined"
+  | "event_added"
+  | "monthly_report_uploaded";
 
 export interface Notification {
   id: string;
   recipientId: string;
   type: NotificationType;
-  bookingId: string;
+  bookingId?: string;
   title: string;
   message: string;
   read: boolean;

@@ -293,7 +293,10 @@ export function EventsCalendarGrid({
                             className="events-calendar__chip"
                             onClick={() => onSelectEvent?.(event)}
                           >
-                            <span className="events-calendar__chip-title">{event.title}</span>
+                            <div className="events-calendar__chip-top">
+                              <span className="events-calendar__chip-title">{event.title}</span>
+                              <span className="events-calendar__chip-view-btn">View Details →</span>
+                            </div>
                             <span className="events-calendar__chip-tags">
                               <span className={`bento-badge bento-badge--${badge.variant} events-calendar__chip-badge`}>
                                 {badge.label}

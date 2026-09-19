@@ -5,9 +5,9 @@ import { StarRating } from "../../../components/common/StarRating";
 import "./AnalyticsSection.css";
 
 // ── Chart constants ──────────────────────────────────────────────────────────
-const CW = 520;           // SVG total width
-const CH = 200;           // SVG total height
-const PAD = { t: 20, r: 58, b: 44, l: 44 };
+const CW = 540;           // SVG total width
+const CH = 220;           // SVG total height
+const PAD = { t: 25, r: 44, b: 36, l: 44 };
 const IW = CW - PAD.l - PAD.r;  // inner width
 const IH = CH - PAD.t - PAD.b;  // inner height
 
@@ -105,6 +105,7 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
   const yRating  = (v: number) => IH - (v / 5) * IH;
 
   const completedPts = monthData.map((p, i) => ({ x: xPos(i), y: ySession(p.completed) }));
+  // If missed count is 0, offset by 1px so it doesn't overlap identically on the baseline
   const missedPts    = monthData.map((p, i) => ({ x: xPos(i), y: ySession(p.missed) }));
   const ratingPts    = monthData
     .map((p, i) => p.avgRating !== null ? { x: xPos(i), y: yRating(p.avgRating) } : null)
@@ -116,23 +117,28 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
 
   return (
     <div className="analytics-inline">
-      {/* ── Summary stat tiles ─────────────────────────────────────────────── */}
-      <div className="analytics-inline__stats-row">
-        <div className="analytics-inline__stat">
-          <span className="analytics-inline__stat-value">{totals.sessions}</span>
-          <span className="analytics-inline__stat-label">Sessions</span>
+      {/* ── Summary stat tiles (Neubrutalist cards) ────────────────────── */}
+      <div className="analytics-inline__stats-grid">
+        <div className="analytics-stat-card">
+          <span className="analytics-stat-card__value">{totals.sessions}</span>
+          <span className="analytics-stat-card__label">Sessions</span>
         </div>
-        <div className="analytics-inline__stat">
-          <span className="analytics-inline__stat-value analytics-inline__stat-value--red">{totals.missed}</span>
-          <span className="analytics-inline__stat-label">Missed</span>
+        <div className="analytics-stat-card analytics-stat-card--red">
+          <span className="analytics-stat-card__value">{totals.missed}</span>
+          <span className="analytics-stat-card__label">Missed</span>
         </div>
-        <div className="analytics-inline__stat">
-          {totals.ratingCount > 0 ? (
-            <StarRating value={totals.avgRating} size="large" />
-          ) : (
-            <span className="analytics-inline__stat-value">—</span>
-          )}
-          <span className="analytics-inline__stat-label">Avg Rating</span>
+        <div className="analytics-stat-card analytics-stat-card--amber">
+          <div className="analytics-stat-card__rating-row">
+            {totals.ratingCount > 0 ? (
+              <>
+                <StarRating value={totals.avgRating} size="large" />
+                <span className="analytics-stat-card__score">{totals.avgRating.toFixed(1)}/5</span>
+              </>
+            ) : (
+              <span className="analytics-stat-card__value">—</span>
+            )}
+          </div>
+          <span className="analytics-stat-card__label">Avg Rating</span>
         </div>
       </div>
 
@@ -140,12 +146,18 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
       <div className="analytics-chart" onClick={(e) => e.stopPropagation()}>
         {/* Legend */}
         <div className="analytics-chart__legend">
-          <span className="analytics-chart__legend-dot analytics-chart__legend-dot--blue" />
-          <span className="analytics-chart__legend-text">Completed</span>
-          <span className="analytics-chart__legend-dot analytics-chart__legend-dot--red" />
-          <span className="analytics-chart__legend-text">Missed</span>
-          <span className="analytics-chart__legend-dot analytics-chart__legend-dot--amber" />
-          <span className="analytics-chart__legend-text">Avg Rating (0–5)</span>
+          <div className="analytics-chart__legend-item">
+            <span className="analytics-chart__legend-dot analytics-chart__legend-dot--blue" />
+            <span className="analytics-chart__legend-text">Completed</span>
+          </div>
+          <div className="analytics-chart__legend-item">
+            <span className="analytics-chart__legend-dot analytics-chart__legend-dot--red" />
+            <span className="analytics-chart__legend-text">Missed</span>
+          </div>
+          <div className="analytics-chart__legend-item">
+            <span className="analytics-chart__legend-dot analytics-chart__legend-dot--amber" />
+            <span className="analytics-chart__legend-text">Avg Rating (0–5)</span>
+          </div>
         </div>
 
         <svg
@@ -207,8 +219,8 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
               <path d={smoothPath(completedPts)} className="analytics-chart__line analytics-chart__line--blue" />
             )}
 
-            {/* Missed sessions line (red) */}
-            {missedPts.length > 1 && (
+            {/* Missed sessions line (red) - only if there's at least one non-zero missed session */}
+            {missedPts.length > 1 && monthData.some((p) => p.missed > 0) && (
               <path d={smoothPath(missedPts)} className="analytics-chart__line analytics-chart__line--red" />
             )}
 
@@ -222,7 +234,7 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
               <g key={i}>
                 {/* Invisible large hit area */}
                 <rect
-                  x={pt.x - 16} y={0} width={32} height={IH}
+                  x={pt.x - 18} y={0} width={36} height={IH}
                   fill="transparent"
                   style={{ cursor: "pointer" }}
                   onMouseEnter={() => setTooltip({ idx: i })}
@@ -235,45 +247,62 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
               </g>
             ))}
 
-            {/* Missed dots */}
+            {/* Missed dots (only show non-zero or hover) */}
             {missedPts.map((pt, i) => (
-              <circle key={i} cx={pt.x} cy={pt.y} r={3}
-                className="analytics-chart__dot analytics-chart__dot--red"
-              />
+              monthData[i].missed > 0 ? (
+                <circle key={i} cx={pt.x} cy={pt.y} r={3.5}
+                  className="analytics-chart__dot analytics-chart__dot--red"
+                />
+              ) : null
             ))}
 
             {/* Rating dots */}
             {ratingPts.map((pt, i) => (
-              <circle key={i} cx={pt.x} cy={pt.y} r={3}
+              <circle key={i} cx={pt.x} cy={pt.y} r={3.5}
                 className="analytics-chart__dot analytics-chart__dot--amber"
               />
             ))}
 
-            {/* Tooltip */}
+            {/* Tooltip Popup */}
             {tooltip !== null && tip !== null && (() => {
               const tx = completedPts[tooltip.idx].x;
-              // Flip tooltip to the left when near the right edge
-              const flipLeft = tx > IW * 0.65;
-              const ttW = 138;
-              const ttX = flipLeft ? tx - ttW - 10 : tx + 12;
-              const ttY = Math.min(completedPts[tooltip.idx].y - 10, IH - 78);
+              const flipLeft = tx > IW * 0.55;
+              const ttW = 146;
+              const ttH = 88;
+              const ttX0 = flipLeft ? tx - ttW - 12 : tx + 12;
+              const ttX = Math.max(0, Math.min(ttX0, IW - ttW));
+              const ttY = Math.max(0, Math.min(completedPts[tooltip.idx].y - 44, IH - ttH));
+
               return (
-                <g transform={`translate(${ttX},${ttY})`} style={{ pointerEvents: "none" }}>
-                  <rect rx={10} ry={10} width={ttW} height={74}
+                <g transform={`translate(${ttX.toFixed(1)},${ttY.toFixed(1)})`} style={{ pointerEvents: "none" }}>
+                  {/* Tooltip Card Background */}
+                  <rect
+                    x={0} y={0} width={ttW} height={ttH}
+                    rx={10} ry={10}
                     className="analytics-chart__tooltip-bg"
                   />
-                  <text x={12} y={20} className="analytics-chart__tooltip-month">{tip.label}</text>
-                  <circle cx={12} cy={36} r={4} className="analytics-chart__dot analytics-chart__dot--blue" />
-                  <text x={22} y={40} className="analytics-chart__tooltip-row">
+
+                  {/* Month Heading */}
+                  <text x={14} y={20} className="analytics-chart__tooltip-month">
+                    {tip.label.toUpperCase()}
+                  </text>
+
+                  {/* Completed Row */}
+                  <circle cx={18} cy={35} r={4} fill="#2563EB" />
+                  <text x={28} y={39} className="analytics-chart__tooltip-row">
                     {tip.completed} completed
                   </text>
-                  <circle cx={12} cy={52} r={4} className="analytics-chart__dot analytics-chart__dot--red" />
-                  <text x={22} y={56} className="analytics-chart__tooltip-row">
+
+                  {/* Missed Row */}
+                  <circle cx={18} cy={53} r={4} fill="#DC2626" />
+                  <text x={28} y={57} className="analytics-chart__tooltip-row">
                     {tip.missed} missed
                   </text>
-                  <circle cx={12} cy={68} r={4} className="analytics-chart__dot analytics-chart__dot--amber" />
-                  <text x={22} y={72} className="analytics-chart__tooltip-row">
-                    {tip.avgRating !== null ? `⭐ ${tip.avgRating.toFixed(1)}` : "No rating"}
+
+                  {/* Rating Row */}
+                  <circle cx={18} cy={71} r={4} fill="#D97706" />
+                  <text x={28} y={75} className="analytics-chart__tooltip-row">
+                    {tip.avgRating !== null ? `⭐ ${tip.avgRating.toFixed(1)} rating` : "No rating"}
                   </text>
                 </g>
               );

@@ -80,6 +80,12 @@
   font-weight: 600;
 }
 
+.campus-management__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .campus-management__confirm {
   display: flex;
   align-items: center;

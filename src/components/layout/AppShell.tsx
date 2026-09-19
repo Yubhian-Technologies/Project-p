@@ -55,7 +55,10 @@ export function AppShell({
               <span className="app-shell__role-badge">{ROLE_LABELS[profile.role]}</span>
             )}
             {profile &&
-              (profile.role === "user" || profile.role === "counsellor" || profile.role === "head") && (
+              (profile.role === "user" ||
+                profile.role === "counsellor" ||
+                profile.role === "head" ||
+                profile.role === "admin") && (
                 <NotificationBell onNotificationClick={onNotificationClick} />
               )}
             <Button variant="outlined" onClick={() => logout()}>

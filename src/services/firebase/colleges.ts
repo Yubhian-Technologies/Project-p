@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, getDocs, query, where } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { db } from "./config";
 import type { College } from "../../types/college";
 
@@ -15,6 +15,10 @@ export async function listColleges(campusId: string): Promise<College[]> {
 export async function createCollege(campusId: string, name: string): Promise<string> {
   const docRef = await addDoc(collegesCollection, { campusId, name, createdAt: Date.now() });
   return docRef.id;
+}
+
+export async function updateCollege(id: string, name: string): Promise<void> {
+  await updateDoc(doc(db, "colleges", id), { name });
 }
 
 export async function deleteCollege(id: string): Promise<void> {

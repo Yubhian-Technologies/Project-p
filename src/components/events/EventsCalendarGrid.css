@@ -136,33 +136,71 @@
 .events-calendar__cell {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 14px;
+  gap: 10px;
+  padding: 16px;
   background: var(--neu-bg, #E8ECF2);
   border-radius: 16px;
+  border: 1.5px solid #2B2B2B;
   box-shadow: var(--neu-shadow-extruded);
-  min-height: 64px;
+  min-height: 72px;
 }
 
 .events-calendar__chip {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+  gap: 8px;
   text-align: left;
-  border: none;
+  border: 1.5px solid #2B2B2B;
   border-radius: 12px;
-  padding: 8px 12px;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-sunken);
+  padding: 12px 14px;
+  background: #FFFFFF;
+  box-shadow: 2.5px 2.5px 0px #2B2B2B;
   cursor: pointer;
   font-family: inherit;
+  transition: all 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.events-calendar__chip:hover {
+  transform: translate(-1.5px, -1.5px);
+  box-shadow: 4px 4px 0px #2B2B2B;
+  background: #F8FAFC;
+}
+
+.events-calendar__chip-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
 }
 
 .events-calendar__chip-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--neu-text-primary, #2D3748);
+  font-size: 14px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.events-calendar__chip-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #7C3AED;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1.5px solid #2B2B2B;
+  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.events-calendar__chip:hover .events-calendar__chip-view-btn {
+  background: #6D28D9;
+  transform: scale(1.02);
 }
 
 .events-calendar__chip-tags {

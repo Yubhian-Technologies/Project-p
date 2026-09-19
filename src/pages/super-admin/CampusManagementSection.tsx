@@ -4,6 +4,7 @@ import type { Campus } from "../../types/campus";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { AddCampusModal } from "./AddCampusModal";
+import { EditCampusModal } from "./EditCampusModal";
 import { CampusDetailSection } from "./CampusDetailSection";
 import "./CampusManagementSection.css";
 
@@ -11,6 +12,7 @@ export function CampusManagementSection() {
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
+  const [editingCampus, setEditingCampus] = useState<Campus | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [selectedCampus, setSelectedCampus] = useState<Campus | null>(null);
@@ -59,7 +61,21 @@ export function CampusManagementSection() {
             <p className="campus-management__date">Created {new Date(campus.createdAt).toLocaleDateString()}</p>
           </div>
 
-          <div onClick={(e) => e.stopPropagation()}>
+          <div className="campus-management__actions" onClick={(e) => e.stopPropagation()}>
+            <Button
+              type="button"
+              variant="outlined"
+              onClick={() => setSelectedCampus(campus)}
+            >
+              View
+            </Button>
+            <Button
+              type="button"
+              variant="outlined"
+              onClick={() => setEditingCampus(campus)}
+            >
+              Edit
+            </Button>
             {confirmingDeleteId === campus.id ? (
               <div className="campus-management__confirm">
                 <span>Delete this campus?</span>
@@ -80,6 +96,13 @@ export function CampusManagementSection() {
       ))}
 
       {addOpen && <AddCampusModal onClose={() => setAddOpen(false)} onCreated={load} />}
+      {editingCampus && (
+        <EditCampusModal
+          campus={editingCampus}
+          onClose={() => setEditingCampus(null)}
+          onUpdated={load}
+        />
+      )}
     </div>
   );
 }

@@ -130,20 +130,6 @@ export function FlashQASection() {
     }
   }
 
-  function handleResetDefaults() {
-    if (
-      window.confirm(
-        "Are you sure you want to reset all 5 questions and answers to default wellness cards?"
-      )
-    ) {
-      setItems(DEFAULT_FLASH_QA);
-      setStatusMessage({
-        type: "success",
-        text: "Reset to default cards. Click 'Save All Changes' to apply to this campus.",
-      });
-    }
-  }
-
   return (
     <div className="flash-qa-manage">
       <div className="flash-qa-manage__header">
@@ -183,14 +169,6 @@ export function FlashQASection() {
           )}
         </div>
         <div className="flash-qa-manage__actions">
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={handleResetDefaults}
-            disabled={saving || loading || loadFailed}
-          >
-            Reset Defaults
-          </Button>
           <Button
             type="button"
             variant="outlined"

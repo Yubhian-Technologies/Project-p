@@ -6,6 +6,7 @@ export interface SidebarSection {
   id: string;
   label: string;
   variant?: "urgent";
+  count?: number;
 }
 
 interface SidebarProps {
@@ -43,7 +44,10 @@ export function Sidebar({ sections, activeSection, onSelectSection, open, onClos
                 onClick={() => select(section.id)}
               >
                 {section.variant === "urgent" && <span className="sidebar__item-dot" aria-hidden="true" />}
-                {section.label}
+                <span className="sidebar__item-label">{section.label}</span>
+                {section.count !== undefined && section.count > 0 && (
+                  <span className="sidebar__item-count">{section.count}</span>
+                )}
               </button>
             </li>
           ))}
