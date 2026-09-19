@@ -3,21 +3,26 @@ import { useAuth } from "../../../hooks/useAuth";
 import {
   createCommunityPost,
   deleteCommunityPost,
-  listCommunityPosts,
+  fetchCommunityFeed,
   listMyCommentIds,
   listMyPostIds,
 } from "../../../services/firebase/community";
-import type { CommunityPost } from "../../../types/communityPost";
+import type { CommunityFeedCursor, CommunityPost } from "../../../types/communityPost";
 import { LeafIcon } from "../../../components/common/icons";
 import { CommunityPostCard } from "./CommunityPostCard";
 import "./CommunitySection.css";
 
+const FEED_PAGE_SIZE = 20;
+
 export function CommunitySection() {
-  const { currentUser } = useAuth();
+  const { currentUser, profile } = useAuth();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [myPostIds, setMyPostIds] = useState<Set<string>>(new Set());
   const [myCommentIds, setMyCommentIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<CommunityFeedCursor | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
@@ -26,20 +31,35 @@ export function CommunitySection() {
 
   async function refresh() {
     if (!currentUser) return;
-    const [allPosts, ownPostIds, ownCommentIds] = await Promise.all([
-      listCommunityPosts(),
+    const [page, ownPostIds, ownCommentIds] = await Promise.all([
+      fetchCommunityFeed(null, FEED_PAGE_SIZE),
       listMyPostIds(currentUser.uid),
       listMyCommentIds(currentUser.uid),
     ]);
-    setPosts(allPosts);
+    setPosts(page.posts);
+    setHasMore(page.hasMore);
+    setNextCursor(page.nextCursor);
     setMyPostIds(ownPostIds);
     setMyCommentIds(ownCommentIds);
     setLoading(false);
   }
 
-  useEffect(() => {
-    refresh();
-  }, [currentUser]);
+useEffect(() => {
+  refresh();
+}, [currentUser]);
+
+  async function handleLoadMore() {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const page = await fetchCommunityFeed(nextCursor, FEED_PAGE_SIZE);
+      setPosts((prev) => [...prev, ...page.posts]);
+      setHasMore(page.hasMore);
+      setNextCursor(page.nextCursor);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   function isGuidelinesAccepted(): boolean {
     if (!currentUser) return false;
@@ -71,10 +91,10 @@ export function CommunitySection() {
   }
 
   async function handlePost() {
-    if (!currentUser || !text.trim() || !guidelinesAgreed) return;
+    if (!currentUser || !text.trim() || !guidelinesAgreed || !profile?.campusId) return;
     setPosting(true);
     try {
-      await createCommunityPost(currentUser.uid, text.trim());
+      await createCommunityPost(currentUser.uid, profile.campusId, text.trim());
       setText("");
       setGuidelinesAgreed(false);
       setComposeOpen(false);
@@ -120,6 +140,16 @@ export function CommunitySection() {
                 onCommentsChanged={refresh}
               />
             ) : null,
+          )}
+          {hasMore && (
+            <button
+              type="button"
+              className="community-section__load-more"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? "Loading…" : "Load more"}
+            </button>
           )}
         </div>
       )}

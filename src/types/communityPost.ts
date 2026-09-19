@@ -4,7 +4,15 @@ export interface CommunityPost {
   likeCount: number;
   commentCount: number;
   createdAt: number;
+  campusId: string;
   pinned?: boolean;
+  authorName?: string;
+  authorEmail?: string;
+}
+
+export interface CommunityFeedCursor {
+  createdAt: number;
+  id: string;
 }
 
 export interface CommunityComment {
@@ -12,4 +20,12 @@ export interface CommunityComment {
   postId: string;
   text: string;
   createdAt: number;
+  authorName?: string;
+  authorEmail?: string;
+}
+
+export interface CommunityPostAuthor {
+  id: string;
+  name: string;
+  email: string;
 }

@@ -1,16 +1,9 @@
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, runTransaction, setDoc } from "firebase/firestore";
-import { db } from "./config";
-import type { CommunityComment, CommunityPost } from "../../types/communityPost";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "./config";
+import type { CommunityComment, CommunityFeedCursor, CommunityPost } from "../../types/communityPost";
 
 const postsCollection = collection(db, "communityPosts");
-
-function toPost(id: string, data: Record<string, unknown>): CommunityPost {
-  return { id, ...data } as CommunityPost;
-}
-
-function toComment(id: string, data: Record<string, unknown>): CommunityComment {
-  return { id, ...data } as CommunityComment;
-}
 
 function authorDocRef(postId: string) {
   return doc(db, "communityPosts", postId, "private", "author");
@@ -32,14 +25,9 @@ function myCommentMarkerRef(uid: string, commentId: string) {
   return doc(db, "users", uid, "myCommunityComments", commentId);
 }
 
-export async function listCommunityPosts(): Promise<CommunityPost[]> {
-  const snapshot = await getDocs(postsCollection);
-  return snapshot.docs.map((d) => toPost(d.id, d.data())).sort((a, b) => b.createdAt - a.createdAt);
-}
-
-// Cross-referenced client-side against listCommunityPosts() so the feed can
-// show a "Delete" button on a user's own anonymous posts without the
-// community data itself ever exposing who wrote what.
+// Cross-referenced client-side against the feed so the UI can show a "Delete"
+// button on a user's own anonymous posts without the community data itself
+// ever exposing who wrote what.
 export async function listMyPostIds(uid: string): Promise<Set<string>> {
   const snapshot = await getDocs(collection(db, "users", uid, "myCommunityPosts"));
   return new Set(snapshot.docs.map((d) => d.id));
@@ -50,9 +38,15 @@ export async function listMyCommentIds(uid: string): Promise<Set<string>> {
   return new Set(snapshot.docs.map((d) => d.id));
 }
 
-export async function createCommunityPost(uid: string, text: string): Promise<string> {
+export async function createCommunityPost(uid: string, campusId: string, text: string): Promise<string> {
   const now = Date.now();
-  const docRef = await addDoc(postsCollection, { text, likeCount: 0, commentCount: 0, createdAt: now });
+  const docRef = await addDoc(postsCollection, {
+    text,
+    likeCount: 0,
+    commentCount: 0,
+    createdAt: now,
+    campusId,
+  });
   await setDoc(authorDocRef(docRef.id), { authorId: uid });
   await setDoc(myPostMarkerRef(uid, docRef.id), { createdAt: now });
   return docRef.id;
@@ -62,11 +56,6 @@ export async function deleteCommunityPost(uid: string, postId: string): Promise<
   await deleteDoc(doc(db, "communityPosts", postId));
   await deleteDoc(authorDocRef(postId));
   await deleteDoc(myPostMarkerRef(uid, postId));
-}
-
-export async function listComments(postId: string): Promise<CommunityComment[]> {
-  const snapshot = await getDocs(collection(db, "communityPosts", postId, "comments"));
-  return snapshot.docs.map((d) => toComment(d.id, d.data())).sort((a, b) => a.createdAt - b.createdAt);
 }
 
 export async function addComment(uid: string, postId: string, text: string): Promise<string> {
@@ -124,4 +113,47 @@ export async function toggleLike(uid: string, postId: string): Promise<boolean> 
     transaction.update(postRef, { likeCount: postSnap.data().likeCount + 1 });
     return true;
   });
+}
+
+// ── Server-side feed (Cloud Functions) ─────────────────────────────────────
+// The feed and comment reads run through callable functions that query the
+// caller's OWN campus only, paginate, and — exclusively for that campus's
+// Head/Counsellor — attach the real author identity. Regular users get the
+// same anonymous posts as before, with zero extra identity reads.
+
+export interface CommunityFeedPage {
+  posts: CommunityPost[];
+  hasMore: boolean;
+  nextCursor: CommunityFeedCursor | null;
+}
+
+export async function fetchCommunityFeed(
+  cursor: CommunityFeedCursor | null,
+  limit = 20,
+): Promise<CommunityFeedPage> {
+  const callable = httpsCallable<{ cursor: CommunityFeedCursor | null; limit: number }, CommunityFeedPage>(
+    functions,
+    "getCommunityFeed",
+  );
+  const result = await callable({ cursor, limit });
+  return result.data;
+}
+
+export interface CommunityCommentFeedPage {
+  comments: CommunityComment[];
+  hasMore: boolean;
+  nextCursor: CommunityFeedCursor | null;
+}
+
+export async function fetchCommentFeed(
+  postId: string,
+  cursor: CommunityFeedCursor | null,
+  limit = 50,
+): Promise<CommunityCommentFeedPage> {
+  const callable = httpsCallable<
+    { postId: string; cursor: CommunityFeedCursor | null; limit: number },
+    CommunityCommentFeedPage
+  >(functions, "getCommentFeed");
+  const result = await callable({ postId, cursor, limit });
+  return result.data;
 }

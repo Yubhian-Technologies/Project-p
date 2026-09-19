@@ -77,9 +77,12 @@ export function CommunityPostCard({
 
       {/* Header */}
       <div className="ig-card__header">
-        <div className="ig-card__avatar">A</div>
+        <div className="ig-card__avatar">{post.authorName ? post.authorName.charAt(0).toUpperCase() : "A"}</div>
         <div className="ig-card__meta">
-          <span className="ig-card__author">Anonymous</span>
+          <span className="ig-card__author">{post.authorName ?? "Anonymous"}</span>
+          {post.authorName && post.authorEmail && (
+            <span className="ig-card__author-email">{post.authorEmail}</span>
+          )}
           <span className="ig-card__time">{timeAgo(post.createdAt)}</span>
         </div>
 
