@@ -357,3 +357,33 @@
   fill: #2D3748;
 }
 
+
+/* Mobile: compact square cards in a swipeable carousel to save vertical space. */
+@media (max-width: 600px) {
+  .analytics-inline__stats-grid {
+    display: flex;
+    grid-template-columns: none;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 6px 10px 2px;
+    margin-right: -4px;
+  }
+
+  .analytics-inline__stats-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .analytics-inline__stats-grid > .analytics-stat-card {
+    flex: 0 0 148px;
+    width: 148px;
+    aspect-ratio: 1 / 1;
+    scroll-snap-align: start;
+    justify-content: center;
+    padding: 14px;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+}

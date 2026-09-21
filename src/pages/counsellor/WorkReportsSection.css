@@ -111,6 +111,57 @@
   line-height: 1.6;
 }
 
+.wr-submit-card__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.wr-submit-card__voice-hint {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.wr-btn--voice {
+  background: #FFFFFF;
+  color: #7C3AED;
+  box-shadow: 2px 2px 0px #2B2B2B;
+}
+
+.wr-btn--voice:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B;
+  background: #F3E8FF;
+}
+
+.wr-btn--voice-active {
+  background: #DC2626;
+  color: #FFFFFF;
+  animation: wr-voice-pulse 1.4s ease-in-out infinite;
+}
+
+.wr-btn--voice-active:hover {
+  background: #B91C1C;
+}
+
+@keyframes wr-voice-pulse {
+  0%, 100% { box-shadow: 2px 2px 0px #2B2B2B; }
+  50% { box-shadow: 2px 2px 0px #2B2B2B, 0 0 0 5px rgba(220, 38, 38, 0.18); }
+}
+
+.wr-submit-card__voice-status {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #DC2626;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .wr-submit-card__actions {
   grid-column: 1 / -1;
   display: flex;
@@ -240,6 +291,52 @@
   overflow-y: auto;
 }
 
+.wr-list__row-info {
+  min-width: 0;
+  flex: 1 1 200px;
+  overflow-wrap: anywhere;
+}
+
+.wr-list__row-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wr-list__row-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.wr-list__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 2px dashed #2B2B2B;
+}
+
+.wr-list__row-actions .wr-btn {
+  justify-content: center;
+}
+
+@media (max-width: 520px) {
+  .wr-list__row {
+    padding: 16px;
+  }
+
+  .wr-list__row-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .wr-list__row-actions .wr-btn--view {
+    grid-column: 1 / -1;
+  }
+}
+
 /* Verified notes block */
 .wr-list__row-notes {
   font-size: 12px;
@@ -339,6 +436,23 @@
   transform: translate(-1px, -1px);
   box-shadow: 3px 3px 0px #2B2B2B;
   background: #DDD6FE;
+}
+
+.wr-btn--danger {
+  background: #FEE2E2;
+  color: #B91C1C;
+  box-shadow: 2px 2px 0px #2B2B2B;
+}
+
+.wr-btn--danger:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B;
+  background: #FECACA;
+}
+
+.wr-btn--danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* ── Modal Details Styling ─────────────────────────────────────────── */

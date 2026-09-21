@@ -33,6 +33,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, []);
 
+  // Tells the intro splash (index.html / main.tsx) that the first auth check is done.
+  useEffect(() => {
+    if (!loading) window.dispatchEvent(new Event("app-ready"));
+  }, [loading]);
+
   async function refreshProfile() {
     if (currentUser) {
       setProfile(await getUserProfile(currentUser.uid));

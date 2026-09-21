@@ -936,3 +936,34 @@ body {
   }
 }
 
+
+/* Mobile: values / features / resources become swipeable carousels (fade + edge hints via useCarouselFade). */
+@media (max-width: 768px) {
+  .landing-values,
+  .features-grid,
+  .resources-grid {
+    display: flex;
+    grid-template-columns: none;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px 8px 14px 4px;
+  }
+
+  .landing-values::-webkit-scrollbar,
+  .features-grid::-webkit-scrollbar,
+  .resources-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .landing-values > *,
+  .features-grid > *,
+  .resources-grid > * {
+    flex: 0 0 min(78%, 300px);
+    min-width: 0;
+    scroll-snap-align: start;
+    box-sizing: border-box;
+  }
+}

@@ -11,6 +11,7 @@ import { CounsellorFeedbackSection } from "./CounsellorFeedbackSection";
 import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAlertsSection";
 import { CommunitySection } from "../user/community/CommunitySection";
 import { GamesSection } from "../user/games/GamesSection";
+import { GamesSummaryCard } from "../user/games/GamesSummaryCard";
 import { JournalSection } from "../user/journal/JournalSection";
 import { CounsellorOverview } from "./CounsellorOverview";
 import { DailyQuoteCard } from "../../components/common/DailyQuoteCard";
@@ -112,6 +113,7 @@ export function CounsellorDashboard() {
           </BentoCard>
           <CounsellorOverview />
           <DailyQuoteCard />
+          <GamesSummaryCard onPlay={() => setActiveSection("games")} />
           <CounsellorHomeActivityOverview onSelectSection={setActiveSection} />
         </div>
       )}

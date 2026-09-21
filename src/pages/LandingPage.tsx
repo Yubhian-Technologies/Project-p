@@ -40,9 +40,6 @@ export function LandingPage() {
                 <Link to="/login" className="btn-glass-subtle">
                   Sign In
                 </Link>
-                <Link to="/signup" className="btn-glass-primary">
-                  Sign Up &rarr;
-                </Link>
               </>
             )}
           </div>

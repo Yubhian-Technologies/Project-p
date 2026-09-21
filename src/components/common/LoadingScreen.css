@@ -1,0 +1,30 @@
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #F9BA32;
+  z-index: 1000;
+}
+
+.loading-screen__logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  box-shadow: 4px 4px 0px #2B2B2B;
+}
+
+.loading-screen__title {
+  margin: 20px 0 0;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #1E1E1E;
+  text-align: center;
+}

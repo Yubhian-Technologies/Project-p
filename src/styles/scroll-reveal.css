@@ -1,0 +1,88 @@
+/* Scroll-reveal: cards rise, scale up and fade in as they enter the viewport
+   (see hooks/useScrollReveal). Replays on every scroll, in both directions. */
+.reveal-pending {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-from, 64px), 0) scale(0.94);
+}
+
+.reveal-in {
+  animation: reveal-up 0.85s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms) both;
+}
+
+@keyframes reveal-up {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-from, 64px), 0) scale(0.94);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-pending {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Carousel cards: fade and scale with horizontal scroll position (hooks/useCarouselFade). */
+.counsellor-overview__kpi-grid > *,
+.head-analytics__kpi-grid > *,
+.aha-kpis > *,
+.analytics-inline__stats-grid > *,
+.landing-values > *,
+.features-grid > *,
+.resources-grid > * {
+  opacity: var(--carousel-o, 1);
+  scale: var(--carousel-s, 1);
+  transition: opacity 0.25s ease-out, scale 0.25s ease-out;
+}
+
+/* Carousel edge hints: a soft fade on any side that still has more cards beyond it. */
+.counsellor-overview__kpi-grid,
+.head-analytics__kpi-grid,
+.aha-kpis,
+.analytics-inline__stats-grid,
+.landing-values,
+.features-grid,
+.resources-grid {
+  --carousel-fade: 44px;
+}
+
+.counsellor-overview__kpi-grid[data-more-right="true"],
+.head-analytics__kpi-grid[data-more-right="true"],
+.aha-kpis[data-more-right="true"],
+.analytics-inline__stats-grid[data-more-right="true"],
+.landing-values[data-more-right="true"],
+.features-grid[data-more-right="true"],
+.resources-grid[data-more-right="true"] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--carousel-fade)), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - var(--carousel-fade)), transparent);
+}
+
+.counsellor-overview__kpi-grid[data-more-left="true"],
+.head-analytics__kpi-grid[data-more-left="true"],
+.aha-kpis[data-more-left="true"],
+.analytics-inline__stats-grid[data-more-left="true"],
+.landing-values[data-more-left="true"],
+.features-grid[data-more-left="true"],
+.resources-grid[data-more-left="true"] {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - var(--carousel-fade)), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - var(--carousel-fade)), transparent);
+}
+
+.counsellor-overview__kpi-grid[data-more-left="true"][data-more-right="true"],
+.head-analytics__kpi-grid[data-more-left="true"][data-more-right="true"],
+.aha-kpis[data-more-left="true"][data-more-right="true"],
+.analytics-inline__stats-grid[data-more-left="true"][data-more-right="true"],
+.landing-values[data-more-left="true"][data-more-right="true"],
+.features-grid[data-more-left="true"][data-more-right="true"],
+.resources-grid[data-more-left="true"][data-more-right="true"] {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--carousel-fade), #000 calc(100% - var(--carousel-fade)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--carousel-fade), #000 calc(100% - var(--carousel-fade)), transparent);
+}
