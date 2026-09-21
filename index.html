@@ -15,9 +15,32 @@
       href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@500,700,900&display=swap"
       rel="stylesheet"
     />
+    <style>
+      html, body { margin: 0; background: #F9BA32; }
+      .splash {
+        position: fixed; inset: 0; z-index: 2000; background: #F9BA32;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        transition: opacity 0.7s ease;
+        will-change: opacity;
+      }
+      .splash--exit { opacity: 0; pointer-events: none; }
+      .splash-logo {
+        width: 96px; height: 96px; border-radius: 50%; object-fit: cover;
+        background: #fff; border: 2px solid #2B2B2B; box-shadow: 4px 4px 0 #2B2B2B;
+      }
+      .splash-title {
+        margin: 20px 0 0; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+        font-size: 22px; font-weight: 800; letter-spacing: -0.01em; color: #1E1E1E; text-align: center;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <!-- Intro splash: fades out to reveal the app once it has mounted (see main.tsx). -->
+    <div id="splash" class="splash">
+      <img src="/favicon.png" alt="Vishnu Wellness Center logo" class="splash-logo" />
+      <p class="splash-title">Vishnu Wellness Center</p>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

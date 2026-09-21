@@ -52,6 +52,13 @@ body,
   background-color: var(--theme-amber);
 }
 
+html,
+body {
+  max-width: 100%;
+  /* clip (not hidden) so the sticky top bar keeps working */
+  overflow-x: clip;
+}
+
 body {
   margin: 0;
   font-family: var(--md-sys-typescale-font-body);

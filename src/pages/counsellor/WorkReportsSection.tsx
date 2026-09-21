@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useSpeechToText } from "../../hooks/useSpeechToText";
 import {
   submitWorkReport,
   listWorkReportsByUid,
@@ -19,7 +20,10 @@ import {
   TrashIcon,
   FileTextIcon,
   EyeIcon,
+  MicIcon,
+  DownloadIcon,
 } from "../../components/common/icons";
+import { downloadWorkReport } from "../../utils/downloadWorkReport";
 import "./WorkReportsSection.css";
 
 const REPORT_TYPES: { value: WorkReportType; label: string }[] = [
@@ -62,6 +66,26 @@ export function WorkReportsSection() {
   const [listError, setListError] = useState("");
   const [selectedReport, setSelectedReport] = useState<WorkReport | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // ── voice-to-text for the report body ──────────────────────────────
+  const voicePrefixRef = useRef("");
+  const { supported: voiceSupported, listening: voiceListening, toggle: toggleVoice } = useSpeechToText(
+    (text) => {
+      const prefix = voicePrefixRef.current;
+      const spacer =
+        prefix && !prefix.endsWith(" ") && !prefix.endsWith("\n") && !prefix.endsWith(".")
+          ? " "
+          : "";
+      setBody(prefix + spacer + text);
+    },
+  );
+
+  function handleVoiceToggle() {
+    if (!voiceListening) {
+      voicePrefixRef.current = body;
+    }
+    toggleVoice();
+  }
 
   async function loadReports() {
     if (!profile?.uid) return;
@@ -211,9 +235,25 @@ export function WorkReportsSection() {
 
           {/* Body */}
           <div className="wr-submit-card__field wr-submit-card__field--full">
-            <label className="wr-submit-card__label" htmlFor="wr-body">
-              Report Content
-            </label>
+            <div className="wr-submit-card__label-row">
+              <label className="wr-submit-card__label" htmlFor="wr-body">
+                Report Content
+              </label>
+              {voiceSupported ? (
+                <button
+                  type="button"
+                  className={`wr-btn wr-btn--voice${voiceListening ? " wr-btn--voice-active" : ""}`}
+                  onClick={handleVoiceToggle}
+                >
+                  <MicIcon />
+                  {voiceListening ? "Stop & Insert" : "Speak to write"}
+                </button>
+              ) : (
+                <span className="wr-submit-card__voice-hint">
+                  Voice input needs Chrome or Edge on desktop.
+                </span>
+              )}
+            </div>
             <textarea
               id="wr-body"
               className="wr-submit-card__textarea"
@@ -222,6 +262,11 @@ export function WorkReportsSection() {
               onChange={(e) => setBody(e.target.value)}
               required
             />
+            {voiceListening && (
+              <p className="wr-submit-card__voice-status">
+                Listening… speak now — your words appear here and you can correct them before submitting.
+              </p>
+            )}
           </div>
 
           {/* Actions */}
@@ -278,35 +323,43 @@ export function WorkReportsSection() {
             {reports.map((r) => (
               <div key={r.id} className="wr-list__row">
                 <div className="wr-list__row-top">
-                  <div>
+                  <div className="wr-list__row-info">
                     <div className="wr-list__row-title">{r.title}</div>
                     <div className="wr-list__row-meta">
-                      <CalendarIcon /> {r.periodLabel}
-                      &nbsp;·&nbsp;
-                      <ClockIcon /> {formatDate(r.submittedAt)}
+                      <span className="wr-list__row-meta-item"><CalendarIcon /> {r.periodLabel}</span>
+                      <span className="wr-list__row-meta-item"><ClockIcon /> {formatDate(r.submittedAt)}</span>
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap", alignItems: "center" }}>
+                  <div className="wr-list__row-badges">
                     <span className="wr-badge wr-badge--type">{typeLabel(r.reportType)}</span>
                     <span className={`wr-badge wr-badge--${r.status}`}>
                       {r.status === "verified" ? <><CheckIcon /> Verified</> : "⏳ Pending"}
                     </span>
-                    <button
-                      type="button"
-                      className="wr-btn wr-btn--view"
-                      onClick={() => setSelectedReport(r)}
-                    >
-                      <EyeIcon /> View Details
-                    </button>
-                    <button
-                      type="button"
-                      className="wr-btn wr-btn--danger"
-                      disabled={deletingId === r.id}
-                      onClick={() => handleDelete(r)}
-                    >
-                      <TrashIcon /> {deletingId === r.id ? "Deleting…" : "Delete"}
-                    </button>
                   </div>
+                </div>
+                <div className="wr-list__row-actions">
+                  <button
+                    type="button"
+                    className="wr-btn wr-btn--view"
+                    onClick={() => setSelectedReport(r)}
+                  >
+                    <EyeIcon /> View Details
+                  </button>
+                  <button
+                    type="button"
+                    className="wr-btn wr-btn--ghost"
+                    onClick={() => void downloadWorkReport(r)}
+                  >
+                    <DownloadIcon /> Download
+                  </button>
+                  <button
+                    type="button"
+                    className="wr-btn wr-btn--danger"
+                    disabled={deletingId === r.id}
+                    onClick={() => handleDelete(r)}
+                  >
+                    <TrashIcon /> {deletingId === r.id ? "Deleting…" : "Delete"}
+                  </button>
                 </div>
               </div>
             ))}
@@ -369,18 +422,18 @@ export function WorkReportsSection() {
             <div className="wr-modal__actions">
               <button
                 type="button"
+                className="wr-btn wr-btn--view"
+                onClick={() => void downloadWorkReport(selectedReport)}
+              >
+                <DownloadIcon /> Download
+              </button>
+              <button
+                type="button"
                 className="wr-btn wr-btn--danger"
                 disabled={deletingId === selectedReport.id}
                 onClick={() => handleDelete(selectedReport)}
               >
                 <TrashIcon /> {deletingId === selectedReport.id ? "Deleting…" : "Delete Report"}
-              </button>
-              <button
-                type="button"
-                className="wr-btn wr-btn--ghost"
-                onClick={() => setSelectedReport(null)}
-              >
-                Close
               </button>
             </div>
           </div>
