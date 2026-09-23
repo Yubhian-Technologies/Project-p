@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { getUserProfile } from "../../services/firebase/firestore";
 import {
   listBookingsForCounsellor,
   listBookableProfiles,
@@ -21,6 +22,7 @@ import {
   rateUser,
   getFollowUpHistory,
   notifyHeadTransferSessionCancelled,
+  suggestSsiTest,
 } from "../../services/firebase/bookings";
 import type { Booking } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
@@ -61,6 +63,7 @@ interface BookingRequestsSectionProps {
 export function BookingRequestsSection({ importOpen = false, onImportClose, initialSelectedId }: BookingRequestsSectionProps) {
   const { currentUser, profile } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [userNames, setUserNames] = useState<Map<string, string>>(new Map());
   const [transferCandidates, setTransferCandidates] = useState<UserProfile[]>([]);
   const [campusHead, setCampusHead] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,6 +82,21 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
       listBookableProfiles(),
     ]);
     setBookings(myBookings);
+
+    // Resolve each student's own display name (if they've set one) so the
+    // list can show that instead of their email — offline-imported "clients"
+    // have a synthetic id and no real profile, so they're skipped.
+    const uniqueUserIds = [...new Set(myBookings.map((b) => b.userId))].filter(
+      (id) => !id.startsWith("offline:"),
+    );
+    const profiles = await Promise.all(uniqueUserIds.map((id) => getUserProfile(id)));
+    const nameMap = new Map<string, string>();
+    uniqueUserIds.forEach((id, i) => {
+      const name = profiles[i]?.displayName?.trim();
+      if (name) nameMap.set(id, name);
+    });
+    setUserNames(nameMap);
+
     setTransferCandidates(allBookable.filter((p) => p.uid !== currentUser.uid));
     setCampusHead(
       allBookable.find((p) => p.role === "head" && p.campusId === profile?.campusId && p.uid !== currentUser.uid) ??
@@ -150,7 +168,7 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
         (newRequests.length === 0 ? (
           <p>No new requests.</p>
         ) : (
-          newRequests.map((b) => <RequestCard key={b.id} booking={b} onClick={() => setSelectedId(b.id)} />)
+          newRequests.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
         ))}
 
       {activeTab === "upcoming" && (
@@ -161,7 +179,7 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
               <p>No follow-up sessions.</p>
             ) : (
               upcomingFollowUps.map((b) => (
-                <RequestCard key={b.id} booking={b} onClick={() => setSelectedId(b.id)} />
+                <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />
               ))
             )}
           </div>
@@ -171,7 +189,7 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
               <p>No new sessions.</p>
             ) : (
               upcomingNewSessions.map((b) => (
-                <RequestCard key={b.id} booking={b} onClick={() => setSelectedId(b.id)} />
+                <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />
               ))
             )}
           </div>
@@ -182,14 +200,14 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
         (completed.length === 0 ? (
           <p>No completed sessions yet.</p>
         ) : (
-          completed.map((b) => <RequestCard key={b.id} booking={b} onClick={() => setSelectedId(b.id)} />)
+          completed.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
         ))}
 
       {activeTab === "missed" &&
         (missed.length === 0 ? (
           <p>No missed sessions.</p>
         ) : (
-          missed.map((b) => <RequestCard key={b.id} booking={b} onClick={() => setSelectedId(b.id)} />)
+          missed.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
         ))}
 
       {selectedBooking && (
@@ -200,6 +218,7 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
           viewerRole={profile?.role === "head" ? "head" : "counsellor"}
           onClose={() => setSelectedId(null)}
           onViewSummary={showViewSummary ? () => handleViewSummary(selectedBooking) : undefined}
+          onSuggestSsi={() => suggestSsiTest(selectedBooking)}
           onAcceptSlot={async (chosenAt) => {
             await acceptProposedSlot(selectedBooking, chosenAt);
             await refresh();

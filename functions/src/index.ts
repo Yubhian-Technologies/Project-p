@@ -326,3 +326,155 @@ export const getCommentFeed = onCall<{
     nextCursor: last ? { createdAt: last.data().createdAt as number, id: last.id } : null,
   };
 });
+
+// A counsellor's public rating/reviews, shown on their profile before anyone
+// books them. `bookings` docs are private to their two parties + staff (so a
+// stranger can't learn who someone else booked or what was discussed) — a
+// direct client-side query for "all of this counsellor's completed sessions"
+// is rejected outright by the security rules, for anyone but the counsellor
+// themselves or staff. This runs with admin access and hands back only the
+// rating and review text, never the booking's owner or any other detail.
+export const getCounsellorReviews = onCall<{ counsellorId: string }>(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+  const counsellorId = request.data?.counsellorId;
+  if (!counsellorId || typeof counsellorId !== "string") {
+    throw new HttpsError("invalid-argument", "counsellorId is required.");
+  }
+
+  const snapshot = await db
+    .collection("bookings")
+    .where("counsellorId", "==", counsellorId)
+    .where("status", "==", "completed")
+    .get();
+
+  const reviews = snapshot.docs
+    .map((docRef) => docRef.data())
+    .filter((b) => b.outcome !== "missed" && typeof b.userRatingOfCounsellor === "number")
+    .map((b) => ({
+      rating: b.userRatingOfCounsellor as number,
+      reviewText: typeof b.userReviewText === "string" ? b.userReviewText : "",
+    }));
+
+  return { reviews };
+});
+
+// Session length for a normal (non-emergency, non-offline-import) booking —
+// mirrors SESSION_DURATION_MINUTES in src/services/firebase/bookings.ts.
+const SESSION_DURATION_MINUTES = 90;
+const ACTIVE_BOOKING_STATUSES = ["pending", "accepted", "scheduled"];
+
+interface BookingIntakeInput {
+  username: string;
+  occupation: "student" | "professional";
+  whatsappNumber: string;
+  issue: string;
+}
+
+// Creates a normal session request. This is the ONLY way a client can create
+// a non-emergency booking now — firestore.rules no longer lets a client
+// write bookings/{id} directly with userId == themselves for anything but an
+// emergency SOS (see createEmergencySosBooking, deliberately untouched and
+// still a direct client write). The one thing this adds that a rules-only
+// check can't: refusing a second active booking for the same student. A
+// disabled button in the UI was the only thing enforcing that before, so it
+// only held as long as nobody had two tabs open, a stale page, or any other
+// path that skipped the button.
+export const createBooking = onCall<{
+  counsellorId: string;
+  counsellorEmail: string;
+  intake: BookingIntakeInput;
+  proposedSlots: [number, number];
+  campusId?: string;
+}>(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+
+  const data = request.data;
+  const intake = data?.intake;
+  if (
+    !data?.counsellorId ||
+    typeof data.counsellorId !== "string" ||
+    !data.counsellorEmail ||
+    typeof data.counsellorEmail !== "string" ||
+    !Array.isArray(data.proposedSlots) ||
+    data.proposedSlots.length !== 2 ||
+    !data.proposedSlots.every((t) => typeof t === "number") ||
+    !intake ||
+    !intake.username?.trim() ||
+    !["student", "professional"].includes(intake.occupation) ||
+    !intake.whatsappNumber?.trim() ||
+    !intake.issue?.trim()
+  ) {
+    throw new HttpsError("invalid-argument", "Missing or invalid booking details.");
+  }
+
+  const callerSnap = await db.collection("users").doc(callerUid).get();
+  const caller = callerSnap.data();
+  if (!caller) {
+    throw new HttpsError("unauthenticated", "Your account profile was not found.");
+  }
+  const callerEmail = (caller.email as string) || "";
+
+  // One active booking per student, same rule the UI already tried to show —
+  // now actually guaranteed. A "scheduled" session whose time has already
+  // passed doesn't block a new one (mirrors isSessionEndedPending()
+  // client-side — it just hasn't been formally closed yet).
+  const existing = await db
+    .collection("bookings")
+    .where("userId", "==", callerUid)
+    .where("status", "in", ACTIVE_BOOKING_STATUSES)
+    .get();
+
+  const now = Date.now();
+  const stillActive = existing.docs.some((docRef) => {
+    const b = docRef.data();
+    if (b.status === "scheduled" && typeof b.scheduledAt === "number") {
+      const durationMinutes = typeof b.durationMinutes === "number" ? b.durationMinutes : SESSION_DURATION_MINUTES;
+      return now < b.scheduledAt + durationMinutes * 60000;
+    }
+    return true;
+  });
+
+  if (stillActive) {
+    throw new HttpsError(
+      "already-exists",
+      "You already have an active booking. Cancel it or wait for it to finish before booking another.",
+    );
+  }
+
+  const bookingRef = db.collection("bookings").doc();
+  await bookingRef.set({
+    userId: callerUid,
+    userEmail: callerEmail,
+    counsellorId: data.counsellorId,
+    counsellorEmail: data.counsellorEmail,
+    status: "pending",
+    durationMinutes: SESSION_DURATION_MINUTES,
+    proposedSlots: data.proposedSlots,
+    ...(data.campusId ? { campusId: data.campusId } : {}),
+    createdAt: now,
+    updatedAt: now,
+  });
+  await bookingRef.collection("private").doc("details").set({
+    username: intake.username.trim(),
+    occupation: intake.occupation,
+    whatsappNumber: intake.whatsappNumber.trim(),
+    issue: intake.issue.trim(),
+  });
+  await db.collection("notifications").add({
+    recipientId: data.counsellorId,
+    type: "booking_requested",
+    bookingId: bookingRef.id,
+    title: "New session request",
+    message: `${callerEmail} requested a session with you`,
+    read: false,
+    createdAt: now,
+  });
+
+  return { bookingId: bookingRef.id };
+});
+

@@ -4,18 +4,21 @@ import "./RequestCard.css";
 
 interface RequestCardProps {
   booking: Booking;
+  /** The student's own display name, if they've set one — falls back to their email. */
+  displayName?: string;
   onClick: () => void;
 }
 
-export function RequestCard({ booking, onClick }: RequestCardProps) {
+export function RequestCard({ booking, displayName, onClick }: RequestCardProps) {
   const isTransfer = booking.status === "pending" && !!booking.transferredFrom;
+  const name = displayName?.trim() || booking.userEmail;
 
   return (
     <Card className="request-card request-card--collapsed" onClick={onClick}>
       <p className="request-card__name">
-        {booking.userEmail}
+        {name}
         {booking.sessionMode === "offline" && (
-          <span className="request-card__offline-tag">Offline</span>
+          <span className="request-card__offline-inline"> (Offline)</span>
         )}
         {isTransfer && (
           <span className="request-card__status request-card__status--transfer" style={{ marginLeft: 8 }}>

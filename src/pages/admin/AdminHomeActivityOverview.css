@@ -578,7 +578,7 @@
 }
 
 /* Mobile: compact square cards in a swipeable carousel to save vertical space. */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .aha-kpis {
     display: flex;
     grid-template-columns: none;
@@ -610,7 +610,7 @@
 }
 
 /* Mobile: keep the whole card inside the screen; header wraps, table fits or scrolls inside its own box. */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .aha-overview,
   .aha-grid,
   .aha-card {
@@ -640,5 +640,22 @@
   .aha-table th {
     font-size: 10.5px;
     letter-spacing: 0.03em;
+  }
+
+  .aha-header {
+    padding: 12px 16px;
+  }
+
+  .aha-header__title {
+    font-size: 15px;
+  }
+
+  .aha-card__title {
+    font-size: 14px;
+  }
+
+  .aha-loading,
+  .aha-empty {
+    padding: 18px;
   }
 }

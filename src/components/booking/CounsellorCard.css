@@ -2,8 +2,18 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  width: 100%;
-  max-width: 320px;
+  flex: 0 0 min(85vw, 320px);
+  width: min(85vw, 320px);
+  /* A fixed height (not just the bio's line-clamp below) is what actually
+     makes every card the same size regardless of how much a counsellor
+     wrote — line-clamp only stops a long bio overflowing, a short one still
+     leaves the card shorter unless the card's own height is fixed too. */
+  height: 300px;
+  /* Flex items default to a content-based minimum size that otherwise wins
+     over an explicit height — this is what makes that height actually stick. */
+  min-height: 0;
+  overflow: hidden;
+  scroll-snap-align: start;
   background: #F8F4EA;
   border: 2px solid #2B2B2B;
   border-radius: 0px;
@@ -12,6 +22,36 @@
   box-shadow: 3px 3px 0px #2B2B2B;
   cursor: pointer;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+
+/* Below 640px (phones — not just very narrow ones), cards are all the same
+   compact size instead of scaled-down desktop cards. */
+@media (max-width: 768px) {
+  .counsellor-card {
+    gap: 12px;
+    padding: 16px;
+    flex-basis: 82vw;
+    width: 82vw;
+    height: 240px;
+  }
+
+  .counsellor-card__bio {
+    -webkit-line-clamp: 2;
+  }
+
+  .counsellor-card .avatar--large {
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+  }
+
+  .counsellor-card__header {
+    gap: 12px;
+  }
+
+  .counsellor-card__footer {
+    padding-top: 4px;
+  }
 }
 
 .counsellor-card:hover {
@@ -45,6 +85,11 @@
   font-size: 13px;
   color: var(--neu-text-body, #4A5568);
   line-height: 1.6;
+  /* Clamped so a long bio can't make one card taller than the rest. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 
 .counsellor-card__footer {

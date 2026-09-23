@@ -67,7 +67,7 @@
   box-sizing: border-box;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .md-timepicker__popup {
     width: min(240px, calc(100vw - 32px));
   }

@@ -45,6 +45,7 @@ interface RequestDetailModalProps {
   onCloseMissed: (reason: string) => Promise<void>;
   onRateUser: (rating: number, note: string) => void;
   onViewSummary?: () => void;
+  onSuggestSsi?: () => Promise<void> | void;
   onClose: () => void;
 }
 
@@ -67,6 +68,7 @@ export function RequestDetailModal({
   onCloseMissed,
   onRateUser,
   onViewSummary,
+  onSuggestSsi,
   onClose,
 }: RequestDetailModalProps) {
   const { currentUser } = useAuth();
@@ -98,6 +100,8 @@ export function RequestDetailModal({
   const [missedReason, setMissedReason] = useState("");
   const [ssiResult, setSsiResult] = useState<SsiResult | null>(null);
   const [showSsiResult, setShowSsiResult] = useState(false);
+  const [ssiSuggesting, setSsiSuggesting] = useState(false);
+  const [ssiSuggested, setSsiSuggested] = useState(false);
 
   useEffect(() => {
     getBookingIntake(booking.id).then((data) => {
@@ -114,6 +118,17 @@ export function RequestDetailModal({
   const sessionStarted = booking.scheduledAt !== undefined && now >= booking.scheduledAt;
   const sessionEnded =
     booking.scheduledAt !== undefined && now >= booking.scheduledAt + booking.durationMinutes * 60000;
+
+  async function handleSuggestSsi() {
+    if (!onSuggestSsi || ssiSuggesting || ssiSuggested) return;
+    setSsiSuggesting(true);
+    try {
+      await onSuggestSsi();
+      setSsiSuggested(true);
+    } finally {
+      setSsiSuggesting(false);
+    }
+  }
 
   async function handleSaveSummary() {
     setSavingSummary(true);
@@ -453,6 +468,18 @@ export function RequestDetailModal({
             SSI Test Result
           </Button>
         )}
+        {onSuggestSsi &&
+          !ssiResult &&
+          (booking.status === "accepted" || (booking.status === "scheduled" && !sessionEnded)) && (
+            <Button
+              type="button"
+              variant="outlined"
+              disabled={ssiSuggesting || ssiSuggested}
+              onClick={handleSuggestSsi}
+            >
+              {ssiSuggested ? "SSI Test Suggested ✓" : ssiSuggesting ? "Suggesting…" : "Suggest SSI Test"}
+            </Button>
+          )}
       </div>
 
       {showChatModal && currentUser && (
@@ -596,7 +623,7 @@ export function RequestDetailModal({
         </div>
       )}
 
-      {booking.status === "accepted" && (
+      {booking.status === "accepted" && !showCancelReason && (
         <div className="request-card__schedule">
           <label htmlFor={`schedule-${booking.id}`}>Pick a session time ({SESSION_DURATION_LABEL})</label>
           <DateTimePicker
@@ -614,7 +641,7 @@ export function RequestDetailModal({
         </div>
       )}
 
-      {booking.status === "scheduled" && (
+      {booking.status === "scheduled" && !showCancelReason && (
         <div className="request-card__schedule">
           <p className="request-card__scheduled-time">
             Scheduled for {booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleString() : "—"} (

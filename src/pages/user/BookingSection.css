@@ -24,10 +24,40 @@
   margin-bottom: 24px;
 }
 
+@media (max-width: 768px) {
+  .booking-section {
+    gap: 24px;
+  }
+
+  .booking-section__heading {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .booking-section__notice {
+    padding: 14px 16px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    box-shadow: 2px 2px 0px #2B2B2B;
+  }
+}
+
+/* Horizontal, swipeable carousel — on every screen size, not just mobile,
+   so the counsellor list scrolls sideways instead of stacking or wrapping. */
 .booking-section__grid {
   display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 4px 14px 0;
+}
+
+.booking-section__grid::-webkit-scrollbar {
+  display: none;
 }
 
 .booking-section__bookings {
@@ -54,6 +84,68 @@
 .booking-section__booking-row:hover {
   box-shadow: 5px 5px 0px #2B2B2B;
   transform: translate(-2px, -2px);
+}
+
+.booking-section__booking-row--collapsed {
+  cursor: pointer;
+  padding: 18px 24px;
+  flex-wrap: nowrap;
+}
+
+.booking-section__row-email {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.booking-section__row-right--pinned {
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+
+/* Phones — matches the breakpoint the rest of this page's mobile styling uses. */
+@media (max-width: 768px) {
+  .booking-section__booking-row--collapsed {
+    flex-wrap: wrap;
+    padding: 14px 16px;
+    gap: 8px;
+  }
+
+  .booking-section__row-email {
+    white-space: normal;
+    flex-basis: 100%;
+    font-size: 14px;
+  }
+
+  .booking-section__row-right--pinned {
+    margin-left: auto;
+    gap: 8px;
+  }
+
+  .booking-section__row-right--pinned .booking-section__status {
+    padding: 4px 10px;
+    font-size: 10px;
+  }
+
+  .booking-section__row-right--pinned .md-button {
+    padding: 6px 12px;
+    font-size: 12px;
+    box-shadow: 2px 2px 0px #2B2B2B;
+  }
+
+  .booking-section__row-right--pinned .md-button:hover {
+    box-shadow: 3px 3px 0px #2B2B2B;
+  }
+}
+
+/* ── Booking Details popup ───────────────────────────────────────────── */
+.booking-section__detail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
 }
 
 .booking-section__status {

@@ -359,7 +359,7 @@
 
 
 /* Mobile: compact square cards in a swipeable carousel to save vertical space. */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .analytics-inline__stats-grid {
     display: flex;
     grid-template-columns: none;

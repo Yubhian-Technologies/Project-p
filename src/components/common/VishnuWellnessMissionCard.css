@@ -223,7 +223,7 @@
   font-weight: 600;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .vwm-card {
     padding: 20px;
   }

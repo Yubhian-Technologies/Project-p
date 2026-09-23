@@ -21,7 +21,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .head-analytics__kpi-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -68,7 +68,7 @@
   height: 18px;
 }
 
-.head-analytics__kpi-icon-badge--teal { color: #8B5CF6; background: rgba(139, 92, 246, 0.12); }
+.head-analytics__kpi-icon-badge--teal { color: #2563EB; background: rgba(37, 99, 235, 0.12); }
 .head-analytics__kpi-icon-badge--purple { color: #8B5CF6; background: rgba(139, 92, 246, 0.12); }
 .head-analytics__kpi-icon-badge--green { color: #10B981; background: rgba(16, 185, 129, 0.12); }
 .head-analytics__kpi-icon-badge--orange { color: #F9BA32; background: rgba(249, 186, 50, 0.16); }
@@ -82,7 +82,7 @@
   text-transform: uppercase;
 }
 
-.head-analytics__kpi-card--teal .head-analytics__kpi-label { color: #8B5CF6; }
+.head-analytics__kpi-card--teal .head-analytics__kpi-label { color: #2563EB; }
 .head-analytics__kpi-card--purple .head-analytics__kpi-label { color: #8B5CF6; }
 .head-analytics__kpi-card--green .head-analytics__kpi-label { color: #10B981; }
 .head-analytics__kpi-card--orange .head-analytics__kpi-label { color: #D97706; }
@@ -181,21 +181,21 @@
 }
 
 .head-analytics__path--appt {
-  stroke: #F9BA32;
+  stroke: #1E3A8A;
 }
 
 .head-analytics__path--check {
-  stroke: #0D9488;
+  stroke: #3B82F6;
 }
 
 .head-analytics__dot--appt {
-  fill: #F9BA32;
+  fill: #1E3A8A;
   stroke: #ffffff;
   stroke-width: 2;
 }
 
 .head-analytics__dot--check {
-  fill: #0D9488;
+  fill: #3B82F6;
   stroke: #ffffff;
   stroke-width: 2;
 }
@@ -251,13 +251,13 @@
 }
 
 .head-analytics__legend-dot--appt {
-  background: #F9BA32;
-  box-shadow: 0 0 8px rgba(234, 88, 12, 0.45);
+  background: #1E3A8A;
+  box-shadow: 0 0 8px rgba(30, 58, 138, 0.45);
 }
 
 .head-analytics__legend-dot--check {
-  background: #0D9488;
-  box-shadow: 0 0 8px rgba(13, 148, 136, 0.45);
+  background: #3B82F6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.45);
 }
 
 .head-analytics__legend-dot--complete {
@@ -499,7 +499,7 @@
   letter-spacing: -0.01em;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .head-analytics__caseload-name {
     min-width: 88px;
     font-size: 11.5px;
@@ -507,7 +507,7 @@
 }
 
 /* Mobile: compact square KPI cards in a swipeable carousel to save vertical space. */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .head-analytics__kpi-grid {
     display: flex;
     grid-template-columns: none;
@@ -572,5 +572,14 @@
   .head-analytics__kpi-grid .head-analytics__kpi-gauge {
     margin-top: 0;
     justify-content: flex-start;
+  }
+
+  .head-analytics__card {
+    padding: 16px 18px;
+    gap: 12px;
+  }
+
+  .head-analytics__title {
+    font-size: 16px;
   }
 }

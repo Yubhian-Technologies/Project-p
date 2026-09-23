@@ -1,25 +1,21 @@
+/* Sized/shaped like the rest of the app's modals (Modal.css sets the base
+   border, radius, shadow and background) — this only adds the wide, two-column
+   layout this profile needs. */
 .counsellor-profile-modal {
   max-width: 860px !important;
   width: 100%;
   height: min(580px, 85vh);
-  background: var(--neu-bg, #E8ECF2) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border: none !important;
-  box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.35), 0 8px 24px rgba(15, 23, 42, 0.2) !important;
   padding: 0 !important;
   display: flex;
   flex-direction: column;
   overflow: hidden !important;
-  border-radius: 28px !important;
 }
 
 .counsellor-profile-modal .modal__header {
   flex-shrink: 0;
   margin-bottom: 0;
   padding: 20px 28px;
-  border-bottom: none;
-  box-shadow: var(--neu-shadow-extruded-sm);
+  border-bottom: var(--sketch-border);
 }
 
 .counsellor-profile-modal .modal__body {
@@ -53,7 +49,6 @@
   flex-shrink: 0;
   width: 160px;
   padding-right: 28px;
-  border-right: none;
 }
 
 .counsellor-profile__right {
@@ -70,10 +65,9 @@
   flex-shrink: 0;
   display: flex;
   justify-content: center;
-  border-top: none;
+  border-top: var(--sketch-border);
   padding: 18px 28px;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-extruded-sm);
+  background: #F8F4EA;
 }
 
 .counsellor-profile__footer .md-button {
@@ -86,36 +80,46 @@
   font-family: var(--md-sys-typescale-font-display);
   font-weight: 800;
   font-size: 18px;
-  color: var(--neu-text-primary, #2D3748);
+  color: #0F172A;
 }
 
 .counsellor-profile__specialization {
   margin: 0;
   font-size: 14px;
-  color: var(--neu-text-muted, #718096);
+  color: #64748B;
   font-weight: 600;
 }
 
+/* ── Status badge / expertise chips / verified tag ──────────────────────
+   Bordered tags with a hard offset shadow, like every other badge in the
+   app, instead of the old borderless soft-shadow pill (whose shadow poked
+   out past the rounded edge with nothing to contain it). */
 .counsellor-profile__badge {
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
   font-size: 12px;
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  box-shadow: var(--neu-shadow-extruded-sm);
-  background: var(--neu-bg, #E8ECF2);
+  font-weight: 800;
+  padding: 5px 14px;
+  border-radius: var(--sketch-radius) !important;
+  border: 1.5px solid #2B2B2B;
+  box-shadow: var(--sketch-shadow-sm);
+  background: #FFFFFF;
 }
 
 .counsellor-profile__badge--available {
-  color: #16a34a;
+  color: #065F46;
+  background: #D1FAE5;
 }
 
 .counsellor-profile__badge--unavailable {
-  color: #dc2626;
+  color: #B91C1C;
+  background: #FEE2E2;
 }
 
 .counsellor-profile__badge--in-session {
-  color: #ea580c;
+  color: #C2410C;
+  background: #FFEDD5;
 }
 
 .counsellor-profile__field {
@@ -128,7 +132,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--neu-text-muted, #718096);
+  color: #64748B;
   margin-bottom: 6px;
 }
 
@@ -136,13 +140,13 @@
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
-  color: var(--neu-text-body, #4A5568);
+  color: #334155;
 }
 
 .counsellor-profile__location {
   margin: 0;
   font-size: 13px;
-  color: var(--neu-text-muted, #718096);
+  color: #64748B;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -155,8 +159,8 @@
 }
 
 .counsellor-profile__section {
-  border-top: none;
-  padding-top: 14px;
+  border-top: 2px dashed #2B2B2B;
+  padding-top: 16px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -167,14 +171,14 @@
   font-family: var(--md-sys-typescale-font-display);
   font-size: 16px;
   font-weight: 800;
-  color: var(--neu-text-primary, #2D3748);
+  color: #0F172A;
 }
 
 .counsellor-profile__section-body {
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
-  color: var(--neu-text-body, #4A5568);
+  color: #334155;
 }
 
 .counsellor-profile__chips {
@@ -184,18 +188,18 @@
 }
 
 .counsellor-profile__chip {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--neu-accent-primary, #2563EB);
-  background: var(--neu-bg, #E8ECF2);
-  border: none;
-  box-shadow: var(--neu-shadow-extruded-sm);
-  border-radius: 9999px;
-  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #5B21B6;
+  background: #EDE9FE;
+  border: 1.5px solid #2B2B2B;
+  box-shadow: var(--sketch-shadow-sm);
+  border-radius: var(--sketch-radius) !important;
+  padding: 5px 14px;
 }
 
 .counsellor-profile__field-value--muted {
-  color: var(--neu-text-muted, #718096);
+  color: #64748B;
   font-size: 13px;
 }
 
@@ -204,13 +208,14 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
-  color: #16a34a;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-extruded-sm);
-  border-radius: 9999px;
-  padding: 6px 16px;
+  color: #065F46;
+  background: #D1FAE5;
+  border: 1.5px solid #2B2B2B;
+  box-shadow: var(--sketch-shadow-sm);
+  border-radius: var(--sketch-radius) !important;
+  padding: 5px 14px;
 }
 
 .counsellor-profile__approach-grid {
@@ -220,10 +225,10 @@
 }
 
 .counsellor-profile__approach-card {
-  background: var(--neu-bg, #E8ECF2);
-  border: none;
-  border-radius: 18px;
-  box-shadow: var(--neu-shadow-sunken-sm);
+  background: #F8F4EA;
+  border: var(--sketch-border);
+  border-radius: var(--sketch-radius) !important;
+  box-shadow: var(--sketch-shadow-sm);
   padding: 16px;
 }
 
@@ -231,76 +236,62 @@
   margin: 0 0 6px 0;
   font-size: 13px;
   font-weight: 800;
-  color: var(--neu-accent-primary, #2563EB);
+  color: #5B21B6;
 }
 
 .counsellor-profile__approach-card p {
   margin: 0;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--neu-text-body, #4A5568);
+  color: #334155;
 }
 
-.counsellor-profile__reviews {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.counsellor-profile__review {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 14px 16px;
-  background: var(--neu-bg, #E8ECF2);
-  border: none;
-  box-shadow: var(--neu-shadow-sunken-sm);
-  border-radius: 18px;
-}
-
-.counsellor-profile__review-text {
-  margin: 0;
-  font-size: 13px;
-  font-style: italic;
-  color: var(--neu-text-body, #4A5568);
-  line-height: 1.6;
-}
-
-.counsellor-profile__review-author {
-  font-size: 12px;
-  color: var(--neu-text-muted, #718096);
-  font-weight: 700;
-}
-
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  /* The card itself stays put on screen — only the content inside it scrolls.
+     (Before, the whole panel — including the header and the Book Session
+     button — scrolled as one block, so the card visibly moved/shrank as you
+     read through it.) */
   .counsellor-profile-modal {
-    height: auto;
+    height: min(88vh, 640px);
     max-height: calc(100vh - 32px);
-    overflow-y: auto !important;
-    display: block;
   }
 
-  .counsellor-profile-modal .modal__body {
-    display: block;
-    overflow: visible;
+  .counsellor-profile-modal .modal__header {
+    padding: 14px 18px;
   }
 
   .counsellor-profile {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
 
+  /* This — not modal__body, and not the whole card — is the one scrolling
+     region, between the fixed header above and the fixed Book Session
+     button below. The button is a sibling of this, not inside it. */
   .counsellor-profile__main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 18px;
+    gap: 16px;
   }
 
   .counsellor-profile__left {
     width: 100%;
     padding-right: 0;
-    padding-bottom: 20px;
-    border-right: none;
-    box-shadow: none;
+    padding-bottom: 0;
+    gap: 10px;
+  }
+
+  /* The photo only needs to be big enough to recognise on a phone. */
+  .counsellor-profile__left .avatar--xl {
+    width: 84px;
+    height: 84px;
+    font-size: 32px;
   }
 
   .counsellor-profile__right {
@@ -311,10 +302,15 @@
     text-align: center;
     overflow: visible;
     padding-right: 0;
+    gap: 14px;
   }
 
   .counsellor-profile__badge {
     align-self: center;
+  }
+
+  .counsellor-profile__footer {
+    padding: 14px 18px;
   }
 
   .counsellor-profile__footer .md-button {
@@ -322,4 +318,3 @@
     width: 100%;
   }
 }
-

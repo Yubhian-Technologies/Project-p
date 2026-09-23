@@ -247,7 +247,7 @@
   color: var(--neu-text-primary, #2D3748);
 }
 
-@media (max-width: 560px) {
+@media (max-width: 768px) {
   .counsellor-session-detail__ratings {
     grid-template-columns: 1fr;
   }

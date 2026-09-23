@@ -52,6 +52,28 @@
   .uha-grid {
     grid-template-columns: 1fr;
   }
+
+  .uha-header {
+    padding: 12px 16px;
+  }
+
+  .uha-header__title {
+    font-size: 15px;
+  }
+
+  .uha-card {
+    padding: 16px 18px;
+    gap: 12px;
+  }
+
+  .uha-card__title {
+    font-size: 14px;
+  }
+
+  .uha-loading,
+  .uha-empty {
+    padding: 18px;
+  }
 }
 
 .uha-card {

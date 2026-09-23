@@ -345,14 +345,11 @@ export function HeadAnalyticsOverview() {
   const apptPts = trendData.map((d, i) => ({ x: xPos(i), y: yPos(d.appointments) }));
   const checkPts = trendData.map((d, i) => ({ x: xPos(i), y: yPos(d.checkins) }));
 
-  function smoothPath(pts: { x: number; y: number }[]): string {
+  function sharpPath(pts: { x: number; y: number }[]): string {
     if (pts.length === 0) return "";
     let path = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
     for (let i = 1; i < pts.length; i++) {
-      const prev = pts[i - 1];
-      const curr = pts[i];
-      const cx = (prev.x + curr.x) / 2;
-      path += ` C ${cx.toFixed(1)} ${prev.y.toFixed(1)}, ${cx.toFixed(1)} ${curr.y.toFixed(1)}, ${curr.x.toFixed(1)} ${curr.y.toFixed(1)}`;
+      path += ` L ${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)}`;
     }
     return path;
   }
@@ -412,20 +409,20 @@ export function HeadAnalyticsOverview() {
               <defs>
                 {/* Soft gradient fills */}
                 <linearGradient id="head-grad-appt" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#EA580C" stopOpacity="0.32" />
-                  <stop offset="100%" stopColor="#EA580C" stopOpacity="0.02" />
+                  <stop offset="0%" stopColor="#1E3A8A" stopOpacity="0.32" />
+                  <stop offset="100%" stopColor="#1E3A8A" stopOpacity="0.02" />
                 </linearGradient>
                 <linearGradient id="head-grad-check" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#0D9488" stopOpacity="0.28" />
-                  <stop offset="100%" stopColor="#0D9488" stopOpacity="0.02" />
+                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.28" />
+                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.02" />
                 </linearGradient>
 
                 {/* Soft glow drop-shadow filters */}
                 <filter id="head-glow-appt" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#EA580C" floodOpacity="0.45" />
+                  <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#1E3A8A" floodOpacity="0.45" />
                 </filter>
                 <filter id="head-glow-check" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#0D9488" floodOpacity="0.45" />
+                  <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#3B82F6" floodOpacity="0.45" />
                 </filter>
               </defs>
 
@@ -458,28 +455,28 @@ export function HeadAnalyticsOverview() {
                 {/* Gradient Area Fills */}
                 {apptPts.length > 1 && (
                   <path
-                    d={`${smoothPath(apptPts)} L ${apptPts[apptPts.length - 1].x.toFixed(1)} ${iH} L 0 ${iH} Z`}
+                    d={`${sharpPath(apptPts)} L ${apptPts[apptPts.length - 1].x.toFixed(1)} ${iH} L 0 ${iH} Z`}
                     fill="url(#head-grad-appt)"
                   />
                 )}
                 {checkPts.length > 1 && (
                   <path
-                    d={`${smoothPath(checkPts)} L ${checkPts[checkPts.length - 1].x.toFixed(1)} ${iH} L 0 ${iH} Z`}
+                    d={`${sharpPath(checkPts)} L ${checkPts[checkPts.length - 1].x.toFixed(1)} ${iH} L 0 ${iH} Z`}
                     fill="url(#head-grad-check)"
                   />
                 )}
 
-                {/* Smooth Glowing Trend Lines */}
+                {/* Sharp Glowing Trend Lines */}
                 {apptPts.length > 1 && (
                   <path
-                    d={smoothPath(apptPts)}
+                    d={sharpPath(apptPts)}
                     className="head-analytics__path head-analytics__path--appt"
                     filter="url(#head-glow-appt)"
                   />
                 )}
                 {checkPts.length > 1 && (
                   <path
-                    d={smoothPath(checkPts)}
+                    d={sharpPath(checkPts)}
                     className="head-analytics__path head-analytics__path--check"
                     filter="url(#head-glow-check)"
                   />
@@ -505,13 +502,21 @@ export function HeadAnalyticsOverview() {
                         onMouseLeave={() => setHoverIndex(null)}
                       />
 
-                      {/* Appointments dot */}
-                      <circle cx={ap.x} cy={ap.y} r={isHovered ? 5.5 : 4} className="head-analytics__dot head-analytics__dot--appt" />
-                      <circle cx={ap.x} cy={ap.y} r={isHovered ? 8 : 6} fill="none" stroke="#EA580C" strokeWidth="1.5" opacity={isHovered ? 0.8 : 0} />
+                      {/* Appointments marker — visible only on hover */}
+                      {isHovered && (
+                        <>
+                          <circle cx={ap.x} cy={ap.y} r={5.5} className="head-analytics__dot head-analytics__dot--appt" />
+                          <circle cx={ap.x} cy={ap.y} r={9} fill="none" stroke="#1E3A8A" strokeWidth="1.5" opacity={0.8} />
+                        </>
+                      )}
 
-                      {/* Check-ins dot */}
-                      <circle cx={cp.x} cy={cp.y} r={isHovered ? 5.5 : 4} className="head-analytics__dot head-analytics__dot--check" />
-                      <circle cx={cp.x} cy={cp.y} r={isHovered ? 8 : 6} fill="none" stroke="#0D9488" strokeWidth="1.5" opacity={isHovered ? 0.8 : 0} />
+                      {/* Check-ins marker — visible only on hover */}
+                      {isHovered && (
+                        <>
+                          <circle cx={cp.x} cy={cp.y} r={5.5} className="head-analytics__dot head-analytics__dot--check" />
+                          <circle cx={cp.x} cy={cp.y} r={9} fill="none" stroke="#3B82F6" strokeWidth="1.5" opacity={0.8} />
+                        </>
+                      )}
                     </g>
                   );
                 })}
@@ -528,11 +533,11 @@ export function HeadAnalyticsOverview() {
                     <g transform={`translate(${tipX}, 15)`} style={{ pointerEvents: "none" }}>
                       <rect width={tipW} height={58} rx={10} className="head-analytics__tooltip-bg" />
                       <text x={10} y={18} className="head-analytics__tooltip-date">{item.dateLabel}</text>
-                      <circle cx={14} cy={32} r={3.5} fill="#EA580C" />
+                      <circle cx={14} cy={32} r={3.5} fill="#1E3A8A" />
                       <text x={22} y={35} className="head-analytics__tooltip-text">
                         Appts: {item.appointments}
                       </text>
-                      <circle cx={14} cy={46} r={3.5} fill="#0D9488" />
+                      <circle cx={14} cy={46} r={3.5} fill="#3B82F6" />
                       <text x={22} y={49} className="head-analytics__tooltip-text">
                         Check-ins: {item.checkins}
                       </text>

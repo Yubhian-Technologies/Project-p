@@ -15,7 +15,7 @@ export function CounsellorCard({ profile, status, onClick }: CounsellorCardProps
   return (
     <Card className="counsellor-card" onClick={onClick}>
       <div className="counsellor-card__header">
-        <Avatar photoURL={profile.photoURL} label={profile.email} size="large" />
+        <Avatar photoURL={profile.photoURL} label={profile.email} size="large" shape="square" />
         <div>
           <p className="counsellor-card__name">{profile.displayName || profile.email}</p>
           {profile.specialization && <p className="counsellor-card__role">{profile.specialization}</p>}

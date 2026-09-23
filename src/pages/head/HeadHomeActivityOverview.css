@@ -61,6 +61,28 @@
   .hha-grid {
     grid-template-columns: 1fr;
   }
+
+  .hha-header {
+    padding: 12px 16px;
+  }
+
+  .hha-header__title {
+    font-size: 15px;
+  }
+
+  .hha-card {
+    padding: 16px 18px;
+    gap: 12px;
+  }
+
+  .hha-card__title {
+    font-size: 14px;
+  }
+
+  .hha-loading,
+  .hha-empty {
+    padding: 18px;
+  }
 }
 
 .hha-card {

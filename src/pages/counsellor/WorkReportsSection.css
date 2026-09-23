@@ -59,7 +59,7 @@
   gap: 16px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .wr-submit-card__form {
     grid-template-columns: 1fr;
   }
@@ -322,7 +322,7 @@
   justify-content: center;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 768px) {
   .wr-list__row {
     padding: 16px;
   }
@@ -365,19 +365,26 @@
   box-shadow: 1px 1px 0px #2B2B2B;
 }
 
-.wr-badge--pending {
-  background: #FEF3C7;
-  color: #92400E;
-}
-
-.wr-badge--verified {
-  background: #D1FAE5;
-  color: #065F46;
-}
-
 .wr-badge--type {
   background: #EDE9FE;
   color: #5B21B6;
+}
+
+/* Plain status label (no border/box) so it reads as status, not another button. */
+.wr-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.wr-status--pending {
+  color: #92400E;
+}
+
+.wr-status--verified {
+  color: #047857;
 }
 
 /* ── Buttons ────────────────────────────────────────────────────────── */
