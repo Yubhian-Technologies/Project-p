@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import {
   listBookableProfiles,
@@ -13,6 +13,7 @@ import {
   SESSION_DURATION_LABEL,
 } from "../../services/firebase/bookings";
 import { listFeedbackForUser, createSessionFeedback } from "../../services/firebase/feedback";
+import { subscribeToNotifications } from "../../services/firebase/notifications";
 import { listSsiResultsForUser, submitSsiResult } from "../../services/firebase/ssiTest";
 import { sanitizePhoneInput, isValidWhatsappNumber } from "../../utils/phone";
 import { FEEDBACK_FORM } from "../../config/feedbackForm";
@@ -47,7 +48,7 @@ function statusLabel(booking: Booking): string {
     case "pending":
       return "Pending";
     case "accepted":
-      return "Accepted — time coming soon";
+      return booking.isEmergency ? "Accepted — being handled directly, no session time needed" : "Accepted — time coming soon";
     case "scheduled":
       return `Scheduled for ${booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleString() : "—"} (${SESSION_DURATION_LABEL})`;
     case "rejected":
@@ -154,6 +155,30 @@ export function BookingSection({
 
   useEffect(() => {
     refresh();
+  }, [currentUser]);
+
+  // The bookings list above is a one-off fetch, not a live listener — so when
+  // the counsellor/head accepts, schedules, or otherwise changes a booking on
+  // their own device, this tab never hears about it and keeps showing the old
+  // status until the page is reloaded. Notifications ARE already a live
+  // stream (subscribeToNotifications uses onSnapshot), and every one of those
+  // actions sends the student a notification, so re-fetching bookings
+  // whenever a genuinely new notification arrives keeps this list current
+  // without needing its own realtime listener.
+  const seenNotificationIds = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!currentUser) return;
+    return subscribeToNotifications(currentUser.uid, (list) => {
+      const ids = new Set(list.map((n) => n.id));
+      if (seenNotificationIds.current === null) {
+        seenNotificationIds.current = ids;
+        return;
+      }
+      const hasNew = list.some((n) => !seenNotificationIds.current!.has(n.id));
+      seenNotificationIds.current = ids;
+      if (hasNew) refresh();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   // Keep the open "View Details" popup in step with the list — e.g. after a
@@ -359,6 +384,7 @@ export function BookingSection({
             >
               <span className="booking-section__row-email">
                 {b.counsellorEmail}
+                {b.isEmergency && <span className="booking-section__emergency-tag">🚨 Crisis SOS</span>}
                 {b.followUpOfBookingId && <span className="booking-section__followup-tag">(follow-up)</span>}
               </span>
               <div className="booking-section__row-right booking-section__row-right--pinned">
@@ -391,6 +417,12 @@ export function BookingSection({
           className="booking-section__detail-modal"
         >
           <div className="booking-section__detail">
+            {detailTarget.isEmergency && (
+              <p className="booking-section__emergency-tag">
+                🚨 Crisis SOS — dispatched to every counsellor/head on your campus; whoever accepts it
+                doesn't pick a time first, since a crisis is handled right away, not scheduled.
+              </p>
+            )}
             {detailTarget.followUpOfBookingId && (
               <p className="booking-section__followup-tag">(follow-up session)</p>
             )}

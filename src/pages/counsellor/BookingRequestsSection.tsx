@@ -1,6 +1,7 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { getUserProfile } from "../../services/firebase/firestore";
+import { subscribeToNotifications } from "../../services/firebase/notifications";
 import {
   listBookingsForCounsellor,
   listBookableProfiles,
@@ -98,15 +99,15 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
     setUserNames(nameMap);
 
     setTransferCandidates(allBookable.filter((p) => p.uid !== currentUser.uid));
-    setCampusHead(
+    const head =
       allBookable.find((p) => p.role === "head" && p.campusId === profile?.campusId && p.uid !== currentUser.uid) ??
-        null,
-    );
+      null;
+    setCampusHead(head);
     setLoading(false);
 
     const newlyPending = myBookings.filter((b) => isSessionEndedPending(b) && !b.missedNotified);
     if (newlyPending.length > 0) {
-      await Promise.all(newlyPending.map((b) => flagMissedSessionPending(b)));
+      await Promise.all(newlyPending.map((b) => flagMissedSessionPending(b, head?.uid)));
       setBookings((prev) =>
         prev.map((b) => (newlyPending.some((p) => p.id === b.id) ? { ...b, missedNotified: true } : b)),
       );
@@ -115,6 +116,28 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
 
   useEffect(() => {
     refresh();
+  }, [currentUser]);
+
+  // Same reasoning as BookingSection.tsx (the student's side): the list above
+  // is a one-off fetch, so a student cancelling/rescheduling on their own
+  // device would otherwise leave this tab showing stale data until reloaded.
+  // Notifications are already a live stream, and every such action sends
+  // this counsellor one, so re-fetching whenever a new one arrives keeps this
+  // list current without a realtime listener of its own.
+  const seenNotificationIds = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!currentUser) return;
+    return subscribeToNotifications(currentUser.uid, (list) => {
+      const ids = new Set(list.map((n) => n.id));
+      if (seenNotificationIds.current === null) {
+        seenNotificationIds.current = ids;
+        return;
+      }
+      const hasNew = list.some((n) => !seenNotificationIds.current!.has(n.id));
+      seenNotificationIds.current = ids;
+      if (hasNew) refresh();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   async function handleViewSummary(booking: Booking) {
@@ -218,7 +241,10 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
           viewerRole={profile?.role === "head" ? "head" : "counsellor"}
           onClose={() => setSelectedId(null)}
           onViewSummary={showViewSummary ? () => handleViewSummary(selectedBooking) : undefined}
-          onSuggestSsi={() => suggestSsiTest(selectedBooking)}
+          onSuggestSsi={async () => {
+            await suggestSsiTest(selectedBooking);
+            await refresh();
+          }}
           onAcceptSlot={async (chosenAt) => {
             await acceptProposedSlot(selectedBooking, chosenAt);
             await refresh();
@@ -287,7 +313,7 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
             await refresh();
           }}
           onCloseMissed={async (reason) => {
-            await closeMissedSession(selectedBooking, reason);
+            await closeMissedSession(selectedBooking, reason, campusHead?.uid);
             await refresh();
           }}
           onRateUser={async (rating, note) => {

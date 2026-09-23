@@ -50,6 +50,12 @@ export interface Booking {
   counsellorNoteOnUser?: string;
   sessionMode?: "online" | "offline";
   isEmergency?: boolean;
+  /** Set once the counsellor/head has suggested the SSI test — keeps the button
+      a one-time action across reopening the details popup, not just per-session. */
+  ssiSuggestedAt?: number;
+  /** Set by the scheduled reminder job (see functions/) once the "starting
+      now" notification has gone out, so it's never sent twice. */
+  reminderStartSent?: boolean;
   campusId?: string; // set on every booking so campus staff (e.g. the Head) can find it
   proposedSlots?: [number, number]; // the two times the student proposed at request time
   rescheduleProposal?: RescheduleProposal;

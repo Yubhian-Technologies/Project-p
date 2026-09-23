@@ -101,7 +101,14 @@ export function RequestDetailModal({
   const [ssiResult, setSsiResult] = useState<SsiResult | null>(null);
   const [showSsiResult, setShowSsiResult] = useState(false);
   const [ssiSuggesting, setSsiSuggesting] = useState(false);
-  const [ssiSuggested, setSsiSuggested] = useState(false);
+  // Backed by the booking itself (ssiSuggestedAt), not just this popup's own
+  // state — reopening the popup, or the parent refreshing, must not forget
+  // it was already suggested and let it be sent again.
+  const [ssiSuggested, setSsiSuggested] = useState(!!booking.ssiSuggestedAt);
+
+  useEffect(() => {
+    setSsiSuggested(!!booking.ssiSuggestedAt);
+  }, [booking.id, booking.ssiSuggestedAt]);
 
   useEffect(() => {
     getBookingIntake(booking.id).then((data) => {
@@ -115,7 +122,10 @@ export function RequestDetailModal({
 
   const [now] = useState(() => Date.now());
   const nowValue = toDateTimeLocalValue(now);
-  const sessionStarted = booking.scheduledAt !== undefined && now >= booking.scheduledAt;
+  // A Crisis SOS session is handled the moment it's accepted, not at some
+  // scheduled time, so it counts as "started" immediately rather than
+  // waiting on a scheduledAt that this kind of booking never gets.
+  const sessionStarted = booking.isEmergency || (booking.scheduledAt !== undefined && now >= booking.scheduledAt);
   const sessionEnded =
     booking.scheduledAt !== undefined && now >= booking.scheduledAt + booking.durationMinutes * 60000;
 
@@ -211,7 +221,10 @@ export function RequestDetailModal({
     }
   }
 
-  const canCancelOrRequestTransfer = booking.status === "accepted" || booking.status === "scheduled";
+  // Once a Crisis SOS is accepted it's already being handled directly — there's
+  // no one else to hand it off to and nothing to cancel, just Close it out above.
+  const canCancelOrRequestTransfer =
+    !booking.isEmergency && (booking.status === "accepted" || booking.status === "scheduled");
 
   function renderTransferControls() {
     if (viewerRole === "head") {
@@ -440,6 +453,11 @@ export function RequestDetailModal({
       >
         {statusBadgeLabel}
       </span>
+      {booking.isEmergency && (
+        <span className="request-card__offline-tag" style={{ color: "#B91C1C", borderColor: "#B91C1C" }}>
+          🚨 Crisis SOS
+        </span>
+      )}
       {booking.sessionMode === "offline" && (
         <span className="request-card__offline-tag">Offline</span>
       )}
@@ -623,7 +641,7 @@ export function RequestDetailModal({
         </div>
       )}
 
-      {booking.status === "accepted" && !showCancelReason && (
+      {booking.status === "accepted" && !booking.isEmergency && !showCancelReason && (
         <div className="request-card__schedule">
           <label htmlFor={`schedule-${booking.id}`}>Pick a session time ({SESSION_DURATION_LABEL})</label>
           <DateTimePicker
@@ -638,6 +656,56 @@ export function RequestDetailModal({
           <Button type="button" disabled={isPastOrEmpty(timeValue)} onClick={handleConfirmSchedule}>
             Save
           </Button>
+        </div>
+      )}
+
+      {/* Crisis SOS: handled directly, right away — never scheduled, so this
+          skips straight to taking a summary and closing it out. */}
+      {booking.status === "accepted" && booking.isEmergency && !showCancelReason && (
+        <div className="request-card__schedule">
+          <p className="request-card__summary-hint">
+            🚨 Crisis SOS — this is handled right away, not scheduled. Once you've assisted the student, take a
+            summary and close it out below.
+          </p>
+
+          <div className="request-card__summary">
+            <label>Session summary</label>
+            <Button type="button" variant="outlined" onClick={() => setSummaryFocusMode(true)}>
+              {intake?.summary ? "View Summary" : "Take Summary"}
+            </Button>
+          </div>
+
+          {showFollowUp ? (
+            <div className="request-card__schedule">
+              <label htmlFor={`followup-${booking.id}`}>Follow-up session time</label>
+              <DateTimePicker
+                id={`followup-${booking.id}`}
+                min={nowValue}
+                value={followUpTime}
+                onChange={setFollowUpTime}
+              />
+              {isPastChoice(followUpTime) && (
+                <p className="request-card__time-warning">This time has already passed. Pick a time later than now.</p>
+              )}
+              <div className="request-card__actions">
+                <Button type="button" disabled={isPastOrEmpty(followUpTime) || closing} onClick={handleCloseFollowUp}>
+                  {closing ? "Saving…" : "Save"}
+                </Button>
+                <Button type="button" variant="outlined" disabled={closing} onClick={() => setShowFollowUp(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="request-card__actions">
+              <Button type="button" disabled={closing} onClick={handleCloseComplete}>
+                {closing ? "Closing…" : "Close & Complete Session"}
+              </Button>
+              <Button type="button" variant="outlined" disabled={closing} onClick={() => setShowFollowUp(true)}>
+                Close &amp; Follow-up Session
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -846,42 +914,44 @@ export function RequestDetailModal({
             </Button>
           )}
 
-          {booking.counsellorRatingOfUser !== undefined ? (
-            <div className="request-card__rating-done">
-              <span>Your rating of the user:</span>
-              <StarRating value={booking.counsellorRatingOfUser} />
-            </div>
-          ) : showRateUser ? (
-            <div className="request-card__rate-user">
-              <label>Rate this user (private, visible only to the Head)</label>
-              <StarRating value={rateUserValue} onChange={setRateUserValue} size="large" />
-              <textarea
-                rows={2}
-                placeholder="Optional private note…"
-                value={rateUserNote}
-                onChange={(e) => setRateUserNote(e.target.value)}
-              />
-              <div className="request-card__actions">
-                <Button
-                  type="button"
-                  disabled={rateUserValue === 0}
-                  onClick={() => {
-                    onRateUser(rateUserValue, rateUserNote.trim());
-                    setShowRateUser(false);
-                  }}
-                >
-                  Submit rating
-                </Button>
-                <Button type="button" variant="outlined" onClick={() => setShowRateUser(false)}>
-                  Cancel
-                </Button>
+          {/* A crisis session isn't the kind of thing to rate the student on. */}
+          {!booking.isEmergency &&
+            (booking.counsellorRatingOfUser !== undefined ? (
+              <div className="request-card__rating-done">
+                <span>Your rating of the user:</span>
+                <StarRating value={booking.counsellorRatingOfUser} />
               </div>
-            </div>
-          ) : (
-            <Button type="button" variant="outlined" onClick={() => setShowRateUser(true)}>
-              Rate this user
-            </Button>
-          )}
+            ) : showRateUser ? (
+              <div className="request-card__rate-user">
+                <label>Rate this user (private, visible only to the Head)</label>
+                <StarRating value={rateUserValue} onChange={setRateUserValue} size="large" />
+                <textarea
+                  rows={2}
+                  placeholder="Optional private note…"
+                  value={rateUserNote}
+                  onChange={(e) => setRateUserNote(e.target.value)}
+                />
+                <div className="request-card__actions">
+                  <Button
+                    type="button"
+                    disabled={rateUserValue === 0}
+                    onClick={() => {
+                      onRateUser(rateUserValue, rateUserNote.trim());
+                      setShowRateUser(false);
+                    }}
+                  >
+                    Submit rating
+                  </Button>
+                  <Button type="button" variant="outlined" onClick={() => setShowRateUser(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button type="button" variant="outlined" onClick={() => setShowRateUser(true)}>
+                Rate this user
+              </Button>
+            ))}
         </div>
       )}
     </Modal>
