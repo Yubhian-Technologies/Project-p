@@ -7,6 +7,7 @@ import {
   type WorkReportType,
 } from "../../services/firebase/workReports";
 import { Modal } from "../../components/common/Modal";
+import { ReportContentPreview } from "../../components/common/ReportContentPreview";
 import {
   CheckIcon,
   RefreshIcon,
@@ -14,11 +15,21 @@ import {
   ClockIcon,
   UserIcon,
   ClipboardListIcon,
+  HourglassIcon,
   EyeIcon,
 } from "../../components/common/icons";
+import { downloadWorkReport } from "../../utils/downloadWorkReport";
 import "./TeamReportsSection.css";
 
 type Tab = "pending" | "verified";
+type TypeFilter = "all" | WorkReportType;
+
+const TYPE_FILTERS: { value: TypeFilter; label: string }[] = [
+  { value: "all", label: "All Types" },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "other", label: "Other" },
+];
 
 const REPORT_TYPE_LABELS: Record<WorkReportType, string> = {
   daily: "Daily",
@@ -42,14 +53,23 @@ export function TeamReportsSection() {
   const { profile } = useAuth();
 
   const [tab, setTab] = useState<Tab>("pending");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [reports, setReports] = useState<WorkReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<WorkReport | null>(null);
-
-  // id of report with verify panel open
-  const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [headNotes, setHeadNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  // ── download (PDF) ─────────────────────────────────────────────────
+  async function handleDownload(report: WorkReport) {
+    setDownloadingId(report.id);
+    try {
+      await downloadWorkReport(report);
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   async function loadReports() {
     setLoading(true);
@@ -66,15 +86,12 @@ export function TeamReportsSection() {
 
   const pending = reports.filter((r) => r.status === "pending");
   const verified = reports.filter((r) => r.status === "verified");
-  const displayed = tab === "pending" ? pending : verified;
+  const displayed = (tab === "pending" ? pending : verified).filter(
+    (r) => typeFilter === "all" || r.reportType === typeFilter,
+  );
 
-  function openVerify(id: string) {
-    setVerifyingId(id);
-    setHeadNotes("");
-  }
-
-  function closeVerify() {
-    setVerifyingId(null);
+  function openReport(r: WorkReport) {
+    setSelectedReport(r);
     setHeadNotes("");
   }
 
@@ -87,7 +104,7 @@ export function TeamReportsSection() {
         profile?.uid ?? "",
         headNotes.trim(),
       );
-      closeVerify();
+      setHeadNotes("");
       if (selectedReport?.id === id) {
         setSelectedReport((prev) => prev ? {
           ...prev,
@@ -127,6 +144,20 @@ export function TeamReportsSection() {
         </button>
       </div>
 
+      {/* ── Report-type filter ──────────────────────────────────────── */}
+      <div className="tr-type-filter">
+        {TYPE_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            className={`tr-type-filter__chip${typeFilter === f.value ? " tr-type-filter__chip--active" : ""}`}
+            onClick={() => setTypeFilter(f.value)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       {/* ── Content ──────────────────────────────────────────────── */}
       <div>
         <div className="tr-list__header">
@@ -156,50 +187,32 @@ export function TeamReportsSection() {
         ) : (
           <div className="tr-list">
             {displayed.map((r) => (
-              <div key={r.id} className="tr-card">
-                {/* Top row */}
+              <div key={r.id} className="tr-card tr-card--clickable" onClick={() => openReport(r)}>
                 <div className="tr-card__top">
-                  <div>
-                    <div className="tr-card__title">{r.title}</div>
-                    <div className="tr-card__meta">
-                      <UserIcon /> {r.submittedBy}
-                      &nbsp;·&nbsp;
-                      <CalendarIcon /> {r.periodLabel}
-                      &nbsp;·&nbsp;
-                      <ClockIcon /> {formatDate(r.submittedAt)}
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap", alignItems: "center" }}>
-                    <span className="tr-badge tr-badge--type">
-                      {REPORT_TYPE_LABELS[r.reportType]}
-                    </span>
-                    <span className={`tr-badge tr-badge--${r.status}`}>
-                      {r.status === "verified" ? <><CheckIcon /> Verified</> : "⏳ Pending"}
-                    </span>
-
-                    <button
-                      type="button"
-                      className="tr-btn tr-btn--view"
-                      onClick={() => setSelectedReport(r)}
-                    >
-                      <EyeIcon /> View Details
-                    </button>
-
-                    {r.status === "pending" && verifyingId !== r.id && (
-                      <button
-                        type="button"
-                        className="tr-btn tr-btn--verify"
-                        onClick={() => {
-                          setSelectedReport(r);
-                          openVerify(r.id);
-                        }}
-                      >
-                        <CheckIcon /> Verify
-                      </button>
-                    )}
-                  </div>
+                  <div className="tr-card__title">{r.title}</div>
+                  <span className={`tr-status tr-status--${r.status}`}>
+                    {r.status === "verified" ? <><CheckIcon /> Verified</> : <><HourglassIcon /> Pending</>}
+                  </span>
                 </div>
+
+                <div className="tr-card__meta">
+                  <UserIcon /> {r.submittedBy}
+                  &nbsp;·&nbsp;
+                  <CalendarIcon /> {r.periodLabel}
+                  &nbsp;·&nbsp;
+                  <ClockIcon /> {formatDate(r.submittedAt)}
+                </div>
+
+                <button
+                  type="button"
+                  className="tr-btn tr-btn--view"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openReport(r);
+                  }}
+                >
+                  <EyeIcon /> View Details
+                </button>
               </div>
             ))}
           </div>
@@ -221,7 +234,7 @@ export function TeamReportsSection() {
             <div className="tr-modal__badges">
               <span className="tr-badge tr-badge--type">{REPORT_TYPE_LABELS[selectedReport.reportType]}</span>
               <span className={`tr-badge tr-badge--${selectedReport.status}`}>
-                {selectedReport.status === "verified" ? <><CheckIcon /> Verified</> : "⏳ Pending"}
+                {selectedReport.status === "verified" ? <><CheckIcon /> Verified</> : <><HourglassIcon /> Pending</>}
               </span>
             </div>
 
@@ -242,7 +255,10 @@ export function TeamReportsSection() {
 
             <div className="tr-modal__section">
               <h4 className="tr-modal__section-title">Report Content</h4>
-              <div className="tr-modal__body-text">{selectedReport.body}</div>
+              <ReportContentPreview
+                downloading={downloadingId === selectedReport.id}
+                onDownload={() => void handleDownload(selectedReport)}
+              />
             </div>
 
             {selectedReport.status === "verified" ? (
@@ -285,15 +301,6 @@ export function TeamReportsSection() {
               </div>
             )}
 
-            <div className="tr-modal__actions">
-              <button
-                type="button"
-                className="tr-btn tr-btn--ghost"
-                onClick={() => setSelectedReport(null)}
-              >
-                Close
-              </button>
-            </div>
           </div>
         </Modal>
       )}

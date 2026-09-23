@@ -210,8 +210,16 @@ service cloud.firestore {
         (resource.data.isEmergency == true && isRole('counsellor') && resource.data.campusId == myProfile().campusId)
       );
 
+      // A normal session request is no longer written directly by the client —
+      // it goes through the createBooking Cloud Function (Admin SDK, bypasses
+      // these rules), which is what actually enforces "one active booking per
+      // student" server-side instead of just hiding a disabled button. Emergency
+      // SOS bookings are deliberately excluded from that — createEmergencySosBooking
+      // still writes userId == self directly, unchanged, since a crisis flow should
+      // never be gated behind anything extra. Offline-session import (a counsellor
+      // logging a historical in-person session) is unrelated and also unchanged.
       allow create: if isSignedIn() && (
-        request.resource.data.userId == request.auth.uid ||
+        (request.resource.data.userId == request.auth.uid && request.resource.data.isEmergency == true) ||
         request.resource.data.counsellorId == request.auth.uid
       );
 

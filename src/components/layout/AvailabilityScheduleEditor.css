@@ -43,7 +43,7 @@
   color: var(--neu-text-muted, #718096);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .availability-editor__row {
     flex-wrap: wrap;
     row-gap: 8px;

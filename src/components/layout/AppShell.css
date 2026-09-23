@@ -175,7 +175,25 @@
   }
 
   .app-shell__content-sheet {
-    padding: 24px 18px;
+    padding: 18px 14px;
+  }
+
+  .app-shell__title-row {
+    margin-bottom: 16px;
+  }
+
+  .app-shell__title {
+    font-size: 21px;
+  }
+
+  .app-shell__title-action .md-button {
+    padding: 8px 14px;
+    font-size: 12px;
+    box-shadow: 2px 2px 0px #2B2B2B;
+  }
+
+  .app-shell__title-action .md-button:hover {
+    box-shadow: 3px 3px 0px #2B2B2B;
   }
 
   .app-shell__topbar-left {

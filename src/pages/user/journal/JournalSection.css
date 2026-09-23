@@ -130,6 +130,13 @@
 
   .journal-section__calendar-col {
     width: 100%;
+    order: 1;
+  }
+
+  /* Notes come first on a phone — the calendar is just for picking a
+     different day, so it shouldn't push today's note below the fold. */
+  .journal-editor {
+    order: 0;
   }
 
   .journal-editor__textarea {

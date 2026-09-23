@@ -12,7 +12,7 @@
   box-shadow: var(--neu-shadow-extruded-hover);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .md-card {
     padding: 18px;
   }

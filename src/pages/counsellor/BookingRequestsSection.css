@@ -45,6 +45,17 @@
   box-shadow: 0 6px 18px rgba(139, 92, 246, 0.35) !important;
 }
 
+@media (max-width: 768px) {
+  .booking-requests-section__tabs {
+    gap: 8px;
+  }
+
+  .booking-requests-section__tab {
+    padding: 7px 14px;
+    font-size: 12px;
+  }
+}
+
 .booking-requests-section__group {
   display: flex;
   flex-direction: column;

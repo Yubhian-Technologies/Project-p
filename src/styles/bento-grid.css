@@ -291,7 +291,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .bento-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
@@ -305,7 +305,7 @@
   }
 
   .bento-card {
-    padding: 20px;
+    padding: 16px;
   }
 
   .bento-card--col-12,
@@ -314,5 +314,54 @@
   .bento-card--col-4,
   .bento-card--col-3 {
     grid-column: span 1;
+  }
+
+  /* Every dashboard is built from these cards, so tightening them once here
+     is what actually makes "the whole dashboard" read as mobile-sized,
+     instead of a shrunk desktop layout. */
+  .bento-card__header {
+    margin-bottom: 14px;
+    gap: 10px;
+  }
+
+  .bento-card__icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .bento-card__icon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .bento-card__title {
+    font-size: 16px;
+  }
+
+  .bento-card__subtitle {
+    font-size: 12px;
+  }
+
+  .bento-kpi {
+    margin: 10px 0;
+  }
+
+  .bento-kpi__number {
+    font-size: 28px;
+  }
+
+  .bento-badge {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+
+  .bento-list-item {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .bento-btn {
+    padding: 9px 18px;
+    font-size: 12px;
   }
 }

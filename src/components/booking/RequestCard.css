@@ -9,7 +9,14 @@
   padding: 36px !important;
 }
 
-@media (max-width: 480px) {
+/* Section spacing itself comes from the shared rule in Modal.css; this just
+   sets the danger zone apart with a dashed divider. */
+.request-detail-modal .request-card__danger-zone {
+  padding-top: 18px;
+  border-top: 2px dashed #2B2B2B;
+}
+
+@media (max-width: 768px) {
   .request-detail-modal {
     padding: 20px !important;
   }
@@ -198,6 +205,16 @@
 
 .request-card__followup-tag {
   font-size: 12px;
+  font-style: italic;
+  color: var(--neu-text-muted, #718096);
+}
+
+/* Plain bracketed text right after the name on the collapsed list row —
+   .request-card__offline-tag (a boxed badge) stays as-is for the detail
+   popup's header, where it sits alongside other badge chips. */
+.request-card__offline-inline {
+  font-size: 13px;
+  font-weight: 700;
   font-style: italic;
   color: var(--neu-text-muted, #718096);
 }

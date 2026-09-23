@@ -2,10 +2,18 @@ import type { SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement>;
 
+// Presentation attributes (not CSS), so any page's `.foo svg { width: … }` rule still wins
+// when the icon is nested normally. They only kick in as a fallback for icons rendered
+// where that ancestor scoping doesn't reach — e.g. a Modal, which portals onto <body> and
+// so falls outside whatever page section was sizing its icons via a descendant selector.
+const DEFAULT_ICON_SIZE = 18;
+
 function Svg({ children, ...rest }: IconProps) {
   return (
     <svg
       viewBox="0 0 24 24"
+      width={DEFAULT_ICON_SIZE}
+      height={DEFAULT_ICON_SIZE}
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
@@ -70,6 +78,17 @@ export function ClockIcon(props: IconProps) {
     <Svg {...props}>
       <circle cx="12" cy="12" r="10" />
       <polyline points="12 6 12 12 16 14" />
+    </Svg>
+  );
+}
+
+export function HourglassIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M5 22h14" />
+      <path d="M5 2h14" />
+      <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+      <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
     </Svg>
   );
 }

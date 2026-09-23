@@ -68,12 +68,23 @@ function statusClass(booking: Booking): string {
   return booking.status;
 }
 
+// One word for the collapsed row — the full explanation (time, reason, etc.) only
+// shows once the person opens View Details.
+function statusWord(booking: Booking): string {
+  const word = statusClass(booking);
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
 export function BookingSection({
   openChatBookingId,
   onChatOpened,
+  openSsiBookingId,
+  onSsiOpened,
 }: {
   openChatBookingId?: string;
   onChatOpened?: () => void;
+  openSsiBookingId?: string;
+  onSsiOpened?: () => void;
 }) {
   const { currentUser, profile } = useAuth();
   const [counsellors, setCounsellors] = useState<UserProfile[]>([]);
@@ -85,6 +96,7 @@ export function BookingSection({
   const [agreed, setAgreed] = useState(false);
   const [bookingStep, setBookingStep] = useState<"terms" | "form">("terms");
   const [submitting, setSubmitting] = useState(false);
+  const [bookingError, setBookingError] = useState("");
   const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
   const [cancelReasonField, setCancelReasonField] = useState("");
   const [cancelling, setCancelling] = useState(false);
@@ -107,6 +119,7 @@ export function BookingSection({
   const [requestingReschedule, setRequestingReschedule] = useState(false);
   const [acceptingRescheduleId, setAcceptingRescheduleId] = useState<string | null>(null);
   const [chatTarget, setChatTarget] = useState<Booking | null>(null);
+  const [detailTarget, setDetailTarget] = useState<Booking | null>(null);
   const [ssiSubmittedIds, setSsiSubmittedIds] = useState<Set<string>>(new Set());
   const [ssiTarget, setSsiTarget] = useState<Booking | null>(null);
   const [ssiIntakeWhatsapp, setSsiIntakeWhatsapp] = useState("");
@@ -143,6 +156,12 @@ export function BookingSection({
     refresh();
   }, [currentUser]);
 
+  // Keep the open "View Details" popup in step with the list — e.g. after a
+  // cancel or an accepted reschedule changes the booking underneath it.
+  useEffect(() => {
+    setDetailTarget((prev) => (prev ? bookings.find((b) => b.id === prev.id) ?? null : prev));
+  }, [bookings]);
+
   // Open a chat thread directly when the user taps a "chat_message" notification.
   useEffect(() => {
     if (!openChatBookingId) return;
@@ -152,6 +171,17 @@ export function BookingSection({
       onChatOpened?.();
     }
   }, [openChatBookingId, bookings, onChatOpened]);
+
+  // Open the SSI test directly when the user taps an "ssi_suggested" notification.
+  useEffect(() => {
+    if (!openSsiBookingId) return;
+    const booking = bookings.find((b) => b.id === openSsiBookingId);
+    if (booking) {
+      openSsiTest(booking);
+      onSsiOpened?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSsiBookingId, bookings, onSsiOpened]);
 
   const activeBooking = bookings.find((b) => ACTIVE_STATUSES.includes(b.status) && !isSessionEndedPending(b));
 
@@ -166,6 +196,7 @@ export function BookingSection({
     setIssueField("");
     setSlot1Field("");
     setSlot2Field("");
+    setBookingError("");
   }
 
   const formValid =
@@ -180,6 +211,7 @@ export function BookingSection({
   async function confirmBooking() {
     if (!currentUser || !profile || !target || !formValid) return;
     setSubmitting(true);
+    setBookingError("");
     try {
       const intake: BookingIntake = {
         username: nameField.trim(),
@@ -195,6 +227,13 @@ export function BookingSection({
         profile.campusId,
       );
       setTarget(null);
+      await refresh();
+    } catch (err) {
+      // Most likely cause: a second tab (or a stale page) let the form get
+      // this far while another booking of theirs became active in the
+      // meantime — the server is the one that actually catches that now.
+      const message = err instanceof Error ? err.message : "Couldn't submit your booking. Please try again.";
+      setBookingError(message);
       await refresh();
     } finally {
       setSubmitting(false);
@@ -313,82 +352,80 @@ export function BookingSection({
         {bookings.length === 0 && <p>You haven't requested a session yet.</p>}
         <div className="booking-section__bookings">
           {bookings.map((b) => (
-            <Card key={b.id} className="booking-section__booking-row">
-              <span>
+            <Card
+              key={b.id}
+              className="booking-section__booking-row booking-section__booking-row--collapsed"
+              onClick={() => setDetailTarget(b)}
+            >
+              <span className="booking-section__row-email">
                 {b.counsellorEmail}
                 {b.followUpOfBookingId && <span className="booking-section__followup-tag">(follow-up)</span>}
               </span>
-              <div className="booking-section__row-right">
+              <div className="booking-section__row-right booking-section__row-right--pinned">
                 <span className={`booking-section__status booking-section__status--${statusClass(b)}`}>
-                  {statusLabel(b)}
+                  {statusWord(b)}
                 </span>
                 <Button
                   type="button"
                   variant="outlined"
-                  onClick={() => setChatTarget(b)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDetailTarget(b);
+                  }}
                 >
-                  Chat
+                  View Details
                 </Button>
-                {(b.status === "accepted" || (b.status === "scheduled" && !isSessionEndedPending(b))) && (
-                  ssiSubmittedIds.has(b.id) ? (
-                    <span className="booking-section__ssi-chip">✓ SSI test submitted</span>
-                  ) : (
-                    <Button type="button" variant="outlined" onClick={() => openSsiTest(b)}>
-                      Take SSI Test
-                    </Button>
-                  )
-                )}
-                {ACTIVE_STATUSES.includes(b.status) && !isSessionEndedPending(b) && (
-                  <Button
-                    type="button"
-                    variant="outlined"
-                    onClick={() => {
-                      setCancelTarget(b);
-                      setCancelReasonField("");
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                )}
-                {b.status === "completed" && b.outcome !== "missed" && (
-                  <div className="booking-section__rating-feedback-block">
-                    {submittedFeedbackIds.has(b.id) ? (
-                      <div className="booking-section__rated-box">
-                        <span className="booking-section__feedback-submitted">✓ Feedback submitted</span>
-                      </div>
-                    ) : (
-                      <Button type="button" onClick={() => openFeedback(b)}>
-                        Take Feedback
-                      </Button>
-                    )}
-                  </div>
-                )}
               </div>
+            </Card>
+          ))}
+        </div>
+      </section>
 
-              {b.status === "pending" && b.proposedSlots && (
-                <div className="booking-section__extra">
-                  Proposed times: {new Date(b.proposedSlots[0]).toLocaleString()} or{" "}
-                  {new Date(b.proposedSlots[1]).toLocaleString()}
-                </div>
-              )}
+      {/* ── Booking Details popup ────────────────────────────────────────
+          Everything about one booking — the full status, and every action
+          for it — lives here instead of in the row, so the list stays short. */}
+      {detailTarget && (
+        <Modal
+          title={detailTarget.counsellorEmail}
+          onClose={() => setDetailTarget(null)}
+          className="booking-section__detail-modal"
+        >
+          <div className="booking-section__detail">
+            {detailTarget.followUpOfBookingId && (
+              <p className="booking-section__followup-tag">(follow-up session)</p>
+            )}
 
-              {b.status === "scheduled" && !isSessionEndedPending(b) && b.rescheduleProposal && (
+            <span className={`booking-section__status booking-section__status--${statusClass(detailTarget)}`}>
+              {statusLabel(detailTarget)}
+            </span>
+
+            {detailTarget.status === "pending" && detailTarget.proposedSlots && (
+              <div className="booking-section__extra">
+                Proposed times: {new Date(detailTarget.proposedSlots[0]).toLocaleString()} or{" "}
+                {new Date(detailTarget.proposedSlots[1]).toLocaleString()}
+              </div>
+            )}
+
+            {detailTarget.status === "scheduled" &&
+              !isSessionEndedPending(detailTarget) &&
+              detailTarget.rescheduleProposal && (
                 <div className="booking-section__extra">
-                  {b.rescheduleProposal.proposedBy === "counsellor" ? (
+                  {detailTarget.rescheduleProposal.proposedBy === "counsellor" ? (
                     <>
                       <p className="booking-section__reschedule-note">
-                        Counsellor proposed a new time: {new Date(b.rescheduleProposal.proposedAt).toLocaleString()}
-                        {b.rescheduleProposal.reason ? ` — ${b.rescheduleProposal.reason}` : ""}
+                        Counsellor proposed a new time:{" "}
+                        {new Date(detailTarget.rescheduleProposal.proposedAt).toLocaleString()}
+                        {detailTarget.rescheduleProposal.reason ? ` — ${detailTarget.rescheduleProposal.reason}` : ""}
                       </p>
                       <div className="booking-section__row-right">
                         <Button
                           type="button"
-                          disabled={acceptingRescheduleId === b.id}
-                          onClick={() => handleAcceptReschedule(b)}
+                          disabled={acceptingRescheduleId === detailTarget.id}
+                          onClick={() => handleAcceptReschedule(detailTarget)}
                         >
-                          {acceptingRescheduleId === b.id ? "Accepting…" : "Accept new time"}
+                          {acceptingRescheduleId === detailTarget.id ? "Accepting…" : "Accept new time"}
                         </Button>
-                        <Button type="button" variant="outlined" onClick={() => openRescheduleRequest(b)}>
+                        <Button type="button" variant="outlined" onClick={() => openRescheduleRequest(detailTarget)}>
                           Propose different time
                         </Button>
                       </div>
@@ -401,17 +438,61 @@ export function BookingSection({
                 </div>
               )}
 
-              {b.status === "scheduled" && !isSessionEndedPending(b) && !b.rescheduleProposal && (
+            {detailTarget.status === "scheduled" &&
+              !isSessionEndedPending(detailTarget) &&
+              !detailTarget.rescheduleProposal && (
                 <div className="booking-section__extra">
-                  <Button type="button" variant="outlined" onClick={() => openRescheduleRequest(b)}>
+                  <Button type="button" variant="outlined" onClick={() => openRescheduleRequest(detailTarget)}>
                     Request reschedule
                   </Button>
                 </div>
               )}
-            </Card>
-          ))}
-        </div>
-      </section>
+
+            <div className="booking-section__row-right">
+              <Button type="button" variant="outlined" onClick={() => setChatTarget(detailTarget)}>
+                Chat
+              </Button>
+
+              {(detailTarget.status === "accepted" ||
+                (detailTarget.status === "scheduled" && !isSessionEndedPending(detailTarget))) &&
+                (ssiSubmittedIds.has(detailTarget.id) ? (
+                  <span className="booking-section__ssi-chip">✓ SSI test submitted</span>
+                ) : (
+                  <Button type="button" variant="outlined" onClick={() => openSsiTest(detailTarget)}>
+                    Take SSI Test
+                  </Button>
+                ))}
+
+              {ACTIVE_STATUSES.includes(detailTarget.status) && !isSessionEndedPending(detailTarget) && (
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={() => {
+                    setCancelTarget(detailTarget);
+                    setCancelReasonField("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              )}
+
+              {detailTarget.status === "completed" && detailTarget.outcome !== "missed" && (
+                <div className="booking-section__rating-feedback-block">
+                  {submittedFeedbackIds.has(detailTarget.id) ? (
+                    <div className="booking-section__rated-box">
+                      <span className="booking-section__feedback-submitted">✓ Feedback submitted</span>
+                    </div>
+                  ) : (
+                    <Button type="button" onClick={() => openFeedback(detailTarget)}>
+                      Take Feedback
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {viewingProfile && (
         <CounsellorProfileModal
@@ -613,6 +694,7 @@ export function BookingSection({
               {slot1Field && slot2Field && slot1Field === slot2Field && (
                 <p className="booking-section__legal-note">Please pick two different times.</p>
               )}
+              {bookingError && <p className="booking-section__field-hint">{bookingError}</p>}
 
               <div className="booking-section__modal-actions">
                 <Button type="button" disabled={!formValid || submitting} onClick={confirmBooking}>

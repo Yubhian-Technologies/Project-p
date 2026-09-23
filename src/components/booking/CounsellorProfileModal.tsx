@@ -4,9 +4,8 @@ import { Avatar } from "../common/Avatar";
 import { Button } from "../common/Button";
 import { StarRating } from "../common/StarRating";
 import { MapPinIcon } from "../common/icons";
-import { listCompletedBookingsForCounsellor } from "../../services/firebase/bookings";
+import { fetchCounsellorReviews, type CounsellorReview } from "../../services/firebase/bookings";
 import type { UserProfile } from "../../types/user";
-import type { Booking } from "../../types/booking";
 import type { LiveStatus } from "../../utils/counsellorStatus";
 import { liveStatusLabel } from "../../utils/counsellorStatus";
 import { formatAvailabilitySchedule } from "../../utils/scheduleFormat";
@@ -33,21 +32,22 @@ export function CounsellorProfileModal({
   onBook,
   onClose,
 }: CounsellorProfileModalProps) {
-  const [completedBookings, setCompletedBookings] = useState<Booking[]>([]);
+  const [reviews, setReviews] = useState<CounsellorReview[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
 
   useEffect(() => {
-    listCompletedBookingsForCounsellor(profile.uid).then((bookings) => {
-      setCompletedBookings(bookings);
-      setLoadingReviews(false);
-    });
+    setLoadingReviews(true);
+    fetchCounsellorReviews(profile.uid)
+      .then(setReviews)
+      .catch((err) => {
+        console.error("Failed to load counsellor reviews:", err);
+        setReviews([]);
+      })
+      .finally(() => setLoadingReviews(false));
   }, [profile.uid]);
 
-  const reviews = completedBookings.filter((b) => b.outcome !== "missed" && b.userRatingOfCounsellor !== undefined);
   const avgRating =
-    reviews.length > 0
-      ? reviews.reduce((sum, b) => sum + (b.userRatingOfCounsellor ?? 0), 0) / reviews.length
-      : 0;
+    reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
 
   const scheduleLines = formatAvailabilitySchedule(profile.availabilitySchedule ?? []);
   const hasApproach = profile.approachEmpathetic || profile.approachEvidenceBased || profile.approachSolutionFocused;
@@ -197,21 +197,6 @@ export function CounsellorProfileModal({
               </section>
             )}
 
-            {!loadingReviews && reviews.length > 0 && (
-              <section className="counsellor-profile__section">
-                <h3 className="counsellor-profile__section-title">Patient Reviews</h3>
-                <StarRating value={avgRating} count={reviews.length} size="large" />
-                <div className="counsellor-profile__reviews">
-                  {reviews.map((r) => (
-                    <div key={r.id} className="counsellor-profile__review">
-                      <StarRating value={r.userRatingOfCounsellor ?? 0} />
-                      {r.userReviewText && <p className="counsellor-profile__review-text">"{r.userReviewText}"</p>}
-                      <span className="counsellor-profile__review-author">— Anonymous user</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
           </div>
         </div>
 

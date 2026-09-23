@@ -14,7 +14,6 @@ import { DailyQuoteCard } from "../../components/common/DailyQuoteCard";
 import { FlashQACard } from "../../components/common/FlashQACard";
 import { MoodTrackerCard } from "../../components/common/MoodTrackerCard";
 import { WellnessScoreBanner } from "../../components/common/WellnessScoreBanner";
-import { ChallengesCard } from "./games/ChallengesCard";
 import { UserHomeActivityOverview } from "./UserHomeActivityOverview";
 import { VishnuWellnessMissionCard } from "../../components/common/VishnuWellnessMissionCard";
 import type { Notification } from "../../types/notification";
@@ -34,11 +33,14 @@ export function UserDashboard() {
   const { profile } = useAuth();
   const [activeSection, setActiveSection] = useState("overview");
   const [chatBookingId, setChatBookingId] = useState<string | undefined>();
+  const [ssiBookingId, setSsiBookingId] = useState<string | undefined>();
 
   function handleNotificationClick(notification: Notification) {
     setActiveSection("booking");
     if (notification.type === "chat_message") {
       setChatBookingId(notification.bookingId);
+    } else if (notification.type === "ssi_suggested") {
+      setSsiBookingId(notification.bookingId);
     }
   }
 
@@ -63,7 +65,12 @@ export function UserDashboard() {
     >
       {activeSection === "profile" && <ProfileSection />}
       {activeSection === "booking" && (
-        <BookingSection openChatBookingId={chatBookingId} onChatOpened={() => setChatBookingId(undefined)} />
+        <BookingSection
+          openChatBookingId={chatBookingId}
+          onChatOpened={() => setChatBookingId(undefined)}
+          openSsiBookingId={ssiBookingId}
+          onSsiOpened={() => setSsiBookingId(undefined)}
+        />
       )}
       {activeSection === "wellness-test" && (
         <WellnessTestSection onBookSession={() => setActiveSection("booking")} />
@@ -110,10 +117,6 @@ export function UserDashboard() {
           </BentoCard>
 
           <GamesSummaryCard onPlay={() => setActiveSection("games")} />
-
-          <div style={{ gridColumn: "1 / -1", marginTop: "12px" }}>
-            <ChallengesCard />
-          </div>
 
           <UserHomeActivityOverview onSelectSection={setActiveSection} />
           <VishnuWellnessMissionCard onSelectSection={setActiveSection} />

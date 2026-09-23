@@ -11,7 +11,8 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { db } from "./config";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "./config";
 import type { UserProfile } from "../../types/user";
 import type { Booking, BookingIntake, BookingOutcome } from "../../types/booking";
 import { createNotification } from "./notifications";
@@ -33,35 +34,38 @@ export async function listBookableProfiles(): Promise<UserProfile[]> {
   return snapshot.docs.map((d) => d.data() as UserProfile);
 }
 
+// Goes through the createBooking Cloud Function rather than writing the
+// booking doc directly — that's what actually enforces "one active booking
+// per student" (firestore.rules can no longer be satisfied by a client
+// writing bookings/{id} with userId == themselves for a normal request; see
+// the rule's comment). `user` is kept in the signature so call sites don't
+// need to change, but only `user.uid` matters now — the server resolves the
+// caller's own email from their profile rather than trusting the client for it.
 export async function createBooking(
-  user: { uid: string; email: string },
+  _user: { uid: string; email: string },
   counsellor: { uid: string; email: string },
   intake: BookingIntake,
   proposedSlots: [number, number],
   campusId?: string,
 ): Promise<string> {
-  const now = Date.now();
-  const docRef = await addDoc(bookingsCollection, {
-    userId: user.uid,
-    userEmail: user.email,
+  const callable = httpsCallable<
+    {
+      counsellorId: string;
+      counsellorEmail: string;
+      intake: BookingIntake;
+      proposedSlots: [number, number];
+      campusId?: string;
+    },
+    { bookingId: string }
+  >(functions, "createBooking");
+  const result = await callable({
     counsellorId: counsellor.uid,
     counsellorEmail: counsellor.email,
-    status: "pending",
-    durationMinutes: SESSION_DURATION_MINUTES,
+    intake,
     proposedSlots,
-    ...(campusId ? { campusId } : {}),
-    createdAt: now,
-    updatedAt: now,
+    campusId,
   });
-  await setDoc(intakeDocRef(docRef.id), intake);
-  await createNotification({
-    recipientId: counsellor.uid,
-    type: "booking_requested",
-    bookingId: docRef.id,
-    title: "New session request",
-    message: `${user.email} requested a session with you`,
-  });
-  return docRef.id;
+  return result.data.bookingId;
 }
 
 /**
@@ -193,6 +197,17 @@ export async function getFollowUpHistory(
 
 export async function saveSessionSummary(bookingId: string, summary: string): Promise<void> {
   await setDoc(intakeDocRef(bookingId), { summary }, { merge: true });
+}
+
+/** Counsellor prompting their client to take the pre-session SSI assessment. */
+export async function suggestSsiTest(booking: Booking): Promise<void> {
+  await createNotification({
+    recipientId: booking.userId,
+    type: "ssi_suggested",
+    bookingId: booking.id,
+    title: "Your counsellor suggests the SSI test",
+    message: `${booking.counsellorEmail} suggested you take the SSI test so they can assist you better before your session.`,
+  });
 }
 
 function toBooking(id: string, data: Record<string, unknown>): Booking {
@@ -497,12 +512,22 @@ export async function listPendingTransferRequestsForCampus(campusId: string): Pr
     .sort((a, b) => (b.transferRequest?.createdAt ?? 0) - (a.transferRequest?.createdAt ?? 0));
 }
 
-export async function listCompletedBookingsForCounsellor(counsellorId: string): Promise<Booking[]> {
-  const q = query(bookingsCollection, where("counsellorId", "==", counsellorId));
-  const snapshot = await getDocs(q);
-  return snapshot.docs
-    .map((d) => toBooking(d.id, d.data()))
-    .filter((b) => b.status === "completed");
+export interface CounsellorReview {
+  rating: number;
+  reviewText: string;
+}
+
+// A stranger's client can't read another counsellor's booking history directly
+// (see firestore.rules) — this goes through the getCounsellorReviews Cloud
+// Function instead, which hands back only the rating/review text, nothing
+// that identifies who booked the session.
+export async function fetchCounsellorReviews(counsellorId: string): Promise<CounsellorReview[]> {
+  const callable = httpsCallable<{ counsellorId: string }, { reviews: CounsellorReview[] }>(
+    functions,
+    "getCounsellorReviews",
+  );
+  const result = await callable({ counsellorId });
+  return result.data.reviews;
 }
 
 export async function listCompletedBookings(): Promise<Booking[]> {

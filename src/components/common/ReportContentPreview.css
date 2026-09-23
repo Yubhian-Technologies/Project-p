@@ -1,0 +1,34 @@
+.report-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.report-preview__download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--sketch-radius) !important;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--md-sys-typescale-font-body);
+  cursor: pointer;
+  border: var(--sketch-border);
+  background: #EDE9FE;
+  color: #5B21B6;
+  box-shadow: var(--sketch-shadow-sm);
+  transition: all 0.18s var(--md-sys-motion-easing-standard);
+}
+
+.report-preview__download:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--sketch-shadow);
+  background: #DDD6FE;
+}
+
+.report-preview__download:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

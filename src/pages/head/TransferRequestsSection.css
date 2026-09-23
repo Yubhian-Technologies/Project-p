@@ -96,7 +96,7 @@
   box-sizing: border-box;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 768px) {
   .transfer-requests__actions {
     flex-wrap: wrap;
     width: 100%;

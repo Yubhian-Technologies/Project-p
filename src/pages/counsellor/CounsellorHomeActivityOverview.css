@@ -52,6 +52,28 @@
   .cha-grid {
     grid-template-columns: 1fr;
   }
+
+  .cha-header {
+    padding: 12px 16px;
+  }
+
+  .cha-header__title {
+    font-size: 15px;
+  }
+
+  .cha-card {
+    padding: 16px 18px;
+    gap: 12px;
+  }
+
+  .cha-card__title {
+    font-size: 14px;
+  }
+
+  .cha-loading,
+  .cha-empty {
+    padding: 18px;
+  }
 }
 
 .cha-card {

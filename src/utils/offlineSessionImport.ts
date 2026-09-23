@@ -276,6 +276,9 @@ export function syntheticClientId(email: string | undefined, phone: string): str
   return `offline:${randomId}`;
 }
 
-export function clientDisplayLabel(clientName: string, phone: string): string {
-  return phone ? `${clientName} (${phone})` : clientName;
+// The phone number lives in the booking's private intake details (visible via
+// View Details) — it doesn't belong in the label shown on the collapsed list
+// row, so this is just the name now.
+export function clientDisplayLabel(clientName: string, _phone: string): string {
+  return clientName;
 }

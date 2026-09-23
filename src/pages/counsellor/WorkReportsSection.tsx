@@ -10,6 +10,7 @@ import {
 } from "../../services/firebase/workReports";
 import { Select } from "../../components/common/Select";
 import { Modal } from "../../components/common/Modal";
+import { ReportContentPreview } from "../../components/common/ReportContentPreview";
 import {
   RefreshIcon,
   CheckIcon,
@@ -22,6 +23,7 @@ import {
   EyeIcon,
   MicIcon,
   DownloadIcon,
+  HourglassIcon,
 } from "../../components/common/icons";
 import { downloadWorkReport } from "../../utils/downloadWorkReport";
 import "./WorkReportsSection.css";
@@ -66,6 +68,7 @@ export function WorkReportsSection() {
   const [listError, setListError] = useState("");
   const [selectedReport, setSelectedReport] = useState<WorkReport | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // ── voice-to-text for the report body ──────────────────────────────
   const voicePrefixRef = useRef("");
@@ -112,6 +115,16 @@ export function WorkReportsSection() {
     loadReports();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.uid]);
+
+  // ── download (PDF) ─────────────────────────────────────────────────
+  async function handleDownload(report: WorkReport) {
+    setDownloadingId(report.id);
+    try {
+      await downloadWorkReport(report);
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   // ── delete ──────────────────────────────────────────────────────────
   async function handleDelete(report: WorkReport) {
@@ -332,8 +345,8 @@ export function WorkReportsSection() {
                   </div>
                   <div className="wr-list__row-badges">
                     <span className="wr-badge wr-badge--type">{typeLabel(r.reportType)}</span>
-                    <span className={`wr-badge wr-badge--${r.status}`}>
-                      {r.status === "verified" ? <><CheckIcon /> Verified</> : "⏳ Pending"}
+                    <span className={`wr-status wr-status--${r.status}`}>
+                      {r.status === "verified" ? <><CheckIcon /> Verified</> : <><HourglassIcon /> Pending</>}
                     </span>
                   </div>
                 </div>
@@ -348,9 +361,10 @@ export function WorkReportsSection() {
                   <button
                     type="button"
                     className="wr-btn wr-btn--ghost"
-                    onClick={() => void downloadWorkReport(r)}
+                    disabled={downloadingId === r.id}
+                    onClick={() => void handleDownload(r)}
                   >
-                    <DownloadIcon /> Download
+                    <DownloadIcon /> {downloadingId === r.id ? "Preparing…" : "Download"}
                   </button>
                   <button
                     type="button"
@@ -380,8 +394,8 @@ export function WorkReportsSection() {
           <div className="wr-modal__details">
             <div className="wr-modal__badges">
               <span className="wr-badge wr-badge--type">{typeLabel(selectedReport.reportType)}</span>
-              <span className={`wr-badge wr-badge--${selectedReport.status}`}>
-                {selectedReport.status === "verified" ? <><CheckIcon /> Verified</> : "⏳ Pending"}
+              <span className={`wr-status wr-status--${selectedReport.status}`}>
+                {selectedReport.status === "verified" ? <><CheckIcon /> Verified</> : <><HourglassIcon /> Pending</>}
               </span>
             </div>
 
@@ -402,7 +416,10 @@ export function WorkReportsSection() {
 
             <div className="wr-modal__section">
               <h4 className="wr-modal__section-title">Report Content</h4>
-              <div className="wr-modal__body-text">{selectedReport.body}</div>
+              <ReportContentPreview
+                downloading={downloadingId === selectedReport.id}
+                onDownload={() => void handleDownload(selectedReport)}
+              />
             </div>
 
             {selectedReport.status === "verified" && (
@@ -420,13 +437,6 @@ export function WorkReportsSection() {
             )}
 
             <div className="wr-modal__actions">
-              <button
-                type="button"
-                className="wr-btn wr-btn--view"
-                onClick={() => void downloadWorkReport(selectedReport)}
-              >
-                <DownloadIcon /> Download
-              </button>
               <button
                 type="button"
                 className="wr-btn wr-btn--danger"

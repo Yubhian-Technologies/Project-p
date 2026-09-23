@@ -177,7 +177,7 @@
 }
 
 /* Mobile: compact square KPI cards in a swipeable carousel to save vertical space. */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .counsellor-overview__kpi-grid {
     display: flex;
     grid-template-columns: none;
@@ -202,5 +202,14 @@
     justify-content: space-between;
     padding: 14px;
     min-width: 0;
+  }
+
+  .counsellor-overview__timeline-card {
+    padding: 16px 18px;
+    gap: 14px;
+  }
+
+  .counsellor-overview__title {
+    font-size: 16px;
   }
 }

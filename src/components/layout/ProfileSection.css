@@ -46,7 +46,7 @@
   box-shadow: var(--neu-shadow-sunken-sm);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .profile-section__list {
     grid-template-columns: 1fr;
   }

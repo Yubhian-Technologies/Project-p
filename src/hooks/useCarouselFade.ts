@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-/** Horizontal card carousels (mobile) that fade/scale cards as they slide in and out of view. */
+/** Horizontal card carousels that fade/scale cards as they slide in and out of view. */
 const CAROUSEL_SELECTOR = [
   ".counsellor-overview__kpi-grid",
   ".head-analytics__kpi-grid",

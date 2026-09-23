@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { ROLE_LABELS } from "../../config/roles";
@@ -30,6 +30,15 @@ export function AppShell({
 }: AppShellProps) {
   const { profile, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Switching sections swaps content in place rather than navigating to a new
+  // page, so the browser has no reason to reset scroll on its own — whatever
+  // scroll position the previous section was left at (e.g. scrolled to its
+  // bottom) would otherwise carry over, making the new section appear to
+  // "open at the bottom." This is shared by every dashboard via AppShell.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+  }, [activeSection]);
 
   return (
     <div className="app-shell">

@@ -10,6 +10,7 @@ export type NotificationType =
   | "session_needs_review"
   | "feedback_submitted"
   | "ssi_test"
+  | "ssi_suggested"
   | "chat_message"
   | "followup_scheduled"
   | "emergency_sos"

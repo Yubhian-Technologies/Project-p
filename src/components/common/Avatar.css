@@ -16,8 +16,13 @@
   border-radius: 50%;
 }
 
+/* Only the counsellor profile photo uses this shape, so it's safe to give it
+   the app's neo-brutalist look (solid border, square-cut corners, hard
+   offset shadow) without touching the circular avatars used everywhere else. */
 .avatar--square {
-  border-radius: 20px;
+  border-radius: var(--sketch-radius, 0px) !important;
+  border: 2px solid #2B2B2B;
+  box-shadow: 3px 3px 0px #2B2B2B;
 }
 
 .avatar--small {
@@ -38,5 +43,17 @@
   height: 130px;
   font-size: 46px;
   box-shadow: 4px 4px 14px rgba(163, 177, 198, 0.35), -3px -3px 10px rgba(255, 255, 255, 0.3);
+}
+
+/* `large` and `xl` are also used at their default circle shape elsewhere
+   (profile page, counsellor list), so their own soft shadow stays as-is —
+   these combo rules just make the square variant's hard shadow win instead,
+   wherever square is deliberately requested alongside a size. */
+.avatar--large.avatar--square {
+  box-shadow: 3px 3px 0px #2B2B2B;
+}
+
+.avatar--xl.avatar--square {
+  box-shadow: 4px 4px 0px #2B2B2B;
 }
 
