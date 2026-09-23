@@ -180,6 +180,21 @@
   color: var(--neu-text-muted, #718096);
 }
 
+.booking-section__emergency-tag {
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #B91C1C;
+}
+
+/* On its own line inside the details popup, it explains why this booking
+   has no scheduled time yet. */
+p.booking-section__emergency-tag {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 .booking-section__feedback-submitted {
   font-size: 13px;
   font-weight: 800;

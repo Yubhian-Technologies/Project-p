@@ -218,7 +218,10 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
           viewerRole={profile?.role === "head" ? "head" : "counsellor"}
           onClose={() => setSelectedId(null)}
           onViewSummary={showViewSummary ? () => handleViewSummary(selectedBooking) : undefined}
-          onSuggestSsi={() => suggestSsiTest(selectedBooking)}
+          onSuggestSsi={async () => {
+            await suggestSsiTest(selectedBooking);
+            await refresh();
+          }}
           onAcceptSlot={async (chosenAt) => {
             await acceptProposedSlot(selectedBooking, chosenAt);
             await refresh();

@@ -47,7 +47,7 @@ function statusLabel(booking: Booking): string {
     case "pending":
       return "Pending";
     case "accepted":
-      return "Accepted — time coming soon";
+      return booking.isEmergency ? "Accepted — being handled directly, no session time needed" : "Accepted — time coming soon";
     case "scheduled":
       return `Scheduled for ${booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleString() : "—"} (${SESSION_DURATION_LABEL})`;
     case "rejected":
@@ -359,6 +359,7 @@ export function BookingSection({
             >
               <span className="booking-section__row-email">
                 {b.counsellorEmail}
+                {b.isEmergency && <span className="booking-section__emergency-tag">🚨 Crisis SOS</span>}
                 {b.followUpOfBookingId && <span className="booking-section__followup-tag">(follow-up)</span>}
               </span>
               <div className="booking-section__row-right booking-section__row-right--pinned">
@@ -391,6 +392,12 @@ export function BookingSection({
           className="booking-section__detail-modal"
         >
           <div className="booking-section__detail">
+            {detailTarget.isEmergency && (
+              <p className="booking-section__emergency-tag">
+                🚨 Crisis SOS — dispatched to every counsellor/head on your campus; whoever accepts it
+                doesn't pick a time first, since a crisis is handled right away, not scheduled.
+              </p>
+            )}
             {detailTarget.followUpOfBookingId && (
               <p className="booking-section__followup-tag">(follow-up session)</p>
             )}

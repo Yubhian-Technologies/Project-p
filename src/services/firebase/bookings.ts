@@ -201,6 +201,7 @@ export async function saveSessionSummary(bookingId: string, summary: string): Pr
 
 /** Counsellor prompting their client to take the pre-session SSI assessment. */
 export async function suggestSsiTest(booking: Booking): Promise<void> {
+  await updateDoc(doc(db, "bookings", booking.id), { ssiSuggestedAt: Date.now() });
   await createNotification({
     recipientId: booking.userId,
     type: "ssi_suggested",
