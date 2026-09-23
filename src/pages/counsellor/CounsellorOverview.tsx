@@ -58,7 +58,14 @@ export function CounsellorOverview() {
         );
         setAppointmentsToday(todaySessions.filter((b) => b.outcome !== "missed").length);
         setPendingRequests(bookings.filter((b) => b.status === "pending").length);
-        setFollowUps(bookings.filter((b) => b.followUpOfBookingId).length);
+        // Only still-active follow-ups — the card is labelled "Ongoing", but this
+        // counted every follow-up booking ever, including ones long since
+        // completed, cancelled, or rejected.
+        setFollowUps(
+          bookings.filter(
+            (b) => b.followUpOfBookingId && ["pending", "accepted", "scheduled"].includes(b.status),
+          ).length,
+        );
 
         const intakes = await Promise.all(
           todaySessions.map((b) =>

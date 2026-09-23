@@ -1,4 +1,5 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldPath } from "firebase-admin/firestore";
@@ -476,5 +477,67 @@ export const createBooking = onCall<{
   });
 
   return { bookingId: bookingRef.id };
+});
+
+// Runs every 5 minutes and sends a one-time "starting now" notification to
+// both the student and the counsellor, right at/after a scheduled session's
+// start time. Firing on a clock rather than when someone happens to have the
+// app open is why this has to be a scheduled function rather than
+// client-side code. Each booking is flagged (reminderStartSent) so a run
+// every 5 minutes can never send it twice.
+export const sendSessionReminders = onSchedule("every 5 minutes", async () => {
+  const now = Date.now();
+  const snapshot = await db.collection("bookings").where("status", "==", "scheduled").get();
+
+  const bookingUpdates: FirebaseFirestore.DocumentReference[] = [];
+  const notifications: Record<string, unknown>[] = [];
+
+  for (const docRef of snapshot.docs) {
+    const b = docRef.data();
+    const scheduledAt = b.scheduledAt as number | undefined;
+    if (typeof scheduledAt !== "number" || b.reminderStartSent) continue;
+    const durationMinutes = typeof b.durationMinutes === "number" ? b.durationMinutes : 90;
+    if (now < scheduledAt || now >= scheduledAt + durationMinutes * 60000) continue;
+
+    bookingUpdates.push(docRef.ref);
+    const recipients = [
+      { id: b.userId as string, counterpartEmail: b.counsellorEmail as string },
+      { id: b.counsellorId as string, counterpartEmail: b.userEmail as string },
+    ];
+    for (const r of recipients) {
+      notifications.push({
+        recipientId: r.id,
+        type: "session_reminder",
+        bookingId: docRef.id,
+        title: "Your session is starting now",
+        message: `Your session with ${r.counterpartEmail} is starting now.`,
+        read: false,
+        createdAt: now,
+      });
+    }
+  }
+
+  if (bookingUpdates.length === 0 && notifications.length === 0) return;
+
+  // Batched in chunks of 400 writes — comfortably under Firestore's 500-per-batch
+  // limit even though each triggering booking contributes up to 3 writes (1 flag
+  // update + 2 notifications).
+  let batch = db.batch();
+  let opsInBatch = 0;
+  const batches: FirebaseFirestore.WriteBatch[] = [];
+  function queue(op: () => void) {
+    op();
+    opsInBatch++;
+    if (opsInBatch === 400) {
+      batches.push(batch);
+      batch = db.batch();
+      opsInBatch = 0;
+    }
+  }
+  for (const ref of bookingUpdates) queue(() => batch.update(ref, { reminderStartSent: true }));
+  for (const n of notifications) queue(() => batch.set(db.collection("notifications").doc(), n));
+  if (opsInBatch > 0) batches.push(batch);
+
+  for (const b of batches) await b.commit();
 });
 

@@ -582,7 +582,13 @@ export async function closeBooking(booking: Booking, outcome: BookingOutcome): P
   }
 }
 
-export async function closeMissedSession(booking: Booking, reason: string): Promise<void> {
+/**
+ * @param headId The counsellor's own campus Head, if known — also notified
+ *   that this counsellor missed a session, and why. Omitted when the viewer
+ *   closing it out IS the head (nothing to tell themselves) or no head could
+ *   be resolved for the campus.
+ */
+export async function closeMissedSession(booking: Booking, reason: string, headId?: string): Promise<void> {
   await updateDoc(doc(db, "bookings", booking.id), {
     status: "completed",
     outcome: "missed",
@@ -596,6 +602,15 @@ export async function closeMissedSession(booking: Booking, reason: string): Prom
     title: "Session not held",
     message: `Your scheduled session with ${booking.counsellorEmail} did not take place: ${reason}`,
   });
+  if (headId) {
+    await createNotification({
+      recipientId: headId,
+      type: "booking_missed",
+      bookingId: booking.id,
+      title: "Counsellor missed a session",
+      message: `${booking.counsellorEmail} marked their session with ${booking.userEmail} as missed: ${reason}`,
+    });
+  }
 }
 
 /**
@@ -621,8 +636,11 @@ export function isSessionEndedPending(booking: Booking): boolean {
  * (e.g. React StrictMode's double-invoked effects) — a transaction guarantees
  * only one of those concurrent calls actually flips missedNotified and sends
  * the notification, instead of both racing past the same stale flag value.
+ *
+ * @param headId The counsellor's own campus Head, if known — also told the
+ *   session is overdue and unmarked, same as the counsellor.
  */
-export async function flagMissedSessionPending(booking: Booking): Promise<void> {
+export async function flagMissedSessionPending(booking: Booking, headId?: string): Promise<void> {
   const bookingRef = doc(db, "bookings", booking.id);
   const shouldNotify = await runTransaction(db, async (transaction) => {
     const snap = await transaction.get(bookingRef);
@@ -638,6 +656,15 @@ export async function flagMissedSessionPending(booking: Booking): Promise<void> 
     title: "Session needs review",
     message: `Your session with ${booking.userEmail} was scheduled to end and hasn't been marked yet — let us know what happened.`,
   });
+  if (headId) {
+    await createNotification({
+      recipientId: headId,
+      type: "session_needs_review",
+      bookingId: booking.id,
+      title: "Counsellor session needs review",
+      message: `${booking.counsellorEmail}'s session with ${booking.userEmail} was scheduled to end and hasn't been marked yet.`,
+    });
+  }
 }
 
 export async function createFollowUpBooking(

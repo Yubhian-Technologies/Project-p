@@ -435,6 +435,16 @@ service cloud.firestore {
             get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role == 'head' &&
             get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
           ) || (
+            // A Counsellor telling their own campus Head that a session of
+            // theirs was missed, or is overdue and not yet marked — same
+            // shape as transfer_requested above; the Head isn't a party to
+            // the booking either.
+            request.resource.data.keys().hasAll(['bookingId']) &&
+            request.resource.data.type in ['booking_missed', 'session_needs_review'] &&
+            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.counsellorId == request.auth.uid &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role == 'head' &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
+          ) || (
             // Staff (a Head, approving/declining a transfer request, etc.) acting
             // administratively on a booking can notify either party even though
             // the staff member isn't a party to the booking themselves.

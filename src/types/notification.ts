@@ -11,6 +11,7 @@ export type NotificationType =
   | "feedback_submitted"
   | "ssi_test"
   | "ssi_suggested"
+  | "session_reminder"
   | "chat_message"
   | "followup_scheduled"
   | "emergency_sos"
