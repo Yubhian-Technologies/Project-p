@@ -379,6 +379,11 @@ export async function transferBooking(
     transferredFrom: previousCounsellorId,
     cancelledBy: deleteField(),
     cancellationReason: deleteField(),
+    // A stale "overdue, unmarked" flag from the previous counsellor must not
+    // survive the reassignment — otherwise flagMissedSessionPending() sees it
+    // as already notified and stays silent even if the new counsellor lets
+    // the (now rescheduled) session go overdue too.
+    missedNotified: deleteField(),
     updatedAt: Date.now(),
   });
   await createNotification({
@@ -553,6 +558,7 @@ export async function rateUser(bookingId: string, rating: number, note?: string)
   await updateDoc(doc(db, "bookings", bookingId), {
     counsellorRatingOfUser: rating,
     ...(note ? { counsellorNoteOnUser: note } : {}),
+    counsellorRatedAt: Date.now(),
     updatedAt: Date.now(),
   });
 }
@@ -614,6 +620,53 @@ export async function closeMissedSession(booking: Booking, reason: string, headI
 }
 
 /**
+ * Head offering the student a make-up session after reviewing a missed
+ * booking's reason. The student answers via respondToCompensationOffer below;
+ * once accepted, the Head schedules the actual new session with
+ * scheduleCompensationSession.
+ */
+export async function offerCompensationSession(
+  booking: Booking,
+  head: { uid: string; email: string },
+): Promise<void> {
+  const now = Date.now();
+  await updateDoc(doc(db, "bookings", booking.id), {
+    compensationOffer: {
+      offeredBy: head.uid,
+      offeredByEmail: head.email,
+      status: "pending",
+      createdAt: now,
+    },
+    updatedAt: now,
+  });
+  await createNotification({
+    recipientId: booking.userId,
+    type: "compensation_offered",
+    bookingId: booking.id,
+    title: "Compensation session offered",
+    message: `Your missed session with ${booking.counsellorEmail} can be made up — accept or decline the compensation session offer.`,
+  });
+}
+
+/** The student's answer to a compensation offer, reported back to the Head who sent it. */
+export async function respondToCompensationOffer(booking: Booking, accept: boolean): Promise<void> {
+  if (!booking.compensationOffer) return;
+  const now = Date.now();
+  await updateDoc(doc(db, "bookings", booking.id), {
+    "compensationOffer.status": accept ? "accepted" : "declined",
+    "compensationOffer.decidedAt": now,
+    updatedAt: now,
+  });
+  await createNotification({
+    recipientId: booking.compensationOffer.offeredBy,
+    type: accept ? "compensation_accepted" : "compensation_declined",
+    bookingId: booking.id,
+    title: accept ? "Compensation session accepted" : "Compensation session declined",
+    message: `${booking.userEmail} ${accept ? "accepted" : "declined"} the compensation session offer for their missed session with ${booking.counsellorEmail}.`,
+  });
+}
+
+/**
  * A "scheduled" booking whose end time (scheduledAt + duration) has already
  * passed with no closing action taken — i.e. it should show as missed even
  * though nobody has written a reason yet.
@@ -671,17 +724,20 @@ export async function createFollowUpBooking(
   original: Booking,
   intake: BookingIntake,
   scheduledAt: number,
+  counsellor?: { uid: string; email: string },
 ): Promise<string> {
   const now = Date.now();
+  const chosenCounsellor = counsellor ?? { uid: original.counsellorId, email: original.counsellorEmail };
   const docRef = await addDoc(bookingsCollection, {
     userId: original.userId,
     userEmail: original.userEmail,
-    counsellorId: original.counsellorId,
-    counsellorEmail: original.counsellorEmail,
+    counsellorId: chosenCounsellor.uid,
+    counsellorEmail: chosenCounsellor.email,
     status: "scheduled",
     scheduledAt,
     durationMinutes: SESSION_DURATION_MINUTES,
     followUpOfBookingId: original.id,
+    campusId: original.campusId,
     createdAt: now,
     updatedAt: now,
   });
@@ -692,9 +748,30 @@ export async function createFollowUpBooking(
     type: "followup_scheduled",
     bookingId: docRef.id,
     title: "Follow-up session scheduled",
-    message: `A follow-up session with ${original.counsellorEmail} is scheduled for ${new Date(scheduledAt).toLocaleString()}`,
+    message: `A follow-up session with ${chosenCounsellor.email} is scheduled for ${new Date(scheduledAt).toLocaleString()}`,
   });
   return docRef.id;
+}
+
+/**
+ * Head-initiated make-up session after a student accepts a compensation
+ * offer (see offerCompensationSession/respondToCompensationOffer below) — a
+ * thin wrapper around createFollowUpBooking that also stamps the new
+ * booking's id back onto the original missed booking's compensationOffer, so
+ * the UI knows not to show the scheduling controls again.
+ */
+export async function scheduleCompensationSession(
+  original: Booking,
+  intake: BookingIntake,
+  counsellor: { uid: string; email: string },
+  scheduledAt: number,
+): Promise<string> {
+  const newBookingId = await createFollowUpBooking(original, intake, scheduledAt, counsellor);
+  await updateDoc(doc(db, "bookings", original.id), {
+    "compensationOffer.compensationBookingId": newBookingId,
+    updatedAt: Date.now(),
+  });
+  return newBookingId;
 }
 
 /**

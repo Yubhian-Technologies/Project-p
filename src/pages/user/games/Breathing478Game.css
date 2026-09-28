@@ -115,3 +115,33 @@
 .b478-actions {
   margin-top: 8px;
 }
+
+@media (max-width: 768px) {
+  .b478-shell {
+    padding: 18px 14px;
+    gap: 14px;
+  }
+
+  .b478-shell__title {
+    font-size: 18px;
+  }
+
+  .b478-shell__subtitle {
+    font-size: 12px;
+  }
+
+  .b478-stats {
+    gap: 16px;
+    padding: 8px 14px;
+  }
+
+  .b478-circle {
+    width: 150px;
+    height: 150px;
+    margin: 8px 0;
+  }
+
+  .b478-circle__timer {
+    font-size: 26px;
+  }
+}

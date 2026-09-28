@@ -17,6 +17,8 @@ import {
   closeBooking,
   closeMissedSession,
   createFollowUpBooking,
+  offerCompensationSession,
+  scheduleCompensationSession,
   flagMissedSessionPending,
   getBookingIntake,
   isSessionEndedPending,
@@ -27,6 +29,7 @@ import {
 } from "../../services/firebase/bookings";
 import type { Booking } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
+import { Button } from "../../components/common/Button";
 import { RequestCard } from "../../components/booking/RequestCard";
 import { RequestDetailModal } from "../../components/booking/RequestDetailModal";
 import { SessionHistoryModal } from "../../components/booking/SessionHistoryModal";
@@ -59,64 +62,103 @@ interface BookingRequestsSectionProps {
   importOpen?: boolean;
   onImportClose?: () => void;
   initialSelectedId?: string;
+  /** Booking id to auto-open the chat tab for — set when the viewer got here
+   *  by tapping a "chat_message" notification. */
+  autoOpenChatBookingId?: string;
+  /** Fired once the targeted request has actually opened with the chat
+   *  auto-opened. The dashboard drops its id on this so that reopening the
+   *  SAME booking later (a plain "view details" click) doesn't pop the chat
+   *  open again — without this, the target id never clears and the chat
+   *  auto-opens every single time that booking is revisited. */
+  onChatAutoOpenConsumed?: () => void;
 }
 
-export function BookingRequestsSection({ importOpen = false, onImportClose, initialSelectedId }: BookingRequestsSectionProps) {
+export function BookingRequestsSection({
+  importOpen = false,
+  onImportClose,
+  initialSelectedId,
+  autoOpenChatBookingId,
+  onChatAutoOpenConsumed,
+}: BookingRequestsSectionProps) {
   const { currentUser, profile } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [userNames, setUserNames] = useState<Map<string, string>>(new Map());
   const [transferCandidates, setTransferCandidates] = useState<UserProfile[]>([]);
+  const [compensationCandidates, setCompensationCandidates] = useState<UserProfile[]>([]);
   const [campusHead, setCampusHead] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("new");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [historyState, setHistoryState] = useState<HistoryState | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialSelectedId) setSelectedId(initialSelectedId);
   }, [initialSelectedId]);
 
+  // Once the request a "chat_message" notification pointed at has actually
+  // been selected (and, on this same render, mounted with autoOpenChat=true
+  // below), tell the dashboard to drop its target immediately — otherwise it
+  // never clears and the chat auto-opens again on every later visit to this
+  // same booking, even a plain "view details" click.
+  useEffect(() => {
+    if (autoOpenChatBookingId && selectedId === autoOpenChatBookingId) {
+      onChatAutoOpenConsumed?.();
+    }
+  }, [selectedId, autoOpenChatBookingId, onChatAutoOpenConsumed]);
+
   async function refresh() {
     if (!currentUser) return;
-    const [myBookings, allBookable] = await Promise.all([
-      listBookingsForCounsellor(currentUser.uid),
-      listBookableProfiles(),
-    ]);
-    setBookings(myBookings);
+    try {
+      const [myBookings, allBookable] = await Promise.all([
+        listBookingsForCounsellor(currentUser.uid),
+        listBookableProfiles(),
+      ]);
+      setBookings(myBookings);
 
-    // Resolve each student's own display name (if they've set one) so the
-    // list can show that instead of their email — offline-imported "clients"
-    // have a synthetic id and no real profile, so they're skipped.
-    const uniqueUserIds = [...new Set(myBookings.map((b) => b.userId))].filter(
-      (id) => !id.startsWith("offline:"),
-    );
-    const profiles = await Promise.all(uniqueUserIds.map((id) => getUserProfile(id)));
-    const nameMap = new Map<string, string>();
-    uniqueUserIds.forEach((id, i) => {
-      const name = profiles[i]?.displayName?.trim();
-      if (name) nameMap.set(id, name);
-    });
-    setUserNames(nameMap);
-
-    setTransferCandidates(allBookable.filter((p) => p.uid !== currentUser.uid));
-    const head =
-      allBookable.find((p) => p.role === "head" && p.campusId === profile?.campusId && p.uid !== currentUser.uid) ??
-      null;
-    setCampusHead(head);
-    setLoading(false);
-
-    const newlyPending = myBookings.filter((b) => isSessionEndedPending(b) && !b.missedNotified);
-    if (newlyPending.length > 0) {
-      await Promise.all(newlyPending.map((b) => flagMissedSessionPending(b, head?.uid)));
-      setBookings((prev) =>
-        prev.map((b) => (newlyPending.some((p) => p.id === b.id) ? { ...b, missedNotified: true } : b)),
+      // Resolve each student's own display name (if they've set one) so the
+      // list can show that instead of their email — offline-imported "clients"
+      // have a synthetic id and no real profile, so they're skipped.
+      const uniqueUserIds = [...new Set(myBookings.map((b) => b.userId))].filter(
+        (id) => !id.startsWith("offline:"),
       );
+      const profiles = await Promise.all(uniqueUserIds.map((id) => getUserProfile(id)));
+      const nameMap = new Map<string, string>();
+      uniqueUserIds.forEach((id, i) => {
+        const name = profiles[i]?.displayName?.trim();
+        if (name) nameMap.set(id, name);
+      });
+      setUserNames(nameMap);
+
+      setTransferCandidates(allBookable.filter((p) => p.uid !== currentUser.uid));
+      setCompensationCandidates(
+        allBookable.filter((p) => p.uid !== currentUser.uid && p.campusId === profile?.campusId),
+      );
+      const head =
+        allBookable.find((p) => p.role === "head" && p.campusId === profile?.campusId && p.uid !== currentUser.uid) ??
+        null;
+      setCampusHead(head);
+      setLoadError(null);
+
+      const newlyPending = myBookings.filter((b) => isSessionEndedPending(b) && !b.missedNotified);
+      if (newlyPending.length > 0) {
+        await Promise.all(newlyPending.map((b) => flagMissedSessionPending(b, head?.uid)));
+        setBookings((prev) =>
+          prev.map((b) => (newlyPending.some((p) => p.id === b.id) ? { ...b, missedNotified: true } : b)),
+        );
+      }
+    } catch (err) {
+      console.error("Failed to load booking requests:", err);
+      setLoadError("Couldn't load booking requests. Check your connection and try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
     refresh();
-  }, [currentUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser, profile?.campusId]);
 
   // Same reasoning as BookingSection.tsx (the student's side): the list above
   // is a one-off fetch, so a student cancelling/rescheduling on their own
@@ -147,6 +189,17 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
   }
 
   if (loading) return null;
+
+  if (loadError) {
+    return (
+      <div className="booking-requests-section">
+        <p>{loadError}</p>
+        <Button type="button" variant="outlined" onClick={() => refresh()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   const newRequests = bookings.filter((b) => NEW_STATUSES.includes(b.status));
   const upcoming = bookings.filter((b) => UPCOMING_STATUSES.includes(b.status) && !isSessionEndedPending(b));
@@ -235,10 +288,13 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
 
       {selectedBooking && (
         <RequestDetailModal
+          key={selectedBooking.id}
           booking={selectedBooking}
           transferCandidates={transferCandidates}
+          compensationCandidates={compensationCandidates}
           campusHead={campusHead}
           viewerRole={profile?.role === "head" ? "head" : "counsellor"}
+          autoOpenChat={!!autoOpenChatBookingId && selectedBooking.id === autoOpenChatBookingId}
           onClose={() => setSelectedId(null)}
           onViewSummary={showViewSummary ? () => handleViewSummary(selectedBooking) : undefined}
           onSuggestSsi={async () => {
@@ -314,6 +370,21 @@ export function BookingRequestsSection({ importOpen = false, onImportClose, init
           }}
           onCloseMissed={async (reason) => {
             await closeMissedSession(selectedBooking, reason, campusHead?.uid);
+            await refresh();
+          }}
+          onOfferCompensation={
+            currentUser && profile?.role === "head"
+              ? async () => {
+                  await offerCompensationSession(selectedBooking, { uid: currentUser.uid, email: profile?.email ?? "" });
+                  await refresh();
+                }
+              : undefined
+          }
+          onScheduleCompensation={async (counsellor, scheduledAt) => {
+            const intake = await getBookingIntake(selectedBooking.id);
+            if (intake) {
+              await scheduleCompensationSession(selectedBooking, intake, counsellor, scheduledAt);
+            }
             await refresh();
           }}
           onRateUser={async (rating, note) => {

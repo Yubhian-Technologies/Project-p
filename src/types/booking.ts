@@ -27,6 +27,15 @@ export interface TransferRequest {
   decisionNote?: string;
 }
 
+export interface CompensationOffer {
+  offeredBy: string; // head uid
+  offeredByEmail: string;
+  status: "pending" | "accepted" | "declined";
+  createdAt: number;
+  decidedAt?: number;
+  compensationBookingId?: string; // set once the Head schedules the new session
+}
+
 export interface Booking {
   id: string;
   userId: string;
@@ -48,6 +57,7 @@ export interface Booking {
   ratedAt?: number;
   counsellorRatingOfUser?: number;
   counsellorNoteOnUser?: string;
+  counsellorRatedAt?: number;
   sessionMode?: "online" | "offline";
   isEmergency?: boolean;
   /** Set once the counsellor/head has suggested the SSI test — keeps the button
@@ -60,6 +70,7 @@ export interface Booking {
   proposedSlots?: [number, number]; // the two times the student proposed at request time
   rescheduleProposal?: RescheduleProposal;
   transferRequest?: TransferRequest;
+  compensationOffer?: CompensationOffer;
   createdAt: number;
   updatedAt: number;
 }

@@ -1,7 +1,65 @@
 .games-section {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 20px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* The exercise itself and its motivation/fact card, side by side. This uses
+   flex-wrap: nowrap deliberately — with wrap enabled, flexbox decides whether
+   to wrap using each item's flex-basis (580px + 300px + gap here), not its
+   shrunk size, so the motivation card would drop to its own line on any
+   window narrower than ~900px even though both items can shrink to fit fine.
+   nowrap + min-width: 0 lets them shrink together and always stay side by
+   side; only the explicit @media block below stacks them, on real phones.
+   align-self: center keeps this compact cluster from sitting pinned to the
+   left edge of a wide desktop content area with a big empty gap beside it —
+   the parent's align-items: flex-start is needed for the list view above,
+   but it made this fixed-width row look stranded on wide screens. */
+.games-section__active-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  align-self: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 904px;
+}
+
+.games-section__active-game {
+  flex: 1 1 0%;
+  min-width: 0;
+  max-width: 580px;
+}
+
+.games-section__motivation-card {
+  flex: 0 1 300px;
+  min-width: 200px;
+  box-sizing: border-box;
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  box-shadow: 3px 3px 0px #2B2B2B;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .games-section__active-row {
+    flex-direction: column;
+    flex-wrap: wrap;
+  }
+
+  .games-section__active-game,
+  .games-section__motivation-card {
+    flex-basis: auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
 }
 
 .games-section__intro {
@@ -10,15 +68,45 @@
   color: var(--neu-text-muted, #718096);
 }
 
+.games-section__motivation-card-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94A3B8;
+}
+
+.games-section__motivation {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #7C3AED;
+}
+
+.games-section__fact {
+  margin: 0;
+  font-size: 12px;
+  color: #64748B;
+  line-height: 1.5;
+}
+
+.games-section__fact strong {
+  color: #334155;
+}
+
 .game-shell {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  background: var(--neu-bg, #E8ECF2);
-  border-radius: 24px;
-  box-shadow: var(--neu-shadow-extruded-lg);
+  background: #F8F4EA;
+  border: 2.5px solid #2B2B2B;
+  border-radius: 0px !important;
+  box-shadow: 4px 4px 0px #2B2B2B;
   padding: 32px 28px;
+  box-sizing: border-box;
+  width: 100%;
   max-width: 520px;
 }
 
@@ -27,12 +115,16 @@
   font-family: var(--md-sys-typescale-font-display);
   font-size: 20px;
   font-weight: 800;
-  color: var(--neu-text-primary, #2D3748);
+  color: #0F172A;
 }
 
 .game-shell__stats {
   display: flex;
-  gap: 24px;
+  gap: 16px;
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  padding: 10px 20px;
+  box-shadow: 2px 2px 0px #2B2B2B;
 }
 
 .game-shell__stat {
@@ -44,9 +136,9 @@
 
 .game-shell__stat-value {
   font-family: var(--md-sys-typescale-font-display);
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 800;
-  color: var(--neu-accent-primary, #2563EB);
+  color: #7C3AED;
 }
 
 .game-shell__stat-label {
@@ -54,13 +146,29 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--neu-text-muted, #718096);
+  color: #64748B;
 }
 
 .game-shell__status {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  color: var(--neu-text-body, #4A5568);
+  color: #334155;
   text-align: center;
+}
+
+@media (max-width: 768px) {
+  .game-shell {
+    padding: 18px 14px;
+    gap: 14px;
+  }
+
+  .game-shell__title {
+    font-size: 18px;
+  }
+
+  .game-shell__stats {
+    gap: 12px;
+    padding: 8px 14px;
+  }
 }

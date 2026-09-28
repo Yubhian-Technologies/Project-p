@@ -124,3 +124,33 @@
 .boxb-actions {
   margin-top: 8px;
 }
+
+@media (max-width: 768px) {
+  .boxb-shell {
+    padding: 18px 14px;
+    gap: 14px;
+  }
+
+  .boxb-shell__title {
+    font-size: 18px;
+  }
+
+  .boxb-shell__subtitle {
+    font-size: 12px;
+  }
+
+  .boxb-stats {
+    gap: 16px;
+    padding: 8px 14px;
+  }
+
+  .boxb-box {
+    width: 150px;
+    height: 150px;
+    margin: 8px 0;
+  }
+
+  .boxb-box__timer {
+    font-size: 26px;
+  }
+}

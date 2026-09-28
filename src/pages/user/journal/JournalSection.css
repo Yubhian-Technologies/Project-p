@@ -122,6 +122,106 @@
   flex-shrink: 0;
 }
 
+.journal-editor__share {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 16px;
+  background: #F8F4EA;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
+}
+
+.journal-editor__share label {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748B;
+}
+
+.journal-editor__share-error {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #C53030;
+}
+
+.journal-editor__share-success {
+  margin: 12px 0 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #065F46;
+}
+
+.journal-section__shared {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 2px dashed #2B2B2B;
+}
+
+.journal-section__shared-title {
+  margin: 0 0 4px 0;
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: #1E1E1E;
+}
+
+.journal-section__shared-subtitle {
+  margin: 0 0 14px 0;
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
+}
+
+.journal-section__shared-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.journal-section__shared-modal-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  margin-bottom: 12px;
+  color: #1E1E1E;
+}
+
+.journal-section__shared-modal-meta span:last-child {
+  color: var(--neu-text-muted, #718096);
+  font-weight: 600;
+}
+
+.journal-section__shared-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: #1E1E1E;
+}
+
+.journal-section__shared-meta span {
+  color: var(--neu-text-muted, #718096);
+  font-weight: 600;
+}
+
+.journal-section__shared-note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #334155;
+  white-space: pre-wrap;
+}
+
 @media (max-width: 768px) {
   .journal-section__body {
     flex-direction: column;

@@ -10,6 +10,7 @@ import {
   acceptRescheduleProposal,
   isSessionEndedPending,
   getBookingIntake,
+  respondToCompensationOffer,
   SESSION_DURATION_LABEL,
 } from "../../services/firebase/bookings";
 import { listFeedbackForUser, createSessionFeedback } from "../../services/firebase/feedback";
@@ -30,6 +31,7 @@ import { Select } from "../../components/common/Select";
 import { DateTimePicker } from "../../components/common/DateTimePicker";
 import { StarRating } from "../../components/common/StarRating";
 import { ChatModal } from "../../components/chat/ChatModal";
+import { SessionResourcesPanel } from "../../components/resources/SessionResourcesPanel";
 import "./BookingSection.css";
 
 function nowValue(): string {
@@ -57,7 +59,14 @@ function statusLabel(booking: Booking): string {
       return `Cancelled by ${booking.cancelledBy === "user" ? "you" : "the counsellor"}${booking.cancellationReason ? `: ${booking.cancellationReason}` : ""}`;
     case "completed":
       if (booking.outcome === "missed") {
-        return `Missed${booking.missedReason ? `: ${booking.missedReason}` : ""}`;
+        const compHint = booking.compensationOffer
+          ? booking.compensationOffer.status === "pending"
+            ? " — compensation session offered"
+            : booking.compensationOffer.status === "accepted"
+              ? " — compensation session accepted"
+              : " — compensation declined"
+          : "";
+        return `Missed${booking.missedReason ? `: ${booking.missedReason}` : ""}${compHint}`;
       }
       return booking.outcome === "followup" ? "Completed — follow-up scheduled" : "Completed";
   }
@@ -81,11 +90,19 @@ export function BookingSection({
   onChatOpened,
   openSsiBookingId,
   onSsiOpened,
+  openResourceBookingId,
+  onResourceOpened,
+  openCompensationBookingId,
+  onCompensationOpened,
 }: {
   openChatBookingId?: string;
   onChatOpened?: () => void;
   openSsiBookingId?: string;
   onSsiOpened?: () => void;
+  openResourceBookingId?: string;
+  onResourceOpened?: () => void;
+  openCompensationBookingId?: string;
+  onCompensationOpened?: () => void;
 }) {
   const { currentUser, profile } = useAuth();
   const [counsellors, setCounsellors] = useState<UserProfile[]>([]);
@@ -106,6 +123,11 @@ export function BookingSection({
   const [feedbackAnswers, setFeedbackAnswers] = useState<Record<string, string>>({});
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
+  // Shared by every one-off action below (reschedule, cancel, accept
+  // reschedule, compensation accept/decline) — these previously had
+  // try/finally with no catch, so a failure silently reset the button with
+  // no explanation at all instead of surfacing anything here.
+  const [actionError, setActionError] = useState("");
 
   const [nameField, setNameField] = useState("");
   const [occupationField, setOccupationField] = useState<"student" | "professional">("student");
@@ -123,6 +145,7 @@ export function BookingSection({
   const [detailTarget, setDetailTarget] = useState<Booking | null>(null);
   const [ssiSubmittedIds, setSsiSubmittedIds] = useState<Set<string>>(new Set());
   const [ssiTarget, setSsiTarget] = useState<Booking | null>(null);
+  const [respondingToCompensation, setRespondingToCompensation] = useState(false);
   const [ssiIntakeWhatsapp, setSsiIntakeWhatsapp] = useState("");
 
   async function openSsiTest(b: Booking) {
@@ -208,6 +231,30 @@ export function BookingSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openSsiBookingId, bookings, onSsiOpened]);
 
+  // Open the booking detail so the student can accept/decline a compensation
+  // offer when they tap a "compensation_offered" notification.
+  useEffect(() => {
+    if (!openCompensationBookingId) return;
+    const booking = bookings.find((b) => b.id === openCompensationBookingId);
+    if (booking) {
+      setDetailTarget(booking);
+      onCompensationOpened?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openCompensationBookingId, bookings, onCompensationOpened]);
+
+  // Open the booking detail (where session resources live) when the user taps
+  // a "session_resource_added" notification.
+  useEffect(() => {
+    if (!openResourceBookingId) return;
+    const booking = bookings.find((b) => b.id === openResourceBookingId);
+    if (booking) {
+      setDetailTarget(booking);
+      onResourceOpened?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openResourceBookingId, bookings, onResourceOpened]);
+
   const activeBooking = bookings.find((b) => ACTIVE_STATUSES.includes(b.status) && !isSessionEndedPending(b));
 
   function openConsent(counsellor: UserProfile) {
@@ -269,11 +316,13 @@ export function BookingSection({
     setRescheduleTarget(booking);
     setRescheduleTimeField("");
     setRescheduleReasonField("");
+    setActionError("");
   }
 
   async function confirmRescheduleRequest() {
     if (!rescheduleTarget || !rescheduleTimeField) return;
     setRequestingReschedule(true);
+    setActionError("");
     try {
       await requestReschedule(
         rescheduleTarget,
@@ -283,6 +332,8 @@ export function BookingSection({
       );
       setRescheduleTarget(null);
       await refresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Couldn't send the reschedule request. Please try again.");
     } finally {
       setRequestingReschedule(false);
     }
@@ -290,9 +341,12 @@ export function BookingSection({
 
   async function handleAcceptReschedule(booking: Booking) {
     setAcceptingRescheduleId(booking.id);
+    setActionError("");
     try {
       await acceptRescheduleProposal(booking);
       await refresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Couldn't accept the new time. Please try again.");
     } finally {
       setAcceptingRescheduleId(null);
     }
@@ -301,10 +355,13 @@ export function BookingSection({
   async function confirmCancel() {
     if (!cancelTarget || !cancelReasonField.trim()) return;
     setCancelling(true);
+    setActionError("");
     try {
       await cancelBooking(cancelTarget, "user", cancelReasonField.trim());
       setCancelTarget(null);
       await refresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Couldn't cancel this booking. Please try again.");
     } finally {
       setCancelling(false);
     }
@@ -384,7 +441,7 @@ export function BookingSection({
             >
               <span className="booking-section__row-email">
                 {b.counsellorEmail}
-                {b.isEmergency && <span className="booking-section__emergency-tag">🚨 Crisis SOS</span>}
+                {b.isEmergency && <span className="booking-section__emergency-tag">Crisis SOS</span>}
                 {b.followUpOfBookingId && <span className="booking-section__followup-tag">(follow-up)</span>}
               </span>
               <div className="booking-section__row-right booking-section__row-right--pinned">
@@ -431,6 +488,15 @@ export function BookingSection({
               {statusLabel(detailTarget)}
             </span>
 
+            <SessionResourcesPanel
+              bookingId={detailTarget.id}
+              userId={detailTarget.userId}
+              counsellorId={detailTarget.counsellorId}
+              campusId={detailTarget.campusId}
+              canManage={false}
+              author={null}
+            />
+
             {detailTarget.status === "pending" && detailTarget.proposedSlots && (
               <div className="booking-section__extra">
                 Proposed times: {new Date(detailTarget.proposedSlots[0]).toLocaleString()} or{" "}
@@ -461,6 +527,7 @@ export function BookingSection({
                           Propose different time
                         </Button>
                       </div>
+                      {actionError && <p className="booking-section__field-hint">{actionError}</p>}
                     </>
                   ) : (
                     <p className="booking-section__reschedule-note">
@@ -478,6 +545,70 @@ export function BookingSection({
                     Request reschedule
                   </Button>
                 </div>
+              )}
+
+            {detailTarget.status === "completed" &&
+              detailTarget.outcome === "missed" &&
+              detailTarget.compensationOffer?.status === "pending" && (
+                <div className="booking-section__extra">
+                  <p className="booking-section__reschedule-note">
+                    Your session with {detailTarget.counsellorEmail} was missed — the Wellness Centre has offered
+                    you a compensation session. Would you like to accept?
+                  </p>
+                  <div className="booking-section__row-right">
+                    <Button
+                      type="button"
+                      disabled={respondingToCompensation}
+                      onClick={async () => {
+                        setRespondingToCompensation(true);
+                        setActionError("");
+                        try {
+                          await respondToCompensationOffer(detailTarget, true);
+                          await refresh();
+                        } catch (err) {
+                          setActionError(
+                            err instanceof Error ? err.message : "Couldn't record your answer. Please try again.",
+                          );
+                        } finally {
+                          setRespondingToCompensation(false);
+                        }
+                      }}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outlined"
+                      disabled={respondingToCompensation}
+                      onClick={async () => {
+                        setRespondingToCompensation(true);
+                        setActionError("");
+                        try {
+                          await respondToCompensationOffer(detailTarget, false);
+                          await refresh();
+                        } catch (err) {
+                          setActionError(
+                            err instanceof Error ? err.message : "Couldn't record your answer. Please try again.",
+                          );
+                        } finally {
+                          setRespondingToCompensation(false);
+                        }
+                      }}
+                    >
+                      Decline
+                    </Button>
+                  </div>
+                  {actionError && <p className="booking-section__field-hint">{actionError}</p>}
+                </div>
+              )}
+
+            {detailTarget.status === "completed" &&
+              detailTarget.outcome === "missed" &&
+              detailTarget.compensationOffer?.status === "accepted" &&
+              !detailTarget.compensationOffer.compensationBookingId && (
+                <p className="booking-section__reschedule-note">
+                  You accepted — waiting for the Wellness Centre to schedule your compensation session.
+                </p>
               )}
 
             <div className="booking-section__row-right">
@@ -502,6 +633,7 @@ export function BookingSection({
                   onClick={() => {
                     setCancelTarget(detailTarget);
                     setCancelReasonField("");
+                    setActionError("");
                   }}
                 >
                   Cancel
@@ -753,6 +885,7 @@ export function BookingSection({
               onChange={(e) => setCancelReasonField(e.target.value)}
             />
           </div>
+          {actionError && <p className="booking-section__field-hint">{actionError}</p>}
           <div className="booking-section__modal-actions">
             <Button type="button" disabled={!cancelReasonField.trim() || cancelling} onClick={confirmCancel}>
               {cancelling ? "Cancelling…" : "Confirm cancellation"}
@@ -784,6 +917,7 @@ export function BookingSection({
               onChange={(e) => setRescheduleReasonField(e.target.value)}
             />
           </div>
+          {actionError && <p className="booking-section__field-hint">{actionError}</p>}
           <div className="booking-section__modal-actions">
             <Button
               type="button"

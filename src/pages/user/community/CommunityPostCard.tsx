@@ -7,6 +7,8 @@ interface CommunityPostCardProps {
   post: CommunityPost;
   uid: string;
   isOwnPost: boolean;
+  /** A Head moderating the community — can delete any post, not just their own. */
+  canModerate?: boolean;
   myCommentIds: Set<string>;
   onDelete: () => void;
   onCommentsChanged: () => void;
@@ -24,6 +26,7 @@ export function CommunityPostCard({
   post,
   uid,
   isOwnPost,
+  canModerate,
   myCommentIds,
   onDelete,
   onCommentsChanged,
@@ -86,8 +89,8 @@ export function CommunityPostCard({
           <span className="ig-card__time">{timeAgo(post.createdAt)}</span>
         </div>
 
-        {/* Three-dot menu — only own posts */}
-        {isOwnPost && (
+        {/* Three-dot menu — own posts, or any post for a Head moderating the community */}
+        {(isOwnPost || canModerate) && (
           <div className="ig-card__menu-wrap" ref={menuRef}>
             <button
               type="button"

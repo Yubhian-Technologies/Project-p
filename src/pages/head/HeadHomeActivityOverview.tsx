@@ -185,7 +185,7 @@ export function HeadHomeActivityOverview({ onSelectSection }: HeadHomeActivityOv
             <button
               type="button"
               className="hha-link-btn"
-              onClick={() => onSelectSection("work-reports")}
+              onClick={() => onSelectSection("team-reports")}
             >
               Go to Full Work Reports Section →
             </button>

@@ -1,11 +1,10 @@
 import { useEffect } from "react";
 
-/** Horizontal card carousels that fade/scale cards as they slide in and out of view. */
+/** Horizontal card carousels that fade/scale cards as they slide in and out of view.
+ *  Landing-page only — the dashboard KPI rows had this too, but the per-card
+ *  opacity/scale swing read as a strong, unwanted "scroll effect" there, so
+ *  dashboard selectors were removed. */
 const CAROUSEL_SELECTOR = [
-  ".counsellor-overview__kpi-grid",
-  ".head-analytics__kpi-grid",
-  ".aha-kpis",
-  ".analytics-inline__stats-grid",
   ".landing-values",
   ".features-grid",
   ".resources-grid",

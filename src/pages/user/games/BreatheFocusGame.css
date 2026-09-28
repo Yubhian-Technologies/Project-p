@@ -1,21 +1,22 @@
 .breathe__circle {
   width: 180px;
   height: 180px;
-  border-radius: 9999px;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-extruded-lg);
+  border: 3px solid #2B2B2B;
+  border-radius: 9999px !important;
+  background: #EDE9FE;
+  box-shadow: 4px 4px 0px #2B2B2B;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   padding: 20px;
   box-sizing: border-box;
-  color: var(--neu-accent-primary, #2563EB);
+  color: #5B21B6;
   font-family: var(--md-sys-typescale-font-display);
   font-weight: 700;
   font-size: 15px;
   transform: scale(1);
-  transition: transform 4s ease-in-out, box-shadow 4s ease-in-out;
+  transition: transform 4s ease-in-out, background-color 4s ease-in-out;
 }
 
 .breathe__circle--idle {
@@ -25,7 +26,7 @@
 .breathe__circle--inhale,
 .breathe__circle--hold-in {
   transform: scale(1.35);
-  box-shadow: var(--neu-shadow-accent);
+  background: #DDD6FE;
 }
 
 .breathe__circle--exhale,

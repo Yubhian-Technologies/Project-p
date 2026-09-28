@@ -135,6 +135,7 @@ useEffect(() => {
                 post={post}
                 uid={currentUser.uid}
                 isOwnPost={myPostIds.has(post.id)}
+                canModerate={profile?.role === "head"}
                 myCommentIds={myCommentIds}
                 onDelete={() => handleDelete(post.id)}
                 onCommentsChanged={refresh}

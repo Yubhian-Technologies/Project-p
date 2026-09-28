@@ -1,6 +1,7 @@
-import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { db } from "./config";
-import type { JournalEntry } from "../../types/journalEntry";
+import { createNotification } from "./notifications";
+import type { JournalEntry, SharedJournalEntry } from "../../types/journalEntry";
 import { toIsoDate } from "../../utils/dateFormat";
 
 function entriesCollection(uid: string) {
@@ -39,6 +40,47 @@ export async function saveJournalEntry(
 
 export async function deleteJournalEntry(uid: string, date: string): Promise<void> {
   await deleteDoc(entryDocRef(uid, date));
+}
+
+const sharedEntriesCollection = collection(db, "sharedJournalEntries");
+
+/**
+ * A student's deliberate, one-off share of a single entry with one
+ * same-campus counsellor — this never touches the private journalEntries
+ * collection above; it just copies the current note text into its own
+ * separate, narrowly-scoped collection.
+ */
+export async function shareJournalEntry(
+  student: { uid: string; email: string; name?: string },
+  counsellorId: string,
+  date: string,
+  note: string,
+): Promise<void> {
+  await addDoc(sharedEntriesCollection, {
+    studentId: student.uid,
+    studentEmail: student.email,
+    ...(student.name ? { studentName: student.name } : {}),
+    counsellorId,
+    date,
+    note,
+    sharedAt: Date.now(),
+  });
+  await createNotification({
+    recipientId: counsellorId,
+    type: "journal_entry_shared",
+    title: "Journal entry shared with you",
+    message: `${student.name || student.email} shared a journal entry from ${date} with you.`,
+  });
+}
+
+export async function listSharedJournalEntriesForCounsellor(
+  counsellorId: string,
+): Promise<SharedJournalEntry[]> {
+  const q = query(sharedEntriesCollection, where("counsellorId", "==", counsellorId));
+  const snapshot = await getDocs(q);
+  return snapshot.docs
+    .map((d) => ({ id: d.id, ...(d.data() as Omit<SharedJournalEntry, "id">) }))
+    .sort((a, b) => b.sharedAt - a.sharedAt);
 }
 
 /**

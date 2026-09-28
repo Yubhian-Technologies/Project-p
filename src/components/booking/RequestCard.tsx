@@ -17,7 +17,7 @@ export function RequestCard({ booking, displayName, onClick }: RequestCardProps)
     <Card className="request-card request-card--collapsed" onClick={onClick}>
       <p className="request-card__name">
         {name}
-        {booking.isEmergency && <span className="request-card__emergency-inline"> 🚨 Crisis SOS</span>}
+        {booking.isEmergency && <span className="request-card__emergency-inline">Crisis SOS</span>}
         {booking.sessionMode === "offline" && (
           <span className="request-card__offline-inline"> (Offline)</span>
         )}

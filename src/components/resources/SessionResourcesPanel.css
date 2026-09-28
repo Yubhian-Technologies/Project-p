@@ -1,0 +1,253 @@
+.sr-panel {
+  border: 2px solid #2B2B2B;
+  border-radius: 0px !important;
+  box-shadow: 3px 3px 0px #2B2B2B;
+  background: #FDF8EE;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.sr-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sr-panel__subtitle {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1D4ED8;
+}
+
+.sr-panel__title {
+  margin: 2px 0 0 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1E1E1E;
+}
+
+.sr-panel__form {
+  border: 2px solid #2B2B2B;
+  border-radius: 0px !important;
+  background: #FFFFFF;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sr-panel__form-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.sr-panel__tab {
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 0px !important;
+  border: 2px solid #2B2B2B;
+  background: #FFFFFF;
+  color: #1E1E1E;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  transition: all 0.15s ease;
+}
+
+.sr-panel__tab:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B;
+}
+
+.sr-panel__tab--active {
+  background: #1D4ED8;
+  border-color: #2B2B2B;
+  color: #FFFFFF;
+}
+
+.sr-panel__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1E1E1E;
+  margin-top: 4px;
+}
+
+.sr-panel__input {
+  font: inherit;
+  font-size: 13.5px;
+  padding: 8px 10px;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px !important;
+  background: #FFFFFF;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sr-panel__input:focus {
+  outline: none;
+  box-shadow: 2px 2px 0px #2B2B2B;
+}
+
+.sr-panel__error {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #B91C1C;
+}
+
+.sr-panel__form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.sr-panel__hint {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1D4ED8;
+}
+
+.sr-panel__empty {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B7280;
+}
+
+.sr-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sr-panel__item {
+  border: 2px solid #2B2B2B;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  background: #FFFFFF;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sr-panel__item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sr-panel__item-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1E1E1E;
+  overflow-wrap: anywhere;
+}
+
+.sr-panel__type-tag {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border: 1.5px solid #2B2B2B;
+  border-radius: 0px !important;
+  flex-shrink: 0;
+}
+
+.sr-panel__type-tag--music {
+  background: rgba(29, 78, 216, 0.12);
+  color: #1D4ED8;
+}
+
+.sr-panel__type-tag--link {
+  background: rgba(16, 185, 129, 0.14);
+  color: #0F766E;
+}
+
+.sr-panel__audio {
+  width: 100%;
+  height: 42px;
+}
+
+.sr-panel__embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 2px solid #2B2B2B;
+  overflow: hidden;
+}
+
+.sr-panel__embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.sr-panel__open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #1D4ED8;
+  text-decoration: none;
+  border: 2px solid #2B2B2B;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  padding: 6px 12px;
+  width: fit-content;
+  transition: all 0.15s ease;
+}
+
+.sr-panel__open-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B;
+}
+
+.sr-panel__item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #6B7280;
+}
+
+.sr-panel__remove {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #B91C1C;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.sr-panel__remove:hover {
+  text-decoration: underline;
+}
+
+.sr-panel__remove:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

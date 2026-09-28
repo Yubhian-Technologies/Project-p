@@ -138,6 +138,13 @@
   margin-bottom: 24px;
 }
 
+.app-shell__title-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
 .app-shell__title {
   font-family: var(--md-sys-typescale-font-display);
   font-size: 28px;
@@ -145,6 +152,39 @@
   letter-spacing: -0.02em;
   color: var(--theme-charcoal, #1E1E1E);
   margin: 0;
+}
+
+/* A small icon-only "←" button any page can put beside its title via
+   AppShell's titleLeadingAction prop — e.g. Wellness Exercise uses it to get
+   back out of whichever exercise is open. */
+.app-shell__title-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  font-size: 18px;
+  font-weight: 800;
+  font-family: inherit;
+  color: #1E1E1E;
+  background: #FFFFFF;
+  border: 2px solid #2B2B2B;
+  box-shadow: 2px 2px 0px #2B2B2B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.app-shell__title-back:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #2B2B2B;
+  color: #7C3AED;
+}
+
+.app-shell__title-back:active {
+  transform: translate(0, 0);
+  box-shadow: 1px 1px 0px #2B2B2B;
 }
 
 .app-shell__title-action {

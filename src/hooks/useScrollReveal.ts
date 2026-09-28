@@ -1,11 +1,10 @@
 import { useEffect } from "react";
 
-/** Elements that fade/slide up the first time they scroll into view. */
+/** Elements that fade/slide up the first time they scroll into view.
+ *  Landing-page only — dashboards had this too, but replaying the
+ *  fade/slide/scale every time a card scrolled in and out of view read as an
+ *  unwanted "scroll effect" there, so dashboard selectors were removed. */
 const REVEAL_SELECTOR = [
-  ".bento-card",
-  ".wr-submit-card",
-  ".wr-list__row",
-  ".events-calendar__row",
   ".landing-section-heading",
   ".landing-about__gallery",
   ".landing-about__guidelines",

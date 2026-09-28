@@ -11,6 +11,8 @@ import "./AppShell.css";
 
 interface AppShellProps {
   title: string;
+  /** Rendered immediately before the title, e.g. a small "←" back button. */
+  titleLeadingAction?: ReactNode;
   headerAction?: ReactNode;
   sections: SidebarSection[];
   activeSection: string;
@@ -21,6 +23,7 @@ interface AppShellProps {
 
 export function AppShell({
   title,
+  titleLeadingAction,
   headerAction,
   sections,
   activeSection,
@@ -98,7 +101,10 @@ export function AppShell({
         <main className="app-shell__content-sheet">
           {title && (
             <div className="app-shell__title-row">
-              <h1 className="app-shell__title">{title}</h1>
+              <div className="app-shell__title-main">
+                {titleLeadingAction}
+                <h1 className="app-shell__title">{title}</h1>
+              </div>
               {headerAction && <div className="app-shell__title-action">{headerAction}</div>}
             </div>
           )}

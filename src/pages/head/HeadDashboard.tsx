@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AppShell } from "../../components/layout/AppShell";
 import { ProfileSection } from "../../components/layout/ProfileSection";
 import { BentoCard } from "../../components/common/BentoCard";
@@ -15,6 +15,7 @@ import { MonthlyReportsSection } from "./MonthlyReportsSection";
 import { TeamReportsSection } from "./TeamReportsSection";
 import { FlashQASection } from "./FlashQASection";
 import { GamesSection } from "../user/games/GamesSection";
+import type { GamesSectionHandle } from "../user/games/GamesSection";
 import { JournalSection } from "../user/journal/JournalSection";
 import { HeadAnalyticsOverview } from "./HeadAnalyticsOverview";
 import { HeadHomeActivityOverview } from "./HeadHomeActivityOverview";
@@ -39,6 +40,9 @@ export function HeadDashboard() {
   const [activeSection, setActiveSection] = useState("overview");
   const [showImport, setShowImport] = useState(false);
   const [pendingBookingId, setPendingBookingId] = useState<string | undefined>();
+  const [chatBookingId, setChatBookingId] = useState<string | undefined>();
+  const gamesRef = useRef<GamesSectionHandle>(null);
+  const [gameOpen, setGameOpen] = useState(false);
 
   function handleNotificationClick(notification: Notification) {
     if (notification.type === "emergency_sos") {
@@ -52,6 +56,13 @@ export function HeadDashboard() {
     if (notification.type === "transfer_requested") {
       setActiveSection("transfer-requests");
       return;
+    }
+    if (notification.type === "journal_entry_shared") {
+      setActiveSection("journal");
+      return;
+    }
+    if (notification.type === "chat_message") {
+      setChatBookingId(notification.bookingId);
     }
     setPendingBookingId(notification.bookingId);
     setActiveSection("requests");
@@ -77,6 +88,19 @@ export function HeadDashboard() {
   return (
     <AppShell
       title={title}
+      titleLeadingAction={
+        activeSection === "games" && gameOpen ? (
+          <button
+            type="button"
+            className="app-shell__title-back"
+            aria-label="Back to Wellness Exercises"
+            title="Back to Wellness Exercises"
+            onClick={() => gamesRef.current?.goBack()}
+          >
+            ←
+          </button>
+        ) : undefined
+      }
       headerAction={
         activeSection === "requests" ? (
           <Button type="button" variant="outlined" onClick={() => setShowImport(true)}>
@@ -97,6 +121,8 @@ export function HeadDashboard() {
           importOpen={showImport}
           onImportClose={() => setShowImport(false)}
           initialSelectedId={pendingBookingId}
+          autoOpenChatBookingId={chatBookingId}
+          onChatAutoOpenConsumed={() => setChatBookingId(undefined)}
         />
       )}
       {activeSection === "feedback" && <CounsellorFeedbackSection />}
@@ -110,7 +136,7 @@ export function HeadDashboard() {
       {activeSection === "transfer-requests" && <TransferRequestsSection />}
       {activeSection === "monthly-reports" && <MonthlyReportsSection />}
       {activeSection === "team-reports" && <TeamReportsSection />}
-      {activeSection === "games" && <GamesSection />}
+      {activeSection === "games" && <GamesSection ref={gamesRef} onActiveChange={setGameOpen} />}
       {activeSection === "flash-qa" && <FlashQASection />}
       {activeSection === "journal" && <JournalSection />}
       {activeSection === "community" && <CommunitySection />}

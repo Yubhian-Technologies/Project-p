@@ -161,3 +161,38 @@
   flex-wrap: wrap;
   align-items: center;
 }
+
+@media (max-width: 768px) {
+  .med-shell {
+    padding: 18px 14px;
+    gap: 14px;
+  }
+
+  .med-shell__title {
+    font-size: 18px;
+  }
+
+  .med-shell__subtitle {
+    font-size: 12px;
+  }
+
+  .med-module-btn {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  .med-visual {
+    width: 160px;
+    height: 160px;
+    margin: 8px 0;
+  }
+
+  .med-visual__content {
+    width: 134px;
+    height: 134px;
+  }
+
+  .med-visual__timer {
+    font-size: 28px;
+  }
+}

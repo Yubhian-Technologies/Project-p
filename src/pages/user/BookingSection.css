@@ -181,16 +181,35 @@
 }
 
 .booking-section__emergency-tag {
+  display: inline-block;
   margin-left: 10px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 5px 12px;
+  border-radius: 0px !important;
+  border: 1.5px solid #2B2B2B;
+  background: #FEE2E2;
+  box-shadow: 2px 2px 0px #2B2B2B;
   color: #B91C1C;
+  white-space: nowrap;
 }
 
-/* On its own line inside the details popup, it explains why this booking
-   has no scheduled time yet. */
+/* On its own line inside the details popup, this is a full explanatory
+   sentence (why the booking has no scheduled time yet) rather than a short
+   label, so it reverts back to plain readable text instead of the badge. */
 p.booking-section__emergency-tag {
+  display: block;
   margin: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: normal;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.5;
 }

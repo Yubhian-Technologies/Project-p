@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AppShell } from "../../components/layout/AppShell";
 import { ProfileSection } from "../../components/layout/ProfileSection";
 import { BentoCard } from "../../components/common/BentoCard";
 import { useAuth } from "../../hooks/useAuth";
 import { BookingSection } from "./BookingSection";
 import { WellnessTestSection } from "./WellnessTestSection";
+import { UpcomingEventsSection } from "./UpcomingEventsSection";
 import { GamesSection } from "./games/GamesSection";
+import type { GamesSectionHandle } from "./games/GamesSection";
 import { GamesSummaryCard } from "./games/GamesSummaryCard";
 import { JournalSection } from "./journal/JournalSection";
 import { CommunitySection } from "./community/CommunitySection";
@@ -23,6 +25,7 @@ const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "booking", label: "Book Session" },
   { id: "wellness-test", label: "Wellness Test" },
+  { id: "events", label: "Events & Programs" },
   { id: "games", label: "Wellness Exercise" },
   { id: "journal", label: "Counselling Journal" },
   { id: "community", label: "Wellness Community" },
@@ -33,12 +36,20 @@ export function UserDashboard() {
   const { profile } = useAuth();
   const [activeSection, setActiveSection] = useState("overview");
   const [chatBookingId, setChatBookingId] = useState<string | undefined>();
+  const [resourceBookingId, setResourceBookingId] = useState<string | undefined>();
+  const [compensationBookingId, setCompensationBookingId] = useState<string | undefined>();
   const [ssiBookingId, setSsiBookingId] = useState<string | undefined>();
+  const gamesRef = useRef<GamesSectionHandle>(null);
+  const [gameOpen, setGameOpen] = useState(false);
 
   function handleNotificationClick(notification: Notification) {
     setActiveSection("booking");
     if (notification.type === "chat_message") {
       setChatBookingId(notification.bookingId);
+    } else if (notification.type === "session_resource_added") {
+      setResourceBookingId(notification.bookingId);
+    } else if (notification.type === "compensation_offered") {
+      setCompensationBookingId(notification.bookingId);
     } else if (notification.type === "ssi_suggested") {
       setSsiBookingId(notification.bookingId);
     }
@@ -48,6 +59,7 @@ export function UserDashboard() {
     profile: "Profile",
     booking: "Book Session",
     "wellness-test": "Wellness Stress Assessment",
+    events: "Events & Programs",
     games: "Wellness Exercise",
     journal: "Counselling Journal",
     community: "Wellness Community",
@@ -58,6 +70,19 @@ export function UserDashboard() {
   return (
     <AppShell
       title={title}
+      titleLeadingAction={
+        activeSection === "games" && gameOpen ? (
+          <button
+            type="button"
+            className="app-shell__title-back"
+            aria-label="Back to Wellness Exercises"
+            title="Back to Wellness Exercises"
+            onClick={() => gamesRef.current?.goBack()}
+          >
+            ←
+          </button>
+        ) : undefined
+      }
       sections={SECTIONS}
       activeSection={activeSection}
       onSelectSection={setActiveSection}
@@ -70,12 +95,17 @@ export function UserDashboard() {
           onChatOpened={() => setChatBookingId(undefined)}
           openSsiBookingId={ssiBookingId}
           onSsiOpened={() => setSsiBookingId(undefined)}
+          openResourceBookingId={resourceBookingId}
+          onResourceOpened={() => setResourceBookingId(undefined)}
+          openCompensationBookingId={compensationBookingId}
+          onCompensationOpened={() => setCompensationBookingId(undefined)}
         />
       )}
       {activeSection === "wellness-test" && (
         <WellnessTestSection onBookSession={() => setActiveSection("booking")} />
       )}
-      {activeSection === "games" && <GamesSection />}
+      {activeSection === "events" && <UpcomingEventsSection />}
+      {activeSection === "games" && <GamesSection ref={gamesRef} onActiveChange={setGameOpen} />}
       {activeSection === "journal" && <JournalSection />}
       {activeSection === "community" && <CommunitySection />}
       {activeSection === "crisis-sos" && <CrisisSosSection />}

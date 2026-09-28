@@ -129,8 +129,13 @@ service cloud.firestore {
     // ---------- events ----------
     match /events/{eventId} {
       // Head, Admin, Super Admin, and Counsellor can all view events/programs
-      // (this is what powers Admin's Group Sessions analytics).
-      allow read: if canViewEventsCalendar();
+      // (this is what powers Admin's Group Sessions analytics) with no campus
+      // check. Students get a narrower branch: their own campus only — this
+      // is the ONLY access a student has to this collection, so it's enforced
+      // here rather than trusted to the client query alone. campusId is also
+      // the exact field listEventsForCampus() queries on, so Firestore can
+      // validate that list query against this check.
+      allow read: if canViewEventsCalendar() || (isRole('user') && resource.data.campusId == myProfile().campusId);
 
       // Head or Counsellor can create an event, only for their own campus + a
       // college that actually belongs to that campus.
@@ -225,9 +230,9 @@ service cloud.firestore {
 
       // Covers accept/reject/schedule/cancel/close/transfer — all performed by
       // the user, the assigned counsellor, or Head/Admin/Super Admin oversight
-      // actions. Writes that touch the user's rating fields are excluded here
-      // (see the one-time rating rule below) so a rating can never be silently
-      // overwritten through the general party/staff branch.
+      // actions. Writes that touch either side's rating fields are excluded
+      // here (see the one-time rating rules below) so a rating can never be
+      // silently overwritten through the general party/staff branch.
       allow update: if isSignedIn() && (
         (
           resource.data.userId == request.auth.uid ||
@@ -250,7 +255,8 @@ service cloud.firestore {
             request.resource.data.isEmergency == true
           )
         ) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-          'userRatingOfCounsellor', 'userReviewText', 'ratedAt'
+          'userRatingOfCounsellor', 'userReviewText', 'ratedAt',
+          'counsellorRatingOfUser', 'counsellorNoteOnUser', 'counsellorRatedAt'
         ])
       ) || (
         // One-time user rating of a held session. The user may rate only their
@@ -266,6 +272,20 @@ service cloud.firestore {
         !('userRatingOfCounsellor' in resource.data) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'userRatingOfCounsellor', 'userReviewText', 'ratedAt', 'updatedAt'
+        ])
+      ) || (
+        // Symmetric one-time counsellor rating of the user (rateUser()) — same
+        // shape as the user-rating branch above. Previously this had NO
+        // one-time protection at all and fell through the general party
+        // branch, letting a counsellor silently overwrite a prior rating/note
+        // with no audit trail.
+        isSignedIn() &&
+        resource.data.counsellorId == request.auth.uid &&
+        resource.data.status == 'completed' &&
+        resource.data.outcome != 'missed' &&
+        !('counsellorRatingOfUser' in resource.data) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'counsellorRatingOfUser', 'counsellorNoteOnUser', 'counsellorRatedAt', 'updatedAt'
         ])
       );
 
@@ -445,6 +465,16 @@ service cloud.firestore {
             get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role == 'head' &&
             get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
           ) || (
+            // A student telling their campus Head whether they accept or
+            // decline a compensation-session offer for a missed booking —
+            // same shape as booking_missed above; the Head isn't a party to
+            // the booking either.
+            request.resource.data.keys().hasAll(['bookingId']) &&
+            request.resource.data.type in ['compensation_accepted', 'compensation_declined'] &&
+            get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.userId == request.auth.uid &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role == 'head' &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
+          ) || (
             // Staff (a Head, approving/declining a transfer request, etc.) acting
             // administratively on a booking can notify either party even though
             // the staff member isn't a party to the booking themselves.
@@ -460,6 +490,15 @@ service cloud.firestore {
             request.resource.data.type in ['event_added', 'monthly_report_uploaded'] &&
             isSignedIn() && myRole() in ['head', 'counsellor', 'admin', 'super-admin'] &&
             get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role == 'admin'
+          ) || (
+            // A student sharing a journal entry with a same-campus counsellor
+            // or Head — also has no booking link, and the recipient here isn't
+            // necessarily an Admin, so this needs its own branch rather than
+            // reusing the platform-alert one above.
+            request.resource.data.type == 'journal_entry_shared' &&
+            isSignedIn() && myRole() == 'user' &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role in ['counsellor', 'head'] &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
           )
         );
 
@@ -476,6 +515,37 @@ service cloud.firestore {
     // is structural (uid is a path segment) so no field-level check is needed.
     match /journalEntries/{uid}/entries/{dateId} {
       allow read, write: if isSelf(uid);
+    }
+
+    // ---------- sharedJournalEntries ----------
+    // A student's deliberate, one-off share of ONE entry with ONE same-campus
+    // counsellor or Head they pick — completely separate from journalEntries
+    // above, which this never reads from or grants any broader access to. No
+    // blanket staff bypass here on purpose: Head only sees an entry if a
+    // student specifically chose to share it with them, same as a counsellor.
+    match /sharedJournalEntries/{shareId} {
+      allow read: if isSignedIn() && (
+        resource.data.studentId == request.auth.uid ||
+        resource.data.counsellorId == request.auth.uid
+      );
+
+      allow create: if isSignedIn()
+                    && request.resource.data.studentId == request.auth.uid
+                    && request.resource.data.keys().hasAll([
+                      'studentId', 'studentEmail', 'counsellorId', 'date', 'note', 'sharedAt'
+                    ])
+                    && request.resource.data.note is string
+                    && request.resource.data.note.size() > 0
+                    && request.resource.data.note.size() <= 10000
+                    && request.resource.data.date is string
+                    && request.resource.data.sharedAt is number
+                    && get(/databases/$(database)/documents/users/$(request.resource.data.counsellorId)).data.role in ['counsellor', 'head']
+                    && get(/databases/$(database)/documents/users/$(request.resource.data.counsellorId)).data.campusId == myProfile().campusId;
+
+      allow update: if false;
+      // Only the student can revoke their own share; the counsellor it was
+      // shared with cannot delete it out from under the student.
+      allow delete: if isSignedIn() && resource.data.studentId == request.auth.uid;
     }
 
     // ---------- moodLogs ----------
@@ -528,9 +598,15 @@ service cloud.firestore {
            request.resource.data.commentCount == resource.data.commentCount - 1))
       );
 
+      // A Head can delete any post on their own campus (moderation), no matter
+      // who wrote it — same campus scoping as canSeeCommunityAuthor above, but
+      // deletion is intentionally Head-only, not Counsellor.
       allow delete: if isSignedIn()
                     && resource.data.campusId == myProfile().campusId
-                    && get(/databases/$(database)/documents/communityPosts/$(postId)/private/author).data.authorId == request.auth.uid;
+                    && (
+                      get(/databases/$(database)/documents/communityPosts/$(postId)/private/author).data.authorId == request.auth.uid ||
+                      isRole('head')
+                    );
 
       match /private/author {
         allow get: if isSelf(resource.data.authorId) || canSeeCommunityAuthor(postId);
@@ -539,7 +615,13 @@ service cloud.firestore {
                       && request.resource.data.authorId == request.auth.uid
                       && request.resource.data.keys().hasOnly(['authorId']);
         allow update: if false;
-        allow delete: if isSelf(resource.data.authorId);
+        // A Head moderating a post also needs to delete this doc alongside it —
+        // deleteCommunityPost() removes both. No campus check here (unlike the
+        // post-level rule above): by the time this subdoc delete runs, the
+        // parent post may already be gone, so there's nothing left to check it
+        // against; the only data at stake is an internal authorship pointer,
+        // never shown to anyone.
+        allow delete: if isSelf(resource.data.authorId) || isRole('head');
       }
 
       match /comments/{commentId} {
@@ -626,6 +708,49 @@ service cloud.firestore {
       allow write: if isSignedIn() && (
         (isRole('head') && request.resource.data.campusId == myProfile().campusId) ||
         isRole('admin') || isRole('super-admin')
+      );
+    }
+
+    // ---------- session_resources ----------
+    // Music files and links a counsellor (or a head holding their own session)
+    // shares with a student for the duration of a booking — like chat_messages,
+    // access is scoped to the two parties of the booking (student + the
+    // counsellor assigned to it) plus staff read-for-oversight. The reference
+    // to the booking's counsellor is taken live from the booking doc, so access
+    // follows transfers and emergency claims automatically.
+    match /session_resources/{resourceId} {
+      // Checked via bookingOf(resource.data.bookingId) rather than the resource's
+      // own userId/counsellorId fields — the app queries this collection with
+      // where("bookingId", "==", ...), and Firestore can only allow a list query
+      // when the rule is provably true using fields the query itself filters on.
+      // Because bookingId IS that filter, referencing it (even inside a get())
+      // is fine; checking userId/counsellorId directly on the resource document
+      // is not, and silently denied the whole query for the student and the
+      // counsellor (only isStaff() — a query-independent constant — got through).
+      allow read: if isSignedIn() && (
+        bookingOf(resource.data.bookingId).userId == request.auth.uid ||
+        bookingOf(resource.data.bookingId).counsellorId == request.auth.uid ||
+        isStaff()
+      );
+
+      // Only the counsellor currently holding the booking can add resources —
+      // the student reads, and Heads add only to sessions they personally hold.
+      allow create: if isSignedIn()
+                    && request.resource.data.bookingId is string
+                    && request.resource.data.userId is string
+                    && request.resource.data.counsellorId is string
+                    && request.resource.data.type in ['music', 'link']
+                    && request.resource.data.title is string
+                    && request.resource.data.title.size() > 0
+                    && request.resource.data.title.size() <= 120
+                    && request.resource.data.createdAt is number
+                    && request.resource.data.addedBy.uid == request.auth.uid
+                    && bookingOf(request.resource.data.bookingId).counsellorId == request.auth.uid;
+
+      allow update: if false;
+      allow delete: if isSignedIn() && (
+        resource.data.addedBy.uid == request.auth.uid ||
+        bookingOf(resource.data.bookingId).counsellorId == request.auth.uid
       );
     }
 

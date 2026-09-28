@@ -42,17 +42,35 @@ async function notifyCounterpart(params: {
     const bookingSnapshot = await getDoc(doc(db, "bookings", params.chatRoomId));
     if (!bookingSnapshot.exists()) return;
     const booking = bookingSnapshot.data();
-    const recipientId = booking.userId === params.senderUid ? booking.counsellorId : booking.userId;
-    if (!recipientId || recipientId === params.senderUid) return;
+    const userId = typeof booking.userId === "string" ? booking.userId : undefined;
+    const counsellorId = typeof booking.counsellorId === "string" ? booking.counsellorId : undefined;
+
+    // A Head (or Admin/Super Admin) reading/replying in a session's chat they
+    // oversee is neither the student nor the assigned counsellor, so a single
+    // "the other party" lookup can't name one recipient for them — notify
+    // BOTH parties in that case, since neither has been addressed specifically.
+    // (Previously this fell through to always naming the student regardless
+    // of who the third party actually was, so the counsellor never learned a
+    // Head had messaged into their session.)
+    let recipientIds: string[];
+    if (params.senderUid === userId) recipientIds = counsellorId ? [counsellorId] : [];
+    else if (params.senderUid === counsellorId) recipientIds = userId ? [userId] : [];
+    else recipientIds = [userId, counsellorId].filter((id): id is string => !!id);
 
     const preview = params.text.length > 60 ? `${params.text.slice(0, 60)}…` : params.text;
-    await createNotification({
-      recipientId,
-      type: "chat_message",
-      bookingId: params.chatRoomId,
-      title: "New chat message",
-      message: `${params.senderName}: ${preview}`,
-    });
+    await Promise.all(
+      recipientIds
+        .filter((recipientId) => recipientId !== params.senderUid)
+        .map((recipientId) =>
+          createNotification({
+            recipientId,
+            type: "chat_message",
+            bookingId: params.chatRoomId,
+            title: "New chat message",
+            message: `${params.senderName}: ${preview}`,
+          }),
+        ),
+    );
   } catch (error) {
     console.error("Failed to notify chat counterpart", error);
   }

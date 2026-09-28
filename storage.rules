@@ -51,6 +51,29 @@ service firebase.storage {
       allow delete: if request.auth != null && request.auth.uid == uid;
     }
 
+    // Session resources (music shared with a student during a session):
+    // src/services/firebase/sessionResources.ts uploads to
+    // session-resources/{uploaderUid}/{bookingId}/{resourceId}/track. Scoped by
+    // the uploader's own uid — like avatars/{uid} above — rather than a
+    // firestore.get() role lookup: that cross-service check proved unreliable
+    // (see monthly-reports below). Access control lives in the Firestore
+    // "session_resources" rule, which only lets the booking's own counsellor
+    // create the resource doc; any signed-in user can read the audio here (the
+    // download link is only ever reached through that already-gated Firestore
+    // listing).
+    match /session-resources/{uid}/{bookingId}/{resourceId}/track {
+      allow read: if request.auth != null;
+      // No contentType allowlist — exactly the storage/unauthorized failure
+      // documented on monthly-reports below when a file's reported MIME is
+      // null or unexpected (some browsers send application/octet-stream or an
+      // empty type for perfectly valid audio files). Access control lives in
+      // the Firestore "session_resources" rule, and the path is scoped to the
+      // uploader's own uid, so only their size cap matters here.
+      allow write: if request.auth != null && request.auth.uid == uid &&
+        request.resource.size < 15 * 1024 * 1024;
+      allow delete: if false;
+    }
+
     // Deny everything else by default.
     match /{allPaths=**} {
       allow read, write: if false;

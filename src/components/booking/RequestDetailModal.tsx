@@ -10,6 +10,7 @@ import type { Booking, BookingIntake } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
 import { useAuth } from "../../hooks/useAuth";
 import { ChatModal } from "../chat/ChatModal";
+import { SessionResourcesPanel } from "../resources/SessionResourcesPanel";
 import "./RequestCard.css";
 
 function toDateTimeLocalValue(epochMs: number): string {
@@ -29,29 +30,40 @@ function isPastChoice(value: string): boolean {
 interface RequestDetailModalProps {
   booking: Booking;
   transferCandidates: UserProfile[];
+  /** Same-campus counsellors only — narrower than transferCandidates on
+   *  purpose, so a Head can't accidentally schedule a compensation session
+   *  with someone outside the student's own campus. */
+  compensationCandidates: UserProfile[];
   campusHead: UserProfile | null;
   viewerRole: "head" | "counsellor";
-  onAcceptSlot: (chosenAt: number) => void;
-  onReject: () => void;
-  onSchedule: (scheduledAt: number) => void;
-  onRequestReschedule: (proposedAt: number, reason?: string) => void;
-  onAcceptReschedule: () => void;
-  onCancel: (reason: string) => void;
-  onRequestTransfer: (reason: string, suggestedTarget?: UserProfile) => void;
-  onDirectTransfer: (target: UserProfile) => void;
+  onAcceptSlot: (chosenAt: number) => Promise<void>;
+  onReject: () => Promise<void>;
+  onSchedule: (scheduledAt: number) => Promise<void>;
+  onRequestReschedule: (proposedAt: number, reason?: string) => Promise<void>;
+  onAcceptReschedule: () => Promise<void>;
+  onCancel: (reason: string) => Promise<void>;
+  onRequestTransfer: (reason: string, suggestedTarget?: UserProfile) => Promise<void>;
+  onDirectTransfer: (target: UserProfile) => Promise<void>;
   onSaveSummary: (summary: string) => Promise<void>;
   onCloseComplete: (summary: string) => Promise<void>;
   onCloseFollowUp: (summary: string, scheduledAt: number) => Promise<void>;
   onCloseMissed: (reason: string) => Promise<void>;
-  onRateUser: (rating: number, note: string) => void;
+  onOfferCompensation?: () => Promise<void>;
+  onScheduleCompensation?: (counsellor: { uid: string; email: string }, scheduledAt: number) => Promise<void>;
+  onRateUser: (rating: number, note: string) => Promise<void>;
   onViewSummary?: () => void;
   onSuggestSsi?: () => Promise<void> | void;
   onClose: () => void;
+  /** Opens straight to the chat tab — set when the viewer got here by tapping
+   *  a "chat_message" notification, so they land directly in the thread
+   *  instead of having to click "Chat with Student" themselves. */
+  autoOpenChat?: boolean;
 }
 
 export function RequestDetailModal({
   booking,
   transferCandidates,
+  compensationCandidates,
   campusHead,
   viewerRole,
   onAcceptSlot,
@@ -66,13 +78,17 @@ export function RequestDetailModal({
   onCloseComplete,
   onCloseFollowUp,
   onCloseMissed,
+  onOfferCompensation,
+  onScheduleCompensation,
   onRateUser,
   onViewSummary,
   onSuggestSsi,
   onClose,
+  autoOpenChat,
 }: RequestDetailModalProps) {
   const { currentUser } = useAuth();
-  const [showChatModal, setShowChatModal] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(!!autoOpenChat);
+  const [showResources, setShowResources] = useState(false);
   const [showProposeTime, setShowProposeTime] = useState(false);
   const [timeValue, setTimeValue] = useState(
     booking.scheduledAt ? toDateTimeLocalValue(booking.scheduledAt) : "",
@@ -98,6 +114,16 @@ export function RequestDetailModal({
   const [rateUserNote, setRateUserNote] = useState("");
   const [closing, setClosing] = useState(false);
   const [missedReason, setMissedReason] = useState("");
+  // Shared by every action below whose prop is Promise<void> but was
+  // previously called fire-and-forget with no await/catch — a rejection
+  // silently reset the form as if it had succeeded, with no feedback at all.
+  const [actionError, setActionError] = useState("");
+  const [actionBusy, setActionBusy] = useState(false);
+  const [offering, setOffering] = useState(false);
+  const [showScheduleCompensation, setShowScheduleCompensation] = useState(false);
+  const [compCounsellorId, setCompCounsellorId] = useState("");
+  const [compTime, setCompTime] = useState("");
+  const [scheduling, setScheduling] = useState(false);
   const [ssiResult, setSsiResult] = useState<SsiResult | null>(null);
   const [showSsiResult, setShowSsiResult] = useState(false);
   const [ssiSuggesting, setSsiSuggesting] = useState(false);
@@ -154,35 +180,63 @@ export function RequestDetailModal({
     }
   }
 
+  // Runs any of the Promise<void> action props with a shared busy/error state
+  // instead of the old fire-and-forget calls, which left the form closing (and
+  // the UI implying success) even when the underlying write actually failed.
+  async function runAction(action: () => Promise<void>, onSuccess: () => void) {
+    if (actionBusy) return;
+    setActionBusy(true);
+    setActionError("");
+    try {
+      await action();
+      onSuccess();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "That didn't go through. Please try again.");
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
   function handleConfirmSchedule() {
     if (!timeValue) return;
-    onSchedule(new Date(timeValue).getTime());
-    setShowProposeTime(false);
+    runAction(() => onSchedule(new Date(timeValue).getTime()), () => setShowProposeTime(false));
   }
 
   function handleProposeReschedule() {
     if (!rescheduleTimeValue) return;
-    onRequestReschedule(new Date(rescheduleTimeValue).getTime(), rescheduleReasonValue.trim() || undefined);
-    setShowReschedulePropose(false);
-    setRescheduleTimeValue("");
-    setRescheduleReasonValue("");
+    runAction(
+      () => onRequestReschedule(new Date(rescheduleTimeValue).getTime(), rescheduleReasonValue.trim() || undefined),
+      () => {
+        setShowReschedulePropose(false);
+        setRescheduleTimeValue("");
+        setRescheduleReasonValue("");
+      },
+    );
   }
 
   function handleRequestTransfer() {
     if (!transferReasonField.trim()) return;
     const suggested = transferCandidates.find((c) => c.uid === transferSuggestedId);
-    onRequestTransfer(transferReasonField.trim(), suggested);
-    setShowTransferRequest(false);
-    setTransferReasonField("");
-    setTransferSuggestedId("");
+    runAction(
+      () => onRequestTransfer(transferReasonField.trim(), suggested),
+      () => {
+        setShowTransferRequest(false);
+        setTransferReasonField("");
+        setTransferSuggestedId("");
+      },
+    );
   }
 
   function handleDirectTransfer() {
     const target = transferCandidates.find((c) => c.uid === directTransferTargetId);
     if (!target) return;
-    onDirectTransfer(target);
-    setShowDirectTransfer(false);
-    setDirectTransferTargetId("");
+    runAction(
+      () => onDirectTransfer(target),
+      () => {
+        setShowDirectTransfer(false);
+        setDirectTransferTargetId("");
+      },
+    );
   }
 
   async function handleCloseFollowUp() {
@@ -207,8 +261,7 @@ export function RequestDetailModal({
 
   function handleConfirmCancel() {
     if (!cancelReason.trim()) return;
-    onCancel(cancelReason.trim());
-    setShowCancelReason(false);
+    runAction(() => onCancel(cancelReason.trim()), () => setShowCancelReason(false));
   }
 
   async function handleConfirmMissed() {
@@ -218,6 +271,28 @@ export function RequestDetailModal({
       await onCloseMissed(missedReason.trim());
     } finally {
       setClosing(false);
+    }
+  }
+
+  async function handleOfferCompensation() {
+    if (!onOfferCompensation || offering) return;
+    setOffering(true);
+    try {
+      await onOfferCompensation();
+    } finally {
+      setOffering(false);
+    }
+  }
+
+  async function handleScheduleCompensation() {
+    const target = compensationCandidates.find((c) => c.uid === compCounsellorId);
+    if (!target || !compTime || scheduling || !onScheduleCompensation) return;
+    setScheduling(true);
+    try {
+      await onScheduleCompensation({ uid: target.uid, email: target.email }, new Date(compTime).getTime());
+      setShowScheduleCompensation(false);
+    } finally {
+      setScheduling(false);
     }
   }
 
@@ -240,13 +315,14 @@ export function RequestDetailModal({
             ))}
           </Select>
           <div className="request-card__actions">
-            <Button type="button" disabled={!directTransferTargetId} onClick={handleDirectTransfer}>
-              Confirm transfer
+            <Button type="button" disabled={actionBusy || !directTransferTargetId} onClick={handleDirectTransfer}>
+              {actionBusy ? "Transferring…" : "Confirm transfer"}
             </Button>
             <Button type="button" variant="outlined" onClick={() => setShowDirectTransfer(false)}>
               Cancel
             </Button>
           </div>
+          {actionError && <p className="request-card__time-warning">{actionError}</p>}
         </div>
       ) : (
         <Button type="button" variant="outlined" onClick={() => setShowDirectTransfer(true)}>
@@ -286,15 +362,16 @@ export function RequestDetailModal({
             <div className="request-card__actions">
               <Button
                 type="button"
-                disabled={!transferReasonField.trim() || !campusHead}
+                disabled={actionBusy || !transferReasonField.trim() || !campusHead}
                 onClick={handleRequestTransfer}
               >
-                Send request to Head
+                {actionBusy ? "Sending…" : "Send request to Head"}
               </Button>
               <Button type="button" variant="outlined" onClick={() => setShowTransferRequest(false)}>
                 Cancel
               </Button>
             </div>
+            {actionError && <p className="request-card__time-warning">{actionError}</p>}
           </div>
         )}
 
@@ -398,7 +475,11 @@ export function RequestDetailModal({
   }
 
   if (summaryFocusMode) {
-    const readOnly = booking.status !== "scheduled";
+    // A Crisis SOS booking never reaches "scheduled" — it's handled directly
+    // and stays "accepted" the whole time (see sessionStarted above) — so
+    // gating on "scheduled" alone made the summary permanently read-only for
+    // every SOS session, even while it was actively in progress.
+    const readOnly = booking.isEmergency ? booking.status !== "accepted" : booking.status !== "scheduled";
     return (
       <Modal title={booking.userEmail} onClose={onClose} className="request-detail-modal">
         <div className="request-card__summary-focus">
@@ -476,6 +557,9 @@ export function RequestDetailModal({
         <Button type="button" variant="outlined" onClick={() => setShowChatModal(true)}>
           Chat with Student
         </Button>
+        <Button type="button" variant="outlined" onClick={() => setShowResources((v) => !v)}>
+          {showResources ? "Hide Resources" : "Session Resources"}
+        </Button>
         {onViewSummary && (
           <Button type="button" variant="outlined" onClick={onViewSummary}>
             View Summary
@@ -529,6 +613,21 @@ export function RequestDetailModal({
         </dl>
       )}
 
+      {showResources && currentUser && (
+        <SessionResourcesPanel
+          bookingId={booking.id}
+          userId={booking.userId}
+          counsellorId={booking.counsellorId}
+          campusId={booking.campusId}
+          canManage={booking.counsellorId === currentUser.uid}
+          author={{
+            uid: currentUser.uid,
+            name: currentUser.displayName || currentUser.email || viewerRole,
+            role: viewerRole,
+          }}
+        />
+      )}
+
       {booking.status === "pending" && !isTransferredPending && (
         <div className="request-card__schedule">
           {booking.proposedSlots && (
@@ -537,15 +636,15 @@ export function RequestDetailModal({
               <div className="request-card__actions">
                 <Button
                   type="button"
-                  disabled={isPastChoice(toDateTimeLocalValue(booking.proposedSlots[0]))}
-                  onClick={() => onAcceptSlot(booking.proposedSlots![0])}
+                  disabled={actionBusy || isPastChoice(toDateTimeLocalValue(booking.proposedSlots[0]))}
+                  onClick={() => runAction(() => onAcceptSlot(booking.proposedSlots![0]), () => {})}
                 >
                   Accept: {new Date(booking.proposedSlots[0]).toLocaleString()}
                 </Button>
                 <Button
                   type="button"
-                  disabled={isPastChoice(toDateTimeLocalValue(booking.proposedSlots[1]))}
-                  onClick={() => onAcceptSlot(booking.proposedSlots![1])}
+                  disabled={actionBusy || isPastChoice(toDateTimeLocalValue(booking.proposedSlots[1]))}
+                  onClick={() => runAction(() => onAcceptSlot(booking.proposedSlots![1]), () => {})}
                 >
                   Accept: {new Date(booking.proposedSlots[1]).toLocaleString()}
                 </Button>
@@ -574,11 +673,12 @@ export function RequestDetailModal({
               <Button type="button" variant="outlined" onClick={() => setShowProposeTime(true)}>
                 Propose a different time
               </Button>
-              <Button type="button" variant="outlined" onClick={onReject}>
+              <Button type="button" variant="outlined" disabled={actionBusy} onClick={() => runAction(onReject, () => {})}>
                 Cancel
               </Button>
             </div>
           )}
+          {actionError && <p className="request-card__time-warning">{actionError}</p>}
         </div>
       )}
 
@@ -613,15 +713,8 @@ export function RequestDetailModal({
                 placeholder="Let the head know why you cannot take this session…"
               />
               <div className="request-card__actions">
-                <Button
-                  type="button"
-                  disabled={!cancelReason.trim()}
-                  onClick={() => {
-                    onCancel(cancelReason.trim());
-                    setShowCancelReason(false);
-                  }}
-                >
-                  Confirm cancellation
+                <Button type="button" disabled={actionBusy || !cancelReason.trim()} onClick={handleConfirmCancel}>
+                  {actionBusy ? "Cancelling…" : "Confirm cancellation"}
                 </Button>
                 <Button type="button" variant="outlined" onClick={() => setShowCancelReason(false)}>
                   Back
@@ -630,14 +723,15 @@ export function RequestDetailModal({
             </div>
           ) : (
             <div className="request-card__actions">
-              <Button type="button" disabled={isPastOrEmpty(timeValue)} onClick={handleConfirmSchedule}>
-                Schedule
+              <Button type="button" disabled={actionBusy || isPastOrEmpty(timeValue)} onClick={handleConfirmSchedule}>
+                {actionBusy ? "Scheduling…" : "Schedule"}
               </Button>
               <Button type="button" variant="outlined" onClick={() => setShowCancelReason(true)}>
                 Cancel
               </Button>
             </div>
           )}
+          {actionError && <p className="request-card__time-warning">{actionError}</p>}
         </div>
       )}
 
@@ -727,13 +821,14 @@ export function RequestDetailModal({
                 {booking.rescheduleProposal.reason ? ` — ${booking.rescheduleProposal.reason}` : ""}
               </p>
               <div className="request-card__actions">
-                <Button type="button" onClick={onAcceptReschedule}>
-                  Accept new time
+                <Button type="button" disabled={actionBusy} onClick={() => runAction(onAcceptReschedule, () => {})}>
+                  {actionBusy ? "Accepting…" : "Accept new time"}
                 </Button>
                 <Button type="button" variant="outlined" onClick={() => setShowReschedulePropose(true)}>
                   Reschedule
                 </Button>
               </div>
+              {actionError && <p className="request-card__time-warning">{actionError}</p>}
             </div>
           )}
 
@@ -762,13 +857,14 @@ export function RequestDetailModal({
                 onChange={(e) => setRescheduleReasonValue(e.target.value)}
               />
               <div className="request-card__actions">
-                <Button type="button" disabled={isPastOrEmpty(rescheduleTimeValue)} onClick={handleProposeReschedule}>
-                  Send
+                <Button type="button" disabled={actionBusy || isPastOrEmpty(rescheduleTimeValue)} onClick={handleProposeReschedule}>
+                  {actionBusy ? "Sending…" : "Send"}
                 </Button>
                 <Button type="button" variant="outlined" onClick={() => setShowReschedulePropose(false)}>
                   Cancel
                 </Button>
               </div>
+              {actionError && <p className="request-card__time-warning">{actionError}</p>}
             </div>
           )}
 
@@ -869,13 +965,14 @@ export function RequestDetailModal({
                 placeholder="Let the user and head know why you're cancelling…"
               />
               <div className="request-card__actions">
-                <Button type="button" disabled={!cancelReason.trim()} onClick={handleConfirmCancel}>
-                  Confirm cancellation
+                <Button type="button" disabled={actionBusy || !cancelReason.trim()} onClick={handleConfirmCancel}>
+                  {actionBusy ? "Cancelling…" : "Confirm cancellation"}
                 </Button>
                 <Button type="button" variant="outlined" onClick={() => setShowCancelReason(false)}>
                   Back
                 </Button>
               </div>
+              {actionError && <p className="request-card__time-warning">{actionError}</p>}
             </div>
           ) : (
             <div className="request-card__actions">
@@ -901,6 +998,79 @@ export function RequestDetailModal({
         <div className="request-card__completed">
           <p>Session was not held.</p>
           {booking.missedReason && <p className="request-card__summary-readonly">{booking.missedReason}</p>}
+
+          {viewerRole === "head" && !booking.compensationOffer && onOfferCompensation && (
+            <div className="request-card__actions">
+              <Button type="button" disabled={offering} onClick={handleOfferCompensation}>
+                {offering ? "Sending…" : "Offer compensation session"}
+              </Button>
+            </div>
+          )}
+
+          {booking.compensationOffer?.status === "pending" && (
+            <p className="request-card__summary-hint">Waiting on the student's response to the compensation offer.</p>
+          )}
+
+          {booking.compensationOffer?.status === "declined" && (
+            <p className="request-card__summary-hint">Student declined the compensation session offer.</p>
+          )}
+
+          {viewerRole === "head" &&
+            booking.compensationOffer?.status === "accepted" &&
+            !booking.compensationOffer.compensationBookingId &&
+            onScheduleCompensation &&
+            (showScheduleCompensation ? (
+              <div className="request-card__schedule">
+                <label htmlFor={`comp-counsellor-${booking.id}`}>Counsellor</label>
+                <Select
+                  id={`comp-counsellor-${booking.id}`}
+                  value={compCounsellorId}
+                  onChange={setCompCounsellorId}
+                >
+                  <option value="" disabled>
+                    Select a counsellor…
+                  </option>
+                  {compensationCandidates.map((c) => (
+                    <option key={c.uid} value={c.uid}>
+                      {c.displayName || c.email}
+                    </option>
+                  ))}
+                </Select>
+                <label htmlFor={`comp-time-${booking.id}`}>Session time ({SESSION_DURATION_LABEL})</label>
+                <DateTimePicker id={`comp-time-${booking.id}`} min={nowValue} value={compTime} onChange={setCompTime} />
+                {isPastChoice(compTime) && (
+                  <p className="request-card__time-warning">This time has already passed. Pick a time later than now.</p>
+                )}
+                <div className="request-card__actions">
+                  <Button
+                    type="button"
+                    disabled={!compCounsellorId || isPastOrEmpty(compTime) || scheduling}
+                    onClick={handleScheduleCompensation}
+                  >
+                    {scheduling ? "Scheduling…" : "Schedule compensation session"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    disabled={scheduling}
+                    onClick={() => setShowScheduleCompensation(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="request-card__actions">
+                <Button type="button" onClick={() => setShowScheduleCompensation(true)}>
+                  Schedule compensation session
+                </Button>
+              </div>
+            ))}
+
+          {booking.compensationOffer?.compensationBookingId && (
+            <p className="request-card__summary-hint">Compensation session scheduled.</p>
+          )}
+
           {renderTransferControls()}
         </div>
       )}
@@ -934,18 +1104,21 @@ export function RequestDetailModal({
                 <div className="request-card__actions">
                   <Button
                     type="button"
-                    disabled={rateUserValue === 0}
-                    onClick={() => {
-                      onRateUser(rateUserValue, rateUserNote.trim());
-                      setShowRateUser(false);
-                    }}
+                    disabled={actionBusy || rateUserValue === 0}
+                    onClick={() =>
+                      runAction(
+                        () => onRateUser(rateUserValue, rateUserNote.trim()),
+                        () => setShowRateUser(false),
+                      )
+                    }
                   >
-                    Submit rating
+                    {actionBusy ? "Submitting…" : "Submit rating"}
                   </Button>
                   <Button type="button" variant="outlined" onClick={() => setShowRateUser(false)}>
                     Cancel
                   </Button>
                 </div>
+                {actionError && <p className="request-card__time-warning">{actionError}</p>}
               </div>
             ) : (
               <Button type="button" variant="outlined" onClick={() => setShowRateUser(true)}>

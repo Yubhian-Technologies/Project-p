@@ -8,11 +8,15 @@ export type NotificationType =
   | "booking_completed"
   | "booking_missed"
   | "session_needs_review"
+  | "compensation_offered"
+  | "compensation_accepted"
+  | "compensation_declined"
   | "feedback_submitted"
   | "ssi_test"
   | "ssi_suggested"
   | "session_reminder"
   | "chat_message"
+  | "session_resource_added"
   | "followup_scheduled"
   | "emergency_sos"
   | "reschedule_requested"
@@ -20,7 +24,8 @@ export type NotificationType =
   | "transfer_requested"
   | "transfer_declined"
   | "event_added"
-  | "monthly_report_uploaded";
+  | "monthly_report_uploaded"
+  | "journal_entry_shared";
 
 export interface Notification {
   id: string;
