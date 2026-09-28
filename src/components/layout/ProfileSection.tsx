@@ -223,55 +223,59 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     JSON.stringify(scheduleDraft) === JSON.stringify(profile.availabilitySchedule ?? defaultAvailabilitySchedule());
 
   return (
-    <Card className="profile-section">
-      <div className="profile-section__avatar-block">
-        <Avatar photoURL={profile.photoURL} label={profile.email} size="large" />
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="profile-section__file-input"
-          onChange={handleFileChange}
-        />
-        <Button
-          variant="outlined"
-          type="button"
-          disabled={uploading}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          {uploading ? "Uploading…" : "Change photo"}
-        </Button>
-        {error && <p className="profile-section__error">{error}</p>}
-
-        {isCounsellorLike && (
+    <div className="profile-page">
+      <h1 className="profile-page__title">Profile</h1>
+      <Card className="profile-section">
+        <div className="profile-section__avatar-block">
+          <Avatar photoURL={profile.photoURL} label={profile.email} size="large" />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="profile-section__file-input"
+            onChange={handleFileChange}
+          />
           <Button
+            variant="outlined"
             type="button"
-            variant={profile.available ? "filled" : "outlined"}
-            disabled={savingAvailability}
-            onClick={handleToggleAvailability}
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
           >
-            {profile.available ? "Available" : "Unavailable"} — tap to toggle
+            {uploading ? "Uploading…" : "Change photo"}
           </Button>
-        )}
-      </div>
+          {error && <p className="profile-section__error">{error}</p>}
 
-      <div className="profile-section__main">
-        <dl className="profile-section__list">
-          {profile.displayName && (
-            <>
-              <dt>Name</dt>
-              <dd>{profile.displayName}</dd>
-            </>
+          {isCounsellorLike && (
+            <Button
+              type="button"
+              variant={profile.available ? "filled" : "outlined"}
+              disabled={savingAvailability}
+              onClick={handleToggleAvailability}
+            >
+              {profile.available ? "Available" : "Unavailable"} — tap to toggle
+            </Button>
           )}
-          <dt>Email</dt>
-          <dd>{profile.email}</dd>
-          <dt>Role</dt>
-          <dd>{ROLE_LABELS[profile.role]}</dd>
-        </dl>
+        </div>
 
-        {isCounsellorLike && (
-          <div className="profile-section__toggle-block">
-            <p className="profile-section__subheading">Profile & Bio Details</p>
+        <div className="profile-section__main">
+          <div className="profile-section__info-card">
+            <dl className="profile-section__list">
+              {profile.displayName && (
+                <>
+                  <dt>NAME</dt>
+                  <dd>{profile.displayName}</dd>
+                </>
+              )}
+              <dt>EMAIL</dt>
+              <dd>{profile.email}</dd>
+              <dt>ROLE</dt>
+              <dd>{ROLE_LABELS[profile.role]}</dd>
+            </dl>
+          </div>
+
+          {isCounsellorLike && (
+            <div className="profile-section__toggle-block">
+              <p className="profile-section__subheading">PROFILE &amp; BIO DETAILS</p>
             {!showEditProfileForm ? (
               <Button type="button" variant="outlined" onClick={() => setShowEditProfileForm(true)}>
                 Edit profile &amp; bio
@@ -492,7 +496,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
 
         {isUser && (
           <div className="profile-section__toggle-block">
-            <p className="profile-section__subheading">Personal Details</p>
+            <p className="profile-section__subheading">PERSONAL DETAILS</p>
             {!showEditProfileForm ? (
               <Button type="button" variant="outlined" onClick={() => setShowEditProfileForm(true)}>
                 Edit details
@@ -559,7 +563,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
 
         {onOpenFeedback && (
           <div className="profile-section__password">
-            <p className="profile-section__subheading">Workspace</p>
+            <p className="profile-section__subheading">WORKSPACE</p>
             <Button type="button" variant="outlined" onClick={onOpenFeedback}>
               My feedback
             </Button>
@@ -567,7 +571,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
         )}
 
         <div className="profile-section__password">
-          <p className="profile-section__subheading">Security</p>
+          <p className="profile-section__subheading">SECURITY</p>
           {!showPasswordForm ? (
             <Button type="button" variant="outlined" onClick={() => setShowPasswordForm(true)}>
               Change password
@@ -638,5 +642,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
         </div>
       </div>
     </Card>
+  </div>
   );
 }
