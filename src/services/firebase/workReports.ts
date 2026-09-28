@@ -30,6 +30,9 @@ export interface WorkReport {
   verifiedByUid?: string;
   verifiedAt?: string;
   headNotes?: string;
+  // speech-to-text — populated when the counsellor dictates the report
+  transcript?: string;
+  transcribedAt?: string;       // ISO string (mirrored from Firestore serverTimestamp)
 }
 
 const COLLECTION = "workReports";
@@ -42,6 +45,7 @@ export async function submitWorkReport(
   periodLabel: string,
   submittedBy: string,
   submittedByUid: string,
+  transcript?: string,
 ): Promise<WorkReport> {
   const docRef = await addDoc(collection(db, COLLECTION), {
     title,
@@ -52,6 +56,9 @@ export async function submitWorkReport(
     submittedByUid,
     submittedAt: serverTimestamp(),
     status: "pending",
+    ...(transcript && transcript.trim()
+      ? { transcript: transcript.trim(), transcribedAt: serverTimestamp() }
+      : {}),
   });
 
   return {
@@ -64,7 +71,21 @@ export async function submitWorkReport(
     submittedByUid,
     submittedAt: new Date().toISOString(),
     status: "pending",
+    ...(transcript && transcript.trim()
+      ? { transcript: transcript.trim(), transcribedAt: new Date().toISOString() }
+      : {}),
   };
+}
+
+/** Saves a speech-to-text transcript onto an existing work report. */
+export async function saveWorkReportTranscript(
+  id: string,
+  transcript: string,
+): Promise<void> {
+  await updateDoc(doc(db, COLLECTION, id), {
+    transcript: transcript.trim(),
+    transcribedAt: serverTimestamp(),
+  });
 }
 
 /** Counsellor fetches their own reports, newest first (client-sorted so no
@@ -126,5 +147,9 @@ function docToReport(id: string, data: Record<string, unknown>): WorkReport {
       (data.verifiedAt as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString?.() ??
       undefined,
     headNotes: (data.headNotes as string | undefined) ?? undefined,
+    transcript: (data.transcript as string | undefined) ?? undefined,
+    transcribedAt:
+      (data.transcribedAt as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString?.() ??
+      undefined,
   };
 }

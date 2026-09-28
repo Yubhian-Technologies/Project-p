@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { useSpeechToText } from "../../hooks/useSpeechToText";
+import { VoiceToTextPanel } from "./VoiceToTextPanel";
 import {
   submitWorkReport,
   listWorkReportsByUid,
@@ -21,7 +21,6 @@ import {
   TrashIcon,
   FileTextIcon,
   EyeIcon,
-  MicIcon,
   DownloadIcon,
   HourglassIcon,
 } from "../../components/common/icons";
@@ -62,6 +61,9 @@ export function WorkReportsSection() {
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
 
+  // ── speech-to-text transcript ──────────────────────────────────────
+  const [transcript, setTranscript] = useState("");
+
   // ── list state ──────────────────────────────────────────────────────
   const [reports, setReports] = useState<WorkReport[]>([]);
   const [loadingList, setLoadingList] = useState(true);
@@ -69,26 +71,6 @@ export function WorkReportsSection() {
   const [selectedReport, setSelectedReport] = useState<WorkReport | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-
-  // ── voice-to-text for the report body ──────────────────────────────
-  const voicePrefixRef = useRef("");
-  const { supported: voiceSupported, listening: voiceListening, toggle: toggleVoice } = useSpeechToText(
-    (text) => {
-      const prefix = voicePrefixRef.current;
-      const spacer =
-        prefix && !prefix.endsWith(" ") && !prefix.endsWith("\n") && !prefix.endsWith(".")
-          ? " "
-          : "";
-      setBody(prefix + spacer + text);
-    },
-  );
-
-  function handleVoiceToggle() {
-    if (!voiceListening) {
-      voicePrefixRef.current = body;
-    }
-    toggleVoice();
-  }
 
   async function loadReports() {
     if (!profile?.uid) return;
@@ -145,6 +127,61 @@ export function WorkReportsSection() {
   }
 
   // ── submit ──────────────────────────────────────────────────────────
+  async function createReport(contentBody: string, withTranscript: string) {
+    return submitWorkReport(
+      title.trim(),
+      contentBody,
+      reportType,
+      periodLabel.trim(),
+      profile?.displayName || profile?.email || "Counsellor",
+      profile?.uid ?? "",
+      withTranscript,
+    );
+  }
+
+  function handleInsertTranscript() {
+    const spoken = transcript.trim();
+    if (!spoken) return;
+    const spacer = body.trim() ? (body.endsWith("\n") ? "" : "\n\n") : "";
+    setBody(body + spacer + spoken);
+    setSubmitError("");
+  }
+
+  async function handleSaveTranscript() {
+    if (!title.trim()) {
+      throw new Error("Please enter a report title before saving the transcript.");
+    }
+    if (!periodLabel.trim()) {
+      throw new Error("Please enter the period (e.g. Week 1, Sep 2026) before saving.");
+    }
+    if (!transcript.trim()) {
+      throw new Error("There's nothing to save yet — record some audio first.");
+    }
+
+    setSubmitError("");
+    setSubmitSuccess("");
+    let created: WorkReport;
+    try {
+      created = await createReport(transcript.trim(), transcript);
+    } catch (err) {
+      console.error("Failed to save transcript:", err);
+      throw new Error("Couldn't save the transcript right now. Please try again.");
+    }
+    setSubmitSuccess(
+      `Transcript saved to report "${created.title}". You can edit it from the list below.`,
+    );
+    setTitle("");
+    setBody("");
+    setPeriodLabel("");
+    setTranscript("");
+    setReports((prev) => [created, ...prev.filter((r) => r.id !== created.id)]);
+    try {
+      await loadReports();
+    } catch (err) {
+      console.warn("Transcript saved, but the list refresh failed:", err);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitError("");
@@ -156,19 +193,17 @@ export function WorkReportsSection() {
     setSubmitting(true);
 
     try {
-      const created = await submitWorkReport(
-        title.trim(),
-        body.trim(),
-        reportType,
-        periodLabel.trim(),
-        profile?.displayName || profile?.email || "Counsellor",
-        profile?.uid ?? "",
-      );
+      const created = await createReport(body.trim(), transcript);
       setSubmitError("");
-      setSubmitSuccess("Report submitted successfully!");
+      setSubmitSuccess(
+        transcript.trim()
+          ? "Report submitted successfully (transcript included)!"
+          : "Report submitted successfully!",
+      );
       setTitle("");
       setBody("");
       setPeriodLabel("");
+      setTranscript("");
       setReports((prev) => [created, ...prev.filter((r) => r.id !== created.id)]);
       try {
         await loadReports();
@@ -252,20 +287,6 @@ export function WorkReportsSection() {
               <label className="wr-submit-card__label" htmlFor="wr-body">
                 Report Content
               </label>
-              {voiceSupported ? (
-                <button
-                  type="button"
-                  className={`wr-btn wr-btn--voice${voiceListening ? " wr-btn--voice-active" : ""}`}
-                  onClick={handleVoiceToggle}
-                >
-                  <MicIcon />
-                  {voiceListening ? "Stop & Insert" : "Speak to write"}
-                </button>
-              ) : (
-                <span className="wr-submit-card__voice-hint">
-                  Voice input needs Chrome or Edge on desktop.
-                </span>
-              )}
             </div>
             <textarea
               id="wr-body"
@@ -275,12 +296,15 @@ export function WorkReportsSection() {
               onChange={(e) => setBody(e.target.value)}
               required
             />
-            {voiceListening && (
-              <p className="wr-submit-card__voice-status">
-                Listening… speak now — your words appear here and you can correct them before submitting.
-              </p>
-            )}
           </div>
+
+          {/* Voice-to-text */}
+          <VoiceToTextPanel
+            transcript={transcript}
+            onTranscriptChange={setTranscript}
+            onInsertTranscript={handleInsertTranscript}
+            onSaveTranscript={handleSaveTranscript}
+          />
 
           {/* Actions */}
           <div className="wr-submit-card__actions">
