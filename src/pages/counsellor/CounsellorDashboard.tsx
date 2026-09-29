@@ -7,6 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { BookingRequestsSection } from "./BookingRequestsSection";
 import { EventsProgramsSection } from "./EventsProgramsSection";
 import { WorkReportsSection } from "./WorkReportsSection";
+import { CounsellorMonthlyReportsSection } from "./CounsellorMonthlyReportsSection";
 import { CounsellorFeedbackSection } from "./CounsellorFeedbackSection";
 import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAlertsSection";
 import { CommunitySection } from "../user/community/CommunitySection";
@@ -24,6 +25,7 @@ const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
   { id: "work-reports", label: "Work Reports" },
+  { id: "monthly-reports", label: "Monthly Reports" },
   { id: "events", label: "Events & Programs" },
   { id: "games", label: "Wellness Exercise" },
   { id: "journal", label: "Counselling Journal" },
@@ -65,6 +67,7 @@ export function CounsellorDashboard() {
     requests: "Booking Requests",
     feedback: "My Feedback",
     "work-reports": "Work Reports",
+    "monthly-reports": "Monthly Reports",
     events: "Events & Programs",
     games: "Wellness Exercise",
     journal: "Counselling Journal",
@@ -115,6 +118,7 @@ export function CounsellorDashboard() {
       )}
       {activeSection === "feedback" && <CounsellorFeedbackSection />}
       {activeSection === "work-reports" && <WorkReportsSection />}
+      {activeSection === "monthly-reports" && <CounsellorMonthlyReportsSection />}
       {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "games" && <GamesSection ref={gamesRef} onActiveChange={setGameOpen} />}
       {activeSection === "journal" && <JournalSection />}

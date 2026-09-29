@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useSpeechToText } from "../../hooks/useSpeechToText";
 import {
   listMonthlyReports,
   uploadMonthlyReport,
@@ -16,6 +17,7 @@ import {
   RefreshIcon,
   CheckIcon,
   AlertTriangleIcon,
+  MicIcon,
 } from "../../components/common/icons";
 import "./MonthlyReportsSection.css";
 
@@ -64,6 +66,26 @@ export function MonthlyReportsSection() {
   const [reports, setReports] = useState<MonthlyReport[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // ── voice-to-text for the report title ───────────────────────────────
+  const voicePrefixRef = useRef("");
+  const { supported: voiceSupported, listening: voiceListening, toggle: toggleVoice } = useSpeechToText(
+    (text) => {
+      const prefix = voicePrefixRef.current;
+      const spacer =
+        prefix && !prefix.endsWith(" ") && !prefix.endsWith("\n") && !prefix.endsWith(".")
+          ? " "
+          : "";
+      setTitle(prefix + spacer + text);
+    },
+  );
+
+  function handleVoiceToggle() {
+    if (!voiceListening) {
+      voicePrefixRef.current = title;
+    }
+    toggleVoice();
+  }
 
   async function loadReports() {
     setLoadingList(true);
@@ -161,9 +183,25 @@ export function MonthlyReportsSection() {
         <form className="mr-upload-card__form" onSubmit={handleUpload}>
           {/* Title */}
           <div className="mr-upload-card__field mr-upload-card__field--full">
-            <label className="mr-upload-card__label" htmlFor="mr-title">
-              Report Title
-            </label>
+            <div className="mr-upload-card__label-row">
+              <label className="mr-upload-card__label" htmlFor="mr-title">
+                Report Title
+              </label>
+              {voiceSupported ? (
+                <button
+                  type="button"
+                  className={`mr-btn mr-btn--voice${voiceListening ? " mr-btn--voice-active" : ""}`}
+                  onClick={handleVoiceToggle}
+                >
+                  <MicIcon />
+                  {voiceListening ? "Stop & Insert" : "Speak to write"}
+                </button>
+              ) : (
+                <span className="mr-upload-card__voice-hint">
+                  Voice input needs Chrome or Edge on desktop.
+                </span>
+              )}
+            </div>
             <input
               id="mr-title"
               className="mr-upload-card__input"
@@ -173,6 +211,11 @@ export function MonthlyReportsSection() {
               onChange={(e) => setTitle(e.target.value)}
               required
             />
+            {voiceListening && (
+              <p className="mr-upload-card__voice-status">
+                Listening… speak now — your words appear here and you can correct them before uploading.
+              </p>
+            )}
           </div>
 
           {/* Month */}

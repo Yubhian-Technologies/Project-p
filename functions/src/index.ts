@@ -541,3 +541,93 @@ export const sendSessionReminders = onSchedule("every 5 minutes", async () => {
   for (const b of batches) await b.commit();
 });
 
+// Runs every 15 minutes and flags sessions whose scheduled window has fully
+// ended with nobody having closed them out (via closeMissedSession) — the
+// same "needs review" nudge src/services/firebase/bookings.ts's
+// flagMissedSessionPending sends, but that one only fires when a
+// counsellor/head happens to have their Booking Requests dashboard open and
+// refresh() runs. A student can otherwise be left staring at a passively
+// computed "missed" label (isSessionEndedPending on the client) forever with
+// no actual notification going out to anyone, if the counsellor never opens
+// the app. This is the server-side backstop that fires regardless. Shares
+// the same `missedNotified` flag as the client-side version so whichever
+// runs first wins and the other is a no-op.
+export const flagMissedSessions = onSchedule("every 15 minutes", async () => {
+  const now = Date.now();
+  const snapshot = await db.collection("bookings").where("status", "==", "scheduled").get();
+
+  const bookingUpdates: FirebaseFirestore.DocumentReference[] = [];
+  const notifications: Record<string, unknown>[] = [];
+  const headByCampus = new Map<string, string | null>();
+
+  async function resolveCampusHead(campusId: string, excludeUid: string): Promise<string | null> {
+    if (headByCampus.has(campusId)) return headByCampus.get(campusId) ?? null;
+    const headSnap = await db
+      .collection("users")
+      .where("role", "==", "head")
+      .where("campusId", "==", campusId)
+      .limit(2)
+      .get();
+    const head = headSnap.docs.map((d) => d.id).find((uid) => uid !== excludeUid) ?? null;
+    headByCampus.set(campusId, head);
+    return head;
+  }
+
+  for (const docRef of snapshot.docs) {
+    const b = docRef.data();
+    const scheduledAt = b.scheduledAt as number | undefined;
+    if (typeof scheduledAt !== "number" || b.missedNotified) continue;
+    const durationMinutes = typeof b.durationMinutes === "number" ? b.durationMinutes : 90;
+    if (now < scheduledAt + durationMinutes * 60000) continue;
+
+    const counsellorId = b.counsellorId as string;
+    const userEmail = b.userEmail as string;
+    bookingUpdates.push(docRef.ref);
+    notifications.push({
+      recipientId: counsellorId,
+      type: "session_needs_review",
+      bookingId: docRef.id,
+      title: "Session needs review",
+      message: `Your session with ${userEmail} was scheduled to end and hasn't been marked yet — let us know what happened.`,
+      read: false,
+      createdAt: now,
+    });
+
+    const campusId = b.campusId as string | undefined;
+    if (campusId) {
+      const headId = await resolveCampusHead(campusId, counsellorId);
+      if (headId) {
+        notifications.push({
+          recipientId: headId,
+          type: "session_needs_review",
+          bookingId: docRef.id,
+          title: "Counsellor session needs review",
+          message: `${b.counsellorEmail ?? "A counsellor"}'s session with ${userEmail} was scheduled to end and hasn't been marked yet.`,
+          read: false,
+          createdAt: now,
+        });
+      }
+    }
+  }
+
+  if (bookingUpdates.length === 0 && notifications.length === 0) return;
+
+  let batch = db.batch();
+  let opsInBatch = 0;
+  const batches: FirebaseFirestore.WriteBatch[] = [];
+  function queue(op: () => void) {
+    op();
+    opsInBatch++;
+    if (opsInBatch === 400) {
+      batches.push(batch);
+      batch = db.batch();
+      opsInBatch = 0;
+    }
+  }
+  for (const ref of bookingUpdates) queue(() => batch.update(ref, { missedNotified: true }));
+  for (const n of notifications) queue(() => batch.set(db.collection("notifications").doc(), n));
+  if (opsInBatch > 0) batches.push(batch);
+
+  for (const b of batches) await b.commit();
+});
+

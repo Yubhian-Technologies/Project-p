@@ -31,6 +31,7 @@ import "./WorkReportsSection.css";
 const REPORT_TYPES: { value: WorkReportType; label: string }[] = [
   { value: "daily", label: "Daily Report" },
   { value: "weekly", label: "Weekly Report" },
+  { value: "consolidated", label: "Consolidated Report" },
   { value: "other", label: "Other" },
 ];
 

@@ -1,9 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { useAuth } from "../../hooks/useAuth";
-import { useSpeechToText } from "../../hooks/useSpeechToText";
+import { useEffect, useState } from "react";
 import {
   listAllWorkReports,
-  verifyWorkReport,
   type WorkReport,
   type WorkReportType,
 } from "../../services/firebase/workReports";
@@ -18,10 +15,9 @@ import {
   ClipboardListIcon,
   HourglassIcon,
   EyeIcon,
-  MicIcon,
 } from "../../components/common/icons";
 import { downloadWorkReport } from "../../utils/downloadWorkReport";
-import "./TeamReportsSection.css";
+import "../head/TeamReportsSection.css";
 
 type Tab = "pending" | "verified";
 type TypeFilter = "all" | WorkReportType;
@@ -53,39 +49,17 @@ function formatDate(iso: string) {
   }
 }
 
-export function TeamReportsSection() {
-  const { profile } = useAuth();
-
+/** Admin's read-only view of every counsellor's work reports across the
+ *  platform — view + PDF download only, no verify controls (verification
+ *  stays Head-only). */
+export function AdminWorkReportsSection() {
   const [tab, setTab] = useState<Tab>("pending");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [reports, setReports] = useState<WorkReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<WorkReport | null>(null);
-  const [headNotes, setHeadNotes] = useState("");
-  const [saving, setSaving] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  // ── voice-to-text for verification notes ────────────────────────────
-  const voicePrefixRef = useRef("");
-  const { supported: voiceSupported, listening: voiceListening, toggle: toggleVoice } = useSpeechToText(
-    (text) => {
-      const prefix = voicePrefixRef.current;
-      const spacer =
-        prefix && !prefix.endsWith(" ") && !prefix.endsWith("\n") && !prefix.endsWith(".")
-          ? " "
-          : "";
-      setHeadNotes(prefix + spacer + text);
-    },
-  );
-
-  function handleVoiceToggle() {
-    if (!voiceListening) {
-      voicePrefixRef.current = headNotes;
-    }
-    toggleVoice();
-  }
-
-  // ── download (PDF) ─────────────────────────────────────────────────
   async function handleDownload(report: WorkReport) {
     setDownloadingId(report.id);
     try {
@@ -113,36 +87,6 @@ export function TeamReportsSection() {
   const displayed = (tab === "pending" ? pending : verified).filter(
     (r) => typeFilter === "all" || r.reportType === typeFilter,
   );
-
-  function openReport(r: WorkReport) {
-    setSelectedReport(r);
-    setHeadNotes("");
-  }
-
-  async function handleVerify(id: string) {
-    setSaving(true);
-    try {
-      await verifyWorkReport(
-        id,
-        profile?.displayName || profile?.email || "Head",
-        profile?.uid ?? "",
-        headNotes.trim(),
-      );
-      setHeadNotes("");
-      if (selectedReport?.id === id) {
-        setSelectedReport((prev) => prev ? {
-          ...prev,
-          status: "verified",
-          verifiedBy: profile?.displayName || profile?.email || "Head",
-          verifiedAt: new Date().toISOString(),
-          headNotes: headNotes.trim(),
-        } : null);
-      }
-      await loadReports();
-    } finally {
-      setSaving(false);
-    }
-  }
 
   return (
     <div className="tr-section">
@@ -204,14 +148,14 @@ export function TeamReportsSection() {
             </div>
             <p>
               {tab === "pending"
-                ? "No pending reports. All caught up! ✅"
+                ? "No pending reports right now."
                 : "No verified reports yet."}
             </p>
           </div>
         ) : (
           <div className="tr-list">
             {displayed.map((r) => (
-              <div key={r.id} className="tr-card tr-card--clickable" onClick={() => openReport(r)}>
+              <div key={r.id} className="tr-card tr-card--clickable" onClick={() => setSelectedReport(r)}>
                 <div className="tr-card__top">
                   <div className="tr-card__title">{r.title}</div>
                   <span className={`tr-status tr-status--${r.status}`}>
@@ -232,7 +176,7 @@ export function TeamReportsSection() {
                   className="tr-btn tr-btn--view"
                   onClick={(e) => {
                     e.stopPropagation();
-                    openReport(r);
+                    setSelectedReport(r);
                   }}
                 >
                   <EyeIcon /> View Details
@@ -240,7 +184,6 @@ export function TeamReportsSection() {
               </div>
             ))}
           </div>
-
         )}
       </div>
 
@@ -299,57 +242,15 @@ export function TeamReportsSection() {
               </div>
             ) : (
               <div className="tr-modal__section">
-                <h4 className="tr-modal__section-title">Verify Report</h4>
-                <div className="tr-verify-panel">
-                  <div className="tr-verify-panel__label-row">
-                    <label className="tr-verify-panel__label" htmlFor={`tr-modal-notes-${selectedReport.id}`}>
-                      Notes / Feedback (optional)
-                    </label>
-                    {voiceSupported ? (
-                      <button
-                        type="button"
-                        className={`tr-btn tr-btn--voice${voiceListening ? " tr-btn--voice-active" : ""}`}
-                        onClick={handleVoiceToggle}
-                      >
-                        <MicIcon />
-                        {voiceListening ? "Stop & Insert" : "Speak to write"}
-                      </button>
-                    ) : (
-                      <span className="tr-verify-panel__voice-hint">
-                        Voice input needs Chrome or Edge on desktop.
-                      </span>
-                    )}
-                  </div>
-                  <textarea
-                    id={`tr-modal-notes-${selectedReport.id}`}
-                    className="tr-verify-panel__textarea"
-                    placeholder="Add feedback before verifying…"
-                    value={headNotes}
-                    onChange={(e) => setHeadNotes(e.target.value)}
-                  />
-                  {voiceListening && (
-                    <p className="tr-verify-panel__voice-status">
-                      Listening… speak now — your words appear here and you can correct them before verifying.
-                    </p>
-                  )}
-                  <div className="tr-verify-panel__actions">
-                    <button
-                      type="button"
-                      className="tr-btn tr-btn--verify"
-                      disabled={saving}
-                      onClick={() => handleVerify(selectedReport.id)}
-                    >
-                      <CheckIcon /> {saving ? "Saving…" : "Confirm & Verify"}
-                    </button>
-                  </div>
-                </div>
+                <h4 className="tr-modal__section-title">Status</h4>
+                <p style={{ margin: 0, fontSize: 13, color: "#64748B" }}>
+                  Awaiting review by Head. Verification happens on the Head dashboard.
+                </p>
               </div>
             )}
-
           </div>
         </Modal>
       )}
     </div>
   );
 }
-

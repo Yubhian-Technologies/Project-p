@@ -13,7 +13,7 @@ import {
 import { db } from "./config";
 
 export type WorkReportStatus = "pending" | "verified";
-export type WorkReportType = "daily" | "weekly" | "other";
+export type WorkReportType = "daily" | "weekly" | "consolidated" | "other";
 
 export interface WorkReport {
   id: string;

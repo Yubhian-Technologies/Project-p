@@ -3,6 +3,7 @@ import type { WorkReport } from "../services/firebase/workReports";
 const TYPE_LABELS: Record<WorkReport["reportType"], string> = {
   daily: "Daily Report",
   weekly: "Weekly Report",
+  consolidated: "Consolidated Report",
   other: "Other",
 };
 

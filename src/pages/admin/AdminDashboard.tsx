@@ -8,6 +8,7 @@ import { LoginsManagementSection } from "../super-admin/LoginsManagementSection"
 import { AnalyticsSection } from "./analytics/AnalyticsSection";
 import { EventsOverviewSection } from "./EventsOverviewSection";
 import { MonthlyReportsViewSection } from "./MonthlyReportsViewSection";
+import { AdminWorkReportsSection } from "./AdminWorkReportsSection";
 import { CounsellorRatingsSection } from "./CounsellorRatingsSection";
 import { AdminHomeActivityOverview } from "./AdminHomeActivityOverview";
 import "../../styles/bento-grid.css";
@@ -20,6 +21,7 @@ const SECTIONS = [
   { id: "analytics", label: "Analytics" },
   { id: "counsellor-ratings", label: "Counsellor Ratings" },
   { id: "monthly-reports", label: "Monthly Reports" },
+  { id: "work-reports", label: "Work Reports" },
 ];
 
 const TITLES: Record<string, string> = {
@@ -30,6 +32,7 @@ const TITLES: Record<string, string> = {
   analytics: "Analytics",
   "counsellor-ratings": "Counsellor Ratings",
   "monthly-reports": "Monthly Reports",
+  "work-reports": "Work Reports",
 };
 
 export function AdminDashboard() {
@@ -57,6 +60,8 @@ export function AdminDashboard() {
         <CounsellorRatingsSection />
       ) : activeSection === "monthly-reports" ? (
         <MonthlyReportsViewSection />
+      ) : activeSection === "work-reports" ? (
+        <AdminWorkReportsSection />
       ) : (
         <div className="bento-grid">
           <BentoCard

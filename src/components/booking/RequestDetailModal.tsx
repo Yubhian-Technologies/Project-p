@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Modal } from "../common/Modal";
 import { Button } from "../common/Button";
 import { Select } from "../common/Select";
 import { DateTimePicker } from "../common/DateTimePicker";
 import { StarRating } from "../common/StarRating";
+import { MicIcon } from "../common/icons";
+import { useSpeechToText } from "../../hooks/useSpeechToText";
 import { getBookingIntake, SESSION_DURATION_LABEL } from "../../services/firebase/bookings";
 import { getSsiResult, type SsiResult } from "../../services/firebase/ssiTest";
 import type { Booking, BookingIntake } from "../../types/booking";
@@ -105,6 +107,26 @@ export function RequestDetailModal({
   const [summaryDraft, setSummaryDraft] = useState("");
   const [summaryFocusMode, setSummaryFocusMode] = useState(false);
   const [savingSummary, setSavingSummary] = useState(false);
+
+  // ── voice-to-text for the session summary ────────────────────────────
+  const summaryVoicePrefixRef = useRef("");
+  const {
+    supported: summaryVoiceSupported,
+    listening: summaryVoiceListening,
+    toggle: toggleSummaryVoice,
+  } = useSpeechToText((text) => {
+    const prefix = summaryVoicePrefixRef.current;
+    const spacer =
+      prefix && !prefix.endsWith(" ") && !prefix.endsWith("\n") && !prefix.endsWith(".") ? " " : "";
+    setSummaryDraft(prefix + spacer + text);
+  });
+
+  function handleSummaryVoiceToggle() {
+    if (!summaryVoiceListening) {
+      summaryVoicePrefixRef.current = summaryDraft;
+    }
+    toggleSummaryVoice();
+  }
   const [showFollowUp, setShowFollowUp] = useState(false);
   const [followUpTime, setFollowUpTime] = useState("");
   const [showCancelReason, setShowCancelReason] = useState(false);
@@ -486,7 +508,23 @@ export function RequestDetailModal({
           <Button type="button" variant="outlined" onClick={() => setSummaryFocusMode(false)}>
             ← Back
           </Button>
-          <label htmlFor={`summary-${booking.id}`}>Session summary</label>
+          <div className="request-card__summary-label-row">
+            <label htmlFor={`summary-${booking.id}`}>Session summary</label>
+            {!readOnly && (
+              summaryVoiceSupported ? (
+                <button
+                  type="button"
+                  className={`request-card__voice-btn${summaryVoiceListening ? " request-card__voice-btn--active" : ""}`}
+                  onClick={handleSummaryVoiceToggle}
+                >
+                  <MicIcon />
+                  {summaryVoiceListening ? "Stop & Insert" : "Speak to write"}
+                </button>
+              ) : (
+                <span className="request-card__voice-hint">Voice input needs Chrome or Edge on desktop.</span>
+              )
+            )}
+          </div>
           {readOnly ? (
             <p className="request-card__summary-readonly">{summaryDraft}</p>
           ) : (
@@ -498,6 +536,11 @@ export function RequestDetailModal({
                 onChange={(e) => setSummaryDraft(e.target.value)}
                 placeholder="Notes from the session…"
               />
+              {summaryVoiceListening && (
+                <p className="request-card__voice-status">
+                  Listening… speak now — your words appear here and you can correct them before saving.
+                </p>
+              )}
               <Button
                 type="button"
                 disabled={savingSummary}

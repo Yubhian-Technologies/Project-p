@@ -662,9 +662,12 @@ service cloud.firestore {
     // ---------- monthlyReports ----------
     // Heads upload/delete their campus's monthly report; Head, Admin, and
     // Super Admin can all view the platform-wide list (Admin's Monthly
-    // Reports tab has no upload/delete UI — view + download only).
+    // Reports tab has no upload/delete UI — view + download only). A
+    // Counsellor can also view (not upload/delete) reports for their own
+    // campus only — view + download only, same as Admin.
     match /monthlyReports/{reportId} {
-      allow read: if isStaff();
+      allow read: if isStaff()
+                  || (isRole('counsellor') && resource.data.campusId == myProfile().campusId);
       allow create: if isRole('head') && request.resource.data.uploadedByUid == request.auth.uid;
       allow update: if false;
       allow delete: if isRole('head');
