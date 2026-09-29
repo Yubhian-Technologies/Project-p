@@ -6,6 +6,7 @@ import { Button } from "../../components/common/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { BookingRequestsSection } from "../counsellor/BookingRequestsSection";
 import { CounsellorFeedbackSection } from "../counsellor/CounsellorFeedbackSection";
+import { SsiCollegeResultsSection } from "../../components/ssi/SsiCollegeResultsSection";
 import { TeamManagementSection } from "./TeamManagementSection";
 import { EventsProgramsSection } from "./EventsProgramsSection";
 import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAlertsSection";
@@ -25,6 +26,7 @@ import "../../styles/bento-grid.css";
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
+  { id: "ssi-results", label: "SSI Test Results" },
   { id: "team-management", label: "Team Management" },
   { id: "events", label: "Events & Programs" },
   { id: "monthly-reports", label: "Monthly Reports" },
@@ -72,6 +74,7 @@ export function HeadDashboard() {
     profile: "Profile",
     requests: "Booking Requests",
     feedback: "My Feedback",
+    "ssi-results": "SSI Test Results",
     "team-management": "Team Management",
     events: "Events & Programs",
     "transfer-requests": "Transfer Requests",
@@ -126,6 +129,7 @@ export function HeadDashboard() {
         />
       )}
       {activeSection === "feedback" && <CounsellorFeedbackSection />}
+      {activeSection === "ssi-results" && <SsiCollegeResultsSection />}
       {activeSection === "team-management" && (
         <TeamManagementSection
           onOpenTransferRequests={() => setActiveSection("transfer-requests")}

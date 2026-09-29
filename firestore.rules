@@ -385,6 +385,41 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if false;
     }
+
+    // ---------- ssi_college_results ----------
+    // The standalone SSI check-in (no booking involved) — a student can take
+    // it anytime, as often as they like, so doc ids are auto-generated rather
+    // than keyed off a booking. Isolated by collegeId: only that college's own
+    // counsellors/head (not other colleges, even in the same campus) can read
+    // its students' results, alongside the student reading their own history.
+    match /ssi_college_results/{resultId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        (myRole() in ['counsellor', 'head'] && myProfile().collegeId == resource.data.collegeId)
+      );
+
+      allow create: if isSignedIn()
+                    && myRole() == 'user'
+                    && request.auth.uid == request.resource.data.userId
+                    && request.resource.data.collegeId == myProfile().collegeId
+                    && request.resource.data.keys().hasOnly([
+                      'userId', 'userEmail', 'displayName', 'collegeId', 'campusId',
+                      'level1', 'likertAnswers', 'level3Answers', 'likertScore', 'likertMax',
+                      'depressionScore', 'anxietyScore', 'stressScore', 'severity',
+                      'whatsappNumber', 'consentGiven', 'consentItems', 'submittedAt'
+                    ])
+                    && request.resource.data.severity in ['normal', 'medium', 'severe']
+                    && request.resource.data.likertScore is number
+                    && request.resource.data.likertScore >= 0
+                    && request.resource.data.depressionScore is number
+                    && request.resource.data.anxietyScore is number
+                    && request.resource.data.stressScore is number
+                    && request.resource.data.consentGiven == true;
+
+      allow update: if false;
+      allow delete: if false;
+    }
+
     // One private chat room per booking — each message stores chatRoomId = the
     // booking id. Access is limited to the two parties: the student (userId)
     // and the counsellor currently assigned to the booking. counsellorId is

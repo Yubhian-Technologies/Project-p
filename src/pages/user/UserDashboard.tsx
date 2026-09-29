@@ -4,6 +4,7 @@ import { ProfileSection } from "../../components/layout/ProfileSection";
 import { BentoCard } from "../../components/common/BentoCard";
 import { useAuth } from "../../hooks/useAuth";
 import { BookingSection } from "./BookingSection";
+import { SsiTestSection } from "./SsiTestSection";
 import { WellnessTestSection } from "./WellnessTestSection";
 import { UpcomingEventsSection } from "./UpcomingEventsSection";
 import { GamesSection } from "./games/GamesSection";
@@ -24,6 +25,7 @@ import "../../styles/bento-grid.css";
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "booking", label: "Book Session" },
+  { id: "ssi-test", label: "SSI Test" },
   { id: "wellness-test", label: "Wellness Test" },
   { id: "events", label: "Events & Programs" },
   { id: "games", label: "Wellness Exercise" },
@@ -58,6 +60,7 @@ export function UserDashboard() {
   const titleBySection: Record<string, string> = {
     profile: "Profile",
     booking: "Book Session",
+    "ssi-test": "SSI Test",
     "wellness-test": "Wellness Stress Assessment",
     events: "Events & Programs",
     games: "Wellness Exercise",
@@ -101,6 +104,7 @@ export function UserDashboard() {
           onCompensationOpened={() => setCompensationBookingId(undefined)}
         />
       )}
+      {activeSection === "ssi-test" && <SsiTestSection />}
       {activeSection === "wellness-test" && (
         <WellnessTestSection onBookSession={() => setActiveSection("booking")} />
       )}

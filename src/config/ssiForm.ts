@@ -289,3 +289,40 @@ export const SSI_CONSENT_ITEMS: string[] = [
 
 export const SSI_WHATSAPP_NOTE =
   "Only your wellness counsellor will contact you. Your details will be kept confidential and your number will be under our records safely.";
+
+// ── Severity tiering (Page 2 DASS-21 subscales + Page 3 safety questions) ─────
+export type SsiSeverity = "normal" | "medium" | "severe";
+
+/**
+ * Standard published DASS-21 per-subscale severity bands (raw 7-item sums,
+ * 0-21 each), combined with the Page 3 safety questions:
+ *  - Severe overrides everything: self-harm ideation answered "Yes"/"Maybe",
+ *    or any subscale is in the clinical Severe/Extremely-Severe band.
+ *  - Medium: a subscale in the Moderate band, or a "Yes" on the traumatic
+ *    event question.
+ */
+export function computeSsiSeverity(input: {
+  depression: number;
+  anxiety: number;
+  stress: number;
+  selfHarmAnswer?: string; // l3_q1
+  traumaAnswer?: string; // l3_q2
+}): SsiSeverity {
+  const selfHarm = input.selfHarmAnswer === "Yes" || input.selfHarmAnswer === "Maybe";
+  const severeBand = input.depression >= 11 || input.anxiety >= 8 || input.stress >= 13;
+  if (selfHarm || severeBand) return "severe";
+
+  const moderateBand =
+    (input.depression >= 7 && input.depression <= 10) ||
+    (input.anxiety >= 6 && input.anxiety <= 7) ||
+    (input.stress >= 10 && input.stress <= 12);
+  if (moderateBand || input.traumaAnswer === "Yes") return "medium";
+
+  return "normal";
+}
+
+export const SSI_SEVERITY_LABELS: Record<SsiSeverity, string> = {
+  severe: "Needs a session or action immediately",
+  medium: "Recommend scheduling a session soon",
+  normal: "No immediate concern",
+};

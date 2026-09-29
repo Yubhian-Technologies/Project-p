@@ -9,6 +9,7 @@ import { EventsProgramsSection } from "./EventsProgramsSection";
 import { WorkReportsSection } from "./WorkReportsSection";
 import { CounsellorMonthlyReportsSection } from "./CounsellorMonthlyReportsSection";
 import { CounsellorFeedbackSection } from "./CounsellorFeedbackSection";
+import { SsiCollegeResultsSection } from "../../components/ssi/SsiCollegeResultsSection";
 import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAlertsSection";
 import { CommunitySection } from "../user/community/CommunitySection";
 import { GamesSection } from "../user/games/GamesSection";
@@ -24,6 +25,7 @@ import "../../styles/bento-grid.css";
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
+  { id: "ssi-results", label: "SSI Test Results" },
   { id: "work-reports", label: "Work Reports" },
   { id: "monthly-reports", label: "Monthly Reports" },
   { id: "events", label: "Events & Programs" },
@@ -66,6 +68,7 @@ export function CounsellorDashboard() {
     profile: "Profile",
     requests: "Booking Requests",
     feedback: "My Feedback",
+    "ssi-results": "SSI Test Results",
     "work-reports": "Work Reports",
     "monthly-reports": "Monthly Reports",
     events: "Events & Programs",
@@ -117,6 +120,7 @@ export function CounsellorDashboard() {
         />
       )}
       {activeSection === "feedback" && <CounsellorFeedbackSection />}
+      {activeSection === "ssi-results" && <SsiCollegeResultsSection />}
       {activeSection === "work-reports" && <WorkReportsSection />}
       {activeSection === "monthly-reports" && <CounsellorMonthlyReportsSection />}
       {activeSection === "events" && <EventsProgramsSection />}
