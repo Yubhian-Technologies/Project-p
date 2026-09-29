@@ -1,8 +1,8 @@
 .journal-calendar {
   background: #FFFFFF;
-  border-radius: 0px;
-  box-shadow: 3px 3px 0px #2B2B2B;
-  border: 2px solid #2B2B2B;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  border: 1px solid rgba(46, 43, 39, 0.08);
   padding: 18px 20px;
   box-sizing: border-box;
   width: 100%;
@@ -19,17 +19,17 @@
   font-family: var(--md-sys-typescale-font-display);
   font-weight: 800;
   font-size: 15px;
-  color: #1E1E1E;
+  color: #2E2B27;
 }
 
 .journal-calendar__nav {
   width: 30px;
   height: 30px;
-  border-radius: 0px;
-  border: 2px solid #2B2B2B;
+  border-radius: 20px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #F8F9FA;
-  color: #1E1E1E;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  color: #2E2B27;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   cursor: pointer;
   font-size: 13px;
   display: flex;
@@ -40,9 +40,9 @@
 
 .journal-calendar__nav:hover {
   background: #F3E8FF;
-  color: #8B5CF6;
+  color: #6D74D6;
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
 .journal-calendar__weekdays {
@@ -75,9 +75,9 @@
   width: 100%;
   height: 32px;
   border: 1px solid rgba(43, 43, 43, 0.15);
-  border-radius: 0px;
+  border-radius: 20px;
   background: #F8F9FA;
-  color: #1E1E1E;
+  color: #2E2B27;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -89,17 +89,17 @@
 
 .journal-calendar__day:hover {
   background: #F3E8FF;
-  color: #8B5CF6;
-  border-color: #2B2B2B;
+  color: #6D74D6;
+  border-color: rgba(46, 43, 39, 0.18);
 }
 
 .journal-calendar__day--selected {
-  background: #F9BA32 !important;
-  color: #1E1E1E !important;
+  background: #F59E0B !important;
+  color: #2E2B27 !important;
   font-weight: 800 !important;
-  border: 2px solid #2B2B2B !important;
-  box-shadow: 2px 2px 0px #2B2B2B;
-  border-radius: 0px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+  border-radius: 20px !important;
   z-index: 1;
 }
 
@@ -114,10 +114,10 @@
   transform: translateX(-50%);
   width: 4px;
   height: 4px;
-  border-radius: 0px;
-  background: #8B5CF6;
+  border-radius: 20px;
+  background: #6D74D6;
 }
 
 .journal-calendar__day--selected .journal-calendar__dot {
-  background: #1E1E1E;
+  background: #2E2B27;
 }

@@ -13,10 +13,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: #F8F4EA;
-  border: 2px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
 }
 
 .cha-header__title {
@@ -78,10 +78,10 @@
 
 .cha-card {
   background: #FFFFFF;
-  border: 2px solid #2B2B2B !important;
-  border-radius: 0px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
   padding: 22px 24px;
-  box-shadow: 3.5px 3.5px 0px #2B2B2B !important;
+  box-shadow: 0 10px 26px rgba(46, 43, 39, 0.065) !important;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -93,7 +93,7 @@
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #2B2B2B;
+  border-bottom: 1px solid rgba(46, 43, 39, 0.08);
 }
 
 .cha-card__title-wrap {
@@ -130,11 +130,11 @@
   align-items: center;
   gap: 5px;
   padding: 3px 9px;
-  border-radius: 0px !important;
-  border: 1.5px solid #2B2B2B;
+  border-radius: 12px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   font-size: 11px;
   font-weight: 800;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045);
 }
 
 .cha-badge svg {
@@ -148,8 +148,8 @@
 .cha-tag {
   display: inline-flex;
   padding: 2px 7px;
-  border-radius: 0px !important;
-  border: 1px solid #2B2B2B;
+  border-radius: 12px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   font-size: 10px;
   font-weight: 800;
 }
@@ -170,9 +170,9 @@
   gap: 12px;
   padding: 12px 14px;
   background: #F8FAFC;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 2px 2px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
 }
 
 .cha-feed__title {
@@ -200,9 +200,9 @@
 .cha-btn-action, .cha-btn-view {
   background: #2563EB;
   color: #FFFFFF;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
   font-size: 11px;
   font-weight: 800;
   padding: 5px 10px;
@@ -221,7 +221,7 @@
 .cha-btn-action:hover, .cha-btn-view:hover {
   background: #1D4ED8;
   transform: translate(-1px, -1px);
-  box-shadow: 2px 2px 0px #2B2B2B !important;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
 }
 
 .cha-shortcuts__list {
@@ -232,9 +232,9 @@
 
 .cha-shortcuts__list button {
   background: #FFFFFF;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
   font-size: 12px;
   font-weight: 800;
   padding: 8px 12px;
@@ -255,7 +255,7 @@
 .cha-shortcuts__list button:hover {
   background: #FEF3C7;
   transform: translate(-1px, -1px);
-  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
 }
 
 .cha-btn-urgent {
@@ -287,13 +287,13 @@
   gap: 10px;
   padding: 10px;
   background: #F8FAFC;
-  border: 1.5px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   font-size: 12px;
 }
 
 .cha-modal__content-box {
   background: #FFFFFF;
-  border: 1.5px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   padding: 12px;
   font-size: 13px;
   line-height: 1.6;

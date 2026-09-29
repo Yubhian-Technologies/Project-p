@@ -3,10 +3,10 @@
   align-items: center;
   gap: 12px;
   background: #FFFFFF;
-  border: 2px solid #2B2B2B;
-  border-radius: 0px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px !important;
   padding: 8px 16px;
-  box-shadow: 2.5px 2.5px 0px #2B2B2B;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055);
   flex-wrap: wrap;
   margin-bottom: 12px;
 }
@@ -54,7 +54,7 @@
 .ws-banner__divider {
   width: 2px;
   height: 16px;
-  background: #2B2B2B;
+  background: #2E2B27;
   opacity: 0.3;
 }
 
@@ -65,7 +65,7 @@
   font-size: 11px;
   font-weight: 800;
   padding: 2px 8px;
-  border-radius: 0px !important;
+  border-radius: 20px !important;
 }
 
 @media (max-width: 768px) {

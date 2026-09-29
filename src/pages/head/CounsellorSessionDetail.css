@@ -47,10 +47,10 @@
 }
 
 .counsellor-session-detail__entry {
-  border: 2px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
-  border-radius: 0px;
-  box-shadow: 3px 3px 0px #2B2B2B;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
   padding: 16px 28px;
   display: flex;
   flex-direction: column;
@@ -60,7 +60,7 @@
 
 .counsellor-session-detail__entry:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0px #2B2B2B;
+  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
 }
 
 .counsellor-session-detail__entry-header {
@@ -82,13 +82,13 @@
   margin-left: auto;
   font-size: 13px;
   font-weight: 700;
-  color: #8B5CF6;
+  color: #6D74D6;
   white-space: nowrap;
   transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .counsellor-session-detail__entry-header:hover .counsellor-session-detail__hint {
-  color: #7C3AED;
+  color: #5A61C0;
   transform: translateX(3px);
 }
 

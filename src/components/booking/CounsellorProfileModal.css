@@ -67,7 +67,7 @@
   justify-content: center;
   border-top: var(--sketch-border);
   padding: 18px 28px;
-  background: #F8F4EA;
+  background: #FFFFFF;
 }
 
 .counsellor-profile__footer .md-button {
@@ -102,7 +102,7 @@
   font-weight: 800;
   padding: 5px 14px;
   border-radius: var(--sketch-radius) !important;
-  border: 1.5px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   box-shadow: var(--sketch-shadow-sm);
   background: #FFFFFF;
 }
@@ -159,7 +159,7 @@
 }
 
 .counsellor-profile__section {
-  border-top: 2px dashed #2B2B2B;
+  border-top: 1px dashed rgba(46, 43, 39, 0.15);
   padding-top: 16px;
   display: flex;
   flex-direction: column;
@@ -192,7 +192,7 @@
   font-weight: 800;
   color: #5B21B6;
   background: #EDE9FE;
-  border: 1.5px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   box-shadow: var(--sketch-shadow-sm);
   border-radius: var(--sketch-radius) !important;
   padding: 5px 14px;
@@ -212,7 +212,7 @@
   font-weight: 800;
   color: #065F46;
   background: #D1FAE5;
-  border: 1.5px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   box-shadow: var(--sketch-shadow-sm);
   border-radius: var(--sketch-radius) !important;
   padding: 5px 14px;
@@ -225,7 +225,7 @@
 }
 
 .counsellor-profile__approach-card {
-  background: #F8F4EA;
+  background: #FFFFFF;
   border: var(--sketch-border);
   border-radius: var(--sketch-radius) !important;
   box-shadow: var(--sketch-shadow-sm);

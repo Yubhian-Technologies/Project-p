@@ -13,10 +13,10 @@
   font-family: inherit;
   font-size: 14px;
   padding: 12px 18px;
-  border-radius: 0px;
-  border: 2px solid #2B2B2B;
+  border-radius: 20px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   color: var(--neu-text-primary, #2D3748);
   cursor: pointer;
   text-align: left;
@@ -29,8 +29,8 @@
 }
 
 .md-timepicker__control:focus-visible {
-  box-shadow: 3px 3px 0px #2B2B2B;
-  border-color: #8B5CF6;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  border-color: #6D74D6;
   outline: none;
 }
 
@@ -61,9 +61,9 @@
   width: 240px;
   padding: 18px;
   background: #FFFFFF;
-  border-radius: 0px;
-  border: 2.5px solid #2B2B2B;
-  box-shadow: 5px 5px 0px #2B2B2B;
+  border-radius: 20px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
   box-sizing: border-box;
 }
 
@@ -82,9 +82,9 @@
 .md-timepicker__row .md-select__control {
   padding: 8px 12px;
   font-size: 13px;
-  border-radius: 0px !important;
-  border: 2px solid #2B2B2B !important;
-  box-shadow: 2px 2px 0px #2B2B2B !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
   background: #FFFFFF !important;
 }
 
@@ -92,18 +92,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 2px solid #2B2B2B;
+  border-top: 1px solid rgba(46, 43, 39, 0.08);
   padding-top: 12px;
 }
 
 .md-timepicker__text-btn {
-  border: 2px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
-  color: #1E1E1E;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  color: #2E2B27;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
   padding: 6px 10px;
-  border-radius: 0px;
+  border-radius: 12px;
 }

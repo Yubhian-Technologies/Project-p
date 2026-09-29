@@ -13,10 +13,10 @@
   font-family: inherit;
   font-size: 14px;
   padding: 12px 18px;
-  border-radius: 0px;
-  border: 2px solid #2B2B2B;
+  border-radius: 20px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   color: var(--neu-text-primary, #2D3748);
   cursor: pointer;
   text-align: left;
@@ -24,8 +24,8 @@
 }
 
 .md-select__control:focus-visible {
-  box-shadow: 3px 3px 0px #2B2B2B;
-  border-color: #8B5CF6;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  border-color: #6D74D6;
   outline: none;
 }
 
@@ -71,14 +71,14 @@
   max-height: 260px;
   overflow-y: auto;
   background: #FFFFFF;
-  border-radius: 0px;
-  border: 2.5px solid #2B2B2B;
-  box-shadow: 5px 5px 0px #2B2B2B;
+  border-radius: 20px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
 }
 
 .md-select__option {
   padding: 10px 14px;
-  border-radius: 0px;
+  border-radius: 20px;
   font-size: 14px;
   color: var(--neu-text-primary, #2D3748);
   cursor: pointer;
@@ -90,8 +90,8 @@
 }
 
 .md-select__option--selected {
-  background: #F9BA32;
-  color: #1E1E1E;
+  background: #F59E0B;
+  color: #2E2B27;
   font-weight: 800;
 }
 

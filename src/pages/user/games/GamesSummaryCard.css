@@ -36,7 +36,7 @@
   font-family: var(--md-sys-typescale-font-display);
   font-weight: 800;
   font-size: 17px;
-  color: #1E1E1E;
+  color: #2E2B27;
 }
 
 .games-summary__score {
@@ -46,7 +46,7 @@
 }
 
 .games-summary__score--best {
-  color: #8B5CF6;
+  color: #6D74D6;
   font-weight: 700;
 }
 
@@ -58,7 +58,7 @@
   border-radius: 9999px;
   background: #FFFFFF;
   box-shadow: 0 4px 12px rgba(30, 30, 30, 0.06);
-  color: #8B5CF6;
+  color: #6D74D6;
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -91,7 +91,7 @@
 
 .games-summary__dot--active {
   opacity: 1;
-  background: #8B5CF6;
+  background: #6D74D6;
   width: 16px;
   border-radius: 9999px;
 }

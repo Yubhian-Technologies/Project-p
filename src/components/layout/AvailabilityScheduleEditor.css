@@ -10,9 +10,9 @@
   gap: 14px;
   background: var(--neu-bg, #E8ECF2);
   padding: 10px 16px;
-  border-radius: 0px;
-  border: 2px solid #2B2B2B;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  border-radius: 20px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .availability-editor__day {

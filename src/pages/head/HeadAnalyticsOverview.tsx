@@ -92,7 +92,7 @@ function IconUtilization() {
 // Topic buckets used to anonymise free-text "issue" answers from the session
 // intake form into the chart — this is categorization config, not data.
 const TOPIC_DEFS: { name: string; color: string; pattern: RegExp }[] = [
-  { name: "Academic Stress", color: "#F9BA32", pattern: /academ|exam|study|syllabus|result|grade|class|semester|assignment|score|placement/ },
+  { name: "Academic Stress", color: "#F59E0B", pattern: /academ|exam|study|syllabus|result|grade|class|semester|assignment|score|placement/ },
   { name: "Anxiety & Mood", color: "#8B5CF6", pattern: /anxiet|worry|stress|mood|depress|sad|panic|overthink|fear|low/ },
   { name: "Relationships", color: "#EC4899", pattern: /relationship|friend|parent|family|breakup|marriage|social|peer/ },
   { name: "Sleep & Fatigue", color: "#10B981", pattern: /sleep|insomnia|fatigue|tired|energy|wake|rest/ },

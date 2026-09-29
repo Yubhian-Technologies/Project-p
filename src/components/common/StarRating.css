@@ -10,9 +10,9 @@
   gap: 6px;
   background: #FFFFFF;
   padding: 6px 12px;
-  border: 2px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   border-radius: 9999px;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -54,7 +54,7 @@
 .star-rating__label {
   font-size: 13px;
   font-weight: 800;
-  color: var(--neu-text-primary, #1E1E1E);
+  color: var(--neu-text-primary, #2E2B27);
 }
 
 

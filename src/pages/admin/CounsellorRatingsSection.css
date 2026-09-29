@@ -29,10 +29,10 @@
   gap: 28px;
   flex-wrap: wrap;
   padding: 14px 18px;
-  background: #F8F4EA;
-  border: 2px solid #2B2B2B;
-  border-radius: 0px;
-  box-shadow: 3px 3px 0px #2B2B2B;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
 .counsellor-ratings__stat {
@@ -71,16 +71,16 @@
   flex-direction: column;
   gap: 16px;
   cursor: pointer;
-  background: #F8F4EA;
-  border: 2px solid #2B2B2B;
-  border-radius: 0px;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px;
   padding: 18px 24px;
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .counsellor-ratings__row:hover {
-  box-shadow: 5px 5px 0px #2B2B2B;
+  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
   transform: translate(-2px, -2px);
 }
 

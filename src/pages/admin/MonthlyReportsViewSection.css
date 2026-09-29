@@ -32,10 +32,10 @@
 .mrv-header__icon {
   width: 40px;
   height: 40px;
-  border-radius: 0px !important;
+  border-radius: 20px !important;
   background: #2563EB;
-  border: 2px solid #2B2B2B !important;
-  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -69,31 +69,31 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  border-radius: 0px !important;
+  border-radius: 12px !important;
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
-  border: 2px solid #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
   background: #FFFFFF;
-  color: #2B2B2B;
-  box-shadow: 2px 2px 0px #2B2B2B !important;
+  color: #2E2B27;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
   transition: all 0.18s ease;
   font-family: var(--md-sys-typescale-font-body);
 }
 
 .mrv-refresh-btn:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 3.5px 3.5px 0px #2B2B2B !important;
+  box-shadow: 0 10px 26px rgba(46, 43, 39, 0.065) !important;
   background: #F8FAFC;
 }
 
 /* ── Campus / College selector card ──────────────────────────────── */
 .mrv-selector-card {
-  background: #F8F4EA;
-  border-radius: 0px !important;
-  border: 2px solid #2B2B2B !important;
+  background: #FFFFFF;
+  border-radius: 20px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
   padding: 24px 28px;
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -119,9 +119,9 @@
   font-style: italic;
   padding: 10px 14px;
   background: #FFFFFF;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
 }
 
 /* ── Filter bar ───────────────────────────────────────────────────── */
@@ -131,10 +131,10 @@
   flex-wrap: wrap;
   align-items: flex-end;
   background: #FFFFFF;
-  border-radius: 0px !important;
-  border: 2px solid #2B2B2B !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
   padding: 18px 24px;
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
 }
 
 .mrv-filters__field {
@@ -148,7 +148,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #2B2B2B;
+  color: #2E2B27;
 }
 
 .mrv-filters__clear {
@@ -156,21 +156,21 @@
   align-items: center;
   gap: 6px;
   padding: 9px 16px;
-  border-radius: 0px !important;
+  border-radius: 20px !important;
   font-size: 12.5px;
   font-weight: 800;
   font-family: var(--md-sys-typescale-font-body);
   cursor: pointer;
-  border: 1.5px solid #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
   background: #FFFFFF;
-  color: #2B2B2B;
-  box-shadow: 2px 2px 0px #2B2B2B !important;
+  color: #2E2B27;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
   transition: all 0.18s ease;
   align-self: flex-end;
 }
 
 .mrv-filters__clear:hover {
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
   transform: translate(-1px, -1px);
   background: #F8FAFC;
 }
@@ -187,10 +187,10 @@
 .mrv-list__empty {
   text-align: center;
   padding: 48px 24px;
-  background: #F8F4EA;
-  border-radius: 0px !important;
-  border: 2px solid #2B2B2B !important;
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  background: #FFFFFF;
+  border-radius: 20px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
   color: #64748B;
   font-size: 14px;
   font-weight: 600;
@@ -221,15 +221,15 @@
   gap: 16px;
   flex-wrap: wrap;
   background: #FFFFFF;
-  border-radius: 0px !important;
-  border: 2px solid #2B2B2B !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
   padding: 18px 24px;
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
   transition: all 0.2s ease;
 }
 
 .mrv-list__row:hover {
-  box-shadow: 4.5px 4.5px 0px #2B2B2B !important;
+  box-shadow: 0 12px 30px rgba(46, 43, 39, 0.075) !important;
   transform: translate(-1px, -1px);
 }
 
@@ -275,12 +275,12 @@
   align-items: center;
   gap: 5px;
   padding: 4px 12px;
-  border-radius: 0px !important;
-  border: 1.5px solid #2B2B2B !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
   background: #DBEAFE;
   color: #1E40AF;
 }
@@ -288,7 +288,7 @@
 .mrv-badge--green {
   background: #DCFCE7;
   color: #15803D;
-  border-color: #2B2B2B !important;
+  border-color: rgba(46, 43, 39, 0.18) !important;
 }
 
 .mrv-btn-download {
@@ -296,8 +296,8 @@
   align-items: center;
   gap: 7px;
   padding: 9px 18px;
-  border-radius: 0px !important;
-  border: 2px solid #2B2B2B !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
   font-size: 13px;
   font-weight: 800;
   font-family: var(--md-sys-typescale-font-body);
@@ -305,12 +305,12 @@
   text-decoration: none;
   background: #2563EB;
   color: #FFFFFF;
-  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
   transition: all 0.18s ease;
 }
 
 .mrv-btn-download:hover {
   background: #1D4ED8;
   transform: translate(-1px, -1px);
-  box-shadow: 3.5px 3.5px 0px #2B2B2B !important;
+  box-shadow: 0 10px 26px rgba(46, 43, 39, 0.065) !important;
 }

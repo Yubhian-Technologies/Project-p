@@ -3,13 +3,13 @@
   max-width: 100vw;
   overflow-x: clip;
   min-height: 100vh;
-  background-color: var(--theme-amber, #F9BA32);
-  color: var(--theme-charcoal, #1E1E1E);
+  background-color: var(--theme-amber, #FFFFFF);
+  color: var(--theme-charcoal, #2E2B27);
 }
 
 .app-shell__topbar {
-  background: var(--theme-amber, #F9BA32);
-  border-bottom: none;
+  background: var(--theme-amber, #FFFFFF);
+  border-bottom: 1px solid rgba(46, 43, 39, 0.08);
   box-shadow: none;
   position: sticky;
   top: 0;
@@ -33,10 +33,10 @@
 }
 
 .app-shell__brand {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--md-sys-typescale-font-display, 'Fraunces', serif);
   font-size: 21px;
-  font-weight: 800;
-  color: #1E1E1E;
+  font-weight: 600;
+  color: #2E2B27;
   white-space: nowrap;
   gap: 12px;
   letter-spacing: -0.01em;
@@ -53,25 +53,25 @@
 .app-shell__menu-toggle {
   display: none;
   background: #FFFFFF;
-  border: 2px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   border-radius: 0;
-  box-shadow: 2.5px 2.5px 0px #2B2B2B;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055);
   font-size: 18px;
   line-height: 1;
   padding: 10px 14px;
-  color: #1E1E1E;
+  color: #2E2B27;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .app-shell__menu-toggle:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0px #2B2B2B;
+  box-shadow: 0 10px 28px rgba(46, 43, 39, 0.07);
 }
 
 .app-shell__menu-toggle:active {
   transform: translate(2px, 2px);
-  box-shadow: 0 0 0 #2B2B2B;
+  box-shadow: 0 0 0 rgba(46, 43, 39, 0);
 }
 
 .app-shell__topbar-right {
@@ -82,9 +82,9 @@
 
 .app-shell__role-badge {
   background: #FFFFFF;
-  color: #8B5CF6;
-  border: 1.5px solid rgba(139, 92, 246, 0.3);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.12);
+  color: #6D74D6;
+  border: 1.5px solid rgba(109, 116, 214, 0.3);
+  box-shadow: 0 4px 12px rgba(109, 116, 214, 0.12);
   border-radius: 9999px;
   padding: 6px 16px;
   font-size: 12px;
@@ -93,14 +93,11 @@
   text-transform: uppercase;
 }
 
-/* ── Organic Wave Divider ────────────────────────────────────────── */
+/* Wave divider retired for the calm design — the topbar's own hairline
+   bottom border now does the separation. Hidden via CSS only (the element
+   still renders) rather than removed from the markup. */
 .app-shell__wave-wrap {
-  width: 100%;
-  height: 40px;
-  overflow: hidden;
-  line-height: 0;
-  margin-top: -2px;
-  background: var(--theme-amber, #F9BA32);
+  display: none;
 }
 
 .app-shell__wave-svg {
@@ -109,15 +106,15 @@
   display: block;
 }
 
-/* ── Content Sheet Container (Overlapping rounded card) ───────────── */
+/* ── Content Sheet Container ───────────────────────────────────────── */
 .app-shell__body {
   display: flex;
   align-items: flex-start;
-  min-height: calc(100vh - 116px);
+  min-height: calc(100vh - 76px);
   width: 100%;
-  background: var(--theme-bg, #F8F9FA);
+  background: var(--theme-bg, #F4F0E8);
   border-radius: 0;
-  box-shadow: 0 -10px 30px rgba(30, 30, 30, 0.06);
+  box-shadow: none;
   position: relative;
   z-index: 10;
 }
@@ -150,7 +147,7 @@
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: var(--theme-charcoal, #1E1E1E);
+  color: var(--theme-charcoal, #2E2B27);
   margin: 0;
 }
 
@@ -168,23 +165,23 @@
   font-size: 18px;
   font-weight: 800;
   font-family: inherit;
-  color: #1E1E1E;
+  color: #2E2B27;
   background: #FFFFFF;
-  border: 2px solid #2B2B2B;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .app-shell__title-back:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #2B2B2B;
-  color: #7C3AED;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  color: #5A61C0;
 }
 
 .app-shell__title-back:active {
   transform: translate(0, 0);
-  box-shadow: 1px 1px 0px #2B2B2B;
+  box-shadow: 0 3px 10px rgba(46, 43, 39, 0.04);
 }
 
 .app-shell__title-action {
@@ -229,11 +226,11 @@
   .app-shell__title-action .md-button {
     padding: 8px 14px;
     font-size: 12px;
-    box-shadow: 2px 2px 0px #2B2B2B;
+    box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   }
 
   .app-shell__title-action .md-button:hover {
-    box-shadow: 3px 3px 0px #2B2B2B;
+    box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
   }
 
   .app-shell__topbar-left {

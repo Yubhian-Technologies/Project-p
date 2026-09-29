@@ -16,11 +16,11 @@
 
 /* ── Upload Card ───────────────────────────────────────────────────── */
 .mr-upload-card {
-  background: #F8F4EA;
-  border-radius: 0px !important;
-  border: 2px solid #2B2B2B;
+  background: #FFFFFF;
+  border-radius: 20px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   padding: 28px 32px;
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
 .mr-upload-card__title {
@@ -38,14 +38,14 @@
   width: 36px;
   height: 36px;
   background: #2563EB;
-  border: 2px solid #2B2B2B;
-  border-radius: 0px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 12px !important;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
   color: #fff;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .mr-upload-card__title-icon svg {
@@ -80,7 +80,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #2B2B2B;
+  color: #2E2B27;
 }
 
 .mr-upload-card__label-row {
@@ -109,13 +109,13 @@
 
 .mr-btn--voice {
   background: #FFFFFF;
-  color: #7C3AED;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  color: #5A61C0;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .mr-btn--voice:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
   background: #F3E8FF;
 }
 
@@ -130,19 +130,19 @@
 }
 
 @keyframes mr-voice-pulse {
-  0%, 100% { box-shadow: 2px 2px 0px #2B2B2B; }
-  50% { box-shadow: 2px 2px 0px #2B2B2B, 0 0 0 5px rgba(220, 38, 38, 0.18); }
+  0%, 100% { box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05); }
+  50% { box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05), 0 0 0 5px rgba(220, 38, 38, 0.18); }
 }
 
 .mr-upload-card__input {
   background: #FFFFFF;
-  border: 2px solid #2B2B2B;
-  border-radius: 0px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px !important;
   padding: 10px 14px;
   font-size: 14px;
   font-family: var(--md-sys-typescale-font-body);
   color: #0F172A;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   outline: none;
   transition: all 0.18s ease;
   width: 100%;
@@ -150,13 +150,13 @@
 }
 
 .mr-upload-card__input:focus {
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
 /* Drop-zone */
 .mr-upload-card__dropzone {
-  border: 2px dashed #2B2B2B;
-  border-radius: 0px !important;
+  border: 1px dashed rgba(46, 43, 39, 0.15);
+  border-radius: 20px !important;
   padding: 28px 20px;
   text-align: center;
   cursor: pointer;
@@ -166,7 +166,7 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .mr-upload-card__dropzone:hover,
@@ -181,11 +181,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0px !important;
-  border: 2px solid #2B2B2B;
+  border-radius: 12px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #2563EB;
   color: #fff;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .mr-upload-card__dropzone-icon svg {
@@ -215,8 +215,8 @@
   width: 100%;
   height: 8px;
   background: #FFFFFF;
-  border: 1.5px solid #2B2B2B;
-  border-radius: 0px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px !important;
   overflow: hidden;
   margin-top: 4px;
 }
@@ -271,10 +271,10 @@
   padding: 40px 20px;
   color: #64748B;
   font-size: 14px;
-  background: #F8F4EA;
-  border-radius: 0px !important;
-  border: 2px solid #2B2B2B;
-  box-shadow: 3px 3px 0px #2B2B2B;
+  background: #FFFFFF;
+  border-radius: 20px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
 .mr-list__empty-icon {
@@ -302,15 +302,15 @@
   gap: 16px;
   flex-wrap: wrap;
   background: #FFFFFF;
-  border-radius: 0px !important;
-  border: 2px solid #2B2B2B;
+  border-radius: 20px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   padding: 16px 22px;
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
   transition: all 0.2s var(--md-sys-motion-easing-standard);
 }
 
 .mr-list__row:hover {
-  box-shadow: 4px 4px 0px #2B2B2B;
+  box-shadow: 0 10px 28px rgba(46, 43, 39, 0.07);
   transform: translate(-1px, -1px);
 }
 
@@ -340,14 +340,14 @@
   align-items: center;
   gap: 5px;
   padding: 4px 12px;
-  border-radius: 0px !important;
-  border: 1.5px solid #2B2B2B;
+  border-radius: 12px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #DBEAFE;
   color: #1E40AF;
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
-  box-shadow: 1px 1px 0px #2B2B2B;
+  box-shadow: 0 3px 10px rgba(46, 43, 39, 0.04);
 }
 
 .mr-list__row-actions {
@@ -362,12 +362,12 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  border-radius: 0px !important;
+  border-radius: 12px !important;
   font-size: 13px;
   font-weight: 700;
   font-family: var(--md-sys-typescale-font-body);
   cursor: pointer;
-  border: 2px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   transition: all 0.18s var(--md-sys-motion-easing-standard);
   text-decoration: none;
 }
@@ -375,13 +375,13 @@
 .mr-btn--primary {
   background: #2563EB;
   color: #fff;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .mr-btn--primary:hover {
   background: #1D4ED8;
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
 .mr-btn--primary:disabled {
@@ -393,36 +393,36 @@
 .mr-btn--ghost {
   background: #FFFFFF;
   color: #475569;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .mr-btn--ghost:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
   color: #0F172A;
 }
 
 .mr-btn--danger {
   background: #FFFFFF;
   color: #dc2626;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .mr-btn--danger:hover {
   background: #FEE2E2;
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
 .mr-btn--download {
   background: #059669;
   color: #fff;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .mr-btn--download:hover {
   background: #047857;
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 

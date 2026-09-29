@@ -10,7 +10,7 @@
   padding: 24px;
   box-sizing: border-box;
   font-family: var(--font-main);
-  background-color: #F8F4EA;
+  background-color: #FFFFFF;
 }
 
 .auth-bg {
@@ -26,12 +26,12 @@
   z-index: 2;
   width: 100%;
   max-width: 460px;
-  background: #F8F4EA;
-  border: 2.5px solid #2B2B2B;
-  border-radius: 0px;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px;
   padding: 44px 40px;
   box-sizing: border-box;
-  box-shadow: 5px 5px 0px #2B2B2B;
+  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
   transform: translate3d(0, 0, 0);
   animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -43,7 +43,7 @@
 
   .auth-glass-card {
     padding: 28px 22px;
-    border-radius: 0px;
+    border-radius: 20px;
   }
 }
 
@@ -57,7 +57,7 @@
   align-items: center;
   gap: 12px;
   text-decoration: none;
-  color: #1E1E1E;
+  color: #2E2B27;
   margin-bottom: 20px;
 }
 
@@ -73,7 +73,7 @@
   font-family: var(--font-display);
   font-size: 24px;
   font-weight: 800;
-  color: #1E1E1E;
+  color: #2E2B27;
 }
 
 .auth-card__title {
@@ -120,8 +120,8 @@
   padding: 14px 18px;
   border-radius: 16px;
   border: 1.5px solid rgba(30, 30, 30, 0.08);
-  background: #F8F4EA;
-  color: #1E1E1E;
+  background: #FFFFFF;
+  color: #2E2B27;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
 }
@@ -133,8 +133,8 @@
 .auth-field input:focus,
 .auth-field select:focus {
   outline: none;
-  border-color: #8B5CF6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+  border-color: #6D74D6;
+  box-shadow: 0 0 0 3px rgba(109, 116, 214, 0.2);
 }
 
 .auth-field__password-wrap {
@@ -156,7 +156,7 @@
   height: 34px;
   padding: 0;
   border: 1px solid rgba(30, 30, 30, 0.08);
-  background: #F8F4EA;
+  background: #FFFFFF;
   border-radius: 50%;
   color: #6B7280;
   cursor: pointer;
@@ -168,7 +168,7 @@
 
 .auth-field__toggle-visibility:hover {
   background: #F3E8FF;
-  color: #8B5CF6;
+  color: #6D74D6;
 }
 
 .auth-field__toggle-visibility svg {
@@ -197,19 +197,19 @@
   font-size: 15px;
   font-weight: 800;
   color: #FFFFFF;
-  background: #8B5CF6;
+  background: #6D74D6;
   border: none;
   border-radius: 9999px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35);
+  box-shadow: 0 6px 20px rgba(109, 116, 214, 0.35);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 10px;
 }
 
 .auth-card__submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  background: #7C3AED;
-  box-shadow: 0 10px 24px rgba(139, 92, 246, 0.45);
+  background: #5A61C0;
+  box-shadow: 0 10px 24px rgba(109, 116, 214, 0.45);
 }
 
 .auth-card__submit:active:not(:disabled) {

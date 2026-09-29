@@ -88,7 +88,7 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
     { label: `Submitted (${periodLabel})`, value: submittedCount, icon: CheckCircleIcon, color: "#15803D", bg: "#DCFCE7" },
     { label: "Campuses Pending", value: pendingCount, icon: AlertCircleIcon, color: "#D97706", bg: "#FFFBEB" },
     { label: "Total Reports Uploaded", value: totalReports, icon: FileTextIcon, color: "#0D9488", bg: "#CCFBF1" },
-    { label: "Colleges Covered", value: collegesCovered, icon: MapPinIcon, color: "#7C3AED", bg: "#EDE9FE" },
+    { label: "Colleges Covered", value: collegesCovered, icon: MapPinIcon, color: "#5A61C0", bg: "#EDE9FE" },
     { label: `Reports This Period`, value: reportsThisMonth.length, icon: CalendarIcon, color: "#1E3A8A", bg: "#E0E7FF" },
   ];
 

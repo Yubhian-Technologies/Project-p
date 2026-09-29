@@ -8,14 +8,14 @@
 .ttt__cell {
   width: 76px;
   height: 76px;
-  border: 2px solid #2B2B2B;
-  border-radius: 0px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px !important;
   background: #FFFFFF;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   font-family: var(--md-sys-typescale-font-display);
   font-size: 30px;
   font-weight: 800;
-  color: #7C3AED;
+  color: #5A61C0;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -26,10 +26,10 @@
 
 .ttt__cell:not(:disabled):hover {
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
 .ttt__cell:not(:empty) {
-  background: #F8F4EA;
+  background: #FFFFFF;
   box-shadow: inset 1.5px 1.5px 0px rgba(43, 43, 43, 0.15);
 }

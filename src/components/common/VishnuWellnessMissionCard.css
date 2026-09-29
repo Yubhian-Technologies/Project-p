@@ -14,9 +14,9 @@
   padding: 14px 20px;
   background: #EF4444;
   color: #FFFFFF;
-  border: 2px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
   font-size: 15px;
   font-weight: 900;
   letter-spacing: 0.04em;
@@ -32,15 +32,15 @@
 .vwm-sos-btn:hover {
   background: #DC2626;
   transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0px #2B2B2B !important;
+  box-shadow: 0 10px 28px rgba(46, 43, 39, 0.07) !important;
 }
 
 .vwm-card {
   background: #FFFFFF;
-  border: 2px solid #2B2B2B !important;
-  border-radius: 0px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
   padding: 28px 32px;
-  box-shadow: 4px 4px 0px #2B2B2B !important;
+  box-shadow: 0 10px 28px rgba(46, 43, 39, 0.07) !important;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -50,7 +50,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  border-bottom: 2px solid #2B2B2B;
+  border-bottom: 1px solid rgba(46, 43, 39, 0.08);
   padding-bottom: 20px;
 }
 
@@ -58,13 +58,13 @@
   display: inline-block;
   align-self: flex-start;
   padding: 4px 12px;
-  background: #F8F4EA;
-  border: 1.5px solid #2B2B2B;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: #2B2B2B;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+  color: #2E2B27;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045);
 }
 
 .vwm-header__main {
@@ -85,8 +85,8 @@
   width: 52px;
   height: 52px;
   object-fit: contain;
-  border: 2px solid #2B2B2B;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   background: #FFFFFF;
   padding: 4px;
 }
@@ -110,9 +110,9 @@
 .vwm-btn-counsellors {
   background: #F1F5F9;
   color: #0F172A;
-  border: 2px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
   font-size: 12.5px;
   font-weight: 800;
   padding: 9px 18px;
@@ -124,7 +124,7 @@
 .vwm-btn-counsellors:hover {
   background: #FEF3C7;
   transform: translate(-1px, -1px);
-  box-shadow: 3.5px 3.5px 0px #2B2B2B !important;
+  box-shadow: 0 10px 26px rgba(46, 43, 39, 0.065) !important;
 }
 
 /* ── Content Blocks ──────────────────────────────────────────────────────── */
@@ -136,9 +136,9 @@
 
 .vwm-block {
   background: #F8FAFC;
-  border: 1.5px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   padding: 18px 22px;
-  box-shadow: 2.5px 2.5px 0px #2B2B2B;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -184,11 +184,11 @@
   display: inline-flex;
   padding: 4px 12px;
   background: #FFFFFF;
-  border: 1.5px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   font-size: 12px;
   font-weight: 800;
   color: #1E293B;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045);
 }
 
 .vwm-pillars__sub {
@@ -207,10 +207,10 @@
   flex-wrap: wrap;
   gap: 12px;
   padding-top: 16px;
-  border-top: 2px solid #2B2B2B;
+  border-top: 1px solid rgba(46, 43, 39, 0.08);
   font-size: 12px;
   font-weight: 800;
-  color: #2B2B2B;
+  color: #2E2B27;
 }
 
 .vwm-footer__left {

@@ -15,10 +15,10 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 16px 20px;
-  background: #F8F4EA;
-  border: 2px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
 }
 
 .aha-header__title {
@@ -58,10 +58,10 @@
 
 .aha-card {
   background: #FFFFFF;
-  border: 2px solid #2B2B2B !important;
-  border-radius: 0px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
   padding: 22px 24px;
-  box-shadow: 3.5px 3.5px 0px #2B2B2B !important;
+  box-shadow: 0 10px 26px rgba(46, 43, 39, 0.065) !important;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -75,7 +75,7 @@
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #2B2B2B;
+  border-bottom: 1px solid rgba(46, 43, 39, 0.08);
 }
 
 .aha-card__title-wrap {
@@ -114,11 +114,11 @@
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: 0px !important;
-  border: 1.5px solid #2B2B2B;
+  border-radius: 12px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   font-size: 11px;
   font-weight: 800;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045);
 }
 
 .aha-badge--blue {
@@ -130,11 +130,11 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: 0px !important;
-  border: 1px solid #2B2B2B;
+  border-radius: 12px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   font-size: 10.5px;
   font-weight: 800;
-  box-shadow: 1px 1px 0px #2B2B2B;
+  box-shadow: 0 3px 10px rgba(46, 43, 39, 0.04);
 }
 
 .aha-tag--month {
@@ -159,8 +159,8 @@
   gap: 16px;
   padding: 16px 20px;
   background: #F8FAFC;
-  border: 2px solid #2B2B2B;
-  box-shadow: 2.5px 2.5px 0px #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055);
   flex-wrap: wrap;
 }
 
@@ -191,16 +191,16 @@
   gap: 14px;
   padding: 14px 16px;
   background: #F8FAFC;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 2px 2px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
   transition: all 0.18s ease;
 }
 
 .aha-feed__item:hover {
   background: #FFFFFF;
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
 }
 
 .aha-feed__item-left {
@@ -255,9 +255,9 @@
   gap: 4px;
   background: #2563EB;
   color: #FFFFFF;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
   font-size: 11.5px;
   font-weight: 800;
   padding: 6px 12px;
@@ -269,7 +269,7 @@
 .aha-btn-dl:hover {
   background: #1D4ED8;
   transform: translate(-1px, -1px);
-  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
 }
 
 .aha-card__footer {
@@ -308,9 +308,9 @@
   gap: 10px;
   padding: 10px 12px;
   background: #F8FAFC;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
 }
 
 .aha-mini-item__title {
@@ -327,9 +327,9 @@
 
 .aha-btn-sm {
   background: #FFFFFF;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
   font-size: 11px;
   font-weight: 800;
   padding: 4px 8px;
@@ -348,7 +348,7 @@
 .aha-shortcuts {
   margin-top: 6px;
   padding-top: 12px;
-  border-top: 2px solid #2B2B2B;
+  border-top: 1px solid rgba(46, 43, 39, 0.08);
 }
 
 .aha-shortcuts__label {
@@ -357,7 +357,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #2B2B2B;
+  color: #2E2B27;
   margin-bottom: 8px;
 }
 
@@ -369,9 +369,9 @@
 
 .aha-shortcuts__grid button {
   background: #FFFFFF;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
   font-size: 11px;
   font-weight: 800;
   padding: 6px 10px;
@@ -392,7 +392,7 @@
 .aha-shortcuts__grid button:hover {
   background: #FEF3C7;
   transform: translate(-1px, -1px);
-  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
 }
 
 .aha-modal {
@@ -407,7 +407,7 @@
   gap: 10px;
   padding: 10px;
   background: #F8FAFC;
-  border: 1.5px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   font-size: 12px;
 }
 
@@ -419,7 +419,7 @@
 
 .aha-modal__content-box {
   background: #FFFFFF;
-  border: 1.5px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   padding: 14px;
   font-size: 13px;
   line-height: 1.6;
@@ -462,9 +462,9 @@
   gap: 12px;
   padding: 14px 16px;
   background: #F8FAFC;
-  border: 2px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
 }
 
 .aha-kpi__icon {
@@ -473,9 +473,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid #2B2B2B;
-  border-radius: 0px !important;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045);
   flex-shrink: 0;
 }
 
@@ -508,8 +508,8 @@
 .aha-table {
   width: 100%;
   border-collapse: collapse;
-  border: 2px solid #2B2B2B;
-  box-shadow: 2.5px 2.5px 0px #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055);
   background: #FFFFFF;
 }
 
@@ -522,7 +522,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #334155;
-  border-bottom: 2px solid #2B2B2B;
+  border-bottom: 1px solid rgba(46, 43, 39, 0.08);
 }
 
 .aha-table td {
@@ -559,9 +559,9 @@
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
-  border: 1.5px solid #2B2B2B;
-  border-radius: 0px !important;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045);
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;

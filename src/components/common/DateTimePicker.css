@@ -13,10 +13,10 @@
   font-family: inherit;
   font-size: 14px;
   padding: 12px 18px;
-  border-radius: 0px;
-  border: 2px solid #2B2B2B;
+  border-radius: 20px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   color: var(--neu-text-primary, #2D3748);
   cursor: pointer;
   text-align: left;
@@ -24,8 +24,8 @@
 }
 
 .md-datetime__control:focus-visible {
-  box-shadow: 3px 3px 0px #2B2B2B;
-  border-color: #8B5CF6;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  border-color: #6D74D6;
   outline: none;
 }
 
@@ -67,9 +67,9 @@
   max-width: calc(100vw - 32px);
   padding: 24px;
   background: #FFFFFF;
-  border-radius: 0px;
-  border: 2.5px solid #2B2B2B;
-  box-shadow: 5px 5px 0px #2B2B2B;
+  border-radius: 20px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
   box-sizing: border-box;
 }
 
@@ -84,17 +84,17 @@
   font-family: var(--md-sys-typescale-font-display);
   font-weight: 800;
   font-size: 15px;
-  color: #1E1E1E;
+  color: #2E2B27;
 }
 
 .md-datetime__nav {
   width: 32px;
   height: 32px;
-  border-radius: 0px;
-  border: 2px solid #2B2B2B;
+  border-radius: 20px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #F8F9FA;
-  color: #1E1E1E;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  color: #2E2B27;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   cursor: pointer;
   font-size: 14px;
   display: flex;
@@ -105,9 +105,9 @@
 
 .md-datetime__nav:hover {
   background: #F3E8FF;
-  color: #8B5CF6;
+  color: #6D74D6;
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
 .md-datetime__nav:disabled {
@@ -147,9 +147,9 @@
   width: 100%;
   aspect-ratio: 1;
   border: 1px solid rgba(43, 43, 43, 0.15);
-  border-radius: 0px;
+  border-radius: 20px;
   background: #F8F9FA;
-  color: #1E1E1E;
+  color: #2E2B27;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -161,17 +161,17 @@
 
 .md-datetime__day:hover:not(:disabled) {
   background: #F3E8FF;
-  color: #8B5CF6;
-  border-color: #2B2B2B;
+  color: #6D74D6;
+  border-color: rgba(46, 43, 39, 0.18);
 }
 
 .md-datetime__day--selected {
-  background: #F9BA32 !important;
-  color: #1E1E1E !important;
+  background: #F59E0B !important;
+  color: #2E2B27 !important;
   font-weight: 800 !important;
-  border: 2px solid #2B2B2B !important;
-  box-shadow: 2px 2px 0px #2B2B2B;
-  border-radius: 0px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+  border-radius: 20px !important;
 }
 
 .md-datetime__day--disabled {
@@ -189,9 +189,9 @@
 .md-datetime__time-row .md-select__control {
   padding: 8px 12px;
   font-size: 13px;
-  border-radius: 0px !important;
-  border: 2px solid #2B2B2B !important;
-  box-shadow: 2px 2px 0px #2B2B2B !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
   background: #FFFFFF !important;
 }
 
@@ -199,33 +199,33 @@
   top: auto;
   bottom: calc(100% + 8px);
   max-height: 180px;
-  border-radius: 0px !important;
-  border: 2px solid #2B2B2B !important;
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
 }
 
 .md-datetime__footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 2px solid #2B2B2B;
+  border-top: 1px solid rgba(46, 43, 39, 0.08);
   padding-top: 14px;
 }
 
 .md-datetime__text-btn {
-  border: 2px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
-  color: #1E1E1E;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  color: #2E2B27;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
   padding: 6px 12px;
-  border-radius: 0px;
+  border-radius: 12px;
   transition: all 0.15s ease;
 }
 
 .md-datetime__text-btn:hover {
   background: #F3E8FF;
-  color: #8B5CF6;
+  color: #6D74D6;
 }

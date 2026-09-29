@@ -13,7 +13,7 @@
    sets the danger zone apart with a dashed divider. */
 .request-detail-modal .request-card__danger-zone {
   padding-top: 18px;
-  border-top: 2px dashed #2B2B2B;
+  border-top: 1px dashed rgba(46, 43, 39, 0.15);
 }
 
 @media (max-width: 768px) {
@@ -88,17 +88,17 @@
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  border: 2px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   border-radius: 0;
   background: #FFFFFF;
-  color: #6D28D9;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  color: #474DA0;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .request-card__voice-btn:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
   background: #F3E8FF;
 }
 
@@ -113,8 +113,8 @@
 }
 
 @keyframes request-card-voice-pulse {
-  0%, 100% { box-shadow: 2px 2px 0px #2B2B2B; }
-  50% { box-shadow: 2px 2px 0px #2B2B2B, 0 0 0 5px rgba(220, 38, 38, 0.18); }
+  0%, 100% { box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05); }
+  50% { box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05), 0 0 0 5px rgba(220, 38, 38, 0.18); }
 }
 
 .request-card__summary-focus textarea {
@@ -144,16 +144,16 @@
   gap: 14px;
   cursor: pointer;
   background: #FFFFFF !important;
-  border: 2px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
   padding: 16px 28px !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .request-card--collapsed:hover {
   transform: translate(-2px, -2px) !important;
-  box-shadow: 5px 5px 0px #2B2B2B !important;
+  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09) !important;
 }
 
 .request-card__name {
@@ -161,19 +161,19 @@
   font-family: var(--md-sys-typescale-font-display);
   font-weight: 800;
   font-size: 16px;
-  color: #1E1E1E;
+  color: #2E2B27;
 }
 
 .request-card__hint {
   font-size: 13px;
   font-weight: 700;
-  color: #8B5CF6;
+  color: #6D74D6;
   white-space: nowrap;
   transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .request-card--collapsed:hover .request-card__hint {
-  color: #7C3AED;
+  color: #5A61C0;
   transform: translateX(3px);
 }
 
@@ -222,9 +222,9 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: 5px 12px;
-  border-radius: 0px;
-  border: 1.5px solid #2B2B2B;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  border-radius: 20px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   background: #FFFFFF;
   color: var(--neu-text-body, #4A5568);
 }
@@ -242,7 +242,7 @@
 .request-card__status--scheduled {
   background: #2563EB;
   color: #ffffff;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .request-card__status--rejected,
@@ -264,7 +264,7 @@
 .request-card__status--transfer {
   color: #7c3aed;
   background: #EDE9FE;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .request-card__followup-tag {
@@ -291,10 +291,10 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: 5px 12px;
-  border-radius: 0px !important;
-  border: 1.5px solid #2B2B2B;
+  border-radius: 20px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FEE2E2;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   color: #B91C1C;
   white-space: nowrap;
 }
@@ -307,10 +307,10 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: 5px 12px;
-  border-radius: 0px;
-  border: 1.5px solid #2B2B2B;
+  border-radius: 12px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   color: var(--neu-text-muted, #718096);
   white-space: nowrap;
 }
@@ -322,10 +322,10 @@
   column-gap: 16px;
   margin: 0;
   padding: 18px 22px;
-  background: #F8F4EA;
-  border: 2px solid #2B2B2B;
-  border-radius: 0px;
-  box-shadow: 3px 3px 0px #2B2B2B;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
   font-size: 13.5px;
 }
 
@@ -341,7 +341,7 @@
 
 .request-card__intake dd {
   margin: 0;
-  color: #1E1E1E;
+  color: #2E2B27;
   font-weight: 700;
   font-size: 14px;
 }
@@ -365,8 +365,8 @@
   font-family: inherit;
   font-size: 14px;
   padding: 12px 18px;
-  border-radius: 0px;
-  border: 2px solid #2B2B2B;
+  border-radius: 12px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
   box-shadow: inset 2px 2px 0px rgba(43, 43, 43, 0.12);
   color: var(--neu-text-primary, #2D3748);
@@ -376,7 +376,7 @@
 
 .request-card__summary textarea:focus {
   outline: none;
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
 .request-card__danger-zone {
@@ -402,8 +402,8 @@
   font-family: inherit;
   font-size: 14px;
   padding: 12px 18px;
-  border-radius: 0px;
-  border: 2px solid #2B2B2B;
+  border-radius: 12px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
   box-shadow: inset 2px 2px 0px rgba(43, 43, 43, 0.12);
   color: var(--neu-text-primary, #2D3748);
@@ -418,10 +418,10 @@
   align-items: flex-start;
   width: 100%;
   padding: 14px 18px;
-  border-radius: 0px;
-  background: #F8F4EA;
-  border: 2px solid #2B2B2B;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  border-radius: 20px;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .request-card__reschedule-proposal p {
@@ -450,8 +450,8 @@
   font-family: inherit;
   font-size: 14px;
   padding: 12px 18px;
-  border-radius: 0px;
-  border: 2px solid #2B2B2B;
+  border-radius: 12px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
   box-shadow: inset 2px 2px 0px rgba(43, 43, 43, 0.12);
   color: var(--neu-text-primary, #2D3748);
@@ -461,7 +461,7 @@
 
 .request-card__cancel-reason textarea:focus {
   outline: none;
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
 .request-card__cancelled {
@@ -514,8 +514,8 @@
   font-family: inherit;
   font-size: 14px;
   padding: 12px 18px;
-  border-radius: 0px;
-  border: 2px solid #2B2B2B;
+  border-radius: 12px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
   box-shadow: inset 2px 2px 0px rgba(43, 43, 43, 0.12);
   color: var(--neu-text-primary, #2D3748);
@@ -524,18 +524,18 @@
 
 .request-card__rate-user textarea:focus {
   outline: none;
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
 .request-card__summary-readonly {
   width: 100%;
   box-sizing: border-box;
   margin: 0;
-  background: #F8F4EA;
-  border: 2px solid #2B2B2B;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   padding: 16px 18px;
-  border-radius: 0px;
+  border-radius: 20px;
   font-size: 14px;
   line-height: 1.6;
   color: var(--neu-text-body, #4A5568);
@@ -591,9 +591,9 @@
   display: flex;
   align-items: baseline;
   gap: 12px;
-  background: #F8F4EA;
-  border: 2px solid #2B2B2B;
-  box-shadow: 3px 3px 0px #2B2B2B;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
   padding: 14px 18px;
   margin-bottom: 18px;
 }
@@ -601,7 +601,7 @@
 .request-card__ssi-score-val {
   font-size: 28px;
   font-weight: 900;
-  color: #1E1E1E;
+  color: #2E2B27;
 }
 
 .request-card__ssi-score-val small {
@@ -613,7 +613,7 @@
 .request-card__ssi-score-pct {
   font-size: 14px;
   font-weight: 800;
-  color: #8B5CF6;
+  color: #6D74D6;
 }
 
 .request-card__ssi-subscales {
@@ -627,7 +627,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 2px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
   padding: 8px 12px;
   flex: 1;
@@ -656,7 +656,7 @@
 .request-card__ssi-subscale-val {
   font-size: 16px;
   font-weight: 900;
-  color: #1E1E1E;
+  color: #2E2B27;
 }
 
 .request-card__ssi-subscale-val small {
@@ -675,7 +675,7 @@
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #8B5CF6;
+  color: #6D74D6;
 }
 
 .request-card__ssi-dl {
@@ -695,7 +695,7 @@
   margin: 0;
   font-size: 13.5px;
   font-weight: 700;
-  color: #1E1E1E;
+  color: #2E2B27;
 }
 
 .request-card__ssi-row {
@@ -715,7 +715,7 @@
 .request-card__ssi-a {
   font-size: 13.5px;
   font-weight: 800;
-  color: #1E1E1E;
+  color: #2E2B27;
 }
 
 .request-card__ssi-a--high {

@@ -6,7 +6,7 @@
 html {
   scroll-behavior: smooth;
   scrollbar-width: thin;
-  scrollbar-color: rgba(139, 92, 246, 0.4) transparent;
+  scrollbar-color: rgba(109, 116, 214, 0.4) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -19,30 +19,31 @@ html {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.4);
+  background: rgba(109, 116, 214, 0.4);
   border-radius: 9999px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.75);
+  background: rgba(109, 116, 214, 0.75);
 }
 
 :root {
-  --theme-amber: #F9BA32;
-  --theme-amber-light: #FDE68A;
-  --theme-bg: #FFFFFF;
-  --theme-charcoal: #1E1E1E;
-  --theme-text-muted: #6B7280;
-  --theme-lavender: #8B5CF6;
-  --theme-lavender-subtle: #F3E8FF;
-  --theme-card-bg: #F8F4EA;
-  --theme-shadow: 0 10px 30px rgba(30, 30, 30, 0.06);
-  --theme-shadow-hover: 0 16px 36px rgba(30, 30, 30, 0.12);
+  /* Calm palette tokens (source of truth for the design) */
+  --theme-amber: #FFFFFF; /* quiet white — dashboard chrome (topbar/hero) */
+  --theme-amber-light: #DCD6F7; /* sage tint — light chrome-adjacent tint */
+  --theme-bg: #F4F0E8; /* warm cream — main content-area background */
+  --theme-charcoal: #2E2B27;
+  --theme-text-muted: #8A8375;
+  --theme-lavender: #6D74D6; /* sage — primary interactive accent */
+  --theme-lavender-subtle: #DCD6F7; /* sage tint — light accent tint */
+  --theme-card-bg: #FFFFFF; /* white — card surface, sits on the cream page */
+  --theme-shadow: 0 10px 30px rgba(46, 43, 39, 0.06);
+  --theme-shadow-hover: 0 16px 36px rgba(46, 43, 39, 0.1);
   --neu-bg: #FFFFFF;
-  --neu-text-primary: #1E1E1E;
-  --neu-text-body: #374151;
-  --neu-text-muted: #6B7280;
-  --neu-accent-primary: #8B5CF6;
+  --neu-text-primary: #2E2B27;
+  --neu-text-body: #4A453E;
+  --neu-text-muted: #8A8375;
+  --neu-accent-primary: #6D74D6;
 }
 
 html,
@@ -101,10 +102,10 @@ input[type="time"],
 select,
 textarea {
   background: #FFFFFF;
-  border: 2px solid #2B2B2B;
-  border-radius: 0px;
-  box-shadow: 2px 2px 0px #2B2B2B;
-  color: var(--neu-text-primary, #1E1E1E);
+  border: 1px solid rgba(46, 43, 39, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(46, 43, 39, 0.04);
+  color: var(--neu-text-primary, #2E2B27);
   padding: 12px 18px;
   font-size: 14px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -113,8 +114,8 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  box-shadow: 3px 3px 0px #2B2B2B;
-  border-color: #8B5CF6;
+  box-shadow: 0 0 0 3px rgba(109, 116, 214, 0.25);
+  border-color: #6D74D6;
 }
 
 input::placeholder,

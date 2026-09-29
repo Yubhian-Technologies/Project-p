@@ -14,12 +14,12 @@
   min-height: 0;
   overflow: hidden;
   scroll-snap-align: start;
-  background: #F8F4EA;
-  border: 2px solid #2B2B2B;
-  border-radius: 0px;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px;
   padding: 24px;
   box-sizing: border-box;
-  box-shadow: 3px 3px 0px #2B2B2B;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
   cursor: pointer;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
 }
@@ -56,7 +56,7 @@
 
 .counsellor-card:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0px #2B2B2B;
+  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
 }
 
 .counsellor-card__header {
@@ -105,9 +105,9 @@
   font-size: 12px;
   font-weight: 700;
   padding: 6px 14px;
-  border-radius: 0px;
-  border: 1.5px solid #2B2B2B;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  border-radius: 20px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   background: #FFFFFF;
 }
 

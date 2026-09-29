@@ -15,10 +15,10 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 16px 20px;
-  background: #F8F4EA;
-  border: 2px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
 }
 
 .hha-header__title {
@@ -87,10 +87,10 @@
 
 .hha-card {
   background: #FFFFFF;
-  border: 2px solid #2B2B2B !important;
-  border-radius: 0px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
   padding: 22px 24px;
-  box-shadow: 3.5px 3.5px 0px #2B2B2B !important;
+  box-shadow: 0 10px 26px rgba(46, 43, 39, 0.065) !important;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -102,7 +102,7 @@
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #2B2B2B;
+  border-bottom: 1px solid rgba(46, 43, 39, 0.08);
 }
 
 .hha-card__title-wrap {
@@ -142,11 +142,11 @@
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
-  border-radius: 0px !important;
-  border: 1.5px solid #2B2B2B;
+  border-radius: 12px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   font-size: 11px;
   font-weight: 800;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045);
 }
 
 .hha-badge svg {
@@ -168,11 +168,11 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: 0px !important;
-  border: 1px solid #2B2B2B;
+  border-radius: 12px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   font-size: 10.5px;
   font-weight: 800;
-  box-shadow: 1px 1px 0px #2B2B2B;
+  box-shadow: 0 3px 10px rgba(46, 43, 39, 0.04);
 }
 
 .hha-tag--pending {
@@ -199,16 +199,16 @@
   gap: 14px;
   padding: 14px 16px;
   background: #F8FAFC;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 2px 2px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
   transition: all 0.18s ease;
 }
 
 .hha-feed__item:hover {
   background: #FFFFFF;
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #2B2B2B !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06) !important;
 }
 
 .hha-feed__item-left {
@@ -255,9 +255,9 @@
 .hha-btn-view {
   background: #2563EB;
   color: #FFFFFF;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
   font-size: 11.5px;
   font-weight: 800;
   padding: 6px 12px;
@@ -277,7 +277,7 @@
 .hha-btn-view:hover {
   background: #1D4ED8;
   transform: translate(-1px, -1px);
-  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
 }
 
 .hha-card__footer {
@@ -317,9 +317,9 @@
   gap: 12px;
   padding: 12px 14px;
   background: #F8FAFC;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 2px 2px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
 }
 
 .hha-status-item--urgent {
@@ -359,9 +359,9 @@
 
 .hha-status-btn {
   background: #FFFFFF;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
   font-size: 11px;
   font-weight: 800;
   padding: 5px 10px;
@@ -373,7 +373,7 @@
 .hha-status-btn:hover {
   background: #F1F5F9;
   transform: translate(-1px, -1px);
-  box-shadow: 2px 2px 0px #2B2B2B !important;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
 }
 
 .hha-status-btn--urgent {
@@ -389,7 +389,7 @@
 .hha-shortcuts {
   margin-top: 6px;
   padding-top: 12px;
-  border-top: 2px solid #2B2B2B;
+  border-top: 1px solid rgba(46, 43, 39, 0.08);
 }
 
 .hha-shortcuts__label {
@@ -398,7 +398,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #2B2B2B;
+  color: #2E2B27;
   margin-bottom: 8px;
 }
 
@@ -410,9 +410,9 @@
 
 .hha-shortcuts__grid button {
   background: #FFFFFF;
-  border: 1.5px solid #2B2B2B !important;
-  border-radius: 0px !important;
-  box-shadow: 1.5px 1.5px 0px #2B2B2B !important;
+  border: 1px solid rgba(46, 43, 39, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
   font-size: 11px;
   font-weight: 800;
   padding: 6px 10px;
@@ -433,7 +433,7 @@
 .hha-shortcuts__grid button:hover {
   background: #FEF3C7;
   transform: translate(-1px, -1px);
-  box-shadow: 2.5px 2.5px 0px #2B2B2B !important;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
 }
 
 /* ── Modal Styling ───────────────────────────────────────────────────────── */
@@ -449,7 +449,7 @@
   gap: 10px;
   padding: 12px;
   background: #F8FAFC;
-  border: 1.5px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
 }
 
 .hha-modal__chip {
@@ -466,7 +466,7 @@
 
 .hha-modal__content-box {
   background: #FFFFFF;
-  border: 2px solid #2B2B2B;
+  border: 1px solid rgba(46, 43, 39, 0.08);
   padding: 16px;
   font-size: 13.5px;
   line-height: 1.6;
@@ -474,7 +474,7 @@
   white-space: pre-wrap;
   max-height: 280px;
   overflow-y: auto;
-  box-shadow: 2px 2px 0px #2B2B2B;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
 }
 
 .hha-modal__notes {
@@ -495,7 +495,7 @@
 .hha-modal__action-area {
   margin-top: 8px;
   padding-top: 12px;
-  border-top: 2px solid #2B2B2B;
+  border-top: 1px solid rgba(46, 43, 39, 0.08);
 }
 
 .hha-modal__verify-form {
@@ -507,14 +507,14 @@
 .hha-modal__verify-form label {
   font-size: 12px;
   font-weight: 800;
-  color: #2B2B2B;
+  color: #2E2B27;
 }
 
 .hha-modal__verify-form textarea {
   width: 100%;
   padding: 10px;
-  border: 2px solid #2B2B2B;
-  border-radius: 0px !important;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 12px !important;
   font-size: 13px;
   box-sizing: border-box;
 }

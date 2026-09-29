@@ -1,26 +1,25 @@
-/* Shared typography, radius, and animation tokens for Vishnu Wellness Center (Typography: Plus Jakarta Sans + Inter + General Sans + Satoshi) */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
-@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=satoshi@500,700,900&display=swap');
+/* Shared typography, radius, and animation tokens for Vishnu Wellness Center (Typography: Fraunces + Work Sans) */
+/* Fonts are loaded once, centrally, in index.html — no @import here to avoid double-loading. */
 
 :root {
   /* Typography Tokens */
-  --font-headline: 'Satoshi', 'General Sans', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-title: 'General Sans', 'Satoshi', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-main: 'Plus Jakarta Sans', 'Inter', 'General Sans', 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  
+  --font-headline: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-title: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-main: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
   --radius-xl: 28px;
   --radius-lg: 24px;
   --radius-md: 20px;
   --radius-pill: 9999px;
 
-  --color-text-main: #2D3748;
+  --color-text-main: #2E2B27;
 }
 
 
 body {
   font-family: var(--font-main);
   color: var(--color-text-main);
-  background-color: var(--theme-bg, #F8F4EA);
+  background-color: var(--theme-bg, #F4F0E8);
   margin: 0;
   padding: 0;
 }
