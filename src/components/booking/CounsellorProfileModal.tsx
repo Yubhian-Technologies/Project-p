@@ -131,7 +131,20 @@ export function CounsellorProfileModal({
                 </div>
               )}
 
-              <span className="counsellor-profile__verified">✓ Verified Psychologist</span>
+              {profile.certifications && profile.certifications.length > 0 && (
+                <div className="counsellor-profile__field">
+                  <span className="counsellor-profile__field-label">Certificates</span>
+                  <div className="counsellor-profile__chips">
+                    {profile.certifications.map((item) => (
+                      <span key={item} className="counsellor-profile__chip">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <span className="counsellor-profile__verified">✓ Certified Psychologist</span>
             </section>
 
             {hasApproach && (

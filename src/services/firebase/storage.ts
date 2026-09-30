@@ -12,3 +12,10 @@ export async function uploadEventReport(eventId: string, uploaderUid: string, fi
   await uploadBytes(reportRef, file);
   return getDownloadURL(reportRef);
 }
+
+/** Private to the owner — only Head/Counsellor/Admin have a signature at all. */
+export async function uploadSignatureImage(uid: string, file: File): Promise<string> {
+  const signatureRef = ref(storage, `signatures/${uid}`);
+  await uploadBytes(signatureRef, file);
+  return getDownloadURL(signatureRef);
+}

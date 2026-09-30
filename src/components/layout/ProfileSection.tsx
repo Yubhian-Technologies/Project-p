@@ -1,8 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { ROLE_LABELS } from "../../config/roles";
-import { uploadAvatar } from "../../services/firebase/storage";
+import { uploadAvatar, uploadSignatureImage } from "../../services/firebase/storage";
 import {
   updateUserPhoto,
   updateUserBio,
@@ -10,6 +10,7 @@ import {
   updateUserIntakeInfo,
   updateCounsellorProfile,
 } from "../../services/firebase/firestore";
+import { getSignatureURL, saveSignatureURL } from "../../services/firebase/signature";
 import { authErrorMessage, changeOwnPassword } from "../../services/firebase/auth";
 import { defaultAvailabilitySchedule } from "../../types/availability";
 import type { DayAvailability } from "../../types/availability";
@@ -61,6 +62,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const [educationDegreeDraft, setEducationDegreeDraft] = useState(profile?.educationDegree ?? "");
   const [educationInstitutionDraft, setEducationInstitutionDraft] = useState(profile?.educationInstitution ?? "");
   const [currentOrganizationDraft, setCurrentOrganizationDraft] = useState(profile?.currentOrganization ?? "");
+  const [certificationsDraft, setCertificationsDraft] = useState(toCsv(profile?.certifications));
   const [sessionTypeDraft, setSessionTypeDraft] = useState<"online" | "offline" | "both">(
     profile?.sessionType ?? "offline",
   );
@@ -86,10 +88,47 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
+  const signatureFileInputRef = useRef<HTMLInputElement>(null);
+  const [signatureURL, setSignatureURL] = useState<string | null>(null);
+  const [loadingSignature, setLoadingSignature] = useState(true);
+  const [uploadingSignature, setUploadingSignature] = useState(false);
+  const [signatureError, setSignatureError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const eligible = profile?.role === "head" || profile?.role === "counsellor" || profile?.role === "admin";
+    if (!currentUser || !eligible) {
+      setLoadingSignature(false);
+      return;
+    }
+    setLoadingSignature(true);
+    getSignatureURL(currentUser.uid)
+      .then(setSignatureURL)
+      .finally(() => setLoadingSignature(false));
+  }, [currentUser, profile?.role]);
+
   if (!profile || !currentUser) return null;
 
   const isCounsellorLike = profile.role === "counsellor" || profile.role === "head";
   const isUser = profile.role === "user";
+  const canHaveSignature = profile.role === "head" || profile.role === "counsellor" || profile.role === "admin";
+
+  async function handleSignatureFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !currentUser) return;
+
+    setSignatureError(null);
+    setUploadingSignature(true);
+    try {
+      const url = await uploadSignatureImage(currentUser.uid, file);
+      await saveSignatureURL(currentUser.uid, url);
+      setSignatureURL(url);
+    } catch {
+      setSignatureError("Could not upload signature. Try a smaller image or a different format.");
+    } finally {
+      setUploadingSignature(false);
+    }
+  }
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -161,6 +200,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
         educationDegree: educationDegreeDraft.trim(),
         educationInstitution: educationInstitutionDraft.trim(),
         currentOrganization: currentOrganizationDraft.trim(),
+        certifications: fromCsv(certificationsDraft),
         sessionType: sessionTypeDraft,
         languages: fromCsv(languagesDraft),
         approachEmpathetic: approachEmpatheticDraft.trim(),
@@ -215,6 +255,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     educationDegreeDraft === (profile.educationDegree ?? "") &&
     educationInstitutionDraft === (profile.educationInstitution ?? "") &&
     currentOrganizationDraft === (profile.currentOrganization ?? "") &&
+    certificationsDraft === toCsv(profile.certifications) &&
     sessionTypeDraft === (profile.sessionType ?? "offline") &&
     languagesDraft === toCsv(profile.languages) &&
     approachEmpatheticDraft === (profile.approachEmpathetic ?? "") &&
@@ -224,7 +265,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
 
   return (
     <div className="profile-page">
-      <h1 className="profile-page__title">Profile</h1>
       <Card className="profile-section">
         <div className="profile-section__avatar-block">
           <Avatar photoURL={profile.photoURL} label={profile.email} size="large" />
@@ -398,10 +438,20 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                     onChange={(e) => setCurrentOrganizationDraft(e.target.value)}
                   />
                 </div>
-                <p className="profile-section__verified-note">✓ Verified Psychologist</p>
+                <div className="profile-section__field">
+                  <label htmlFor="certifications">Certificates (comma-separated)</label>
+                  <input
+                    id="certifications"
+                    type="text"
+                    placeholder="e.g. Certified CBT Practitioner, Trauma-Informed Care"
+                    value={certificationsDraft}
+                    onChange={(e) => setCertificationsDraft(e.target.value)}
+                  />
+                </div>
+                <p className="profile-section__verified-note">✓ Certified Psychologist</p>
 
                 <p className="profile-section__subheading">My approach</p>
-                <div className="profile-section__field">
+                <div className="profile-section__field profile-section__field--full">
                   <label htmlFor="approach-empathetic">Empathetic</label>
                   <textarea
                     id="approach-empathetic"
@@ -411,7 +461,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                     onChange={(e) => setApproachEmpatheticDraft(e.target.value)}
                   />
                 </div>
-                <div className="profile-section__field">
+                <div className="profile-section__field profile-section__field--full">
                   <label htmlFor="approach-evidence">Evidence-based</label>
                   <textarea
                     id="approach-evidence"
@@ -421,7 +471,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                     onChange={(e) => setApproachEvidenceBasedDraft(e.target.value)}
                   />
                 </div>
-                <div className="profile-section__field">
+                <div className="profile-section__field profile-section__field--full">
                   <label htmlFor="approach-solution">Solution-focused</label>
                   <textarea
                     id="approach-solution"
@@ -445,7 +495,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                     <option value="both">Online &amp; Offline</option>
                   </Select>
                 </div>
-                <div className="profile-section__field">
+                <div className="profile-section__field profile-section__field--full">
                   <label>Weekly availability</label>
                   <AvailabilityScheduleEditor value={scheduleDraft} onChange={setScheduleDraft} />
                 </div>
@@ -561,6 +611,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
           </div>
         )}
 
+        <div className="profile-section__utility-grid">
         {onOpenFeedback && (
           <div className="profile-section__password">
             <p className="profile-section__subheading">WORKSPACE</p>
@@ -639,6 +690,40 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
               </div>
             </>
           )}
+        </div>
+
+        {canHaveSignature && (
+          <div className="profile-section__password">
+            <p className="profile-section__subheading">DIGITAL SIGNATURE</p>
+            {loadingSignature ? (
+              <p className="profile-section__intake-hint">Loading…</p>
+            ) : (
+              <>
+                {signatureURL ? (
+                  <img src={signatureURL} alt="Your digital signature" className="profile-section__signature-preview" />
+                ) : (
+                  <p className="profile-section__intake-hint">No signature uploaded yet.</p>
+                )}
+                <input
+                  ref={signatureFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="profile-section__file-input"
+                  onChange={handleSignatureFileChange}
+                />
+                <Button
+                  type="button"
+                  variant="outlined"
+                  disabled={uploadingSignature}
+                  onClick={() => signatureFileInputRef.current?.click()}
+                >
+                  {uploadingSignature ? "Uploading…" : signatureURL ? "Change signature" : "Upload signature"}
+                </Button>
+                {signatureError && <p className="profile-section__error">{signatureError}</p>}
+              </>
+            )}
+          </div>
+        )}
         </div>
       </div>
     </Card>

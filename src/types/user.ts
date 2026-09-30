@@ -22,6 +22,7 @@ export interface UserProfile {
   educationDegree?: string;
   educationInstitution?: string;
   currentOrganization?: string;
+  certifications?: string[];
   sessionType?: "online" | "offline" | "both";
   languages?: string[];
   approachEmpathetic?: string;

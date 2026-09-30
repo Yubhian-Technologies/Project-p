@@ -75,7 +75,7 @@ export function VishnuWellnessMissionCard({ onSelectSection }: VishnuWellnessMis
               <span className="vwm-pill">Compassion</span>
               <span className="vwm-pill">Confidentiality</span>
               <span className="vwm-pill">Empathy</span>
-              <span className="vwm-pill">Integrity</span>
+              <span className="vwm-pill">Non-Judgemental</span>
               <span className="vwm-pill">Well-Being</span>
             </div>
             <p className="vwm-pillars__sub">

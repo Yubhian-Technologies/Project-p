@@ -179,7 +179,7 @@ export function LandingPage() {
                   <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1.2 14.6l-3.6-3.6 1.4-1.4 2.2 2.2 5-5 1.4 1.4-6.4 6.4z" />
                 </svg>
               </div>
-              <h3 className="feature-card__title">Licensed &amp; Verified Psychologists</h3>
+              <h3 className="feature-card__title">Certified Psychologists</h3>
               <p className="feature-card__desc">Every counsellor is vetted and certified before joining.</p>
             </div>
 

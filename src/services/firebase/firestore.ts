@@ -70,6 +70,7 @@ export async function updateCounsellorProfile(
     educationDegree: string;
     educationInstitution: string;
     currentOrganization: string;
+    certifications: string[];
     sessionType: "online" | "offline" | "both";
     languages: string[];
     approachEmpathetic: string;
