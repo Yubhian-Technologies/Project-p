@@ -111,6 +111,13 @@ service cloud.firestore {
       match /myCommunityComments/{commentId} {
         allow read, write: if isSelf(uid);
       }
+
+      // A Head/Counsellor/Admin's digital signature image — private to the
+      // owner only, unlike the shared profile fields above which any
+      // signed-in user can read.
+      match /signature/{docId} {
+        allow read, write: if isSelf(uid);
+      }
     }
 
     // ---------- campuses ----------
@@ -256,7 +263,8 @@ service cloud.firestore {
           )
         ) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'userRatingOfCounsellor', 'userReviewText', 'ratedAt',
-          'counsellorRatingOfUser', 'counsellorNoteOnUser', 'counsellorRatedAt'
+          'counsellorRatingOfUser', 'counsellorNoteOnUser', 'counsellorRatedAt',
+          'sharedSummary', 'sharedSummaryAt'
         ])
       ) || (
         // One-time user rating of a held session. The user may rate only their
@@ -286,6 +294,15 @@ service cloud.firestore {
         !('counsellorRatingOfUser' in resource.data) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'counsellorRatingOfUser', 'counsellorNoteOnUser', 'counsellorRatedAt', 'updatedAt'
+        ])
+      ) || (
+        // The assigned counsellor or staff (never the student) sharing the
+        // session summary — the one and only way sharedSummary/sharedSummaryAt
+        // can be written, so a student can never fake or alter it themselves.
+        isSignedIn() &&
+        (resource.data.counsellorId == request.auth.uid || isStaff()) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'sharedSummary', 'sharedSummaryAt', 'updatedAt'
         ])
       );
 
@@ -695,40 +712,59 @@ service cloud.firestore {
     }
 
     // ---------- monthlyReports ----------
-    // Heads upload/delete their campus's monthly report; Head, Admin, and
-    // Super Admin can all view the platform-wide list (Admin's Monthly
-    // Reports tab has no upload/delete UI — view + download only). A
-    // Counsellor can also view (not upload/delete) reports for their own
-    // campus only — view + download only, same as Admin.
+    // A campus's consolidated report — there is exactly one Head per campus,
+    // overseeing every college in it, who compiles this from that campus's
+    // counsellor submissions and sends it up to Admin. Admin/Super Admin
+    // browse platform-wide (their tab has its own campus picker) and are the
+    // only ones who can verify it; the Head may only read/create/delete their
+    // own campus's reports — never another campus's. Counsellors have no
+    // access here at all (their own reports live in counsellorMonthlyReports).
     match /monthlyReports/{reportId} {
-      allow read: if isStaff()
-                  || (isRole('counsellor') && resource.data.campusId == myProfile().campusId);
-      allow create: if isRole('head') && request.resource.data.uploadedByUid == request.auth.uid;
-      allow update: if false;
-      allow delete: if isRole('head');
+      allow read: if myRole() in ['admin', 'super-admin']
+                  || (isRole('head') && resource.data.campusId == myProfile().campusId);
+      allow create: if isRole('head')
+                    && request.resource.data.uploadedByUid == request.auth.uid
+                    && request.resource.data.campusId == myProfile().campusId
+                    && request.resource.data.collegeId == myProfile().collegeId
+                    && request.resource.data.status == 'pending';
+      // Only Admin/Super Admin can verify (update status → verified); the
+      // report's identity/ownership fields must stay untouched.
+      allow update: if myRole() in ['admin', 'super-admin']
+                    && request.resource.data.status == 'verified'
+                    && request.resource.data.uploadedByUid == resource.data.uploadedByUid
+                    && request.resource.data.campusId == resource.data.campusId
+                    && request.resource.data.collegeId == resource.data.collegeId;
+      allow delete: if isRole('head')
+                    && resource.data.uploadedByUid == request.auth.uid
+                    && resource.data.campusId == myProfile().campusId;
     }
 
-    // ---------- workReports ----------
-    // Counsellors submit their own work reports; head/admin/super-admin
-    // can read all reports and verify (update status, verifiedBy, headNotes).
-    match /workReports/{reportId} {
-      // Counsellor reads only their own; staff reads all
-      allow read: if isSignedIn()
-                  && (isStaff() || isRole('counsellor'));
-
-      // Only counsellors create; they can only set their own uid
+    // ---------- counsellorMonthlyReports ----------
+    // A counsellor's own monthly report, submitted straight to (and visible
+    // only to) their campus's one Head — who oversees every college in that
+    // campus, not just the counsellor's own college — never to Admin, and
+    // never to another campus's Head. Immutable except for the Head's own
+    // verification of it: no delete by anyone, and no update besides that
+    // Head marking it verified.
+    match /counsellorMonthlyReports/{reportId} {
+      allow read: if isSignedIn() && (
+        resource.data.uploadedByUid == request.auth.uid ||
+        (isRole('head') && resource.data.campusId == myProfile().campusId)
+      );
       allow create: if isRole('counsellor')
-                    && request.resource.data.submittedByUid == request.auth.uid
+                    && request.resource.data.uploadedByUid == request.auth.uid
+                    && request.resource.data.campusId == myProfile().campusId
+                    && request.resource.data.collegeId == myProfile().collegeId
                     && request.resource.data.status == 'pending';
-
-      // Only head/admin/super-admin can verify (update status → verified)
-      allow update: if isStaff()
-                    && request.resource.data.status == 'verified';
-
-      // Report authors (counsellors) can delete their own reports;
-      // head/admin/super-admin can delete any report.
-      allow delete: if isSignedIn()
-                    && (resource.data.submittedByUid == request.auth.uid || isStaff());
+      // Only that campus's Head can verify it; the report's identity/
+      // ownership fields must stay untouched.
+      allow update: if isRole('head')
+                    && resource.data.campusId == myProfile().campusId
+                    && request.resource.data.status == 'verified'
+                    && request.resource.data.uploadedByUid == resource.data.uploadedByUid
+                    && request.resource.data.campusId == resource.data.campusId
+                    && request.resource.data.collegeId == resource.data.collegeId;
+      allow delete: if false;
     }
 
     // ---------- flash_qa ----------

@@ -25,14 +25,6 @@
       ]
     },
     {
-      "collectionGroup": "workReports",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "submittedByUid", "order": "ASCENDING" },
-        { "fieldPath": "submittedAt", "order": "DESCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "communityPosts",
       "queryScope": "COLLECTION",
       "fields": [
