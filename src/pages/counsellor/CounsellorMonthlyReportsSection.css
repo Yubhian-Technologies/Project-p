@@ -1,0 +1,8 @@
+/* ── Monthly Reports Section (Counsellor – submit to Head) ───────── */
+
+.cmr-section {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+}

@@ -5,6 +5,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  updateDoc,
   query,
   orderBy,
   where,
@@ -14,6 +15,9 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage
 import { db, storage } from "./config";
 import { createNotification } from "./notifications";
 import { listUsersByRole } from "./firestore";
+import { attachmentMetadata } from "../../utils/attachmentMetadata";
+
+export type MonthlyReportStatus = "pending" | "verified";
 
 export interface MonthlyReport {
   id: string;
@@ -28,6 +32,11 @@ export interface MonthlyReport {
   storagePath: string;
   fileName: string;
   uploadedAt: string; // ISO string
+  status: MonthlyReportStatus;
+  // populated once Admin verifies it
+  verifiedBy?: string;
+  verifiedByUid?: string;
+  verifiedAt?: string;
 }
 
 const COLLECTION = "monthlyReports";
@@ -48,7 +57,7 @@ export async function uploadMonthlyReport(
   const storageRef = ref(storage, storagePath);
 
   onProgress?.(0);
-  await uploadBytes(storageRef, file);
+  await uploadBytes(storageRef, file, attachmentMetadata(file.name));
   onProgress?.(100);
 
   const downloadURL = await getDownloadURL(storageRef);
@@ -65,6 +74,7 @@ export async function uploadMonthlyReport(
     storagePath,
     fileName: file.name,
     uploadedAt: serverTimestamp(),
+    status: "pending",
   });
 
   // Platform-level alert for admins whenever a campus uploads a monthly report.
@@ -96,7 +106,18 @@ export async function uploadMonthlyReport(
     storagePath,
     fileName: file.name,
     uploadedAt: new Date().toISOString(),
+    status: "pending",
   };
+}
+
+/** Admin verifies a Head's consolidated report. */
+export async function verifyMonthlyReport(id: string, verifiedBy: string, verifiedByUid: string): Promise<void> {
+  await updateDoc(doc(db, COLLECTION, id), {
+    status: "verified",
+    verifiedBy,
+    verifiedByUid,
+    verifiedAt: serverTimestamp(),
+  });
 }
 
 /** Fetch all monthly reports ordered by most recent first. */
@@ -106,19 +127,14 @@ export async function listMonthlyReports(): Promise<MonthlyReport[]> {
   return snap.docs.map((d) => docToReport(d.id, d.data()));
 }
 
-/** Fetch reports filtered by campus + college (for admin view). */
-export async function listMonthlyReportsByCampusCollege(
-  campusId: string,
-  collegeId: string,
-): Promise<MonthlyReport[]> {
-  const q = query(
-    collection(db, COLLECTION),
-    where("campusId", "==", campusId),
-    where("collegeId", "==", collegeId),
-    orderBy("uploadedAt", "desc"),
-  );
+/** Fetch one campus's own consolidated reports — used by that campus's Head
+    (client-sorted so no composite index is required). */
+export async function listMonthlyReportsByCampus(campusId: string): Promise<MonthlyReport[]> {
+  const q = query(collection(db, COLLECTION), where("campusId", "==", campusId));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => docToReport(d.id, d.data()));
+  return snap.docs
+    .map((d) => docToReport(d.id, d.data()))
+    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
 }
 
 /** Delete a report from both Firestore and Storage. */
@@ -157,5 +173,10 @@ function docToReport(id: string, data: Record<string, unknown>): MonthlyReport {
     uploadedAt:
       (data.uploadedAt as { toDate?: () => Date })?.toDate?.()?.toISOString?.() ??
       new Date().toISOString(),
+    status: (data.status as MonthlyReportStatus) ?? "pending",
+    verifiedBy: (data.verifiedBy as string | undefined) ?? undefined,
+    verifiedByUid: (data.verifiedByUid as string | undefined) ?? undefined,
+    verifiedAt:
+      (data.verifiedAt as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString?.() ?? undefined,
   };
 }

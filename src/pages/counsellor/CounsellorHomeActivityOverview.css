@@ -70,7 +70,6 @@
     font-size: 14px;
   }
 
-  .cha-loading,
   .cha-empty {
     padding: 18px;
   }
@@ -144,18 +143,6 @@
 
 .cha-badge--pending { background: #FEF3C7; color: #B45309; }
 .cha-badge--clear { background: #DCFCE7; color: #15803D; }
-
-.cha-tag {
-  display: inline-flex;
-  padding: 2px 7px;
-  border-radius: 12px !important;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.cha-tag--pending { background: #FFFBEB; color: #D97706; }
-.cha-tag--verified { background: #DCFCE7; color: #15803D; }
 
 .cha-feed {
   display: flex;
@@ -269,43 +256,9 @@
   color: #FFFFFF !important;
 }
 
-.cha-loading, .cha-empty {
+.cha-empty {
   padding: 20px;
   text-align: center;
   color: #64748B;
   font-size: 13px;
-}
-
-.cha-modal {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.cha-modal__meta {
-  display: flex;
-  gap: 10px;
-  padding: 10px;
-  background: #F8FAFC;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  font-size: 12px;
-}
-
-.cha-modal__content-box {
-  background: #FFFFFF;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  padding: 12px;
-  font-size: 13px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  max-height: 240px;
-  overflow-y: auto;
-}
-
-.cha-modal__notes {
-  background: #F0FDF4;
-  border: 1.5px solid #16A34A;
-  padding: 10px;
-  font-size: 12px;
-  color: #166534;
 }

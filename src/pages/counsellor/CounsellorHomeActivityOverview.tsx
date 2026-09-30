@@ -1,18 +1,11 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import {
-  listWorkReportsByUid,
-  type WorkReport,
-} from "../../services/firebase/workReports";
 import { listBookingsForCounsellor } from "../../services/firebase/bookings";
 import type { Booking } from "../../types/booking";
-import { Modal } from "../../components/common/Modal";
 import {
   TrendingUpIcon,
   CalendarIcon,
   CheckIcon,
-  ClipboardListIcon,
-  EyeIcon,
   ZapIcon,
   StarIcon,
   SparklesIcon,
@@ -28,25 +21,14 @@ interface CounsellorHomeActivityOverviewProps {
 
 export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHomeActivityOverviewProps) {
   const { profile } = useAuth();
-  const [myReports, setMyReports] = useState<WorkReport[]>([]);
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedReport, setSelectedReport] = useState<WorkReport | null>(null);
 
   useEffect(() => {
     if (!profile?.uid) return;
 
-    setLoading(true);
-    Promise.all([
-      listWorkReportsByUid(profile.uid),
-      listBookingsForCounsellor(profile.uid),
-    ])
-      .then(([reportsData, bookingsData]) => {
-        setMyReports(reportsData);
-        setMyBookings(bookingsData);
-      })
-      .catch((err) => console.error("Failed to load counsellor overview data", err))
-      .finally(() => setLoading(false));
+    listBookingsForCounsellor(profile.uid)
+      .then(setMyBookings)
+      .catch((err) => console.error("Failed to load counsellor overview data", err));
   }, [profile?.uid]);
 
   const pendingBookings = myBookings.filter(
@@ -59,13 +41,13 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
         <div>
           <h3 className="cha-header__title"><TrendingUpIcon /> Workspace Activity & Notifications Feed</h3>
           <p className="cha-header__sub">
-            Recent session requests, work report statuses, and workspace shortcuts.
+            Recent session requests and workspace shortcuts.
           </p>
         </div>
       </div>
 
       <div className="cha-grid">
-        {/* Left Column: Session Requests & My Work Reports */}
+        {/* Left Column: Session Requests */}
         <div className="cha-card cha-card--main">
           <div className="cha-card__header">
             <div className="cha-card__title-wrap">
@@ -106,47 +88,6 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
               ))}
             </div>
           )}
-
-          {/* Submitted Work Reports Status Section */}
-          <div className="cha-card__header" style={{ marginTop: 16 }}>
-            <div className="cha-card__title-wrap">
-              <span className="cha-card__icon"><ClipboardListIcon /></span>
-              <div>
-                <h4 className="cha-card__title">My Submitted Work Reports</h4>
-                <span className="cha-card__subtitle">Status of work reports shared with department head</span>
-              </div>
-            </div>
-          </div>
-
-          {loading ? (
-            <p className="cha-loading">Loading my work reports…</p>
-          ) : myReports.length === 0 ? (
-            <div className="cha-empty">No work reports submitted yet.</div>
-          ) : (
-            <div className="cha-feed">
-              {myReports.slice(0, 4).map((report) => (
-                <div key={report.id} className="cha-feed__item">
-                  <div>
-                    <strong className="cha-feed__title">{report.title}</strong>
-<span className="cha-feed__meta">
-  <CalendarIcon width={12} height={12} />
-  Submitted {new Date(report.submittedAt).toLocaleDateString("en-IN")} • Status:{" "}
-                      <span className={`cha-tag cha-tag--${report.status}`}>
-                        {report.status === "pending" ? "Pending Head Review" : "✓ Verified by Head"}
-                      </span>
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    className="cha-btn-view"
-                    onClick={() => setSelectedReport(report)}
-                  >
-                    <EyeIcon width={13} height={13} /> View Report
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Right Column: Shortcuts & Quick Jumps */}
@@ -164,9 +105,6 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
           <div className="cha-shortcuts__list">
 <button type="button" onClick={() => onSelectSection("requests")}>
   <CalendarIcon /> Session Requests ({pendingBookings.length})
-</button>
-<button type="button" onClick={() => onSelectSection("work-reports")}>
-  <ClipboardListIcon /> Work Reports ({myReports.length})
 </button>
 <button type="button" onClick={() => onSelectSection("feedback")}>
   <StarIcon /> My Session Feedback
@@ -186,40 +124,6 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
           </div>
         </div>
       </div>
-
-      {/* ── View Work Report Modal ────────────────────────────── */}
-      {selectedReport && (
-        <Modal
-          onClose={() => setSelectedReport(null)}
-          title={`My Work Report: ${selectedReport.title}`}
-        >
-          <div className="cha-modal">
-            <div className="cha-modal__meta">
-              <div><strong>Submitted:</strong> {new Date(selectedReport.submittedAt).toLocaleString("en-IN")}</div>
-              <div><strong>Period:</strong> {selectedReport.periodLabel || selectedReport.reportType}</div>
-              <div>
-                <strong>Status:</strong>{" "}
-                <span className={`cha-tag cha-tag--${selectedReport.status}`}>
-                  {selectedReport.status === "pending" ? "Pending Head Review" : "✓ Verified by Head"}
-                </span>
-              </div>
-            </div>
-
-            <div className="cha-modal__body">
-              <h5>Report Body / Shared Summary:</h5>
-              <div className="cha-modal__content-box">{selectedReport.body}</div>
-            </div>
-
-            {selectedReport.headNotes && (
-              <div className="cha-modal__notes">
-                <strong>Head Verification Notes:</strong>
-                <p>{selectedReport.headNotes}</p>
-                <span>— Verified by {selectedReport.verifiedBy}</span>
-              </div>
-            )}
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }

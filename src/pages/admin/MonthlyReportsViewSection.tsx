@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
 import {
   listMonthlyReports,
+  verifyMonthlyReport,
   type MonthlyReport,
 } from "../../services/firebase/monthlyReports";
 import { listCampuses } from "../../services/firebase/campuses";
-import { listColleges } from "../../services/firebase/colleges";
 import type { Campus } from "../../types/campus";
-import type { College } from "../../types/college";
 import { Select } from "../../components/common/Select";
 import {
   FolderOpenIcon,
@@ -18,6 +18,7 @@ import {
   XIcon,
   CheckIcon,
   BuildingIcon,
+  HourglassIcon,
 } from "../../components/common/icons";
 import "./MonthlyReportsViewSection.css";
 
@@ -46,11 +47,11 @@ function formatDate(iso: string) {
 }
 
 export function MonthlyReportsViewSection() {
-  // ── Campus / College state ────────────────────────────────────────
+  const { profile } = useAuth();
+
+  // ── Campus state ─────────────────────────────────────────────────
   const [campuses, setCampuses] = useState<Campus[]>([]);
-  const [colleges, setColleges] = useState<College[]>([]);
   const [selectedCampusId, setSelectedCampusId] = useState("");
-  const [selectedCollegeId, setSelectedCollegeId] = useState("");
   const [loadingMeta, setLoadingMeta] = useState(true);
 
   // ── Reports state ────────────────────────────────────────────────
@@ -58,6 +59,7 @@ export function MonthlyReportsViewSection() {
   const [loading, setLoading] = useState(false);
   const [filterMonth, setFilterMonth] = useState(0);
   const [filterYear, setFilterYear] = useState(0);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
   // ── Load campuses once on mount ──────────────────────────────────
   useEffect(() => {
@@ -67,37 +69,34 @@ export function MonthlyReportsViewSection() {
       .finally(() => setLoadingMeta(false));
   }, []);
 
-  // ── When campus changes, load its colleges & reset selection ─────
+  // ── When campus changes, fetch that campus's consolidated report(s) ──
   useEffect(() => {
-    setSelectedCollegeId("");
-    setColleges([]);
     setReports([]);
     if (!selectedCampusId) return;
-    listColleges(selectedCampusId).then(setColleges);
-  }, [selectedCampusId]);
-
-  // ── When college changes, fetch reports ──────────────────────────
-  useEffect(() => {
-    setReports([]);
-    if (!selectedCampusId || !selectedCollegeId) return;
     loadReports();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCollegeId]);
+  }, [selectedCampusId]);
 
   async function loadReports() {
-    if (!selectedCampusId || !selectedCollegeId) return;
+    if (!selectedCampusId) return;
     setLoading(true);
     try {
       // Fetch all reports and filter client-side — avoids needing a
-      // Firestore composite index on (campusId, collegeId, uploadedAt).
+      // Firestore composite index on (campusId, uploadedAt).
       const all = await listMonthlyReports();
-      setReports(
-        all.filter(
-          (r) => r.campusId === selectedCampusId && r.collegeId === selectedCollegeId,
-        ),
-      );
+      setReports(all.filter((r) => r.campusId === selectedCampusId));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleVerify(report: MonthlyReport) {
+    setVerifyingId(report.id);
+    try {
+      await verifyMonthlyReport(report.id, profile?.displayName || profile?.email || "Admin", profile?.uid ?? "");
+      await loadReports();
+    } finally {
+      setVerifyingId(null);
     }
   }
 
@@ -107,7 +106,7 @@ export function MonthlyReportsViewSection() {
     return true;
   });
 
-  const hasSelection = !!selectedCampusId && !!selectedCollegeId;
+  const hasSelection = !!selectedCampusId;
 
   return (
     <div className="mrv-section">
@@ -118,8 +117,8 @@ export function MonthlyReportsViewSection() {
             <FolderOpenIcon />
           </div>
           <div>
-            <h2 className="mrv-header__title">Monthly Reports</h2>
-            <p className="mrv-header__sub">Reports submitted by Department Heads</p>
+            <h2 className="mrv-header__title">Consolidated Reports</h2>
+            <p className="mrv-header__sub">Consolidated monthly reports submitted by Department Heads</p>
           </div>
         </div>
         {hasSelection && (
@@ -129,10 +128,9 @@ export function MonthlyReportsViewSection() {
         )}
       </div>
 
-      {/* ── Campus / College selector card ──────────────────────────── */}
+      {/* ── Campus selector card ─────────────────────────────────────── */}
       <div className="mrv-selector-card">
         <div className="mrv-selector-card__row">
-          {/* Campus */}
           <div className="mrv-filters__field">
             <label className="mrv-filters__label" htmlFor="mrv-campus">
               <BuildingIcon /> Campus
@@ -152,30 +150,11 @@ export function MonthlyReportsViewSection() {
               )}
             </Select>
           </div>
-
-          {/* College — only enabled once a campus is picked */}
-          <div className="mrv-filters__field">
-            <label className="mrv-filters__label" htmlFor="mrv-college">
-              <BuildingIcon /> College
-            </label>
-            <Select
-              id="mrv-college"
-              value={selectedCollegeId}
-              onChange={(v) => setSelectedCollegeId(v)}
-            >
-              <option value="">
-                {!selectedCampusId ? "Select campus first" : "— Select college —"}
-              </option>
-              {colleges.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </Select>
-          </div>
         </div>
 
         {!hasSelection && (
           <p className="mrv-selector-card__hint">
-            Select a campus and college above to view their monthly reports.
+            Select a campus above to view its consolidated report.
           </p>
         )}
       </div>
@@ -238,7 +217,7 @@ export function MonthlyReportsViewSection() {
             </div>
             <p>
               {reports.length === 0
-                ? "No monthly reports have been uploaded for this college yet."
+                ? "No consolidated report has been submitted for this campus yet."
                 : "No reports match the selected filters."}
             </p>
           </div>
@@ -263,6 +242,9 @@ export function MonthlyReportsViewSection() {
                   <span className="mrv-badge mrv-badge--green">
                     <CheckIcon /> By Head
                   </span>
+                  <span className={`mrv-badge ${r.status === "verified" ? "mrv-badge--green" : "mrv-badge--amber"}`}>
+                    {r.status === "verified" ? <><CheckIcon /> Verified</> : <><HourglassIcon /> Pending</>}
+                  </span>
                   <a
                     href={r.downloadURL}
                     target="_blank"
@@ -271,6 +253,16 @@ export function MonthlyReportsViewSection() {
                   >
                     <DownloadIcon /> View / Download
                   </a>
+                  {r.status === "pending" && (
+                    <button
+                      type="button"
+                      className="mrv-btn-verify"
+                      disabled={verifyingId === r.id}
+                      onClick={() => handleVerify(r)}
+                    >
+                      <CheckIcon /> {verifyingId === r.id ? "Verifying…" : "Verify"}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

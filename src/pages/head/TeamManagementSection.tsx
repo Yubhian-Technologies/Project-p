@@ -59,12 +59,10 @@ function computeStats(profiles: UserProfile[], bookings: Booking[]): CounsellorS
 
 interface TeamManagementSectionProps {
   onOpenTransferRequests?: () => void;
-  onOpenTeamReports?: () => void;
 }
 
 export function TeamManagementSection({
   onOpenTransferRequests,
-  onOpenTeamReports,
 }: TeamManagementSectionProps) {
   const [stats, setStats] = useState<CounsellorStats[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
@@ -115,11 +113,6 @@ export function TeamManagementSection({
       <div className="team-management__header">
         <h3 className="team-management__heading">Team Management</h3>
         <div className="team-management__actions">
-          {onOpenTeamReports && (
-            <Button type="button" variant="outlined" onClick={onOpenTeamReports}>
-              Team Reports →
-            </Button>
-          )}
           {onOpenTransferRequests && (
             <Button type="button" variant="outlined" onClick={onOpenTransferRequests}>
               Transfer Requests →

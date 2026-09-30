@@ -13,7 +13,7 @@ import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAler
 import { TransferRequestsSection } from "./TransferRequestsSection";
 import { CommunitySection } from "../user/community/CommunitySection";
 import { MonthlyReportsSection } from "./MonthlyReportsSection";
-import { TeamReportsSection } from "./TeamReportsSection";
+import { TeamMonthlyReportsSection } from "./TeamMonthlyReportsSection";
 import { FlashQASection } from "./FlashQASection";
 import { GamesSection } from "../user/games/GamesSection";
 import type { GamesSectionHandle } from "../user/games/GamesSection";
@@ -29,7 +29,8 @@ const SECTIONS = [
   { id: "ssi-results", label: "SSI Test Results" },
   { id: "team-management", label: "Team Management" },
   { id: "events", label: "Events & Programs" },
-  { id: "monthly-reports", label: "Monthly Reports" },
+  { id: "counsellor-monthly-reports", label: "Monthly Reports" },
+  { id: "monthly-reports", label: "Consolidated Reports" },
   { id: "games", label: "Wellness Exercise" },
   { id: "flash-qa", label: "Flash Q/A" },
   { id: "journal", label: "Counselling Journal" },
@@ -47,7 +48,7 @@ export function HeadDashboard() {
   const [gameOpen, setGameOpen] = useState(false);
 
   function handleNotificationClick(notification: Notification) {
-    if (notification.type === "emergency_sos") {
+    if (notification.type === "emergency_sos" || notification.type === "emergency_sos_claimed") {
       setActiveSection("emergency");
       return;
     }
@@ -61,6 +62,10 @@ export function HeadDashboard() {
     }
     if (notification.type === "journal_entry_shared") {
       setActiveSection("journal");
+      return;
+    }
+    if (notification.type === "monthly_report_uploaded") {
+      setActiveSection("counsellor-monthly-reports");
       return;
     }
     if (notification.type === "chat_message") {
@@ -78,8 +83,8 @@ export function HeadDashboard() {
     "team-management": "Team Management",
     events: "Events & Programs",
     "transfer-requests": "Transfer Requests",
-    "monthly-reports": "Monthly Reports",
-    "team-reports": "Team Reports",
+    "counsellor-monthly-reports": "Monthly Reports",
+    "monthly-reports": "Consolidated Reports",
     games: "Wellness Exercise",
     "flash-qa": "Flash Q/A",
     journal: "Counselling Journal",
@@ -131,15 +136,12 @@ export function HeadDashboard() {
       {activeSection === "feedback" && <CounsellorFeedbackSection />}
       {activeSection === "ssi-results" && <SsiCollegeResultsSection />}
       {activeSection === "team-management" && (
-        <TeamManagementSection
-          onOpenTransferRequests={() => setActiveSection("transfer-requests")}
-          onOpenTeamReports={() => setActiveSection("team-reports")}
-        />
+        <TeamManagementSection onOpenTransferRequests={() => setActiveSection("transfer-requests")} />
       )}
       {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "transfer-requests" && <TransferRequestsSection />}
+      {activeSection === "counsellor-monthly-reports" && <TeamMonthlyReportsSection />}
       {activeSection === "monthly-reports" && <MonthlyReportsSection />}
-      {activeSection === "team-reports" && <TeamReportsSection />}
       {activeSection === "games" && <GamesSection ref={gamesRef} onActiveChange={setGameOpen} />}
       {activeSection === "flash-qa" && <FlashQASection />}
       {activeSection === "journal" && <JournalSection />}

@@ -6,7 +6,6 @@ import { Button } from "../../components/common/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { BookingRequestsSection } from "./BookingRequestsSection";
 import { EventsProgramsSection } from "./EventsProgramsSection";
-import { WorkReportsSection } from "./WorkReportsSection";
 import { CounsellorMonthlyReportsSection } from "./CounsellorMonthlyReportsSection";
 import { CounsellorFeedbackSection } from "./CounsellorFeedbackSection";
 import { SsiCollegeResultsSection } from "../../components/ssi/SsiCollegeResultsSection";
@@ -26,7 +25,6 @@ const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
   { id: "ssi-results", label: "SSI Test Results" },
-  { id: "work-reports", label: "Work Reports" },
   { id: "monthly-reports", label: "Monthly Reports" },
   { id: "events", label: "Events & Programs" },
   { id: "games", label: "Wellness Exercise" },
@@ -45,7 +43,7 @@ export function CounsellorDashboard() {
   const [gameOpen, setGameOpen] = useState(false);
 
   function handleNotificationClick(notification: Notification) {
-    if (notification.type === "emergency_sos") {
+    if (notification.type === "emergency_sos" || notification.type === "emergency_sos_claimed") {
       setActiveSection("emergency");
       return;
     }
@@ -69,7 +67,6 @@ export function CounsellorDashboard() {
     requests: "Booking Requests",
     feedback: "My Feedback",
     "ssi-results": "SSI Test Results",
-    "work-reports": "Work Reports",
     "monthly-reports": "Monthly Reports",
     events: "Events & Programs",
     games: "Wellness Exercise",
@@ -121,7 +118,6 @@ export function CounsellorDashboard() {
       )}
       {activeSection === "feedback" && <CounsellorFeedbackSection />}
       {activeSection === "ssi-results" && <SsiCollegeResultsSection />}
-      {activeSection === "work-reports" && <WorkReportsSection />}
       {activeSection === "monthly-reports" && <CounsellorMonthlyReportsSection />}
       {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "games" && <GamesSection ref={gamesRef} onActiveChange={setGameOpen} />}
