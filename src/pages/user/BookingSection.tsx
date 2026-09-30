@@ -143,6 +143,7 @@ export function BookingSection({
   const [acceptingRescheduleId, setAcceptingRescheduleId] = useState<string | null>(null);
   const [chatTarget, setChatTarget] = useState<Booking | null>(null);
   const [detailTarget, setDetailTarget] = useState<Booking | null>(null);
+  const [summaryModalTarget, setSummaryModalTarget] = useState<Booking | null>(null);
   const [ssiSubmittedIds, setSsiSubmittedIds] = useState<Set<string>>(new Set());
   const [ssiTarget, setSsiTarget] = useState<Booking | null>(null);
   const [respondingToCompensation, setRespondingToCompensation] = useState(false);
@@ -487,6 +488,12 @@ export function BookingSection({
             <span className={`booking-section__status booking-section__status--${statusClass(detailTarget)}`}>
               {statusLabel(detailTarget)}
             </span>
+
+            {detailTarget.sharedSummary && (
+              <Button type="button" variant="outlined" onClick={() => setSummaryModalTarget(detailTarget)}>
+                View Summary
+              </Button>
+            )}
 
             <SessionResourcesPanel
               bookingId={detailTarget.id}
@@ -1029,6 +1036,19 @@ export function BookingSection({
           }}
           onClose={() => setSsiTarget(null)}
         />
+      )}
+
+      {summaryModalTarget && (
+        <Modal title="Session Notes from Your Counsellor" onClose={() => setSummaryModalTarget(null)}>
+          <div className="booking-section__shared-summary">
+            <p className="booking-section__shared-summary-body">{summaryModalTarget.sharedSummary}</p>
+            {summaryModalTarget.sharedSummaryAt && (
+              <span className="booking-section__shared-summary-date">
+                Shared on {new Date(summaryModalTarget.sharedSummaryAt).toLocaleString()}
+              </span>
+            )}
+          </div>
+        </Modal>
       )}
     </div>
   );

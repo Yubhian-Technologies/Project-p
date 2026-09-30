@@ -6,6 +6,7 @@ import {
   listBookingsForCounsellor,
   listBookableProfiles,
   acceptProposedSlot,
+  claimEmergencyBooking,
   rejectBooking,
   scheduleBooking,
   requestReschedule,
@@ -14,6 +15,7 @@ import {
   requestBookingTransfer,
   transferBooking,
   saveSessionSummary,
+  shareSessionSummary,
   closeBooking,
   closeMissedSession,
   createFollowUpBooking,
@@ -30,6 +32,7 @@ import {
 import type { Booking } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
 import { Button } from "../../components/common/Button";
+import { Select } from "../../components/common/Select";
 import { RequestCard } from "../../components/booking/RequestCard";
 import { RequestDetailModal } from "../../components/booking/RequestDetailModal";
 import { SessionHistoryModal } from "../../components/booking/SessionHistoryModal";
@@ -51,6 +54,20 @@ const TABS: { id: Tab; label: string }[] = [
 const NEW_STATUSES = ["pending"];
 const UPCOMING_STATUSES = ["accepted", "scheduled"];
 const COMPLETED_STATUSES = ["completed", "cancelled", "rejected"];
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const THIS_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: 6 }, (_, i) => THIS_YEAR - i);
+
+// The date a completed/cancelled/rejected booking is filtered by — its
+// scheduled session time when it has one, otherwise when it last changed
+// (rejected bookings never got a scheduledAt at all).
+function completedDate(b: Booking): Date {
+  return new Date(b.scheduledAt ?? b.updatedAt);
+}
 
 interface HistoryState {
   clientEmail: string;
@@ -91,6 +108,10 @@ export function BookingRequestsSection({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [historyState, setHistoryState] = useState<HistoryState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [completedFilterMonth, setCompletedFilterMonth] = useState(0);
+  const [completedFilterYear, setCompletedFilterYear] = useState(0);
+  const [missedFilterMonth, setMissedFilterMonth] = useState(0);
+  const [missedFilterYear, setMissedFilterYear] = useState(0);
 
   useEffect(() => {
     if (initialSelectedId) setSelectedId(initialSelectedId);
@@ -209,6 +230,22 @@ export function BookingRequestsSection({
   );
   const upcomingFollowUps = upcoming.filter((b) => b.followUpOfBookingId);
   const upcomingNewSessions = upcoming.filter((b) => !b.followUpOfBookingId);
+  const filteredCompleted = completed.filter((b) => {
+    if (!completedFilterMonth && !completedFilterYear) return true;
+    const d = completedDate(b);
+    if (completedFilterMonth && d.getMonth() + 1 !== completedFilterMonth) return false;
+    if (completedFilterYear && d.getFullYear() !== completedFilterYear) return false;
+    return true;
+  });
+  const completedFiltersActive = completedFilterMonth !== 0 || completedFilterYear !== 0;
+  const filteredMissed = missed.filter((b) => {
+    if (!missedFilterMonth && !missedFilterYear) return true;
+    const d = completedDate(b);
+    if (missedFilterMonth && d.getMonth() + 1 !== missedFilterMonth) return false;
+    if (missedFilterYear && d.getFullYear() !== missedFilterYear) return false;
+    return true;
+  });
+  const missedFiltersActive = missedFilterMonth !== 0 || missedFilterYear !== 0;
 
   const tabCounts: Record<Tab, number> = {
     new: newRequests.length,
@@ -272,19 +309,117 @@ export function BookingRequestsSection({
         </>
       )}
 
-      {activeTab === "completed" &&
-        (completed.length === 0 ? (
-          <p>No completed sessions yet.</p>
-        ) : (
-          completed.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
-        ))}
+      {activeTab === "completed" && (
+        <>
+          {completed.length > 0 && (
+            <div className="booking-requests-section__filters">
+              <div className="booking-requests-section__filter-field">
+                <label htmlFor="completed-filter-month">Month</label>
+                <Select
+                  id="completed-filter-month"
+                  value={String(completedFilterMonth)}
+                  onChange={(v) => setCompletedFilterMonth(Number(v))}
+                >
+                  <option value="0">All months</option>
+                  {MONTHS.map((m, i) => (
+                    <option key={m} value={String(i + 1)}>{m}</option>
+                  ))}
+                </Select>
+              </div>
+              <div className="booking-requests-section__filter-field">
+                <label htmlFor="completed-filter-year">Year</label>
+                <Select
+                  id="completed-filter-year"
+                  value={String(completedFilterYear)}
+                  onChange={(v) => setCompletedFilterYear(Number(v))}
+                >
+                  <option value="0">All years</option>
+                  {YEARS.map((y) => (
+                    <option key={y} value={String(y)}>{y}</option>
+                  ))}
+                </Select>
+              </div>
+              {completedFiltersActive && (
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={() => {
+                    setCompletedFilterMonth(0);
+                    setCompletedFilterYear(0);
+                  }}
+                >
+                  Clear filters
+                </Button>
+              )}
+              <span className="booking-requests-section__filter-count">
+                {filteredCompleted.length} of {completed.length}
+              </span>
+            </div>
+          )}
 
-      {activeTab === "missed" &&
-        (missed.length === 0 ? (
-          <p>No missed sessions.</p>
-        ) : (
-          missed.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
-        ))}
+          {filteredCompleted.length === 0 ? (
+            <p>{completed.length === 0 ? "No completed sessions yet." : "No sessions match the selected filters."}</p>
+          ) : (
+            filteredCompleted.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
+          )}
+        </>
+      )}
+
+      {activeTab === "missed" && (
+        <>
+          {missed.length > 0 && (
+            <div className="booking-requests-section__filters">
+              <div className="booking-requests-section__filter-field">
+                <label htmlFor="missed-filter-month">Month</label>
+                <Select
+                  id="missed-filter-month"
+                  value={String(missedFilterMonth)}
+                  onChange={(v) => setMissedFilterMonth(Number(v))}
+                >
+                  <option value="0">All months</option>
+                  {MONTHS.map((m, i) => (
+                    <option key={m} value={String(i + 1)}>{m}</option>
+                  ))}
+                </Select>
+              </div>
+              <div className="booking-requests-section__filter-field">
+                <label htmlFor="missed-filter-year">Year</label>
+                <Select
+                  id="missed-filter-year"
+                  value={String(missedFilterYear)}
+                  onChange={(v) => setMissedFilterYear(Number(v))}
+                >
+                  <option value="0">All years</option>
+                  {YEARS.map((y) => (
+                    <option key={y} value={String(y)}>{y}</option>
+                  ))}
+                </Select>
+              </div>
+              {missedFiltersActive && (
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={() => {
+                    setMissedFilterMonth(0);
+                    setMissedFilterYear(0);
+                  }}
+                >
+                  Clear filters
+                </Button>
+              )}
+              <span className="booking-requests-section__filter-count">
+                {filteredMissed.length} of {missed.length}
+              </span>
+            </div>
+          )}
+
+          {filteredMissed.length === 0 ? (
+            <p>{missed.length === 0 ? "No missed sessions." : "No sessions match the selected filters."}</p>
+          ) : (
+            filteredMissed.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
+          )}
+        </>
+      )}
 
       {selectedBooking && (
         <RequestDetailModal
@@ -303,6 +438,11 @@ export function BookingRequestsSection({
           }}
           onAcceptSlot={async (chosenAt) => {
             await acceptProposedSlot(selectedBooking, chosenAt);
+            await refresh();
+          }}
+          onAcceptEmergency={async () => {
+            if (!currentUser) return;
+            await claimEmergencyBooking(selectedBooking, { uid: currentUser.uid, email: profile?.email ?? "" });
             await refresh();
           }}
           onReject={async () => {
@@ -352,6 +492,10 @@ export function BookingRequestsSection({
           }}
           onSaveSummary={async (summary) => {
             await saveSessionSummary(selectedBooking.id, summary);
+            await refresh();
+          }}
+          onShareSummary={async (summary) => {
+            await shareSessionSummary(selectedBooking, summary);
             await refresh();
           }}
           onCloseComplete={async (summary) => {

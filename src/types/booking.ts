@@ -67,6 +67,12 @@ export interface Booking {
       now" notification has gone out, so it's never sent twice. */
   reminderStartSent?: boolean;
   campusId?: string; // set on every booking so campus staff (e.g. the Head) can find it
+  /** The counsellor/head's session summary, explicitly shared with the
+      student — a separate copy from the private working notes in the
+      intake doc, so only the counsellor/head ever controls what (and
+      whether) the student sees. */
+  sharedSummary?: string;
+  sharedSummaryAt?: number;
   proposedSlots?: [number, number]; // the two times the student proposed at request time
   rescheduleProposal?: RescheduleProposal;
   transferRequest?: TransferRequest;

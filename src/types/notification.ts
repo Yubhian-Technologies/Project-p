@@ -19,13 +19,15 @@ export type NotificationType =
   | "session_resource_added"
   | "followup_scheduled"
   | "emergency_sos"
+  | "emergency_sos_claimed"
   | "reschedule_requested"
   | "reschedule_accepted"
   | "transfer_requested"
   | "transfer_declined"
   | "event_added"
   | "monthly_report_uploaded"
-  | "journal_entry_shared";
+  | "journal_entry_shared"
+  | "session_summary_shared";
 
 export interface Notification {
   id: string;

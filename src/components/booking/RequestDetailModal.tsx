@@ -39,6 +39,7 @@ interface RequestDetailModalProps {
   campusHead: UserProfile | null;
   viewerRole: "head" | "counsellor";
   onAcceptSlot: (chosenAt: number) => Promise<void>;
+  onAcceptEmergency: () => Promise<void>;
   onReject: () => Promise<void>;
   onSchedule: (scheduledAt: number) => Promise<void>;
   onRequestReschedule: (proposedAt: number, reason?: string) => Promise<void>;
@@ -47,6 +48,7 @@ interface RequestDetailModalProps {
   onRequestTransfer: (reason: string, suggestedTarget?: UserProfile) => Promise<void>;
   onDirectTransfer: (target: UserProfile) => Promise<void>;
   onSaveSummary: (summary: string) => Promise<void>;
+  onShareSummary: (summary: string) => Promise<void>;
   onCloseComplete: (summary: string) => Promise<void>;
   onCloseFollowUp: (summary: string, scheduledAt: number) => Promise<void>;
   onCloseMissed: (reason: string) => Promise<void>;
@@ -69,6 +71,7 @@ export function RequestDetailModal({
   campusHead,
   viewerRole,
   onAcceptSlot,
+  onAcceptEmergency,
   onReject,
   onSchedule,
   onRequestReschedule,
@@ -77,6 +80,7 @@ export function RequestDetailModal({
   onRequestTransfer,
   onDirectTransfer,
   onSaveSummary,
+  onShareSummary,
   onCloseComplete,
   onCloseFollowUp,
   onCloseMissed,
@@ -107,6 +111,7 @@ export function RequestDetailModal({
   const [summaryDraft, setSummaryDraft] = useState("");
   const [summaryFocusMode, setSummaryFocusMode] = useState(false);
   const [savingSummary, setSavingSummary] = useState(false);
+  const [sharingSummary, setSharingSummary] = useState(false);
 
   // ── voice-to-text for the session summary ────────────────────────────
   const summaryVoicePrefixRef = useRef("");
@@ -199,6 +204,15 @@ export function RequestDetailModal({
       );
     } finally {
       setSavingSummary(false);
+    }
+  }
+
+  async function handleShareSummary() {
+    setSharingSummary(true);
+    try {
+      await onShareSummary(summaryDraft);
+    } finally {
+      setSharingSummary(false);
     }
   }
 
@@ -553,6 +567,31 @@ export function RequestDetailModal({
               </Button>
             </>
           )}
+
+          <div className="request-card__summary-share">
+            {booking.sharedSummaryAt ? (
+              <p className="request-card__summary-shared-note">
+                ✓ Shared with {booking.userEmail} on {new Date(booking.sharedSummaryAt).toLocaleString()}
+                {booking.sharedSummary !== summaryDraft && " — edited since sharing, share again to update."}
+              </p>
+            ) : (
+              <p className="request-card__summary-shared-note request-card__summary-shared-note--unshared">
+                Not shared with the student yet.
+              </p>
+            )}
+            <Button
+              type="button"
+              variant="outlined"
+              disabled={sharingSummary || !summaryDraft.trim() || booking.sharedSummary === summaryDraft}
+              onClick={handleShareSummary}
+            >
+              {sharingSummary
+                ? "Sharing…"
+                : booking.sharedSummaryAt
+                  ? "Share updated notes with student"
+                  : "Share with student"}
+            </Button>
+          </div>
         </div>
       </Modal>
     );
@@ -671,7 +710,7 @@ export function RequestDetailModal({
         />
       )}
 
-      {booking.status === "pending" && !isTransferredPending && (
+      {booking.status === "pending" && !isTransferredPending && !booking.isEmergency && (
         <div className="request-card__schedule">
           {booking.proposedSlots && (
             <>
@@ -721,6 +760,23 @@ export function RequestDetailModal({
               </Button>
             </div>
           )}
+          {actionError && <p className="request-card__time-warning">{actionError}</p>}
+        </div>
+      )}
+
+      {/* ── Crisis SOS: no time to negotiate — just accept it ─────────── */}
+      {booking.status === "pending" && booking.isEmergency && (
+        <div className="request-card__schedule">
+          <p className="request-card__summary-hint">
+            🚨 Crisis SOS — accepting will assign this session to you and start it immediately.
+          </p>
+          <Button
+            type="button"
+            disabled={actionBusy}
+            onClick={() => runAction(onAcceptEmergency, () => {})}
+          >
+            {actionBusy ? "Accepting…" : "Accept Crisis SOS"}
+          </Button>
           {actionError && <p className="request-card__time-warning">{actionError}</p>}
         </div>
       )}

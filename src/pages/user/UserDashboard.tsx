@@ -48,7 +48,7 @@ export function UserDashboard() {
     setActiveSection("booking");
     if (notification.type === "chat_message") {
       setChatBookingId(notification.bookingId);
-    } else if (notification.type === "session_resource_added") {
+    } else if (notification.type === "session_resource_added" || notification.type === "session_summary_shared") {
       setResourceBookingId(notification.bookingId);
     } else if (notification.type === "compensation_offered") {
       setCompensationBookingId(notification.bookingId);

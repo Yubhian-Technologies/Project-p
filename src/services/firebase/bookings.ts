@@ -168,6 +168,26 @@ export async function claimEmergencyBooking(booking: Booking, staff: { uid: stri
     title: "Request accepted",
     message: `${staff.email} accepted your session request`,
   });
+
+  // Every other Head/Counsellor on the campus was dispatched this same Crisis
+  // SOS alert — let them know it's already being handled so they don't also
+  // try to respond to it.
+  if (booking.campusId) {
+    const campusStaff = (await listBookableProfiles()).filter(
+      (p) => p.campusId === booking.campusId && p.uid !== staff.uid,
+    );
+    await Promise.all(
+      campusStaff.map((member) =>
+        createNotification({
+          recipientId: member.uid,
+          type: "emergency_sos_claimed",
+          bookingId: booking.id,
+          title: "Crisis SOS handled",
+          message: `${staff.email} accepted the Crisis SOS from ${booking.userEmail}.`,
+        }),
+      ),
+    );
+  }
 }
 
 export async function getBookingIntake(bookingId: string): Promise<BookingIntake | null> {
@@ -197,6 +217,24 @@ export async function getFollowUpHistory(
 
 export async function saveSessionSummary(bookingId: string, summary: string): Promise<void> {
   await setDoc(intakeDocRef(bookingId), { summary }, { merge: true });
+}
+
+/** Counsellor/Head explicitly sharing their session summary with the student
+    it's about — a separate, student-readable copy from the private working
+    notes above, so the student only ever sees what was deliberately shared. */
+export async function shareSessionSummary(booking: Booking, summary: string): Promise<void> {
+  await updateDoc(doc(db, "bookings", booking.id), {
+    sharedSummary: summary,
+    sharedSummaryAt: Date.now(),
+    updatedAt: Date.now(),
+  });
+  await createNotification({
+    recipientId: booking.userId,
+    type: "session_summary_shared",
+    bookingId: booking.id,
+    title: "Session notes shared",
+    message: `${booking.counsellorEmail} shared session notes with you.`,
+  });
 }
 
 /** Counsellor prompting their client to take the pre-session SSI assessment. */
