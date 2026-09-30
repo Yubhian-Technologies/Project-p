@@ -11,6 +11,7 @@ import { CounsellorFeedbackSection } from "./CounsellorFeedbackSection";
 import { SsiCollegeResultsSection } from "../../components/ssi/SsiCollegeResultsSection";
 import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAlertsSection";
 import { CommunitySection } from "../user/community/CommunitySection";
+import { TeamChatSection } from "../../components/chat/TeamChatSection";
 import { GamesSection } from "../user/games/GamesSection";
 import type { GamesSectionHandle } from "../user/games/GamesSection";
 import { GamesSummaryCard } from "../user/games/GamesSummaryCard";
@@ -24,6 +25,7 @@ import "../../styles/bento-grid.css";
 const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
+  { id: "team-chat", label: "Team Chat" },
   { id: "ssi-results", label: "SSI Test Results" },
   { id: "monthly-reports", label: "Monthly Reports" },
   { id: "events", label: "Events & Programs" },
@@ -55,6 +57,10 @@ export function CounsellorDashboard() {
       setActiveSection("journal");
       return;
     }
+    if (notification.type === "team_chat_message") {
+      setActiveSection("team-chat");
+      return;
+    }
     if (notification.type === "chat_message") {
       setChatBookingId(notification.bookingId);
     }
@@ -66,6 +72,7 @@ export function CounsellorDashboard() {
     profile: "Profile",
     requests: "Booking Requests",
     feedback: "My Feedback",
+    "team-chat": "Team Chat",
     "ssi-results": "SSI Test Results",
     "monthly-reports": "Monthly Reports",
     events: "Events & Programs",
@@ -117,6 +124,7 @@ export function CounsellorDashboard() {
         />
       )}
       {activeSection === "feedback" && <CounsellorFeedbackSection />}
+      {activeSection === "team-chat" && <TeamChatSection />}
       {activeSection === "ssi-results" && <SsiCollegeResultsSection />}
       {activeSection === "monthly-reports" && <CounsellorMonthlyReportsSection />}
       {activeSection === "events" && <EventsProgramsSection />}

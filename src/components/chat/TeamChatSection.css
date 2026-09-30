@@ -1,0 +1,139 @@
+.team-chat {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 220px);
+  min-height: 420px;
+  gap: 16px;
+}
+
+.team-chat__messages {
+  flex: 1;
+  overflow-y: auto;
+  background: #F8F9FA;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.team-chat__empty {
+  margin: auto;
+  font-size: 13.5px;
+  color: #718096;
+  text-align: center;
+}
+
+.team-chat__bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+}
+
+.team-chat__bubble-wrap--mine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.team-chat__bubble-wrap--them {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.team-chat__sender-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #718096;
+  margin-bottom: 3px;
+}
+
+.team-chat__role-tag {
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 7px;
+  border-radius: 12px;
+  background: #F3E8FF;
+  color: #6D74D6;
+}
+
+.team-chat__role-tag--head {
+  background: #DBEAFE;
+  color: #1D4ED8;
+}
+
+.team-chat__bubble {
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #2E2B27;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.team-chat__bubble--mine {
+  background: #F3E8FF;
+}
+
+.team-chat__bubble--them {
+  background: #FFFFFF;
+}
+
+.team-chat__timestamp {
+  font-size: 10px;
+  color: #A0AEC0;
+  margin-top: 3px;
+}
+
+.team-chat__input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.team-chat__error {
+  width: 100%;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #B91C1C;
+  background: #FEE2E2;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+  padding: 8px 12px;
+}
+
+.team-chat__input {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+  padding: 12px 18px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #2E2B27;
+  outline: none;
+  background: #FFFFFF;
+}
+
+.team-chat__input:focus {
+  border-color: #6D74D6;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+}
+
+@media (max-width: 640px) {
+  .team-chat {
+    height: calc(100vh - 260px);
+  }
+}

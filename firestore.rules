@@ -465,6 +465,28 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ---------- teamChatMessages ----------
+    // One shared chat room per campus for that campus's Head + every
+    // counsellor to coordinate in — not tied to any booking. Only
+    // Head/Counsellor accounts of the matching campus can read or post;
+    // students and staff of other campuses never see it.
+    match /teamChatMessages/{messageId} {
+      allow read: if isSignedIn()
+                  && myRole() in ['counsellor', 'head']
+                  && resource.data.campusId == myProfile().campusId;
+
+      allow create: if isSignedIn()
+                    && myRole() in ['counsellor', 'head']
+                    && request.resource.data.senderUid == request.auth.uid
+                    && request.resource.data.campusId == myProfile().campusId
+                    && request.resource.data.keys().hasOnly([
+                      'campusId', 'senderUid', 'senderEmail', 'senderName', 'senderRole', 'text', 'createdAt'
+                    ]);
+
+      allow update: if false;
+      allow delete: if false;
+    }
+
     // ---------- notifications ----------
     match /notifications/{notificationId} {
       allow read: if isSignedIn() && resource.data.recipientId == request.auth.uid;
@@ -550,6 +572,29 @@ service cloud.firestore {
             request.resource.data.type == 'journal_entry_shared' &&
             isSignedIn() && myRole() == 'user' &&
             get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role in ['counsellor', 'head'] &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
+          ) || (
+            // A Counsellor telling their own campus's Head they've submitted a
+            // monthly report — same event type as the platform-alert branch
+            // above, but the recipient here is the Head, not Admin.
+            request.resource.data.type == 'monthly_report_uploaded' &&
+            isSignedIn() && myRole() == 'counsellor' &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role == 'head' &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
+          ) || (
+            // Whoever claims a Crisis SOS tells every other same-campus
+            // Head/Counsellor it's already being handled — no booking link
+            // needed since the recipients here aren't parties to it.
+            request.resource.data.type == 'emergency_sos_claimed' &&
+            isSignedIn() && myRole() in ['head', 'counsellor'] &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role in ['head', 'counsellor'] &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
+          ) || (
+            // Team chat: every message pings every other same-campus
+            // Head/Counsellor — no booking link involved.
+            request.resource.data.type == 'team_chat_message' &&
+            isSignedIn() && myRole() in ['head', 'counsellor'] &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role in ['head', 'counsellor'] &&
             get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
           )
         );

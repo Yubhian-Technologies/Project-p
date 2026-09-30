@@ -27,7 +27,8 @@ export type NotificationType =
   | "event_added"
   | "monthly_report_uploaded"
   | "journal_entry_shared"
-  | "session_summary_shared";
+  | "session_summary_shared"
+  | "team_chat_message";
 
 export interface Notification {
   id: string;

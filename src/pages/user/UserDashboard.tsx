@@ -7,6 +7,7 @@ import { BookingSection } from "./BookingSection";
 import { SsiTestSection } from "./SsiTestSection";
 import { WellnessTestSection } from "./WellnessTestSection";
 import { UpcomingEventsSection } from "./UpcomingEventsSection";
+import { UpcomingEventsCard } from "./UpcomingEventsCard";
 import { GamesSection } from "./games/GamesSection";
 import type { GamesSectionHandle } from "./games/GamesSection";
 import { GamesSummaryCard } from "./games/GamesSummaryCard";
@@ -137,7 +138,7 @@ export function UserDashboard() {
           <MoodTrackerCard />
 
           <BentoCard
-            span={6}
+            span={4}
             title="Take Wellness Stress Assessment"
             subtitle="Evaluate your stress level and get instant personalized suggestions."
             action={{
@@ -151,6 +152,7 @@ export function UserDashboard() {
           </BentoCard>
 
           <GamesSummaryCard onPlay={() => setActiveSection("games")} />
+          <UpcomingEventsCard onViewEvents={() => setActiveSection("events")} />
 
           <UserHomeActivityOverview onSelectSection={setActiveSection} />
           <VishnuWellnessMissionCard onSelectSection={setActiveSection} />
