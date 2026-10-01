@@ -1,14 +1,13 @@
 .counsellor-card {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  flex: 0 0 min(85vw, 320px);
-  width: min(85vw, 320px);
+  flex: 0 0 min(85vw, 280px);
+  width: min(85vw, 280px);
   /* A fixed height (not just the bio's line-clamp below) is what actually
      makes every card the same size regardless of how much a counsellor
      wrote — line-clamp only stops a long bio overflowing, a short one still
      leaves the card shorter unless the card's own height is fixed too. */
-  height: 300px;
+  height: 380px;
   /* Flex items default to a content-based minimum size that otherwise wins
      over an explicit height — this is what makes that height actually stick. */
   min-height: 0;
@@ -17,7 +16,7 @@
   background: #FFFFFF;
   border: 1px solid rgba(46, 43, 39, 0.08);
   border-radius: 20px;
-  padding: 24px;
+  padding: 0;
   box-sizing: border-box;
   box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
   cursor: pointer;
@@ -28,29 +27,21 @@
    compact size instead of scaled-down desktop cards. */
 @media (max-width: 768px) {
   .counsellor-card {
-    gap: 12px;
-    padding: 16px;
     flex-basis: 82vw;
     width: 82vw;
-    height: 240px;
+    height: 340px;
+  }
+
+  .counsellor-card__photo-wrap {
+    height: 160px;
+  }
+
+  .counsellor-card__photo {
+    height: 160px;
   }
 
   .counsellor-card__bio {
     -webkit-line-clamp: 2;
-  }
-
-  .counsellor-card .avatar--large {
-    width: 56px;
-    height: 56px;
-    font-size: 22px;
-  }
-
-  .counsellor-card__header {
-    gap: 12px;
-  }
-
-  .counsellor-card__footer {
-    padding-top: 4px;
   }
 }
 
@@ -59,10 +50,69 @@
   box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
 }
 
-.counsellor-card__header {
+.counsellor-card__photo-wrap {
+  position: relative;
+  flex-shrink: 0;
+  height: 190px;
+}
+
+.counsellor-card__photo {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  display: block;
+  border-radius: 20px 20px 0 0;
+}
+
+.counsellor-card__photo--placeholder {
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
+  background: var(--neu-accent-light, #DCD6F7);
+  color: var(--neu-accent-dark, #474DA0);
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 48px;
+  font-weight: 700;
+}
+
+.counsellor-card__status-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.18);
+}
+
+.counsellor-card__status-badge--available {
+  background: #F59E0B;
+  color: #2E2B27;
+}
+
+.counsellor-card__status-badge--unavailable {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+
+.counsellor-card__status-badge--in-session {
+  background: #FFEDD5;
+  color: #C2410C;
+}
+
+.counsellor-card__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 18px;
+  overflow: hidden;
 }
 
 .counsellor-card__name {
@@ -71,13 +121,6 @@
   font-weight: 700;
   font-size: 17px;
   color: var(--neu-text-primary, #2D3748);
-}
-
-.counsellor-card__role {
-  margin: 3px 0 0 0;
-  font-size: 13px;
-  color: var(--neu-text-muted, #718096);
-  font-weight: 600;
 }
 
 .counsellor-card__bio {
@@ -92,40 +135,7 @@
   overflow: hidden;
 }
 
-.counsellor-card__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+.counsellor-card__rating {
   margin-top: auto;
-  padding-top: 10px;
+  padding-top: 4px;
 }
-
-.counsellor-card__badge {
-  font-size: 12px;
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
-  background: #FFFFFF;
-}
-
-.counsellor-card__badge--available {
-  color: #16a34a;
-}
-
-.counsellor-card__badge--unavailable {
-  color: #dc2626;
-}
-
-.counsellor-card__badge--in-session {
-  color: #ea580c;
-}
-
-.counsellor-card__hint {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--neu-accent-primary, #2563EB);
-}
-
