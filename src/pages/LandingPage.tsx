@@ -1,11 +1,71 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { dashboardPathForRole } from "../utils/roleRedirect";
 import "./LandingPage.css";
 
+const FAQS = [
+  {
+    question: "What is counseling?",
+    answer:
+      "Counselling is a confidential, supportive conversation with a trained professional to help you understand your feelings, work through challenges, and build healthier ways of coping.",
+  },
+  {
+    question: "Will my sessions be confidential?",
+    answer:
+      "Yes. Everything you share stays strictly between you and your counsellor, and is never disclosed to anyone else without your explicit consent — except in rare situations involving risk of harm to yourself or others.",
+  },
+  {
+    question: "How many sessions will I have to attend?",
+    answer:
+      "There's no fixed number — it depends on your goals and progress. Some people find a few sessions helpful, while others continue over a longer period. Your counsellor will discuss a plan with you.",
+  },
+  {
+    question: "Can I get a refund?",
+    answer:
+      "Refund eligibility depends on your enrollment/payment plan and how far in advance a session is cancelled. Reach out to our team and we'll review your specific case.",
+  },
+  {
+    question: "Who is a counseling psychologist?",
+    answer:
+      "A counselling psychologist is a licensed mental health professional trained to help people manage everyday life challenges, emotional difficulties, and personal growth through talk-based therapy.",
+  },
+  {
+    question: "Who is a clinical psychologist?",
+    answer:
+      "A clinical psychologist is trained to assess, diagnose, and treat more complex mental health conditions, often using evidence-based therapeutic approaches.",
+  },
+  {
+    question: "Is it safe to take medications for mental health?",
+    answer:
+      "When prescribed and monitored by a qualified psychiatrist, mental health medications are safe and can be an effective part of treatment. Never start, stop, or adjust medication without medical guidance.",
+  },
+  {
+    question: "Who is a psychiatrist?",
+    answer:
+      "A psychiatrist is a medical doctor who specialises in diagnosing and treating mental health conditions, and is qualified to prescribe medication when needed.",
+  },
+  {
+    question: "How do I know if I need therapy?",
+    answer:
+      "If you're feeling persistently overwhelmed, anxious, low, or stuck — or just want a space to talk things through — therapy can help. You don't need a diagnosis to benefit from counselling.",
+  },
+  {
+    question: "Is online therapy as effective as in-person therapy?",
+    answer:
+      "Research shows online therapy can be just as effective as in-person sessions for many concerns, while offering more flexibility and comfort.",
+  },
+  {
+    question: "How can I prepare for my first session?",
+    answer:
+      "Come as you are — there's nothing you need to prepare. It can help to jot down what's been on your mind, but your counsellor will guide the conversation from there.",
+  },
+];
+
 export function LandingPage() {
   const { currentUser, role } = useAuth();
   const dashboardPath = dashboardPathForRole(role);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   return (
     <div className="landing-wrapper">
@@ -27,6 +87,7 @@ export function LandingPage() {
             <li><a href="#team" className="landing-nav__link">Our Team</a></li>
             <li><a href="#features" className="landing-nav__link">Features</a></li>
             <li><a href="#resources" className="landing-nav__link">Resources</a></li>
+            <li><a href="#faq" className="landing-nav__link">FAQ</a></li>
             <li><a href="#terms" className="landing-nav__link">Terms and Policies</a></li>
           </ul>
 
@@ -123,19 +184,17 @@ export function LandingPage() {
           </div>
 
           <div className="landing-about__gallery">
-            {/* Placeholder photo cards — swap the .about-photo-placeholder div inside each
-                for <img src="/your-photo.jpg" alt="..." /> once real photos are provided. */}
             <div className="about-photo-card about-photo-card--1">
-              <div className="about-photo-placeholder" />
+              <img className="about-photo-card__image" src="/about-photo-1.jpg" alt="Positive psychology" />
             </div>
             <div className="about-photo-card about-photo-card--2">
-              <div className="about-photo-placeholder" />
+              <img className="about-photo-card__image" src="/about-photo-2.jpg" alt="Mental wellness" />
             </div>
             <div className="about-photo-card about-photo-card--3">
-              <div className="about-photo-placeholder" />
+              <img className="about-photo-card__image" src="/about-photo-3.webp" alt="Psychology concepts" />
             </div>
             <div className="about-photo-card about-photo-card--4">
-              <div className="about-photo-placeholder" />
+              <img className="about-photo-card__image" src="/about-photo-4.webp" alt="Mental health awareness" />
             </div>
           </div>
         </section>
@@ -246,6 +305,42 @@ export function LandingPage() {
               <h3 className="resource-card__title">Placeholder Reference Title</h3>
               <p className="resource-card__desc">Background reading our approach is grounded in.</p>
             </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="landing-faq" id="faq">
+          <div className="landing-section-heading">
+            <span className="landing-about__eyebrow">FAQ</span>
+            <h2 className="landing-section-heading__title">Questions people usually ask</h2>
+          </div>
+
+          <div className="faq-card">
+            {FAQS.map((faq, index) => {
+              const isOpen = openFaqIndex === index;
+              return (
+                <div key={faq.question} className="faq-item">
+                  <button
+                    type="button"
+                    className="faq-item__question"
+                    aria-expanded={isOpen}
+                    onClick={() => setOpenFaqIndex(isOpen ? null : index)}
+                  >
+                    <span>{faq.question}</span>
+                    <span className={`faq-item__toggle ${isOpen ? "faq-item__toggle--open" : ""}`} aria-hidden="true">
+                      +
+                    </span>
+                  </button>
+                  {isOpen && <p className="faq-item__answer">{faq.answer}</p>}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="landing-faq__more">
+            <a href="#faq" className="btn-faq-more">
+              Check out more FAQ&apos;s
+            </a>
           </div>
         </section>
 
