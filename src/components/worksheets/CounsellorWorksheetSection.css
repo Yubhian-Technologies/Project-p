@@ -1,0 +1,324 @@
+.counsellor-worksheet {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.counsellor-worksheet__intro {
+  margin: 0;
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
+  line-height: 1.6;
+}
+
+.counsellor-worksheet__error {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b91c1c;
+  background: #fee2e2;
+  border-radius: 12px;
+  padding: 8px 14px;
+}
+
+.counsellor-worksheet__back {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6d74d6;
+  cursor: pointer;
+}
+
+.counsellor-worksheet__back:hover {
+  text-decoration: underline;
+}
+
+.counsellor-worksheet__year-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.counsellor-worksheet__delete-year {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #b91c1c;
+  cursor: pointer;
+}
+
+.counsellor-worksheet__delete-year:hover {
+  text-decoration: underline;
+}
+
+.counsellor-worksheet__year-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 320px;
+}
+
+.counsellor-worksheet__add-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.counsellor-worksheet__add-inline input[type="text"] {
+  flex: 1 1 240px;
+  min-width: 200px;
+  border: 1px solid rgba(46, 43, 39, 0.12);
+  border-radius: 14px;
+  padding: 11px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #2e2b27;
+  outline: none;
+  background: #ffffff;
+}
+
+.counsellor-worksheet__add-inline input[type="text"]:focus {
+  border-color: #6d74d6;
+}
+
+.counsellor-worksheet__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.counsellor-worksheet__list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+}
+
+.counsellor-worksheet__list-row-name {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--neu-text-primary, #2d3748);
+  cursor: pointer;
+}
+
+.counsellor-worksheet__list-row-name:hover {
+  color: #6d74d6;
+}
+
+.counsellor-worksheet__row-delete {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: #a0aec0;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+
+.counsellor-worksheet__row-delete:hover {
+  color: #b91c1c;
+}
+
+.counsellor-worksheet__row-edit {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #a0aec0;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+
+.counsellor-worksheet__row-edit:hover {
+  color: #6d74d6;
+}
+
+/* ── Excel-style worksheet grid ─────────────────────────────────────── */
+
+.counsellor-worksheet__table-wrap {
+  overflow-x: auto;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.08);
+}
+
+.counsellor-worksheet__table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.counsellor-worksheet__table th,
+.counsellor-worksheet__table td {
+  border: 1px solid #cbd5e1;
+  padding: 10px 14px;
+  font-size: 13px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.counsellor-worksheet__table thead tr:nth-child(2) th {
+  background: #f1f5f9;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #334155;
+}
+
+.counsellor-worksheet__title-bar {
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 800;
+  text-align: center;
+  padding: 12px 14px;
+}
+
+.counsellor-worksheet__table tbody td {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.counsellor-worksheet__table tbody tr:hover td {
+  background: #f8fafc;
+}
+
+/* Overrides the shared Select component's default orange selected-option
+   highlight just within this screen, to match the blue theme here — other
+   dropdowns across the app keep their own default styling. */
+.counsellor-worksheet .md-select__option--selected {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.counsellor-worksheet__table td .md-select {
+  min-width: 140px;
+}
+
+.counsellor-worksheet__table td input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(46, 43, 39, 0.12);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #2e2b27;
+  outline: none;
+  background: #ffffff;
+}
+
+.counsellor-worksheet__table td input[type="text"]:focus {
+  border-color: #6d74d6;
+}
+
+.counsellor-worksheet__empty {
+  text-align: center !important;
+  color: #718096;
+  font-weight: 500 !important;
+}
+
+.counsellor-worksheet__status-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.counsellor-worksheet__status-cell .md-select {
+  flex: 0 1 140px;
+  width: auto;
+  min-width: 120px;
+}
+
+.counsellor-worksheet__badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.counsellor-worksheet__badge--pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.counsellor-worksheet__badge--done {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* ── Add-row form ────────────────────────────────────────────────────── */
+
+.counsellor-worksheet__add-row {
+  padding: 18px 22px;
+}
+
+.counsellor-worksheet__add-row-title {
+  margin: 0 0 12px;
+  font-family: var(--md-sys-typescale-font-display);
+  font-weight: 700;
+  font-size: 14.5px;
+  color: var(--neu-text-primary, #2d3748);
+}
+
+.counsellor-worksheet__add-row-fields {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.counsellor-worksheet__add-row-fields .md-select {
+  /* Select.css sets width:100%, which — with no explicit flex-basis — becomes
+     this flex item's hypothetical main size and stretches it across the
+     entire row. An explicit flex-basis overrides that so selects sit beside
+     the other fields instead of each claiming a full row to themselves. */
+  flex: 1 1 180px;
+  width: auto;
+  min-width: 160px;
+}
+
+.counsellor-worksheet__add-row-fields input[type="text"] {
+  flex: 1 1 140px;
+  min-width: 120px;
+  border: 1px solid rgba(46, 43, 39, 0.12);
+  border-radius: 14px;
+  padding: 11px 14px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: #2e2b27;
+  outline: none;
+  background: #ffffff;
+}
+
+.counsellor-worksheet__add-row-fields input[type="text"]:focus {
+  border-color: #6d74d6;
+}
+
+@media (max-width: 640px) {
+  .counsellor-worksheet__year-row {
+    max-width: none;
+  }
+}

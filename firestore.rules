@@ -206,6 +206,57 @@ service cloud.firestore {
       allow delete: if canEditEventsCalendar() && resource.data.campusId == myProfile().campusId;
     }
 
+    // ---------- worksheetAcademicYears ----------
+    // Campus-wide (not college-scoped) — one Head designs the L&D/training
+    // schedule for every college in their campus.
+    match /worksheetAcademicYears/{yearId} {
+      allow read: if isSignedIn() && resource.data.campusId == myProfile().campusId;
+      allow create: if isRole('head')
+                    && request.resource.data.createdBy == request.auth.uid
+                    && request.resource.data.campusId == myProfile().campusId;
+      allow update: if isRole('head')
+                    && resource.data.campusId == myProfile().campusId
+                    && request.resource.data.campusId == resource.data.campusId
+                    && request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if isRole('head') && resource.data.campusId == myProfile().campusId;
+    }
+
+    // ---------- worksheets ----------
+    match /worksheets/{worksheetId} {
+      allow read: if isSignedIn() && resource.data.campusId == myProfile().campusId;
+      allow create: if isRole('head')
+                    && request.resource.data.createdBy == request.auth.uid
+                    && request.resource.data.campusId == myProfile().campusId;
+      allow update: if isRole('head')
+                    && resource.data.campusId == myProfile().campusId
+                    && request.resource.data.campusId == resource.data.campusId
+                    && request.resource.data.academicYearId == resource.data.academicYearId
+                    && request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if isRole('head') && resource.data.campusId == myProfile().campusId;
+
+      // ---------- worksheets/{worksheetId}/rows ----------
+      // Head has full edit rights on any row in their campus. The named
+      // counsellor on a row may flip only its status (+updatedAt) once their
+      // session is done — everything else stays Head-controlled.
+      match /rows/{rowId} {
+        allow read: if isSignedIn() && resource.data.campusId == myProfile().campusId;
+
+        allow create: if isRole('head') && request.resource.data.campusId == myProfile().campusId;
+
+        allow update: if (
+          isRole('head') && resource.data.campusId == myProfile().campusId
+        ) || (
+          isRole('counsellor')
+          && resource.data.campusId == myProfile().campusId
+          && resource.data.counsellorId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+          && request.resource.data.status in ['pending', 'done']
+        );
+
+        allow delete: if isRole('head') && resource.data.campusId == myProfile().campusId;
+      }
+    }
+
     // ---------- bookings ----------
     match /bookings/{bookingId} {
       allow read: if isSignedIn() && (

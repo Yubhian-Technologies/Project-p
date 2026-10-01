@@ -12,6 +12,7 @@ import { SsiCollegeResultsSection } from "../../components/ssi/SsiCollegeResults
 import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAlertsSection";
 import { CommunitySection } from "../user/community/CommunitySection";
 import { TeamChatSection } from "../../components/chat/TeamChatSection";
+import { CounsellorWorksheetSection } from "../../components/worksheets/CounsellorWorksheetSection";
 import { GamesSection } from "../user/games/GamesSection";
 import type { GamesSectionHandle } from "../user/games/GamesSection";
 import { GamesSummaryCard } from "../user/games/GamesSummaryCard";
@@ -26,6 +27,7 @@ const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
   { id: "team-chat", label: "Team Chat" },
+  { id: "worksheets", label: "Counsellor Worksheet" },
   { id: "ssi-results", label: "SSI Test Results" },
   { id: "monthly-reports", label: "Monthly Reports" },
   { id: "events", label: "Events & Programs" },
@@ -73,6 +75,7 @@ export function CounsellorDashboard() {
     requests: "Booking Requests",
     feedback: "My Feedback",
     "team-chat": "Team Chat",
+    worksheets: "Counsellor Worksheet",
     "ssi-results": "SSI Test Results",
     "monthly-reports": "Monthly Reports",
     events: "Events & Programs",
@@ -125,6 +128,7 @@ export function CounsellorDashboard() {
       )}
       {activeSection === "feedback" && <CounsellorFeedbackSection />}
       {activeSection === "team-chat" && <TeamChatSection />}
+      {activeSection === "worksheets" && <CounsellorWorksheetSection />}
       {activeSection === "ssi-results" && <SsiCollegeResultsSection />}
       {activeSection === "monthly-reports" && <CounsellorMonthlyReportsSection />}
       {activeSection === "events" && <EventsProgramsSection />}

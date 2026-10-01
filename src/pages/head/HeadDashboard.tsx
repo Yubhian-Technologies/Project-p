@@ -13,6 +13,7 @@ import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAler
 import { TransferRequestsSection } from "./TransferRequestsSection";
 import { CommunitySection } from "../user/community/CommunitySection";
 import { TeamChatSection } from "../../components/chat/TeamChatSection";
+import { CounsellorWorksheetSection } from "../../components/worksheets/CounsellorWorksheetSection";
 import { MonthlyReportsSection } from "./MonthlyReportsSection";
 import { TeamMonthlyReportsSection } from "./TeamMonthlyReportsSection";
 import { FlashQASection } from "./FlashQASection";
@@ -28,6 +29,7 @@ const SECTIONS = [
   { id: "overview", label: "Home" },
   { id: "requests", label: "Requests" },
   { id: "team-chat", label: "Team Chat" },
+  { id: "worksheets", label: "Counsellor Worksheet" },
   { id: "ssi-results", label: "SSI Test Results" },
   { id: "team-management", label: "Team Management" },
   { id: "events", label: "Events & Programs" },
@@ -86,6 +88,7 @@ export function HeadDashboard() {
     requests: "Booking Requests",
     feedback: "My Feedback",
     "team-chat": "Team Chat",
+    worksheets: "Counsellor Worksheet",
     "ssi-results": "SSI Test Results",
     "team-management": "Team Management",
     events: "Events & Programs",
@@ -142,6 +145,7 @@ export function HeadDashboard() {
       )}
       {activeSection === "feedback" && <CounsellorFeedbackSection />}
       {activeSection === "team-chat" && <TeamChatSection />}
+      {activeSection === "worksheets" && <CounsellorWorksheetSection />}
       {activeSection === "ssi-results" && <SsiCollegeResultsSection />}
       {activeSection === "team-management" && (
         <TeamManagementSection onOpenTransferRequests={() => setActiveSection("transfer-requests")} />

@@ -2,7 +2,8 @@ import { createContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { User } from "firebase/auth";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../services/firebase/config";
+import { doc, onSnapshot } from "firebase/firestore";
+import { auth, db } from "../services/firebase/config";
 import { getUserProfile } from "../services/firebase/firestore";
 import { signOutUser } from "../services/firebase/auth";
 import type { UserProfile, Role } from "../types/user";
@@ -24,14 +25,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setLoading(true);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      setProfile(user ? await getUserProfile(user.uid) : null);
-      setLoading(false);
+      if (!user) {
+        setProfile(null);
+        setLoading(false);
+      }
+      // When a user is present, the profile listener below takes over
+      // loading (it needs the first snapshot before we know the profile).
     });
     return unsubscribe;
   }, []);
+
+  // Live-subscribed rather than fetched once: an Admin reassigning this
+  // account's role/campus/college while the tab stays open must be reflected
+  // immediately, otherwise campus/college-scoped writes get silently
+  // rejected by Firestore rules against a stale cached profile.
+  useEffect(() => {
+    if (!currentUser) return;
+    setLoading(true);
+    const unsubscribe = onSnapshot(doc(db, "users", currentUser.uid), (snapshot) => {
+      setProfile(snapshot.exists() ? (snapshot.data() as UserProfile) : null);
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, [currentUser]);
 
   // Tells the intro splash (index.html / main.tsx) that the first auth check is done.
   useEffect(() => {
