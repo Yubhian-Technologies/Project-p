@@ -124,7 +124,7 @@ export function UserDashboard() {
     community: "Wellness Community",
     "crisis-sos": "Crisis SOS",
   };
-  const title = titleBySection[activeSection] ?? "User Dashboard";
+  const title = activeSection === "overview" ? "" : (titleBySection[activeSection] ?? "");
 
   return (
     <AppShell

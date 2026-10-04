@@ -52,7 +52,7 @@ export function SuperAdminDashboard() {
 
   return (
     <AppShell
-      title={TITLES[activeSection] ?? "Super Admin Dashboard"}
+      title={activeSection === "overview" ? "" : (TITLES[activeSection] ?? "")}
       sections={SECTIONS}
       activeSection={activeSection}
       onSelectSection={setActiveSection}
