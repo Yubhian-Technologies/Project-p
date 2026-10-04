@@ -631,3 +631,5 @@ export const flagMissedSessions = onSchedule("every 15 minutes", async () => {
   for (const b of batches) await b.commit();
 });
 
+
+export { emailNotification } from "./email";
