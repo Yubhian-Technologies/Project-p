@@ -50,6 +50,13 @@ service cloud.firestore {
       return isSignedIn() && myRole() in ['head', 'counsellor'];
     }
 
+    // Head and Counsellor jointly manage a campus's Counsellor Worksheet —
+    // either can create/edit/delete any academic year, worksheet, or row
+    // on their own campus.
+    function canEditWorksheets() {
+      return isSignedIn() && myRole() in ['head', 'counsellor'];
+    }
+
     // Head and Counsellor can resolve who authored anonymous community posts —
     // moderation-only visibility, and ONLY for posts on their own campus.
     // Regular users (and other roles) never see it.
@@ -207,54 +214,72 @@ service cloud.firestore {
     }
 
     // ---------- worksheetAcademicYears ----------
-    // Campus-wide (not college-scoped) — one Head designs the L&D/training
-    // schedule for every college in their campus.
+    // Campus-wide (not college-scoped) — a Head or Counsellor manages the
+    // L&D/training schedule for every college in their campus.
     match /worksheetAcademicYears/{yearId} {
-      allow read: if isSignedIn() && resource.data.campusId == myProfile().campusId;
-      allow create: if isRole('head')
+      allow read: if isSignedIn() && (resource.data.campusId == myProfile().campusId || isCampusManager());
+      allow create: if canEditWorksheets()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId;
-      allow update: if isRole('head')
+      allow update: if canEditWorksheets()
                     && resource.data.campusId == myProfile().campusId
                     && request.resource.data.campusId == resource.data.campusId
                     && request.resource.data.createdBy == resource.data.createdBy;
-      allow delete: if isRole('head') && resource.data.campusId == myProfile().campusId;
+      allow delete: if canEditWorksheets() && resource.data.campusId == myProfile().campusId;
     }
 
     // ---------- worksheets ----------
     match /worksheets/{worksheetId} {
-      allow read: if isSignedIn() && resource.data.campusId == myProfile().campusId;
-      allow create: if isRole('head')
+      allow read: if isSignedIn() && (resource.data.campusId == myProfile().campusId || isCampusManager());
+      allow create: if canEditWorksheets()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId;
-      allow update: if isRole('head')
+      allow update: if canEditWorksheets()
                     && resource.data.campusId == myProfile().campusId
                     && request.resource.data.campusId == resource.data.campusId
                     && request.resource.data.academicYearId == resource.data.academicYearId
                     && request.resource.data.createdBy == resource.data.createdBy;
-      allow delete: if isRole('head') && resource.data.campusId == myProfile().campusId;
+      allow delete: if canEditWorksheets() && resource.data.campusId == myProfile().campusId;
 
       // ---------- worksheets/{worksheetId}/rows ----------
-      // Head has full edit rights on any row in their campus. The named
-      // counsellor on a row may flip only its status (+updatedAt) once their
-      // session is done — everything else stays Head-controlled.
+      // Head and Counsellor both have full edit rights on any row in
+      // their campus — either can add, edit, delete, or flip the status
+      // of any session row.
       match /rows/{rowId} {
-        allow read: if isSignedIn() && resource.data.campusId == myProfile().campusId;
+        allow read: if isSignedIn() && (resource.data.campusId == myProfile().campusId || isCampusManager());
 
-        allow create: if isRole('head') && request.resource.data.campusId == myProfile().campusId;
+        allow create: if canEditWorksheets() && request.resource.data.campusId == myProfile().campusId;
 
-        allow update: if (
-          isRole('head') && resource.data.campusId == myProfile().campusId
-        ) || (
-          isRole('counsellor')
-          && resource.data.campusId == myProfile().campusId
-          && resource.data.counsellorId == request.auth.uid
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
-          && request.resource.data.status in ['pending', 'done']
-        );
+        allow update: if canEditWorksheets() && resource.data.campusId == myProfile().campusId;
 
-        allow delete: if isRole('head') && resource.data.campusId == myProfile().campusId;
+        allow delete: if canEditWorksheets() && resource.data.campusId == myProfile().campusId;
       }
+    }
+
+    // ---------- attendance ----------
+    // Daily check-in / check-out. Exactly one record per user per day
+    // (doc id = {uid}_{YYYY-MM-DD}): check-in creates it, check-out
+    // fills in checkOutAt. Counsellors and Heads record their own
+    // attendance on their own campus; a Head reviews their campus's
+    // counsellors; Admins/Super Admins see every campus.
+    match /attendance/{recordId} {
+      allow read: if isSignedIn() && (
+        resource.data.uid == request.auth.uid ||
+        (isStaff() && resource.data.campusId == myProfile().campusId) ||
+        isCampusManager()
+      );
+
+      allow create: if isSignedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.checkInAt != null;
+
+      allow update: if isSignedIn()
+                    && resource.data.uid == request.auth.uid
+                    && resource.data.checkInAt != null
+                    && resource.data.checkOutAt == null
+                    && request.resource.data.checkOutAt != null;
+
+      allow delete: if false;
     }
 
     // ---------- bookings ----------

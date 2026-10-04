@@ -66,6 +66,61 @@
   gap: 18px;
 }
 
+/* Date filter above the list — a dropdown of only the days that actually have
+   a session on them, plus an "All dates" option to clear the filter. */
+.booking-section__date-filter {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 16px;
+  padding: 8px 14px;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.06);
+  margin-bottom: 20px;
+}
+
+.booking-section__date-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 220px;
+}
+
+.booking-section__date-filter-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #2E2B27;
+}
+
+.booking-section__filter-count {
+  margin-left: auto;
+  align-self: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+@media (max-width: 768px) {
+  .booking-section__date-filter {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .booking-section__date-filter-field {
+    min-width: 0;
+  }
+
+  .booking-section__filter-count {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+}
+
 .booking-section__booking-row {
   display: flex;
   align-items: center;
@@ -105,6 +160,15 @@
   flex-wrap: nowrap;
 }
 
+/* The day the session falls on, so the date filter is verifiable at a glance. */
+.booking-section__row-date {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neu-text-muted, #718096);
+  white-space: nowrap;
+}
+
 /* Phones — matches the breakpoint the rest of this page's mobile styling uses. */
 @media (max-width: 768px) {
   .booking-section__booking-row--collapsed {
@@ -117,6 +181,10 @@
     white-space: normal;
     flex-basis: 100%;
     font-size: 14px;
+  }
+
+  .booking-section__row-date {
+    flex-basis: 100%;
   }
 
   .booking-section__row-right--pinned {
@@ -164,7 +232,7 @@
 .booking-section__status--scheduled {
   color: #ffffff;
   border-color: rgba(46, 43, 39, 0.18);
-  background: #2563EB;
+  background: #2065F6;
 }
 
 .booking-section__status--rejected,
@@ -226,7 +294,7 @@ p.booking-section__emergency-tag {
 .booking-section__ssi-chip {
   font-size: 13px;
   font-weight: 800;
-  color: #1e3a8a;
+  color: #1A55E0;
   background: #e0e7ff;
   border-radius: 12px;
   padding: 8px 16px;
@@ -493,7 +561,7 @@ p.booking-section__emergency-tag {
   box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
   padding: 12px 16px !important;
   font-weight: 600;
-  color: #1e3a8a !important;
+  color: #1A55E0 !important;
   font-style: italic;
   margin-bottom: 16px !important;
 }
@@ -510,7 +578,7 @@ p.booking-section__emergency-tag {
   margin: 16px 0 6px 0;
   font-size: 13px;
   font-weight: 700;
-  color: var(--neu-accent-primary, #2563EB);
+  color: var(--neu-accent-primary, #2065F6);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

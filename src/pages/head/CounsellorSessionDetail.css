@@ -113,7 +113,7 @@
 }
 
 .counsellor-session-detail__status--scheduled {
-  color: var(--neu-accent-primary, #2563EB);
+  color: var(--neu-accent-primary, #2065F6);
 }
 
 .counsellor-session-detail__status--missed {
@@ -129,7 +129,7 @@
 .counsellor-detail__chip {
   font-size: 12px;
   font-weight: 800;
-  color: var(--neu-accent-primary, #2563EB);
+  color: var(--neu-accent-primary, #2065F6);
 }
 
 .counsellor-session-detail__date {

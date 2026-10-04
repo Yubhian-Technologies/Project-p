@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { Avatar } from "../common/Avatar";
 import "./Sidebar.css";
@@ -5,6 +6,7 @@ import "./Sidebar.css";
 export interface SidebarSection {
   id: string;
   label: string;
+  icon?: ReactNode;
   variant?: "urgent";
   count?: number;
 }
@@ -44,6 +46,11 @@ export function Sidebar({ sections, activeSection, onSelectSection, open, onClos
                 onClick={() => select(section.id)}
               >
                 {section.variant === "urgent" && <span className="sidebar__item-dot" aria-hidden="true" />}
+                {section.icon && (
+                  <span className="sidebar__item-icon" aria-hidden="true">
+                    {section.icon}
+                  </span>
+                )}
                 <span className="sidebar__item-label">{section.label}</span>
                 {section.count !== undefined && section.count > 0 && (
                   <span className="sidebar__item-count">{section.count}</span>

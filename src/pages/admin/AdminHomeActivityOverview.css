@@ -122,8 +122,8 @@
 }
 
 .aha-badge--blue {
-  background: #DBEAFE;
-  color: #1E40AF;
+  background: #EBF0FE;
+  color: #2065F6;
 }
 
 .aha-tag {
@@ -253,7 +253,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #2563EB;
+  background: #2065F6;
   color: #FFFFFF;
   border: 1px solid rgba(46, 43, 39, 0.08) !important;
   border-radius: 12px !important;
@@ -267,7 +267,7 @@
 }
 
 .aha-btn-dl:hover {
-  background: #1D4ED8;
+  background: #1A55E0;
   transform: translate(-1px, -1px);
   box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
 }
@@ -280,7 +280,7 @@
 .aha-link-btn {
   background: none;
   border: none;
-  color: #2563EB;
+  color: #2065F6;
   font-size: 12.5px;
   font-weight: 800;
   cursor: pointer;
@@ -551,7 +551,7 @@
 .aha-table__campus svg {
   width: 15px;
   height: 15px;
-  color: #2563EB;
+  color: #2065F6;
   flex-shrink: 0;
 }
 

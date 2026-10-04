@@ -732,7 +732,7 @@
 }
 
 .ig-card__view-comments:hover {
-  color: var(--neu-accent-primary, #2563EB);
+  color: var(--neu-accent-primary, #2065F6);
 }
 
 /* ─── Comment thread ────────────────────────────────────────── */
@@ -849,7 +849,7 @@
 }
 
 .community-comment-thread__composer textarea:focus {
-  border-color: rgba(37, 99, 235, 0.4);
+  border-color: rgba(32, 101, 246, 0.4);
   box-shadow: var(--neu-shadow-sunken-focus);
 }
 
@@ -859,7 +859,7 @@
 
 .community-comment-thread__composer-send {
   border: none;
-  background: linear-gradient(135deg, #2563EB, #1E3A8A);
+  background: linear-gradient(135deg, #2065F6, #1A55E0);
   color: #fff;
   font-size: 12px;
   font-weight: 800;

@@ -1,0 +1,407 @@
+/* ── Fan Carousel Root ──────────────────────────────────── */
+.fan-carousel-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 8px 0 0;
+  position: relative;
+}
+
+/* ── Stage — gives the fan room to breathe ─────────────── */
+.fan-carousel-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 80rem;
+  /* tall enough that the fan cards don't get clipped */
+  min-height: 38rem;
+  position: relative;
+}
+
+/* ── Fan layout container ───────────────────────────────── */
+.fan-layout {
+  display: flex;
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 80rem;
+}
+
+/* ── Individual fan card ────────────────────────────────── */
+.fan-card {
+  position: absolute;
+  /* card dimensions */
+  width: 14rem;
+  height: 18rem;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.12),
+    0 1px 4px rgba(0, 0, 0, 0.08);
+  transform-origin: center bottom;
+  /* GSAP controls transform/zIndex — no CSS transform here */
+  will-change: transform, opacity;
+  transition: box-shadow 0.25s ease;
+  text-decoration: none;
+  display: block;
+}
+
+.fan-card:hover {
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.18),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Card inner — fills the card fully & continuous float motion ─── */
+@keyframes fanFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.fan-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  animation: fanFloat 3.8s ease-in-out infinite;
+}
+
+.fan-card:nth-child(2n) .fan-card-inner {
+  animation-delay: -1.2s;
+  animation-duration: 4.2s;
+}
+
+.fan-card:nth-child(3n) .fan-card-inner {
+  animation-delay: -2.1s;
+  animation-duration: 4.6s;
+}
+
+.fan-card-inner img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  z-index: 10;
+  display: block;
+}
+
+/* ── Pagination row ─────────────────────────────────────── */
+.fan-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 16px 0 20px;
+  z-index: 30;
+}
+
+/* ── Arrow buttons ──────────────────────────────────────── */
+.fan-arrow-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.05);
+  backdrop-filter: blur(16px);
+  color: rgba(15, 23, 42, 0.45);
+  cursor: pointer;
+  flex-shrink: 0;
+  z-index: 30;
+  outline: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease;
+}
+
+.fan-arrow-btn::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 1px solid rgba(15, 23, 42, 0.04);
+  pointer-events: none;
+}
+
+.fan-arrow-btn:hover {
+  border-color: rgba(15, 23, 42, 0.25);
+  color: rgba(15, 23, 42, 0.8);
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.fan-arrow-btn:active {
+  opacity: 0.7;
+}
+
+.fan-arrow-icon {
+  width: 18px;
+  height: 18px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Dot indicators ─────────────────────────────────────── */
+.fan-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fan-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.15);
+  transition: background 0.3s ease, transform 0.3s ease;
+  display: inline-block;
+}
+
+.fan-dot--active {
+  background: rgba(15, 23, 42, 0.7);
+  transform: scale(1.3);
+}
+
+/* ── Responsive stage heights ───────────────────────────── */
+@media (max-width: 1024px) {
+  .fan-carousel-stage {
+    min-height: 34rem;
+  }
+  .fan-card {
+    width: 11rem;
+    height: 15rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .fan-carousel-stage {
+    min-height: 28rem;
+  }
+  .fan-card {
+    width: 9rem;
+    height: 12rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .fan-carousel-stage {
+    min-height: 26rem;
+  }
+  .fan-card {
+    width: 8rem;
+    height: 11rem;
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .fan-carousel-stage {
+    min-height: 22rem;
+  }
+  .fan-card {
+    width: 7rem;
+    height: 9.5rem;
+    border-radius: 12px;
+  }
+  .fan-arrow-btn {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+/* ── Details Card below photos ──────────────────────────── */
+.fan-card-details {
+  margin-top: 0;
+  width: 100%;
+  max-width: 44rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  padding: 24px 28px;
+  text-align: center;
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.06),
+    0 1px 4px rgba(15, 23, 42, 0.04);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 25;
+}
+
+.fan-card-details__name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+
+.fan-card-details__meta-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.fan-card-details__role {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0d9488;
+}
+
+.fan-meta-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  vertical-align: -2px;
+  flex-shrink: 0;
+}
+
+.fan-card-details__institution {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e3a8a;
+  background: #eff6ff;
+  border: 1px solid rgba(30, 58, 138, 0.15);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.fan-card-details__institution .fan-meta-icon {
+  color: #2563eb;
+}
+
+.fan-card-details__qual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+
+.fan-card-details__qual-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.fan-card-details__qual-item .fan-meta-icon {
+  color: #0d9488;
+}
+
+.fan-card-details__summary {
+  font-size: 0.875rem;
+  font-style: italic;
+  color: #475569;
+  line-height: 1.55;
+  background: #f8fafc;
+  border-left: 3px solid #0d9488;
+  padding: 10px 16px;
+  border-radius: 0 10px 10px 0;
+  margin: 4px 0 14px;
+  max-width: 38rem;
+  text-align: left;
+}
+
+.fan-card-details__specialties {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.fan-card-details__tag {
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: #334155;
+  background: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(203, 213, 225, 0.6);
+}
+
+.fan-card-details__contact-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px 6px;
+  border-top: 1px dashed rgba(203, 213, 225, 0.6);
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.fan-card-details__contact-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.fan-card-details__contact-item .fan-meta-icon {
+  color: #64748b;
+}
+
+.fan-card-details__contact-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.fan-card-details__contact-link .fan-meta-icon {
+  color: #2563eb;
+}
+
+.fan-card-details__contact-link:hover {
+  text-decoration: underline;
+}
+
+.fan-card-details__hint {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  margin: 4px 0 0;
+  font-style: italic;
+}
+
+@media (max-width: 640px) {
+  .fan-card-details {
+    padding: 18px 20px;
+    margin: 8px 16px 0;
+  }
+  .fan-card-details__name {
+    font-size: 1.15rem;
+  }
+  .fan-card-details__role {
+    font-size: 0.88rem;
+  }
+  .fan-card-details__qual {
+    font-size: 0.78rem;
+  }
+}
+

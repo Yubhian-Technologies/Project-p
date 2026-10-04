@@ -121,6 +121,56 @@
   padding-top: 0;
 }
 
+.profile-section__availability {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 240px;
+}
+
+.profile-section__availability-hint {
+  margin: 0;
+  font-size: 11px;
+  color: #718096;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.profile-section__attendance {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 260px;
+}
+
+.profile-section__attendance-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-section__attendance-status {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2d3748;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.profile-section__attendance-error {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e53e3e;
+  text-align: center;
+}
+
 .profile-section__toggle-block,
 .profile-section__password {
   display: flex;

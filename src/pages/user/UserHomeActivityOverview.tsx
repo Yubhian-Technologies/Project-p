@@ -6,7 +6,6 @@ import {
   LeafIcon,
   CalendarIcon,
   SparklesIcon,
-  ClipboardListIcon,
   GamepadIcon,
   BookOpenIcon,
   MessageCircleIcon,
@@ -126,9 +125,6 @@ export function UserHomeActivityOverview({ onSelectSection }: UserHomeActivityOv
           </div>
 
           <div className="uha-shortcuts__list">
-            <button type="button" onClick={() => onSelectSection("wellness-test")}>
-              <ClipboardListIcon /> Take Wellness Stress Test
-            </button>
             <button type="button" onClick={() => onSelectSection("games")}>
               <GamepadIcon /> 4-7-8 & Box Breathing Exercises
             </button>

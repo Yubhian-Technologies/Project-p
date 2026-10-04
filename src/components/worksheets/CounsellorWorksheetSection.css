@@ -264,6 +264,11 @@
   color: #b45309;
 }
 
+.counsellor-worksheet__badge--in-progress {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
 .counsellor-worksheet__badge--done {
   background: #dcfce7;
   color: #15803d;

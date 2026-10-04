@@ -11,6 +11,7 @@ import { Button } from "../../components/common/Button";
 import { StarRating } from "../../components/common/StarRating";
 import { ROLE_LABELS } from "../../config/roles";
 import { CounsellorSessionDetail } from "./CounsellorSessionDetail";
+import { TeamAttendanceSection } from "./TeamAttendanceSection";
 import "./TeamManagementSection.css";
 
 const TAKEN_STATUSES = ["accepted", "scheduled", "completed"];
@@ -72,6 +73,7 @@ export function TeamManagementSection({
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [selectedCounsellor, setSelectedCounsellor] = useState<UserProfile | null>(null);
+  const [attendanceOpen, setAttendanceOpen] = useState(false);
 
   async function load() {
     const [profiles, bookings, liveBookings, feedback] = await Promise.all([
@@ -106,6 +108,10 @@ export function TeamManagementSection({
     return <CounsellorSessionDetail counsellor={selectedCounsellor} onBack={() => setSelectedCounsellor(null)} />;
   }
 
+  if (attendanceOpen) {
+    return <TeamAttendanceSection onBack={() => setAttendanceOpen(false)} />;
+  }
+
   if (loading) return null;
 
   return (
@@ -118,6 +124,9 @@ export function TeamManagementSection({
               Transfer Requests →
             </Button>
           )}
+          <Button type="button" variant="outlined" onClick={() => setAttendanceOpen(true)}>
+            Check-in / Check-out →
+          </Button>
         </div>
       </div>
       {stats.length === 0 && <p>No counsellors or heads are set up yet.</p>}
@@ -175,7 +184,7 @@ export function TeamManagementSection({
                 disabled={togglingId === profile.uid}
                 onClick={() => handleToggleAvailability(profile)}
               >
-                {profile.available ? "Mark Unavailable" : "Mark Available"}
+                {profile.available ? "Mark Leave" : "Mark Available"}
               </Button>
               <Button type="button" onClick={() => setSelectedCounsellor(profile)}>
                 View sessions →

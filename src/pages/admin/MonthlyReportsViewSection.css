@@ -33,7 +33,7 @@
   width: 40px;
   height: 40px;
   border-radius: 20px !important;
-  background: #2563EB;
+  background: #2065F6;
   border: 1px solid rgba(46, 43, 39, 0.08) !important;
   box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
   display: flex;
@@ -281,8 +281,8 @@
   font-weight: 800;
   white-space: nowrap;
   box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
-  background: #DBEAFE;
-  color: #1E40AF;
+  background: #EBF0FE;
+  color: #2065F6;
 }
 
 .mrv-badge--green {
@@ -338,14 +338,14 @@
   font-family: var(--md-sys-typescale-font-body);
   cursor: pointer;
   text-decoration: none;
-  background: #2563EB;
+  background: #2065F6;
   color: #FFFFFF;
   box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
   transition: all 0.18s ease;
 }
 
 .mrv-btn-download:hover {
-  background: #1D4ED8;
+  background: #1A55E0;
   transform: translate(-1px, -1px);
   box-shadow: 0 10px 26px rgba(46, 43, 39, 0.065) !important;
 }

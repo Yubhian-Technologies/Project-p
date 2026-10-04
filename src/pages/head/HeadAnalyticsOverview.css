@@ -68,12 +68,12 @@
   height: 18px;
 }
 
-.head-analytics__kpi-icon-badge--teal { color: #2563EB; background: rgba(37, 99, 235, 0.12); }
+.head-analytics__kpi-icon-badge--teal { color: #2065F6; background: rgba(32, 101, 246, 0.12); }
 .head-analytics__kpi-icon-badge--purple { color: #8B5CF6; background: rgba(139, 92, 246, 0.12); }
 .head-analytics__kpi-icon-badge--green { color: #10B981; background: rgba(16, 185, 129, 0.12); }
 .head-analytics__kpi-icon-badge--orange { color: #F59E0B; background: rgba(217, 162, 75, 0.16); }
 .head-analytics__kpi-icon-badge--red { color: #EC4899; background: rgba(236, 72, 153, 0.12); }
-.head-analytics__kpi-icon-badge--navy { color: #3B82F6; background: rgba(59, 130, 246, 0.12); }
+.head-analytics__kpi-icon-badge--navy { color: #2065F6; background: rgba(32, 101, 246, 0.12); }
 
 .head-analytics__kpi-label {
   font-size: 11px;
@@ -82,12 +82,12 @@
   text-transform: uppercase;
 }
 
-.head-analytics__kpi-card--teal .head-analytics__kpi-label { color: #2563EB; }
+.head-analytics__kpi-card--teal .head-analytics__kpi-label { color: #2065F6; }
 .head-analytics__kpi-card--purple .head-analytics__kpi-label { color: #8B5CF6; }
 .head-analytics__kpi-card--green .head-analytics__kpi-label { color: #10B981; }
 .head-analytics__kpi-card--orange .head-analytics__kpi-label { color: #D97706; }
 .head-analytics__kpi-card--red .head-analytics__kpi-label { color: #EC4899; }
-.head-analytics__kpi-card--navy .head-analytics__kpi-label { color: #3B82F6; }
+.head-analytics__kpi-card--navy .head-analytics__kpi-label { color: #2065F6; }
 
 .head-analytics__kpi-val {
   font-size: 26px;
@@ -181,21 +181,21 @@
 }
 
 .head-analytics__path--appt {
-  stroke: #1E3A8A;
+  stroke: #1A55E0;
 }
 
 .head-analytics__path--check {
-  stroke: #3B82F6;
+  stroke: #2065F6;
 }
 
 .head-analytics__dot--appt {
-  fill: #1E3A8A;
+  fill: #1A55E0;
   stroke: #ffffff;
   stroke-width: 2;
 }
 
 .head-analytics__dot--check {
-  fill: #3B82F6;
+  fill: #2065F6;
   stroke: #ffffff;
   stroke-width: 2;
 }
@@ -251,13 +251,13 @@
 }
 
 .head-analytics__legend-dot--appt {
-  background: #1E3A8A;
-  box-shadow: 0 0 8px rgba(30, 58, 138, 0.45);
+  background: #1A55E0;
+  box-shadow: 0 0 8px rgba(26, 85, 224, 0.45);
 }
 
 .head-analytics__legend-dot--check {
-  background: #3B82F6;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.45);
+  background: #2065F6;
+  box-shadow: 0 0 8px rgba(32, 101, 246, 0.45);
 }
 
 .head-analytics__legend-dot--complete {
@@ -422,8 +422,8 @@
 }
 
 .head-analytics__gauge--navy .head-analytics__gauge-fg {
-  stroke: #3B82F6;
-  filter: drop-shadow(0 2px 6px rgba(59, 130, 246, 0.45));
+  stroke: #2065F6;
+  filter: drop-shadow(0 2px 6px rgba(32, 101, 246, 0.45));
 }
 
 .head-analytics__gauge-tick {

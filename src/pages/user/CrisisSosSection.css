@@ -103,7 +103,7 @@
   border-left-color: #ef4444;
 }
 .crisis-sos__line--indigo {
-  border-left-color: var(--neu-accent-primary, #2563EB);
+  border-left-color: var(--neu-accent-primary, #2065F6);
 }
 .crisis-sos__line--green {
   border-left-color: #16a34a;
@@ -173,7 +173,7 @@
   color: #dc2626;
 }
 .crisis-sos__line-action--indigo {
-  color: var(--neu-accent-primary, #2563EB);
+  color: var(--neu-accent-primary, #2065F6);
 }
 .crisis-sos__line-action--green {
   color: #16a34a;

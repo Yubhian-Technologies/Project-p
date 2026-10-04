@@ -48,7 +48,7 @@
   font-family: var(--md-sys-typescale-font-display);
   font-size: 22px;
   font-weight: 800;
-  color: var(--neu-accent-primary, #2563EB);
+  color: var(--neu-accent-primary, #2065F6);
 }
 
 .counsellor-ratings__stat-label {
@@ -152,7 +152,7 @@
 
 .counsellor-ratings__bar-fill {
   height: 100%;
-  background: var(--neu-accent-primary, #2563EB);
+  background: var(--neu-accent-primary, #2065F6);
   border-radius: 9999px;
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }

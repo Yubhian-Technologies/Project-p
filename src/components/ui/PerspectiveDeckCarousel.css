@@ -1,0 +1,306 @@
+/* ==========================================================================
+   Perspective Deck Carousel — 3D Stacked Photo Gallery
+   ========================================================================== */
+
+.perspective-deck {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+  margin: 2.5rem auto 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+/* 3D Perspective Viewport — perfectly centered */
+.perspective-deck__stage {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 0;
+  overflow: visible;
+}
+
+/* Individual 3D Card — anchored relative to stage center */
+.perspective-deck__card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(280px, 40vw, 460px);
+  height: clamp(190px, 28vw, 320px);
+  border-radius: 24px;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  will-change: transform, opacity, filter;
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.45),
+              0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.perspective-deck__image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  background-color: #121316;
+}
+
+.perspective-deck__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+/* Subtle gradient vignette on cards */
+.perspective-deck__card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(10, 12, 16, 0.75) 0%,
+    rgba(10, 12, 16, 0.15) 45%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Informational Badge on active card */
+.perspective-deck__card-badge {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 1.5rem;
+  right: 1.5rem;
+  z-index: 2;
+  color: #ffffff;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s ease 0.2s, transform 0.4s ease 0.2s;
+}
+
+.perspective-deck__badge-subtitle {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6ee7b7;
+  margin-bottom: 0.25rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.perspective-deck__badge-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+}
+
+/* ==========================================================================
+   3D Slot Positions (Center-Balanced Perspective Depth Curve)
+   ========================================================================== */
+
+/* Slot 0: Front active card (Left-of-center to balance the trailing deck) */
+.perspective-deck__card--slot-0 {
+  transform: translate3d(calc(-50% - 170px), -50%, 0) rotateY(0deg) scale(1);
+  z-index: 10;
+  opacity: 1;
+  filter: brightness(1);
+  cursor: default;
+}
+
+.perspective-deck__card--slot-0 .perspective-deck__card-badge {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Slot 1: Mid-right trailing card (near screen center) */
+.perspective-deck__card--slot-1 {
+  transform: translate3d(calc(-50% + 20px), -50%, -80px) rotateY(-24deg) scale(0.88);
+  z-index: 8;
+  opacity: 0.9;
+  filter: brightness(0.92);
+}
+
+.perspective-deck__card--slot-1:hover {
+  filter: brightness(1.05);
+  transform: translate3d(calc(-50% + 20px), calc(-50% - 6px), -60px) rotateY(-20deg) scale(0.9);
+}
+
+/* Slot 2: Deep right trailing card */
+.perspective-deck__card--slot-2 {
+  transform: translate3d(calc(-50% + 170px), -50%, -180px) rotateY(-36deg) scale(0.74);
+  z-index: 6;
+  opacity: 0.72;
+  filter: brightness(0.8);
+}
+
+.perspective-deck__card--slot-2:hover {
+  filter: brightness(0.95);
+  transform: translate3d(calc(-50% + 170px), calc(-50% - 4px), -160px) rotateY(-32deg) scale(0.76);
+}
+
+/* Slot 3: Edge right trailing card */
+.perspective-deck__card--slot-3 {
+  transform: translate3d(calc(-50% + 280px), -50%, -280px) rotateY(-46deg) scale(0.6);
+  z-index: 4;
+  opacity: 0.48;
+  filter: brightness(0.68);
+}
+
+/* Exiting card (leaving to the left) */
+.perspective-deck__card--slot-prev {
+  transform: translate3d(calc(-50% - 340px), -50%, -100px) rotateY(20deg) scale(0.85);
+  z-index: 1;
+  opacity: 0;
+  filter: brightness(0.6);
+  pointer-events: none;
+}
+
+/* Hidden cards (off-screen) */
+.perspective-deck__card--hidden {
+  transform: translate3d(calc(-50% + 460px), -50%, -360px) rotateY(-55deg) scale(0.45);
+  z-index: 0;
+  opacity: 0;
+  filter: brightness(0.5);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Navigation Buttons ([ Prev ] [ Next ])
+   ========================================================================== */
+
+.perspective-deck__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 2rem;
+  z-index: 15;
+}
+
+.perspective-deck__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  padding: 0.65rem 1.6rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #f1f5f9;
+  background-color: #17181c;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.perspective-deck__btn:hover {
+  background-color: #24262d;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+
+.perspective-deck__btn:active {
+  transform: translateY(0);
+  background-color: #121316;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.perspective-deck__btn:focus-visible {
+  outline: 2px solid #6ee7b7;
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .perspective-deck__stage {
+    height: 300px;
+    padding: 0;
+    perspective-origin: 50% 50%;
+  }
+
+  .perspective-deck__card {
+    border-radius: 18px;
+    width: clamp(260px, 60vw, 360px);
+    height: clamp(170px, 40vw, 240px);
+  }
+
+  .perspective-deck__image-wrapper {
+    border-radius: 18px;
+  }
+
+  .perspective-deck__card--slot-0 {
+    transform: translate3d(calc(-50% - 90px), -50%, 0) rotateY(0deg) scale(1);
+  }
+
+  .perspective-deck__card--slot-1 {
+    transform: translate3d(calc(-50% + 15px), -50%, -60px) rotateY(-22deg) scale(0.88);
+  }
+
+  .perspective-deck__card--slot-2 {
+    transform: translate3d(calc(-50% + 95px), -50%, -120px) rotateY(-32deg) scale(0.76);
+  }
+
+  .perspective-deck__card--slot-3 {
+    transform: translate3d(calc(-50% + 155px), -50%, -180px) rotateY(-40deg) scale(0.64);
+    opacity: 0.35;
+  }
+
+  .perspective-deck__card--slot-prev {
+    transform: translate3d(calc(-50% - 220px), -50%, -100px) rotateY(20deg) scale(0.85);
+  }
+
+  .perspective-deck__btn {
+    padding: 0.55rem 1.3rem;
+    font-size: 0.88rem;
+    min-width: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .perspective-deck__stage {
+    height: 250px;
+  }
+
+  .perspective-deck__card--slot-0 {
+    transform: translate3d(calc(-50% - 30px), -50%, 0) rotateY(0deg) scale(1);
+  }
+
+  .perspective-deck__card--slot-1 {
+    transform: translate3d(calc(-50% + 35px), -50%, -50px) rotateY(-20deg) scale(0.88);
+  }
+
+  .perspective-deck__card--slot-2 {
+    transform: translate3d(calc(-50% + 80px), -50%, -100px) rotateY(-28deg) scale(0.76);
+  }
+
+  .perspective-deck__card--slot-3 {
+    opacity: 0;
+    pointer-events: none;
+  }
+}

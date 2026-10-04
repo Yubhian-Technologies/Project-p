@@ -125,7 +125,7 @@
 .analytics-section__college {
   margin: 4px 0 0;
   font-size: 13px;
-  color: var(--neu-accent-primary, #2563EB);
+  color: var(--neu-accent-primary, #2065F6);
   font-weight: 600;
 }
 
@@ -168,7 +168,7 @@
   font-family: var(--md-sys-typescale-font-display);
   font-size: 22px;
   font-weight: 800;
-  color: #2563EB;
+  color: #2065F6;
   line-height: 1.1;
 }
 
@@ -280,7 +280,7 @@
   flex-shrink: 0;
 }
 
-.analytics-chart__legend-dot--blue  { background: #2563EB; }
+.analytics-chart__legend-dot--blue  { background: #2065F6; }
 .analytics-chart__legend-dot--red   { background: #DC2626; }
 .analytics-chart__legend-dot--amber { background: #D97706; }
 
@@ -324,7 +324,7 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.analytics-chart__line--blue  { stroke: #2563EB; }
+.analytics-chart__line--blue  { stroke: #2065F6; }
 .analytics-chart__line--red   { stroke: #DC2626; stroke-width: 2.5; stroke-dasharray: 6 4; }
 .analytics-chart__line--amber { stroke: #D97706; stroke-width: 2.5; }
 
@@ -332,7 +332,7 @@
 .analytics-chart__dot {
   transition: all 0.15s ease;
 }
-.analytics-chart__dot--blue  { fill: #2563EB; stroke: #FFFFFF; stroke-width: 2; }
+.analytics-chart__dot--blue  { fill: #2065F6; stroke: #FFFFFF; stroke-width: 2; }
 .analytics-chart__dot--red   { fill: #DC2626; stroke: #FFFFFF; stroke-width: 2; }
 .analytics-chart__dot--amber { fill: #D97706; stroke: #FFFFFF; stroke-width: 2; }
 

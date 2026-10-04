@@ -135,10 +135,10 @@
   box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045);
 }
 
-.uha-badge--active { background: #DBEAFE; color: #1E40AF; }
+.uha-badge--active { background: #EBF0FE; color: #2065F6; }
 
 .uha-btn-book {
-  background: #2563EB;
+  background: #2065F6;
   color: #FFFFFF;
   border: 1px solid rgba(46, 43, 39, 0.08) !important;
   border-radius: 12px !important;
@@ -150,7 +150,7 @@
 }
 
 .uha-btn-book-lg {
-  background: #2563EB;
+  background: #2065F6;
   color: #FFFFFF;
   border: 1px solid rgba(46, 43, 39, 0.08) !important;
   border-radius: 12px !important;

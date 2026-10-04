@@ -15,7 +15,7 @@ export interface Worksheet {
   createdAt: number;
 }
 
-export type WorksheetRowStatus = "pending" | "done";
+export type WorksheetRowStatus = "pending" | "in-progress" | "done";
 
 export interface WorksheetRow {
   id: string;

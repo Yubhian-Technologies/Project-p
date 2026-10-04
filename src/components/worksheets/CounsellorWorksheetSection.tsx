@@ -21,6 +21,12 @@ import { Button } from "../common/Button";
 import { Select } from "../common/Select";
 import "./CounsellorWorksheetSection.css";
 
+const STATUS_LABELS: Record<WorksheetRowStatus, string> = {
+  pending: "Pending",
+  "in-progress": "In Progress",
+  done: "Done",
+};
+
 const MONTHS = [
   "January",
   "February",
@@ -406,11 +412,12 @@ export function CounsellorWorksheetSection() {
                     <td>
                       <div className="counsellor-worksheet__status-cell">
                         <span className={`counsellor-worksheet__badge counsellor-worksheet__badge--${row.status}`}>
-                          {row.status === "done" ? "Done" : "Pending"}
+                          {STATUS_LABELS[row.status]}
                         </span>
                         {canToggle && (
                           <Select value={row.status} onChange={(v) => handleToggleStatus(row, v as WorksheetRowStatus)}>
                             <option value="pending">Pending</option>
+                            <option value="in-progress">In Progress</option>
                             <option value="done">Done</option>
                           </Select>
                         )}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import {
   listBookableProfiles,
@@ -21,7 +21,6 @@ import { FEEDBACK_FORM } from "../../config/feedbackForm";
 import type { UserProfile } from "../../types/user";
 import type { Booking, BookingIntake } from "../../types/booking";
 import { computeLiveStatus } from "../../utils/counsellorStatus";
-import { CounsellorCard } from "../../components/booking/CounsellorCard";
 import { CounsellorProfileModal } from "../../components/booking/CounsellorProfileModal";
 import { SsiTestModal } from "../../components/booking/SsiTestModal";
 import { Card } from "../../components/common/Card";
@@ -85,6 +84,35 @@ function statusWord(booking: Booking): string {
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
+// The day a session actually falls on, used by the date filter and the date
+// shown on each row: the confirmed time once there is one, the newly proposed
+// time while a reschedule is being negotiated, otherwise the first slot the
+// student asked for — and for a Crisis SOS (which never carries a time), the
+// day they asked for help.
+function sessionTimestamp(booking: Booking): number {
+  return (
+    booking.scheduledAt ??
+    booking.rescheduleProposal?.proposedAt ??
+    booking.proposedSlots?.[0] ??
+    booking.createdAt
+  );
+}
+
+function dateKey(timestamp: number): string {
+  const d = new Date(timestamp);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function formatDay(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export function BookingSection({
   openChatBookingId,
   onChatOpened,
@@ -105,7 +133,6 @@ export function BookingSection({
   onCompensationOpened?: () => void;
 }) {
   const { currentUser, profile } = useAuth();
-  const [counsellors, setCounsellors] = useState<UserProfile[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,6 +175,8 @@ export function BookingSection({
   const [ssiTarget, setSsiTarget] = useState<Booking | null>(null);
   const [respondingToCompensation, setRespondingToCompensation] = useState(false);
   const [ssiIntakeWhatsapp, setSsiIntakeWhatsapp] = useState("");
+  // "YYYY-MM-DD" of the session day to show, or "" for every booking.
+  const [sessionDateFilter, setSessionDateFilter] = useState("");
 
   async function openSsiTest(b: Booking) {
     setSsiTarget(b);
@@ -162,14 +191,13 @@ export function BookingSection({
 
   async function refresh() {
     if (!currentUser) return;
-    const [profiles, userBookings, liveBookings, feedback, ssiResults] = await Promise.all([
+    const [, userBookings, liveBookings, feedback, ssiResults] = await Promise.all([
       listBookableProfiles(),
       listBookingsForUser(currentUser.uid),
       listScheduledBookings(),
       listFeedbackForUser(currentUser.uid).catch(() => []),
       listSsiResultsForUser(currentUser.uid).catch(() => []),
     ]);
-    setCounsellors(profiles);
     setBookings(userBookings);
     setScheduledBookings(liveBookings);
     setSubmittedFeedbackIds(new Set(feedback.map((f) => f.bookingId)));
@@ -378,6 +406,33 @@ export function BookingSection({
     (q) => q.required && !(feedbackAnswers[q.id]?.trim()),
   );
 
+  // Only the days that actually have a session on them — so the filter offers
+  // real dates to tap rather than an empty date picker.
+  const bookedDates = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const b of bookings) {
+      const key = dateKey(sessionTimestamp(b));
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+      .map(([key, count]) => {
+        const d = new Date(`${key}T00:00:00`);
+        return {
+          key,
+          count,
+          weekday: d.toLocaleDateString(undefined, { weekday: "short" }),
+          dayMonth: d.toLocaleDateString(undefined, { day: "numeric", month: "short" }),
+        };
+      });
+  }, [bookings]);
+
+  const filteredBookings = sessionDateFilter
+    ? bookings
+        .filter((b) => dateKey(sessionTimestamp(b)) === sessionDateFilter)
+        .sort((a, b) => sessionTimestamp(a) - sessionTimestamp(b))
+    : bookings;
+
   async function submitFeedback() {
     const feedbackBookingRef = feedbackBooking;
     const overallRating = Number(feedbackAnswers["overall"] ?? 0);
@@ -411,30 +466,34 @@ export function BookingSection({
   return (
     <div className="booking-section">
       <section>
-        <h2 className="booking-section__heading">Counsellors</h2>
-        {activeBooking && (
-          <p className="booking-section__notice">
-            You already have an active booking. You can book someone else once it's cancelled or rejected.
-          </p>
-        )}
-        <div className="booking-section__grid">
-          {counsellors.map((c) => (
-            <CounsellorCard
-              key={c.uid}
-              profile={c}
-              status={computeLiveStatus(c, scheduledBookings)}
-              onClick={() => setViewingProfile(c)}
-            />
-          ))}
-          {counsellors.length === 0 && <p>No counsellors are set up yet.</p>}
-        </div>
-      </section>
-
-      <section>
         <h2 className="booking-section__heading">My Bookings</h2>
         {bookings.length === 0 && <p>You haven't requested a session yet.</p>}
+        {bookings.length > 0 && (
+          <div className="booking-section__date-filter">
+            <div className="booking-section__date-filter-field">
+              <span className="booking-section__date-filter-label">Session date</span>
+              <Select
+                id="booking-date-filter"
+                value={sessionDateFilter}
+                onChange={setSessionDateFilter}
+              >
+                <option value="">All dates</option>
+                {bookedDates.map((d) => (
+                  <option key={d.key} value={d.key}>
+                    {d.weekday}, {d.dayMonth} · {d.count} session{d.count === 1 ? "" : "s"}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <span className="booking-section__filter-count">
+              {sessionDateFilter
+                ? `${filteredBookings.length} of ${bookings.length} on this date`
+                : `${bookings.length} total`}
+            </span>
+          </div>
+        )}
         <div className="booking-section__bookings">
-          {bookings.map((b) => (
+          {filteredBookings.map((b) => (
             <Card
               key={b.id}
               className="booking-section__booking-row booking-section__booking-row--collapsed"
@@ -445,6 +504,7 @@ export function BookingSection({
                 {b.isEmergency && <span className="booking-section__emergency-tag">Crisis SOS</span>}
                 {b.followUpOfBookingId && <span className="booking-section__followup-tag">(follow-up)</span>}
               </span>
+              <span className="booking-section__row-date">{formatDay(sessionTimestamp(b))}</span>
               <div className="booking-section__row-right booking-section__row-right--pinned">
                 <span className={`booking-section__status booking-section__status--${statusClass(b)}`}>
                   {statusWord(b)}

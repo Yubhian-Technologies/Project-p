@@ -2,29 +2,18 @@
   box-sizing: border-box;
 }
 
-/* Global thin scrollbar — applies to the page and every scrollable element (modals, dropdowns, lists) */
+/* Scrollbars hidden everywhere — the page and every scrollable element
+   (modals, dropdowns, lists) still scroll via wheel/trackpad/keyboard, the
+   bar itself just isn't drawn. */
 html {
   scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(109, 116, 214, 0.4) transparent;
+  scrollbar-width: none;
 }
 
 *::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: rgba(109, 116, 214, 0.4);
-  border-radius: 9999px;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background: rgba(109, 116, 214, 0.75);
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 :root {

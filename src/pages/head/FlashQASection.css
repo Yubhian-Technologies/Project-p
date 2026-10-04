@@ -86,7 +86,7 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--neu-accent-primary, #2563EB);
+  color: var(--neu-accent-primary, #2065F6);
 }
 
 .flash-qa-card-editor__field {
@@ -131,5 +131,5 @@
 
 .flash-qa-card-editor__input:focus,
 .flash-qa-card-editor__textarea:focus {
-  outline: 2px solid var(--neu-accent-primary, #2563EB);
+  outline: 2px solid var(--neu-accent-primary, #2065F6);
 }

@@ -21,7 +21,7 @@ export function liveStatusLabel(status: LiveStatus): string {
     case "available":
       return "Available";
     case "unavailable":
-      return "Unavailable";
+      return "Leave";
     case "in-session":
       return "In Session";
   }

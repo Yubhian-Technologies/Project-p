@@ -52,6 +52,32 @@
   box-sizing: border-box;
 }
 
+.sidebar__item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.sidebar__item-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sidebar__item--active .sidebar__item-icon,
+.sidebar__item:hover .sidebar__item-icon {
+  opacity: 1;
+}
+
 .sidebar__item-label {
   flex: 1;
 }

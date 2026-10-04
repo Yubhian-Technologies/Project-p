@@ -52,37 +52,56 @@ export function Select({ id, value, onChange, disabled, children }: SelectProps)
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Positioned fixed (via the control's live screen rect) rather than
-  // absolute-under-the-control: a `position: absolute` menu gets silently
-  // clipped whenever any ancestor needs `overflow-x: auto` for its own
-  // layout (e.g. a horizontally-scrollable table) — CSS forces that
-  // ancestor's overflow-y to clip too, cutting the dropdown off. Fixed
-  // positioning escapes that entirely.
+  // Recompute position on scroll/resize (not just at open), and update on
+  // window visual viewport changes; also only close when the *window*
+  // (page) scrolls/resizes — not when scrolling inside the dropdown.
   useLayoutEffect(() => {
     if (!open || !containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    setMenuStyle({
-      position: "fixed",
-      top: rect.bottom + 8,
-      left: rect.left,
-      width: rect.width,
-      right: "auto",
-    });
+    function updatePosition() {
+      const rect = containerRef.current!.getBoundingClientRect();
+      const menuHeight = 220;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const openUp = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+      const maxHeight = openUp ? Math.max(180, spaceAbove - 16) : Math.max(180, spaceBelow - 16);
+      setMenuStyle({
+        position: "fixed",
+        ...(openUp
+          ? { bottom: Math.max(8, window.innerHeight - rect.top + 8), top: "auto" }
+          : { top: Math.min(window.innerHeight - 8, rect.bottom + 8), bottom: "auto" }),
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - Math.min(rect.width, 320) - 8)),
+        width: rect.width,
+        right: "auto",
+        maxHeight,
+      });
+    }
+    updatePosition();
+    const onResize = () => updatePosition();
+    const onScroll = () => updatePosition();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    window.visualViewport?.addEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("scroll", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll, { capture: true });
+      window.visualViewport?.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("scroll", onResize);
+    };
   }, [open]);
 
-  // The menu's position is only computed at open time, so if the page (or a
-  // scrolling ancestor) moves while it's open, close it rather than let it
-  // drift away from the control it belongs to.
+  // Only close on *page* scroll/resize (not when scrolling inside the menu).
+  // Also don't close on scroll events that originate from inside the menu.
   useEffect(() => {
     if (!open) return;
-    function handleScroll() {
+    function handleWindowResize() {
       setOpen(false);
     }
-    window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
-    window.addEventListener("resize", handleScroll);
+    window.addEventListener("resize", handleWindowResize);
+    window.visualViewport?.addEventListener("resize", handleWindowResize);
     return () => {
-      window.removeEventListener("scroll", handleScroll, { capture: true });
-      window.removeEventListener("resize", handleScroll);
+      window.removeEventListener("resize", handleWindowResize);
+      window.visualViewport?.removeEventListener("resize", handleWindowResize);
     };
   }, [open]);
 

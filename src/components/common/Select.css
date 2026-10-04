@@ -68,12 +68,14 @@
   margin: 0;
   padding: 6px;
   list-style: none;
-  max-height: 260px;
+  max-height: 220px;
   overflow-y: auto;
+  overflow-x: hidden;
   background: #FFFFFF;
-  border-radius: 20px;
+  border-radius: 16px;
   border: 1px solid rgba(46, 43, 39, 0.08);
   box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
+  -webkit-overflow-scrolling: touch;
 }
 
 .md-select__option {
