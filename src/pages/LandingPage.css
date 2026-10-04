@@ -229,9 +229,20 @@ body {
 /* Shared section layout — a plain stacked page, sections divided by a hairline instead of boxed cards */
 .landing-section {
   width: 100%;
-  padding: 56px clamp(24px, 5vw, 64px);
+  padding: 64px clamp(24px, 5vw, 64px);
   box-sizing: border-box;
   border-top: 1px solid #E2E8F0;
+}
+
+.landing-section:first-of-type {
+  border-top: none;
+}
+
+.landing-section-container {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 
@@ -473,6 +484,438 @@ body {
   margin-bottom: 8px;
 }
 
+/* ==========================================================================
+   Wellness Journey Section (5 Horizontal Cards Grid with Soft Hover Effects)
+   ========================================================================== */
+.landing-journey-section {
+  text-align: center;
+}
+
+.landing-journey-header {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto 3rem auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.landing-journey-subtitle {
+  font-family: var(--font-main);
+  font-size: 16.5px;
+  line-height: 1.6;
+  font-weight: 500;
+  color: #64748B;
+  margin: 10px 0 0 0;
+}
+
+.landing-doodle {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.landing-doodle--left {
+  left: -50px;
+  top: 10px;
+}
+
+.landing-doodle--right {
+  right: -50px;
+  top: 0px;
+}
+
+.landing-journey-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+  width: 100%;
+  box-sizing: border-box;
+  perspective: 1200px;
+}
+
+.landing-journey-card {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  transform-style: preserve-3d;
+  box-shadow: 0 8px 24px -6px rgba(15, 23, 42, 0.04),
+              0 2px 6px -1px rgba(15, 23, 42, 0.02);
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s ease,
+              background 0.35s ease;
+  will-change: transform, box-shadow;
+}
+
+/* Parallel 3D Float — Keeps all 5 cards strictly straight and aligned */
+.landing-journey-card:hover {
+  transform: translateY(-8px) translateZ(18px) scale(1.025);
+  background: linear-gradient(150deg, #FFFFFF 0%, #FAFDFD 100%);
+}
+
+/* Interactive Theme-Colored Border Glows */
+.landing-journey-card--teal:hover {
+  border-color: #38BDF8;
+  box-shadow: 0 22px 48px -10px rgba(56, 189, 248, 0.22),
+              0 10px 20px -4px rgba(56, 189, 248, 0.12),
+              0 0 0 1px #38BDF8;
+}
+
+.landing-journey-card--indigo:hover {
+  border-color: #818CF8;
+  box-shadow: 0 22px 48px -10px rgba(129, 140, 248, 0.22),
+              0 10px 20px -4px rgba(129, 140, 248, 0.12),
+              0 0 0 1px #818CF8;
+}
+
+.landing-journey-card--orange:hover {
+  border-color: #FB923C;
+  box-shadow: 0 22px 48px -10px rgba(251, 146, 60, 0.22),
+              0 10px 20px -4px rgba(251, 146, 60, 0.12),
+              0 0 0 1px #FB923C;
+}
+
+.landing-journey-card--rose:hover {
+  border-color: #F43F5E;
+  box-shadow: 0 22px 48px -10px rgba(244, 63, 94, 0.22),
+              0 10px 20px -4px rgba(244, 63, 94, 0.12),
+              0 0 0 1px #F43F5E;
+}
+
+.landing-journey-card--mint:hover {
+  border-color: #34D399;
+  box-shadow: 0 22px 48px -10px rgba(52, 211, 153, 0.22),
+              0 10px 20px -4px rgba(52, 211, 153, 0.12),
+              0 0 0 1px #34D399;
+}
+
+.landing-journey-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  transform-style: preserve-3d;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.38s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+.landing-journey-card:hover .landing-journey-icon {
+  transform: translateZ(28px) scale(1.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.landing-journey-icon--teal {
+  background-color: #E0F2FE;
+  color: #0284C7;
+}
+
+.landing-journey-icon--indigo {
+  background-color: #EEF2FF;
+  color: #4F46E5;
+}
+
+.landing-journey-icon--orange {
+  background-color: #FFF7ED;
+  color: #EA580C;
+}
+
+.landing-journey-icon--rose {
+  background-color: #FFE4E6;
+  color: #E11D48;
+}
+
+.landing-journey-icon--mint {
+  background-color: #ECFDF5;
+  color: #059669;
+}
+
+.landing-journey-card__title {
+  font-family: 'DM Serif Display', var(--font-headline), serif;
+  font-size: 19px;
+  line-height: 1.3;
+  font-weight: 400;
+  color: #0F172A;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.01em;
+  transform-style: preserve-3d;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-journey-card:hover .landing-journey-card__title {
+  transform: translateZ(20px);
+}
+
+.landing-journey-card__desc {
+  font-family: var(--font-main);
+  font-size: 13.5px;
+  line-height: 1.65;
+  font-weight: 450;
+  color: #64748B;
+  margin: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-journey-card:hover .landing-journey-card__desc {
+  transform: translateZ(12px);
+}
+
+@media (max-width: 1024px) {
+  .landing-journey-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .landing-journey-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .landing-doodle {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Find What You Need / How Are You Really Doing? Section
+   ========================================================================== */
+.landing-doing-section {
+  text-align: center;
+  position: relative;
+}
+
+.landing-doing-header {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto 3rem auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.landing-accent-italic {
+  font-family: 'Playfair Display', 'DM Serif Display', serif;
+  font-style: italic;
+  color: #0D9488;
+  font-weight: 500;
+  padding: 0 4px;
+}
+
+.landing-doing-subtitle {
+  font-family: var(--font-main);
+  font-size: 16.5px;
+  line-height: 1.6;
+  font-weight: 500;
+  color: #64748B;
+  margin: 8px 0 0 0;
+}
+
+.landing-doodle-note {
+  position: absolute;
+  right: -140px;
+  top: -10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: rotate(4deg);
+}
+
+.landing-doodle-note__text {
+  font-family: 'DM Serif Display', cursive, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.landing-doodle-note__svg {
+  margin-top: -2px;
+}
+
+.landing-doing-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.landing-doing-card {
+  border-radius: 20px;
+  padding: 14px 14px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+}
+
+.landing-doing-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.12);
+}
+
+/* Pastel Theme Backgrounds */
+.landing-doing-card--pink {
+  background-color: #FFF0F2;
+}
+
+.landing-doing-card--blue {
+  background-color: #EFF6FF;
+}
+
+.landing-doing-card--mint {
+  background-color: #ECFDF5;
+}
+
+.landing-doing-card--peach {
+  background-color: #FFF7ED;
+}
+
+.landing-doing-card--lavender {
+  background-color: #F5F3FF;
+}
+
+.landing-doing-card--yellow {
+  background-color: #FEFCE8;
+}
+
+.landing-doing-card__image-wrapper {
+  width: 100%;
+  height: 175px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background-color: #E2E8F0;
+}
+
+.landing-doing-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s ease;
+}
+
+.landing-doing-card:hover .landing-doing-card__image {
+  transform: scale(1.05);
+}
+
+.landing-doing-card__content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.landing-doing-card__title {
+  font-family: 'DM Serif Display', var(--font-headline), serif;
+  font-size: 17.5px;
+  line-height: 1.35;
+  font-weight: 400;
+  color: #0F172A;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.01em;
+}
+
+.landing-doing-card__desc {
+  font-family: var(--font-main);
+  font-size: 12.5px;
+  line-height: 1.55;
+  font-weight: 500;
+  color: #64748B;
+  margin: 0 0 18px 0;
+}
+
+.landing-doing-card__arrow {
+  margin-top: auto;
+  align-self: flex-end;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.landing-doing-card--pink .landing-doing-card__arrow {
+  background-color: #FECDD3;
+  color: #E11D48;
+}
+
+.landing-doing-card--blue .landing-doing-card__arrow {
+  background-color: #BFDBFE;
+  color: #2563EB;
+}
+
+.landing-doing-card--mint .landing-doing-card__arrow {
+  background-color: #A7F3D0;
+  color: #059669;
+}
+
+.landing-doing-card--peach .landing-doing-card__arrow {
+  background-color: #FFEDD5;
+  color: #EA580C;
+}
+
+.landing-doing-card--lavender .landing-doing-card__arrow {
+  background-color: #DDD6FE;
+  color: #7C3AED;
+}
+
+.landing-doing-card--yellow .landing-doing-card__arrow {
+  background-color: #FEF08A;
+  color: #CA8A04;
+}
+
+.landing-doing-card:hover .landing-doing-card__arrow {
+  transform: translateX(3px) scale(1.05);
+}
+
+@media (max-width: 1280px) {
+  .landing-doing-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .landing-doodle-note {
+    right: -20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-doing-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .landing-doodle-note {
+    position: static;
+    margin-top: 12px;
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-doing-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* FAQ — 2-Column Light Mode Layout with Silky Hover Transitions */
 .landing-faq-layout {
   display: grid;
@@ -507,25 +950,49 @@ body {
   max-width: 320px;
 }
 
-.landing-faq-contact {
-  font-family: var(--font-main);
-  font-size: 14.5px;
-  line-height: 1.65;
-  color: #64748B;
-  margin: 0;
+.landing-faq-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
   max-width: 320px;
 }
 
-.landing-faq-contact__link {
-  color: #061330;
+.landing-faq-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  transition: color 0.2s ease;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.28);
+  transition: all 0.22s ease;
 }
 
-.landing-faq-contact__link:hover {
-  color: #EA580C;
+.landing-faq-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.38);
+}
+
+.landing-faq-note {
+  font-family: var(--font-main);
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748B;
+  margin: 0;
+}
+
+.landing-faq-note__link {
+  display: inline-block;
+  margin-top: 4px;
+  color: #0F172A;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.landing-faq-note__link:hover {
+  color: #F97316;
+  transform: translateX(3px);
 }
 
 .faq-list {
@@ -630,6 +1097,7 @@ body {
   line-height: 1.75;
   font-weight: 450;
   color: #475569;
+  white-space: pre-line;
   transform: translateY(-6px);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -968,3 +1436,262 @@ body {
     text-align: center;
   }
 }
+
+/* ── About Section — Split 2-Column Design ──────────────── */
+.landing-about-section {
+  padding: 80px clamp(24px, 5vw, 64px);
+  background: #FCFBF9;
+}
+
+.landing-about-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 56px;
+  align-items: center;
+}
+
+.landing-about-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.landing-about-title {
+  font-family: 'DM Serif Display', var(--font-headline), serif;
+  font-size: clamp(32px, 3.8vw, 46px);
+  line-height: 1.18;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: #0F172A;
+  margin: 12px 0 20px 0;
+}
+
+.landing-about-title__accent {
+  position: relative;
+  display: inline-block;
+  color: #0F172A;
+}
+
+.landing-about-title__stroke {
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  width: 100%;
+  height: 10px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.landing-about-body {
+  font-family: var(--font-main);
+  font-size: 16px;
+  line-height: 1.68;
+  font-weight: 450;
+  color: #475569;
+  margin: 0 0 32px 0;
+  max-width: 580px;
+}
+
+.landing-about-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.landing-about-btn-primary {
+  background: #0B193C;
+  color: #FFFFFF !important;
+  border-radius: 9999px;
+  padding: 14px 28px;
+  font-size: 14.5px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(11, 25, 60, 0.18);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.landing-about-btn-primary:hover {
+  background: #142858;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(11, 25, 60, 0.28);
+}
+
+.landing-about-btn-secondary {
+  font-family: var(--font-main);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #1E293B;
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 9999px;
+  padding: 13px 26px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.landing-about-btn-secondary:hover {
+  border-color: #94A3B8;
+  background: #F8FAFC;
+  color: #0F172A;
+  transform: translateY(-1px);
+}
+
+.landing-about-features {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.landing-about-features::-webkit-scrollbar {
+  display: none; /* Chrome / Safari / Edge */
+}
+
+.landing-about-feature {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-main);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #475569;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-about-feature:hover {
+  color: #0D9488;
+  background: #F0FDF4;
+  transform: translateY(-2px);
+}
+
+/* Right Media Column */
+.landing-about-media {
+  position: relative;
+  width: 100%;
+}
+
+.landing-about-image-wrapper {
+  width: 100%;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.12),
+              0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.landing-about-image {
+  width: 100%;
+  height: 100%;
+  max-height: 480px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Hand-drawn Doodle Badges */
+.landing-about-doodle {
+  position: absolute;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.landing-about-doodle--yellow {
+  top: -24px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transform: rotate(-6deg);
+}
+
+.landing-about-doodle__rays {
+  margin-left: 20px;
+  margin-bottom: -4px;
+}
+
+.landing-about-doodle__card {
+  background: #FEF3C7;
+  border-radius: 20px;
+  padding: 10px 18px;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.2);
+}
+
+.landing-about-doodle__line1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px;
+  font-weight: 400;
+  color: #1E293B;
+}
+
+.landing-about-doodle__line2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1E293B;
+  letter-spacing: -0.02em;
+}
+
+.landing-about-doodle__line3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 19px;
+  font-weight: 400;
+  color: #1E293B;
+}
+
+.landing-about-doodle--mint {
+  top: -30px;
+  right: 16px;
+  transform: rotate(5deg);
+}
+
+.landing-about-doodle__bubble {
+  background: #CCFBF1;
+  border-radius: 26px 26px 8px 26px;
+  padding: 12px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-main);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  color: #0D9488;
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.18);
+  position: relative;
+}
+
+.landing-about-doodle__arrow {
+  position: absolute;
+  right: -10px;
+  bottom: -18px;
+}
+
+/* Responsive Styles for About Section */
+@media (max-width: 960px) {
+  .landing-about-container {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .landing-about-media {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+

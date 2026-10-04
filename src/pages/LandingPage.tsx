@@ -6,30 +6,85 @@ import { CardFanCarousel } from "../components/ui/CardFanCarousel";
 import { PerspectiveDeckCarousel } from "../components/ui/PerspectiveDeckCarousel";
 import "./LandingPage.css";
 
-const ABOUT_CARDS = [
+const VALUES_CARDS = [
   {
     id: 1,
-    title: "Positive Psychology",
-    subtitle: "Mindset & Growth",
-    imageUrl: "/about-photo-1.jpg",
+    title: "Confidentiality",
+    subtitle: "100% Private & Secure",
+    description:
+      "Everything you share stays strictly between you and your counsellor — private, secure, and never disclosed without your consent.",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      </svg>
+    ),
+    accentColor: "#059669",
+    bgGradient: "linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)",
+    borderColor: "#86EFAC",
   },
   {
     id: 2,
-    title: "Cognitive Balance",
-    subtitle: "Brain & Emotion",
-    imageUrl: "/about-photo-2.jpg",
+    title: "Empathy",
+    subtitle: "Warmth & Understanding",
+    description:
+      "Every session starts with genuinely listening — our counsellors meet you where you are, with warmth, compassion, and deep understanding.",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.72-8.72 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      </svg>
+    ),
+    accentColor: "#4F46E5",
+    bgGradient: "linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)",
+    borderColor: "#A5B4FC",
   },
   {
     id: 3,
-    title: "Mental Wellness",
-    subtitle: "Evidence-Based",
-    imageUrl: "/about-photo-3.webp",
+    title: "Non-judgemental",
+    subtitle: "Safe Space Always",
+    description:
+      "A safe space to share exactly as you are — no labels, no stigma, no judgement, just unconditional support.",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EA580C" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+    ),
+    accentColor: "#EA580C",
+    bgGradient: "linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)",
+    borderColor: "#FDBA74",
   },
   {
     id: 4,
-    title: "Clarity & Healing",
-    subtitle: "Guided Discovery",
-    imageUrl: "/about-photo-4.webp",
+    title: "Student-Centered",
+    subtitle: "Campus & Academic Life",
+    description:
+      "Tailored specifically to academic life, exam pressure, career adjustments, relationships, and personal growth for Vishnu students.",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+        <path d="M6 12v5c3 3 9 3 12 0v-5" />
+      </svg>
+    ),
+    accentColor: "#DB2777",
+    bgGradient: "linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%)",
+    borderColor: "#F472B6",
+  },
+  {
+    id: 5,
+    title: "Professional Excellence",
+    subtitle: "Certified Support",
+    description:
+      "Guidance provided by qualified mental health professionals utilizing evidence-based psychological tools and coping strategies.",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0284C7" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="8" r="7" />
+        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+      </svg>
+    ),
+    accentColor: "#0284C7",
+    bgGradient: "linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)",
+    borderColor: "#7DD3FC",
   },
 ];
 
@@ -200,59 +255,49 @@ const TEAM_CARDS = [
 
 const FAQS = [
   {
-    question: "What is counseling?",
+    question: "What is counselling?",
     answer:
-      "Counselling is a confidential, supportive conversation with a trained professional to help you understand your feelings, work through challenges, and build healthier ways of coping.",
+      "Counselling is a confidential and supportive conversation with a trained wellness counsellor. It gives you a safe space to understand your thoughts, emotions, behaviors, and challenges and to develop practical ways of coping and moving forward.\n\nYou don't need to have a serious problem to seek counselling. You can reach out whenever you feel overwhelmed, confused, or stressed, or simply want someone to talk to.",
   },
   {
-    question: "Will my sessions be confidential?",
+    question: "Is counselling confidential?",
     answer:
-      "Yes. Everything you share stays strictly between you and your counsellor, and is never disclosed to anyone else without your explicit consent — except in rare situations involving risk of harm to yourself or others.",
+      "Yes. Your privacy is respected. Information shared during counselling is handled professionally and is not routinely shared with friends, faculty, or other students.\n\nHowever, confidentiality has important limits in situations involving serious and immediate risk of harm to yourself or someone else, or where disclosure is otherwise required by applicable professional or legal requirements. Your counsellor will explain these limits when appropriate.",
   },
   {
-    question: "How many sessions will I have to attend?",
+    question: "Do I need to have a mental health problem to meet a counsellor?",
     answer:
-      "There's no fixed number — it depends on your goals and progress. Some people find a few sessions helpful, while others continue over a longer period. Your counsellor will discuss a plan with you.",
+      "Not at all. You can approach the Wellness Centre for everyday concerns such as:\n• Academic pressure & Exam stress\n• Overthinking & Relationship difficulties\n• Homesickness & Sleep problems\n• Low confidence & Family concerns\n• Anger, Loneliness, or Difficulty making decisions\n• Personal growth\n\nYou don't have to wait until things become serious to ask for support.",
   },
   {
-    question: "Can I get a refund?",
+    question: "How long does a counselling session last?",
     answer:
-      "Refund eligibility depends on your enrollment/payment plan and how far in advance a session is cancelled. Reach out to our team and we'll review your specific case.",
+      "A counselling session generally takes around 45–60 minutes, depending on the nature of the session and the Wellness Centre's scheduling system. The exact duration may vary.",
   },
   {
-    question: "Who is a counseling psychologist?",
+    question: "Do I need an appointment?",
     answer:
-      "A counselling psychologist is a licensed mental health professional trained to help people manage everyday life challenges, emotional difficulties, and personal growth through talk-based therapy.",
+      "Students can book a counselling appointment through the Vishnu Wellness Centre platform. If walk-in support is available at your institution, you may also approach the Wellness Centre directly.\n\nFor urgent concerns, follow the emergency support pathway rather than waiting for a routine appointment.",
   },
   {
-    question: "Who is a clinical psychologist?",
+    question: "Is counselling free for Vishnu students?",
     answer:
-      "A clinical psychologist is trained to assess, diagnose, and treat more complex mental health conditions, often using evidence-based therapeutic approaches.",
+      "Counselling support provided through the Vishnu Wellness Centre is intended as a student wellness support service within the institution. Students should check the current Wellness Centre information or appointment system for details regarding any specialised external services or referrals that may involve additional costs.",
   },
   {
-    question: "Is it safe to take medications for mental health?",
+    question: "Can I approach the Wellness Centre for someone else?",
     answer:
-      "When prescribed and monitored by a qualified psychiatrist, mental health medications are safe and can be an effective part of treatment. Never start, stop, or adjust medication without medical guidance.",
+      "Yes. If you are worried about a friend, roommate, or classmate, you can approach the Wellness Centre and explain your concern. You don't need to diagnose your friend — simply tell us what you have noticed and why you are concerned. The counsellor can guide you on how to approach and support the student appropriately.",
   },
   {
-    question: "Who is a psychiatrist?",
+    question: "What if my friend is talking about suicide or self-harm?",
     answer:
-      "A psychiatrist is a medical doctor who specialises in diagnosing and treating mental health conditions, and is qualified to prescribe medication when needed.",
+      "Take it seriously and don't leave them to manage the situation alone. Stay with the person when possible, encourage them to seek immediate professional help, and contact the appropriate campus emergency/wellness support or emergency services when there is immediate danger.\n\nYou do not need to be a psychologist to help someone in crisis. If there is an immediate risk of harm, seek urgent in-person emergency assistance rather than waiting for a routine counselling appointment.",
   },
   {
-    question: "How do I know if I need therapy?",
+    question: "What is the difference between a counsellor, psychologist, and psychiatrist?",
     answer:
-      "If you're feeling persistently overwhelmed, anxious, low, or stuck — or just want a space to talk things through — therapy can help. You don't need a diagnosis to benefit from counselling.",
-  },
-  {
-    question: "Is online therapy as effective as in-person therapy?",
-    answer:
-      "Research shows online therapy can be just as effective as in-person sessions for many concerns, while offering more flexibility and comfort.",
-  },
-  {
-    question: "How can I prepare for my first session?",
-    answer:
-      "Come as you are — there's nothing you need to prepare. It can help to jot down what's been on your mind, but your counsellor will guide the conversation from there.",
+      "• A psychologist is a trained mental health professional who may provide psychological assessment, counselling, and psychotherapy depending on their qualifications and scope of practice.\n• A counsellor provides structured psychological support and counselling within their professional training and scope.\n• A psychiatrist is a medical doctor specializing in mental health who can assess psychiatric conditions and prescribe medication when clinically appropriate.\n\nSometimes different professionals work together as part of a person's care.",
   },
 ];
 
@@ -299,9 +344,9 @@ export function LandingPage() {
             </a>
             <a href="#resources" className="landing-nav__item">
               <svg className="landing-nav__icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.72-8.72 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
-              <span>Resources</span>
+              <span>Find Help</span>
             </a>
             <a href="#faq" className="landing-nav__item">
               <svg className="landing-nav__icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -310,6 +355,16 @@ export function LandingPage() {
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
               <span>FAQ</span>
+            </a>
+            <a href="#terms" className="landing-nav__item">
+              <svg className="landing-nav__icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+              <span>Terms &amp; Policies</span>
             </a>
           </div>
         </nav>
@@ -328,184 +383,371 @@ export function LandingPage() {
       </header>
 
       <main>
-        {/* Hero */}
-        <section className="landing-hero">
-          <div className="landing-hero__content">
-            <h1 className="landing-headline">
-              Elevate Your Mind, Body &amp; Soul. <span className="landing-headline__accent">Redefined.</span>
-            </h1>
-            <p className="landing-subtitle">
-              Book 1-on-1 sessions with certified psychologists, track your personal wellness journey, and
-              receive dedicated counselling support—all in one seamless workspace.
-            </p>
-            <Link to={currentUser ? dashboardPath : "/signup"} className="btn-primary btn-hero-primary">
-              Book Session &rarr;
-            </Link>
+        {/* About Section — Split 2-Column Design */}
+        <section className="landing-section landing-about-section" id="about">
+          <div className="landing-about-container">
+            {/* Left Column: Content */}
+            <div className="landing-about-content">
+              <h2 className="landing-about-title">
+                A calm, judgment-free space to work through what&apos;s on your{" "}
+                <span className="landing-about-title__accent">
+                  mind.
+                  <svg className="landing-about-title__stroke" viewBox="0 0 120 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 8C35 3.5 85 9 117 4" stroke="#0D9488" strokeWidth="3.5" strokeLinecap="round" />
+                  </svg>
+                </span>
+              </h2>
+
+              <p className="landing-about-body">
+                Vishnu Wellness Centre is a student-focused space where you can talk, reflect and find support for
+                life&apos;s challenges — academic, personal or emotional. Our counsellors are here to listen, guide and help
+                you build practical skills for a healthier, happier you.
+              </p>
+
+              <div className="landing-about-actions">
+                <Link to={currentUser ? dashboardPath : "/signup"} className="btn-primary landing-about-btn-primary">
+                  Book a Confidential Session &rarr;
+                </Link>
+                <a href="#features" className="landing-about-btn-secondary">
+                  Explore Features
+                </a>
+              </div>
+
+              <div className="landing-about-features">
+                <a href="#values" className="landing-about-feature">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <span>Confidential</span>
+                </a>
+                <a href="#values" className="landing-about-feature">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  <span>Student Friendly</span>
+                </a>
+                <a href="#values" className="landing-about-feature">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.72-8.72 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                  <span>Professional Support</span>
+                </a>
+                <a href="#values" className="landing-about-feature">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <path d="M9 12l2 2 4-4" />
+                  </svg>
+                  <span>No Judgement</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Right Column: Photo with Doodle Stickers */}
+            <div className="landing-about-media">
+              <div className="landing-about-image-wrapper">
+                <img
+                  src="/about-campus-students.jpg"
+                  alt="Vishnu Wellness Centre campus students talking together"
+                  className="landing-about-image"
+                />
+              </div>
+
+              {/* Doodle Sticker 1 (Top Left) */}
+              <div className="landing-about-doodle landing-about-doodle--yellow">
+                <svg className="landing-about-doodle__rays" width="36" height="24" viewBox="0 0 40 30" fill="none">
+                  <path d="M8 20L2 12M20 10V2M32 20L38 12" stroke="#1E293B" strokeWidth="2.5" strokeLinecap="round" />
+                </svg>
+                <div className="landing-about-doodle__card">
+                  <span className="landing-about-doodle__line1">You</span>
+                  <span className="landing-about-doodle__line2">Matter</span>
+                  <span className="landing-about-doodle__line3">Here</span>
+                </div>
+              </div>
+
+              {/* Doodle Sticker 2 (Top Right) */}
+              <div className="landing-about-doodle landing-about-doodle--mint">
+                <div className="landing-about-doodle__bubble">
+                  <span>TALK</span>
+                  <span>REFLECT</span>
+                  <span>GROW</span>
+                  <svg className="landing-about-doodle__arrow" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M6 8C10 8 16 10 16 18M16 18L11 14M16 18L20 14" stroke="#0D9488" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Core Values */}
-        <section className="landing-section">
-          <h2 className="landing-section__title">Our Values</h2>
-          <div className="landing-values">
-            <div className="landing-values__item">
-              <h3>Confidentiality</h3>
-              <p>
-                Everything you share stays strictly between you and your counsellor — private, secure, and never
-                disclosed without your consent.
-              </p>
-            </div>
-            <div className="landing-values__item">
-              <h3>Empathy</h3>
-              <p>
-                Every session starts with genuinely listening — our counsellors meet you where you are, with warmth
-                and understanding.
-              </p>
-            </div>
-            <div className="landing-values__item">
-              <h3>Non-judgemental</h3>
-              <p>A safe space to share exactly as you are — no labels, no judgement, just support.</p>
-            </div>
+        <section className="landing-section" id="values">
+          <div className="landing-section-container">
+            <h2 className="landing-section__title">Our Values</h2>
+            <p className="landing-section__body">
+              Every interaction at Vishnu Wellness Centre is grounded in empathy, complete privacy, and non-judgmental support.
+            </p>
+
+            <PerspectiveDeckCarousel items={VALUES_CARDS} />
           </div>
         </section>
 
-        {/* About / Guidelines */}
-        <section className="landing-section" id="about">
-          <span className="landing-eyebrow">About Vishnu Wellness Center</span>
-          {/* Placeholder copy — replace with real content */}
-          <h2 className="landing-section__title">A calm, judgment-free space to work through what's on your mind</h2>
-          <p className="landing-section__body">
-            Vishnu Wellness Center connects students and working professionals with licensed counsellors for
-            private, one-on-one support. Every session follows a simple set of principles designed to keep the
-            experience safe, consistent, and genuinely helpful.
-          </p>
-          <ul className="landing-checklist">
-            <li>100% confidential — your sessions stay between you and your counsellor</li>
-            <li>Matched with licensed, certified mental health professionals</li>
-            <li>Flexible scheduling that works around your routine</li>
-            <li>A judgment-free space, every session</li>
-          </ul>
-
-          <PerspectiveDeckCarousel items={ABOUT_CARDS} />
-        </section>
-
-        {/* Our Team — placeholder photos via fan carousel; swap imgUrl for real photos when ready */}
+        {/* Our Team */}
         <section className="landing-section" id="team">
-          <span className="landing-eyebrow">Our Team</span>
-          <h2 className="landing-section__title">The people behind Vishnu Wellness Center</h2>
-          <p className="landing-section__body">
-            Our counsellors are licensed, certified mental health professionals dedicated to providing compassionate,
-            personalised support — hover the cards to meet the team.
-          </p>
+          <div className="landing-section-container">
+            <h2 className="landing-section__title">The people behind Vishnu Wellness Center</h2>
+            <p className="landing-section__body">
+              Our counsellors are certified mental health professionals dedicated to providing compassionate,
+              personalised support.
+            </p>
 
-          <CardFanCarousel cards={TEAM_CARDS} />
+            <CardFanCarousel cards={TEAM_CARDS} />
+          </div>
         </section>
 
-        {/* Features — placeholder highlights, replace with real specifics */}
-        <section className="landing-section" id="features">
-          <span className="landing-eyebrow">Why Vishnu Wellness Center</span>
-          <h2 className="landing-section__title">Everything you need for your wellness journey</h2>
+        {/* Features / Why Vishnu Wellness Centre */}
+        <section className="landing-section landing-journey-section" id="features">
+          <div className="landing-journey-header">
+            <h2 className="landing-section__title">Everything you need for your wellness journey</h2>
+            <p className="landing-journey-subtitle">
+              Professional support, practical tools and a safe space to help you navigate student life.
+            </p>
+          </div>
 
-          <div className="landing-list">
-            <div className="landing-list__item">
-              <div className="landing-list__icon">
-                <svg viewBox="0 0 24 24">
-                  <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+          <div className="landing-journey-grid">
+            {/* Card 1: Confidential Counselling */}
+            <div className="landing-journey-card landing-journey-card--teal">
+              <div className="landing-journey-icon landing-journey-icon--teal">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  <circle cx="9" cy="10" r="1" fill="currentColor" />
+                  <circle cx="12" cy="10" r="1" fill="currentColor" />
+                  <circle cx="15" cy="10" r="1" fill="currentColor" />
                 </svg>
               </div>
-              <div>
-                <h3>1-on-1 Video &amp; Chat Sessions</h3>
-                <p>Connect with your counsellor privately, on your schedule.</p>
-              </div>
+              <h3 className="landing-journey-card__title">Confidential Counselling</h3>
+              <p className="landing-journey-card__desc">
+                A safe space to talk about academic, personal, emotional or relationship concerns.
+              </p>
             </div>
 
-            <div className="landing-list__item">
-              <div className="landing-list__icon">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1.2 14.6l-3.6-3.6 1.4-1.4 2.2 2.2 5-5 1.4 1.4-6.4 6.4z" />
+            {/* Card 2: Professional Support */}
+            <div className="landing-journey-card landing-journey-card--indigo">
+              <div className="landing-journey-icon landing-journey-icon--indigo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
               </div>
-              <div>
-                <h3>Certified Psychologists</h3>
-                <p>Every counsellor is vetted and certified before joining.</p>
-              </div>
+              <h3 className="landing-journey-card__title">Professional Support</h3>
+              <p className="landing-journey-card__desc">
+                Guidance from trained counsellors with a compassionate, student-focused approach.
+              </p>
             </div>
 
-            <div className="landing-list__item">
-              <div className="landing-list__icon">
-                <svg viewBox="0 0 24 24">
-                  <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
+            {/* Card 3: Easy & Flexible Access */}
+            <div className="landing-journey-card landing-journey-card--orange">
+              <div className="landing-journey-icon landing-journey-icon--orange">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
               </div>
-              <div>
-                <h3>Flexible Scheduling</h3>
-                <p>Book, reschedule, or follow up whenever it suits you.</p>
-              </div>
+              <h3 className="landing-journey-card__title">Easy &amp; Flexible Access</h3>
+              <p className="landing-journey-card__desc">
+                Book a session, reschedule or follow up at a time that works for you.
+              </p>
             </div>
 
-            <div className="landing-list__item">
-              <div className="landing-list__icon">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6-9h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM8 6a4 4 0 0 1 8 0v2H8V6z" />
+            {/* Card 4: Privacy Matters */}
+            <div className="landing-journey-card landing-journey-card--rose">
+              <div className="landing-journey-icon landing-journey-icon--rose">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <rect x="9" y="11" width="6" height="5" rx="1" />
+                  <path d="M10 11V9a2 2 0 1 1 4 0v2" />
                 </svg>
               </div>
-              <div>
-                <h3>Confidential by Design</h3>
-                <p>Your sessions and details stay private, always.</p>
-              </div>
+              <h3 className="landing-journey-card__title">Privacy Matters</h3>
+              <p className="landing-journey-card__desc">
+                Your conversations and details are handled with care and confidentiality.
+              </p>
             </div>
 
-            <div className="landing-list__item">
-              <div className="landing-list__icon">
-                <svg viewBox="0 0 24 24">
-                  <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
+            {/* Card 5: Your Progress, Your Journey */}
+            <div className="landing-journey-card landing-journey-card--mint">
+              <div className="landing-journey-icon landing-journey-icon--mint">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a10 10 0 0 0-7.07 17.07L12 22l7.07-2.93A10 10 0 0 0 12 2z" />
+                  <path d="M12 6v8" />
+                  <path d="M8 10l4 4 4-4" />
                 </svg>
               </div>
-              <div>
-                <h3>Progress You Can Track</h3>
-                <p>Session history and follow-ups, all in one place.</p>
-              </div>
+              <h3 className="landing-journey-card__title">Your Progress, Your Journey</h3>
+              <p className="landing-journey-card__desc">
+                Set goals, build coping skills and work towards a healthier, more balanced you.
+              </p>
             </div>
           </div>
         </section>
 
-        {/* Resources — generic placeholder labels, no invented real titles/authors */}
-        <section className="landing-section" id="resources">
-          <span className="landing-eyebrow">Resources We Follow</span>
-          <h2 className="landing-section__title">Grounded in trusted guidelines and reading</h2>
+        {/* Find What You Need / How Are You Really Doing? */}
+        <section className="landing-section landing-doing-section" id="resources">
+          <div className="landing-doing-header">
+            <h2 className="landing-section__title">
+              How are you <span className="landing-accent-italic">really</span> doing?
+            </h2>
+            <p className="landing-doing-subtitle">
+              Whatever you&apos;re going through, there&apos;s a place to start.
+            </p>
 
-          <div className="landing-list">
-            <div className="landing-list__item">
-              <div>
-                <span className="landing-tag">Recommended Reading</span>
-                <h3>Placeholder Book Title</h3>
-                <p>A short placeholder description of what this resource covers.</p>
-              </div>
+            <div className="landing-doodle-note">
+              <span className="landing-doodle-note__text">IT&apos;S OKAY TO NOT BE OKAY &hearts;</span>
+              <svg width="110" height="14" viewBox="0 0 110 14" fill="none" className="landing-doodle-note__svg">
+                <path d="M2 9C24 4 56 12 108 5" stroke="#0D9488" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
             </div>
+          </div>
 
-            <div className="landing-list__item">
-              <div>
-                <span className="landing-tag">Clinical Guideline</span>
-                <h3>Placeholder Guideline Name</h3>
-                <p>The framework our counsellors follow during sessions.</p>
+          <div className="landing-doing-grid">
+            {/* Card 1 */}
+            <Link to={currentUser ? dashboardPath : "/login"} className="landing-doing-card landing-doing-card--pink">
+              <div className="landing-doing-card__image-wrapper">
+                <img
+                  src="/find-help/find-help-1.jpg"
+                  alt="My brain won't switch off"
+                  className="landing-doing-card__image"
+                  loading="lazy"
+                />
               </div>
-            </div>
+              <div className="landing-doing-card__content">
+                <h3 className="landing-doing-card__title">My brain won&apos;t switch off.</h3>
+                <p className="landing-doing-card__desc">Overthinking &bull; Anxiety &bull; Racing thoughts</p>
+                <div className="landing-doing-card__arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </div>
+              </div>
+            </Link>
 
-            <div className="landing-list__item">
-              <div>
-                <span className="landing-tag">Self-Help Resource</span>
-                <h3>Placeholder Resource Name</h3>
-                <p>A tool or worksheet used to support ongoing care.</p>
+            {/* Card 2 */}
+            <Link to={currentUser ? dashboardPath : "/login"} className="landing-doing-card landing-doing-card--blue">
+              <div className="landing-doing-card__image-wrapper">
+                <img
+                  src="/find-help/find-help-2.jpg"
+                  alt="Academics are getting to me"
+                  className="landing-doing-card__image"
+                  loading="lazy"
+                />
               </div>
-            </div>
+              <div className="landing-doing-card__content">
+                <h3 className="landing-doing-card__title">Academics are getting to me.</h3>
+                <p className="landing-doing-card__desc">Exam stress &bull; Performance pressure &bull; Procrastination</p>
+                <div className="landing-doing-card__arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </div>
+              </div>
+            </Link>
 
-            <div className="landing-list__item">
-              <div>
-                <span className="landing-tag">Research &amp; Reference</span>
-                <h3>Placeholder Reference Title</h3>
-                <p>Background reading our approach is grounded in.</p>
+            {/* Card 3 */}
+            <Link to={currentUser ? dashboardPath : "/login"} className="landing-doing-card landing-doing-card--mint">
+              <div className="landing-doing-card__image-wrapper">
+                <img
+                  src="/find-help/find-help-3.jpg"
+                  alt="I'm running on empty"
+                  className="landing-doing-card__image"
+                  loading="lazy"
+                />
               </div>
-            </div>
+              <div className="landing-doing-card__content">
+                <h3 className="landing-doing-card__title">I&apos;m running on empty.</h3>
+                <p className="landing-doing-card__desc">Burnout &bull; Sleep &bull; Motivation &bull; Digital overload</p>
+                <div className="landing-doing-card__arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </div>
+              </div>
+            </Link>
+
+            {/* Card 4 */}
+            <Link to={currentUser ? dashboardPath : "/login"} className="landing-doing-card landing-doing-card--peach">
+              <div className="landing-doing-card__image-wrapper">
+                <img
+                  src="/find-help/find-help-4.jpg"
+                  alt="It's complicated"
+                  className="landing-doing-card__image"
+                  loading="lazy"
+                />
+              </div>
+              <div className="landing-doing-card__content">
+                <h3 className="landing-doing-card__title">It&apos;s complicated.</h3>
+                <p className="landing-doing-card__desc">Relationships &bull; Friendships &bull; Family &bull; Boundaries</p>
+                <div className="landing-doing-card__arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </div>
+              </div>
+            </Link>
+
+            {/* Card 5 */}
+            <Link to={currentUser ? dashboardPath : "/login"} className="landing-doing-card landing-doing-card--lavender">
+              <div className="landing-doing-card__image-wrapper">
+                <img
+                  src="/find-help/find-help-5.jpg"
+                  alt="I'm figuring myself out"
+                  className="landing-doing-card__image"
+                  loading="lazy"
+                />
+              </div>
+              <div className="landing-doing-card__content">
+                <h3 className="landing-doing-card__title">I&apos;m figuring myself out.</h3>
+                <p className="landing-doing-card__desc">Confidence &bull; Self-esteem &bull; Identity &bull; Personal growth</p>
+                <div className="landing-doing-card__arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </div>
+              </div>
+            </Link>
+
+            {/* Card 6 */}
+            <Link to={currentUser ? dashboardPath : "/login"} className="landing-doing-card landing-doing-card--yellow">
+              <div className="landing-doing-card__image-wrapper">
+                <img
+                  src="/find-help/find-help-6.jpg"
+                  alt="I need someone to talk to"
+                  className="landing-doing-card__image"
+                  loading="lazy"
+                />
+              </div>
+              <div className="landing-doing-card__content">
+                <h3 className="landing-doing-card__title">I need someone to talk to.</h3>
+                <p className="landing-doing-card__desc">A safe space to share and get support</p>
+                <div className="landing-doing-card__arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </div>
+              </div>
+            </Link>
           </div>
         </section>
 
@@ -514,17 +756,18 @@ export function LandingPage() {
           <div className="landing-faq-layout">
             {/* Left Column: Heading & Contact Info */}
             <div className="landing-faq-sidebar">
-              <h2 className="landing-faq-title">FAQs</h2>
+              <h2 className="landing-faq-title">Still Have Questions?</h2>
               <p className="landing-faq-subtitle">
-                Everything you need to know about Vishnu Wellness Center
+                We&apos;re here to help. Explore more frequently asked questions or speak with our Wellness Team.
               </p>
-              <p className="landing-faq-contact">
-                Can&apos;t find what you&apos;re looking for? Reach out to our{" "}
-                <a href="#footer" className="landing-faq-contact__link">
-                  support team
-                </a>{" "}
-                for assistance.
-              </p>
+              <div className="landing-faq-actions">
+                <Link to={currentUser ? dashboardPath : "/signup"} className="btn-primary landing-faq-btn">
+                  Book a Session
+                </Link>
+                <p className="landing-faq-note">
+                  You don&apos;t have to figure everything out alone. <a href="#team" className="landing-faq-note__link">Talk to a wellness counselor &rarr;</a>
+                </p>
+              </div>
             </div>
 
             {/* Right Column: Interactive Accordion List */}
@@ -573,7 +816,6 @@ export function LandingPage() {
 
         {/* Terms and Policies */}
         <section className="landing-section" id="terms">
-          <span className="landing-eyebrow">Terms and Policies</span>
           <h2 className="landing-section__title">Please review our terms before you begin</h2>
 
           <ol className="terms-list">
