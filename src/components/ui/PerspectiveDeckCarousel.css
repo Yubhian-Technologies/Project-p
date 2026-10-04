@@ -249,70 +249,104 @@
    ========================================================================== */
 
 @media (max-width: 768px) {
+  .perspective-deck {
+    margin: 1.25rem auto 1rem;
+  }
+
   .perspective-deck__stage {
-    height: 300px;
+    height: 310px;
     padding: 0;
-    perspective-origin: 50% 50%;
+    perspective: none;
   }
 
   .perspective-deck__card {
-    border-radius: 18px;
-    width: clamp(260px, 60vw, 360px);
-    height: clamp(170px, 40vw, 240px);
+    border-radius: 20px;
+    width: clamp(260px, 88vw, 360px);
+    height: 250px;
   }
 
   .perspective-deck__image-wrapper {
-    border-radius: 18px;
+    border-radius: 20px;
   }
 
+  .perspective-deck__text-card-inner {
+    padding: 20px 22px;
+  }
+
+  .perspective-deck__text-card-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .perspective-deck__text-card-subtitle {
+    font-size: 11px;
+  }
+
+  .perspective-deck__text-card-title {
+    font-size: 22px;
+    margin: 10px 0 6px 0;
+  }
+
+  .perspective-deck__text-card-desc {
+    font-size: 13.5px;
+    line-height: 1.55;
+    -webkit-line-clamp: 3;
+  }
+
+  .perspective-deck__text-card-accent-line {
+    margin-top: 12px;
+    height: 3.5px;
+  }
+
+  /* Single centered card on mobile — behind cards hidden until Next/Prev is clicked */
   .perspective-deck__card--slot-0 {
-    transform: translate3d(calc(-50% - 90px), -50%, 0) rotateY(0deg) scale(1);
+    transform: translate3d(-50%, -50%, 0) rotateY(0deg) scale(1);
+    z-index: 10;
+    opacity: 1;
   }
 
-  .perspective-deck__card--slot-1 {
-    transform: translate3d(calc(-50% + 15px), -50%, -60px) rotateY(-22deg) scale(0.88);
-  }
-
-  .perspective-deck__card--slot-2 {
-    transform: translate3d(calc(-50% + 95px), -50%, -120px) rotateY(-32deg) scale(0.76);
-  }
-
-  .perspective-deck__card--slot-3 {
-    transform: translate3d(calc(-50% + 155px), -50%, -180px) rotateY(-40deg) scale(0.64);
-    opacity: 0.55;
-  }
-
+  .perspective-deck__card--slot-1,
+  .perspective-deck__card--slot-2,
+  .perspective-deck__card--slot-3,
   .perspective-deck__card--slot-prev {
-    transform: translate3d(calc(-50% - 220px), -50%, -100px) rotateY(20deg) scale(0.85);
+    transform: translate3d(-50%, -50%, -40px) rotateY(0deg) scale(0.94);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
   }
 
   .perspective-deck__btn {
-    padding: 0.55rem 1.3rem;
-    font-size: 0.88rem;
-    min-width: 80px;
+    padding: 0.6rem 1.4rem;
+    font-size: 0.9rem;
+    min-width: 84px;
   }
 }
 
 @media (max-width: 480px) {
   .perspective-deck__stage {
-    height: 250px;
+    height: 295px;
   }
 
-  .perspective-deck__card--slot-0 {
-    transform: translate3d(calc(-50% - 30px), -50%, 0) rotateY(0deg) scale(1);
+  .perspective-deck__card {
+    width: clamp(250px, 92vw, 330px);
+    height: 245px;
   }
 
-  .perspective-deck__card--slot-1 {
-    transform: translate3d(calc(-50% + 35px), -50%, -50px) rotateY(-20deg) scale(0.88);
+  .perspective-deck__text-card-inner {
+    padding: 18px 20px;
   }
 
-  .perspective-deck__card--slot-2 {
-    transform: translate3d(calc(-50% + 80px), -50%, -100px) rotateY(-28deg) scale(0.76);
+  .perspective-deck__text-card-title {
+    font-size: 20px;
   }
 
-  .perspective-deck__card--slot-3 {
-    opacity: 0;
-    pointer-events: none;
+  .perspective-deck__text-card-desc {
+    font-size: 13px;
+  }
+
+  .perspective-deck__controls {
+    margin-top: 1.25rem;
+    gap: 0.85rem;
   }
 }
 
@@ -321,11 +355,12 @@
    ========================================================================== */
 
 .perspective-deck__card--text {
-  background: transparent;
+  background: var(--card-bg, #ffffff);
   border: 1.5px solid var(--card-border, #86EFAC);
   box-shadow: 0 16px 40px -10px rgba(15, 23, 42, 0.1),
               0 0 20px -5px var(--card-border, #86EFAC);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  overflow: hidden;
 }
 
 .perspective-deck__text-card-inner {
