@@ -1,9 +1,7 @@
 import { useRef, useState } from "react";
 import { AppShell } from "../../components/layout/AppShell";
 import { ProfileSection } from "../../components/layout/ProfileSection";
-import { BentoCard } from "../../components/common/BentoCard";
 import { Button } from "../../components/common/Button";
-import { useAuth } from "../../hooks/useAuth";
 import { BookingRequestsSection } from "../counsellor/BookingRequestsSection";
 import { CounsellorFeedbackSection } from "../counsellor/CounsellorFeedbackSection";
 import { SsiCollegeResultsSection } from "../../components/ssi/SsiCollegeResultsSection";
@@ -14,14 +12,14 @@ import { TransferRequestsSection } from "./TransferRequestsSection";
 import { CommunitySection } from "../user/community/CommunitySection";
 import { TeamChatSection } from "../../components/chat/TeamChatSection";
 import { CounsellorWorksheetSection } from "../../components/worksheets/CounsellorWorksheetSection";
+import { TeamWorkloadSection } from "../../components/workload/TeamWorkloadSection";
 import { MonthlyReportsSection } from "./MonthlyReportsSection";
 import { TeamMonthlyReportsSection } from "./TeamMonthlyReportsSection";
 import { FlashQASection } from "./FlashQASection";
 import { GamesSection } from "../user/games/GamesSection";
 import type { GamesSectionHandle } from "../user/games/GamesSection";
 import { JournalSection } from "../user/journal/JournalSection";
-import { HeadAnalyticsOverview } from "./HeadAnalyticsOverview";
-import { HeadHomeActivityOverview } from "./HeadHomeActivityOverview";
+import { HeadCommandCentre } from "./HeadCommandCentre";
 import { SessionReportsSection } from "./SessionReportsSection";
 import type { Notification } from "../../types/notification";
 import "../../styles/bento-grid.css";
@@ -53,6 +51,13 @@ const SECTIONS = [
     label: "Counsellor Worksheet",
     icon: (
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+    ),
+  },
+  {
+    id: "team-workload",
+    label: "Team Workload",
+    icon: (
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="3" y1="15" x2="21" y2="15" /><line x1="9" y1="3" x2="9" y2="21" /></svg>
     ),
   },
   {
@@ -136,7 +141,6 @@ const SECTIONS = [
 ];
 
 export function HeadDashboard() {
-  const { profile } = useAuth();
   const [activeSection, setActiveSection] = useState("overview");
   const [showImport, setShowImport] = useState(false);
   const [pendingBookingId, setPendingBookingId] = useState<string | undefined>();
@@ -182,6 +186,7 @@ export function HeadDashboard() {
     feedback: "My Feedback",
     "team-chat": "Team Chat",
     worksheets: "Counsellor Worksheet",
+    "team-workload": "Team Workload",
     "ssi-results": "SSI Test Results",
     "team-management": "Team Management",
     "session-reports": "Session Reports",
@@ -195,7 +200,7 @@ export function HeadDashboard() {
     community: "Wellness Community",
     emergency: "Emergency Alerts",
   };
-  const title = titleBySection[activeSection] ?? "Head Dashboard";
+  const title = activeSection === "overview" ? "" : (titleBySection[activeSection] ?? "");
 
   return (
     <AppShell
@@ -240,6 +245,7 @@ export function HeadDashboard() {
       {activeSection === "feedback" && <CounsellorFeedbackSection />}
       {activeSection === "team-chat" && <TeamChatSection />}
       {activeSection === "worksheets" && <CounsellorWorksheetSection />}
+      {activeSection === "team-workload" && <TeamWorkloadSection />}
       {activeSection === "ssi-results" && <SsiCollegeResultsSection />}
       {activeSection === "team-management" && (
         <TeamManagementSection onOpenTransferRequests={() => setActiveSection("transfer-requests")} />
@@ -254,28 +260,7 @@ export function HeadDashboard() {
       {activeSection === "journal" && <JournalSection />}
       {activeSection === "community" && <CommunitySection />}
       {activeSection === "emergency" && <EmergencyAlertsSection />}
-      {activeSection === "overview" && (
-        <div className="bento-grid">
-          <BentoCard
-            span={12}
-            variant="hero"
-            title={`Welcome, ${profile?.displayName || profile?.email || "Department Head"}`}
-            subtitle="Counselling Department Leadership & Team Oversight"
-            action={{
-              label: "View Team Management →",
-              variant: "secondary",
-              onClick: () => setActiveSection("team-management"),
-            }}
-          >
-            <div style={{ fontSize: "14px", lineHeight: "1.6" }}>
-              Monitor team workload, review cancellations, and oversee booking requests across your department.
-            </div>
-          </BentoCard>
-
-          <HeadAnalyticsOverview />
-          <HeadHomeActivityOverview onSelectSection={setActiveSection} />
-        </div>
-      )}
+      {activeSection === "overview" && <HeadCommandCentre onNavigate={setActiveSection} />}
     </AppShell>
   );
 }

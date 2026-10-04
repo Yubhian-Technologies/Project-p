@@ -59,6 +59,7 @@ export function MonthlyReportsSection() {
         heading="Submit Consolidated Report to Admin"
         titlePlaceholder="e.g. September 2026 Consolidated Report"
         submitLabel="Submit Consolidated Report"
+        allowVoiceInput={false}
         onUpload={async (file, title, month, year, onProgress) => {
           await uploadMonthlyReport(
             file,

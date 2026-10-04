@@ -1,0 +1,29 @@
+.attn {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attn-status {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #2E2B27;
+}
+
+.attn-muted {
+  margin: 0;
+  font-size: 13px;
+  color: #8A8375;
+}
+
+.attn-actions {
+  margin-top: 6px;
+}
+
+.attn-error {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #B91C1C;
+}

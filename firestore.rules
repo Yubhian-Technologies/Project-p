@@ -269,17 +269,61 @@ service cloud.firestore {
         isCampusManager()
       );
 
+      // Check-in: the owner only, counsellor or head only, on their own campus,
+      // for the day named in the doc id, and stamped within ten minutes of the
+      // server's clock so times can't be backdated. Only check-in fields may be set.
+      // (Reading a field that doesn't exist fails the whole rule, so the
+      // "not yet checked out" test uses `in` instead of comparing to null.)
       allow create: if isSignedIn()
+                    && myRole() in ['counsellor', 'head']
                     && request.resource.data.uid == request.auth.uid
-                    && request.resource.data.checkInAt != null;
+                    && request.resource.data.campusId == myProfile().campusId
+                    && recordId == request.auth.uid + '_' + request.resource.data.date
+                    && request.resource.data.checkInAt is number
+                    && request.resource.data.checkInAt <= request.time.toMillis() + 600000
+                    && request.resource.data.checkInAt >= request.time.toMillis() - 600000
+                    && !('checkOutAt' in request.resource.data)
+                    && request.resource.data.keys().hasOnly(['uid', 'campusId', 'date', 'checkInAt', 'updatedAt']);
 
+      // Check-out: fills checkOutAt exactly once. Nothing else on the record
+      // can change, so the check-in time and day can't be rewritten.
       allow update: if isSignedIn()
+                    && myRole() in ['counsellor', 'head']
                     && resource.data.uid == request.auth.uid
-                    && resource.data.checkInAt != null
-                    && resource.data.checkOutAt == null
-                    && request.resource.data.checkOutAt != null;
+                    && 'checkInAt' in resource.data
+                    && !('checkOutAt' in resource.data)
+                    && request.resource.data.checkOutAt is number
+                    && request.resource.data.checkOutAt <= request.time.toMillis() + 600000
+                    && request.resource.data.checkOutAt >= request.time.toMillis() - 600000
+                    && request.resource.data.checkOutAt > resource.data.checkInAt
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['checkOutAt', 'updatedAt']);
 
       allow delete: if false;
+    }
+
+    // ---------- workloadSheets/{ownerUid}/rows ----------
+    // Each person's workload rows (compulsory / optional / action items).
+    // The owner can read and edit their own rows; the same-campus Head can
+    // read and edit any row on the campus; admin / super-admin can read all
+    // rows for analytics. Nothing crosses campuses.
+    match /workloadSheets/{ownerUid}/rows/{rowId} {
+      allow read: if isSignedIn() && (
+        ownerUid == request.auth.uid ||
+        (isRole('head') && resource.data.campusId == myProfile().campusId) ||
+        isCampusManager()
+      );
+      allow create: if canEditWorksheets()
+                    && (ownerUid == request.auth.uid || isRole('head'))
+                    && request.resource.data.ownerUid == ownerUid
+                    && request.resource.data.campusId == myProfile().campusId;
+      allow update: if canEditWorksheets()
+                    && (resource.data.ownerUid == request.auth.uid || isRole('head'))
+                    && resource.data.campusId == myProfile().campusId
+                    && request.resource.data.campusId == resource.data.campusId
+                    && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if canEditWorksheets()
+                    && (resource.data.ownerUid == request.auth.uid || isRole('head'))
+                    && resource.data.campusId == myProfile().campusId;
     }
 
     // ---------- bookings ----------

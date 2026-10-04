@@ -11,15 +11,7 @@ import {
   updateCounsellorProfile,
 } from "../../services/firebase/firestore";
 import { getSignatureURL, saveSignatureURL } from "../../services/firebase/signature";
-import {
-  getAttendanceRecord,
-  checkIn,
-  checkOut,
-  istDateKey,
-  formatIstTime,
-  formatDuration,
-} from "../../services/firebase/attendance";
-import type { AttendanceRecord } from "../../types/attendance";
+import { AttendanceCheckCard } from "../attendance/AttendanceCheckCard";
 import { authErrorMessage, changeOwnPassword } from "../../services/firebase/auth";
 import { defaultAvailabilitySchedule } from "../../types/availability";
 import type { DayAvailability } from "../../types/availability";
@@ -103,10 +95,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const [uploadingSignature, setUploadingSignature] = useState(false);
   const [signatureError, setSignatureError] = useState<string | null>(null);
 
-  const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
-  const [attendanceBusy, setAttendanceBusy] = useState(false);
-  const [attendanceError, setAttendanceError] = useState<string | null>(null);
-
   useEffect(() => {
     const eligible = profile?.role === "head" || profile?.role === "counsellor" || profile?.role === "admin";
     if (!currentUser || !eligible) {
@@ -119,31 +107,11 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
       .finally(() => setLoadingSignature(false));
   }, [currentUser, profile?.role]);
 
-  // Today's attendance record for counsellor/head roles — only
-  // while they're not on leave (leave hides check-in/out entirely).
-  useEffect(() => {
-    const eligible = profile?.role === "counsellor" || profile?.role === "head";
-    if (!currentUser || !profile?.campusId || !eligible || profile.available === false) {
-      setTodayRecord(null);
-      return;
-    }
-    const date = istDateKey(Date.now());
-    let cancelled = false;
-    getAttendanceRecord(currentUser.uid, date).then((record) => {
-      if (!cancelled) setTodayRecord(record);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [currentUser, profile]);
-
   if (!profile || !currentUser) return null;
 
   const isCounsellorLike = profile.role === "counsellor" || profile.role === "head";
   const isUser = profile.role === "user";
   const canHaveSignature = profile.role === "head" || profile.role === "counsellor" || profile.role === "admin";
-  const onLeave = profile.available === false;
-  const showAttendance = isCounsellorLike && !onLeave && !!profile.campusId;
 
   async function handleSignatureFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -200,45 +168,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
       await refreshProfile();
     } finally {
       setSavingAvailability(false);
-    }
-  }
-
-async function handleCheckIn() {
-    if (!currentUser || !profile?.campusId) {
-      console.log("Check-in blocked:", { hasUser: !!currentUser, hasProfile: !!profile, campusId: profile?.campusId });
-      return;
-    }
-    const date = istDateKey(Date.now());
-    setAttendanceBusy(true);
-    setAttendanceError(null);
-    try {
-      console.log("Check-in attempt:", { uid: currentUser.uid, campusId: profile.campusId, date });
-      await checkIn(currentUser.uid, profile.campusId, date);
-      console.log("Check-in succeeded");
-      setTodayRecord(await getAttendanceRecord(currentUser.uid, date));
-    } catch (err) {
-      console.error("Check-in failed:", err);
-      setAttendanceError(err instanceof Error ? err.message : "Check-in failed");
-    } finally {
-      setAttendanceBusy(false);
-    }
-  }
-
-async function handleCheckOut() {
-    if (!currentUser || !profile?.campusId) return;
-    const date = istDateKey(Date.now());
-    setAttendanceBusy(true);
-    setAttendanceError(null);
-    try {
-      console.log("Check-out attempt:", { uid: currentUser.uid, campusId: profile.campusId, date });
-      await checkOut(currentUser.uid, date);
-      console.log("Check-out succeeded");
-      setTodayRecord(await getAttendanceRecord(currentUser.uid, date));
-    } catch (err) {
-      console.error("Check-out failed:", err);
-      setAttendanceError(err instanceof Error ? err.message : "Check-out failed");
-    } finally {
-      setAttendanceBusy(false);
     }
   }
 
@@ -373,36 +302,7 @@ async function handleCheckOut() {
             </div>
           )}
 
-          {showAttendance && (
-            <div className="profile-section__attendance">
-              <p className="profile-section__subheading">ATTENDANCE — TODAY</p>
-              {attendanceError && <p className="profile-section__attendance-error">{attendanceError}</p>}
-              {todayRecord?.checkInAt != null && todayRecord?.checkOutAt != null ? (
-                <p className="profile-section__attendance-status">
-                  {formatIstTime(todayRecord.checkInAt)} – {formatIstTime(todayRecord.checkOutAt)} (
-                  {formatDuration(todayRecord.checkOutAt - todayRecord.checkInAt)})
-                </p>
-              ) : todayRecord?.checkInAt != null ? (
-                <div className="profile-section__attendance-row">
-                  <p className="profile-section__attendance-status">
-                    Checked in at {formatIstTime(todayRecord.checkInAt)}
-                  </p>
-                  <Button type="button" disabled={attendanceBusy} onClick={handleCheckOut}>
-                    {attendanceBusy ? "Saving…" : "Check Out"}
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outlined"
-                  disabled={attendanceBusy}
-                  onClick={handleCheckIn}
-                >
-                  {attendanceBusy ? "Saving…" : "Check In"}
-                </Button>
-              )}
-            </div>
-          )}
+          {isCounsellorLike && !!profile.campusId && <AttendanceCheckCard span={12} />}
         </div>
 
         <div className="profile-section__main">

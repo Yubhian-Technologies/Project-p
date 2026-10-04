@@ -1,0 +1,200 @@
+.twl {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+}
+
+.twl-muted {
+  color: #8A8375;
+  margin: 0;
+}
+
+.twl-error {
+  color: #B91C1C;
+  font-weight: 600;
+  margin: 0;
+}
+
+.twl-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.twl-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6D74D6;
+  margin: 0 0 4px;
+}
+
+.twl-title {
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.twl-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.twl-person {
+  min-width: 240px;
+}
+
+.twl-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.twl-group__title {
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+  padding: 6px 12px;
+  background: #FFF4D6;
+  border-left: 4px solid #F59E0B;
+  border-radius: 6px;
+}
+
+.twl-table-wrap {
+  overflow-x: auto;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.1);
+  border-radius: 14px;
+}
+
+.twl-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.twl-table th,
+.twl-table td {
+  border: 1px solid #D6DCE4;
+  padding: 9px 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.twl-table th {
+  background: #F1F5F9;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #334155;
+}
+
+.twl-table td input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(46, 43, 39, 0.14);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.twl-empty {
+  text-align: center !important;
+  color: #8A8375;
+}
+
+.twl-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.twl-status .md-select {
+  min-width: 130px;
+}
+
+.twl-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.twl-badge--pending {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+
+.twl-badge--in-progress {
+  background: #DBEAFE;
+  color: #1D4ED8;
+}
+
+.twl-badge--done {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.twl-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.twl-icon {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.twl-icon:hover {
+  color: #6D74D6;
+}
+
+.twl-icon--danger:hover {
+  color: #B91C1C;
+}
+
+/* Add-row card under each group */
+.twl-add {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr 1.2fr auto;
+  gap: 8px;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1px dashed rgba(46, 43, 39, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.twl-add input {
+  border: 1px solid rgba(46, 43, 39, 0.14);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .twl-add {
+    grid-template-columns: 1fr 1fr;
+  }
+}

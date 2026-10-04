@@ -1,0 +1,137 @@
+.wla {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.wla-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.wla-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6D74D6;
+  margin: 0 0 4px;
+}
+
+.wla-muted {
+  color: #8A8375;
+  margin: 0;
+  font-size: 13.5px;
+}
+
+.wla-error {
+  color: #B91C1C;
+  font-weight: 600;
+  margin: 0;
+}
+
+.wla-campus {
+  min-width: 260px;
+}
+
+.wla-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.wla-stat {
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.wla-stat__label {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6D74D6;
+  margin: 0;
+}
+
+.wla-stat__value {
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 26px;
+  font-weight: 700;
+  margin: 6px 0 0;
+}
+
+.wla-stat__note {
+  font-size: 12.5px;
+  color: #8A8375;
+  margin: 4px 0 0;
+}
+
+.wla-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wla-title {
+  font-family: var(--md-sys-typescale-font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.wla-table-wrap {
+  overflow-x: auto;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 14px;
+}
+
+.wla-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.wla-table th,
+.wla-table td {
+  text-align: left;
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(46, 43, 39, 0.06);
+}
+
+.wla-table th {
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6D74D6;
+}
+
+.wla-pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.wla-pill--light {
+  background: #E0F2FE;
+  color: #0369A1;
+}
+
+.wla-pill--balanced {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.wla-pill--high {
+  background: #FEE2E2;
+  color: #B91C1C;
+}

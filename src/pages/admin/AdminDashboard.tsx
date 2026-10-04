@@ -1,3 +1,4 @@
+import { WorkloadAnalyticsPanel } from "./analytics/WorkloadAnalyticsPanel";
 import { useState } from "react";
 import { AppShell } from "../../components/layout/AppShell";
 import { ProfileSection } from "../../components/layout/ProfileSection";
@@ -56,6 +57,13 @@ const SECTIONS = [
     ),
   },
   {
+    id: "workload-analytics",
+    label: "Team Workload",
+    icon: (
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="3" y1="15" x2="21" y2="15" /><line x1="9" y1="3" x2="9" y2="21" /></svg>
+    ),
+  },
+  {
     id: "monthly-reports",
     label: "Consolidated Reports",
     icon: (
@@ -71,6 +79,7 @@ const TITLES: Record<string, string> = {
   events: "Events & Programs",
   analytics: "Analytics",
   "counsellor-worksheet": "Counsellor Worksheet",
+  "workload-analytics": "Team Workload Analytics",
   "monthly-reports": "Consolidated Reports",
 };
 
@@ -80,7 +89,7 @@ export function AdminDashboard() {
 
   return (
     <AppShell
-      title={TITLES[activeSection] ?? "Admin Dashboard"}
+      title={activeSection === "overview" ? "" : (TITLES[activeSection] ?? "")}
       sections={SECTIONS}
       activeSection={activeSection}
       onSelectSection={setActiveSection}
@@ -97,6 +106,8 @@ export function AdminDashboard() {
         <AnalyticsSection />
       ) : activeSection === "counsellor-worksheet" ? (
         <CounsellorWorksheetSection />
+      ) : activeSection === "workload-analytics" ? (
+        <WorkloadAnalyticsPanel />
       ) : activeSection === "monthly-reports" ? (
         <MonthlyReportsViewSection />
       ) : (
