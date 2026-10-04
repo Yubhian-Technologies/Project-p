@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { listBookingsForCounsellor } from "../../services/firebase/bookings";
 import { listAttendance } from "../../services/firebase/attendance";
 import { listBookableProfiles } from "../../services/firebase/bookings";
@@ -101,15 +101,15 @@ export function SessionReportsSection() {
     return months.reverse(); // newest first
   }, []);
 
-  async function loadReport() {
-    if (!selectedMonth) return;
+  const loadReport = useCallback(async (month: string) => {
+    if (!month) return;
     setLoading(true);
     setError("");
 
     try {
-      const [yearStr, monthStr] = selectedMonth.split("-");
+      const [yearStr, monthStr] = month.split("-");
       const year = Number(yearStr);
-      const month = Number(monthStr) - 1;
+      const monthIdx = Number(monthStr) - 1;
 
       const personReports: PersonReport[] = await Promise.all(
         profiles.map(async (profile) => {
@@ -122,26 +122,25 @@ export function SessionReportsSection() {
             sessions: 0, leaveDays: 0, weekdaysInWeek: 0,
           }));
 
-          const monthStart = new Date(Date.UTC(year, month, 1));
-          const monthEnd = new Date(Date.UTC(year, month + 1, 0));
+          const monthStart = new Date(Date.UTC(year, monthIdx, 1));
+          const monthEnd = new Date(Date.UTC(year, monthIdx + 1, 0));
           const monthStartKey = istDateKey(monthStart.getTime());
           const monthEndKey = istDateKey(monthEnd.getTime());
 
-          // Profile creation date - ignore any data before login was created
           const profileCreatedKey = profile.createdAt ? istDateKey(profile.createdAt) : null;
 
           bookings.forEach(b => {
             if (b.status !== "completed" || b.outcome === "missed") return;
             const bKey = istDateKey(b.createdAt);
             if (bKey < monthStartKey || bKey > monthEndKey) return;
-            if (profileCreatedKey && bKey < profileCreatedKey) return; // before login creation
+            if (profileCreatedKey && bKey < profileCreatedKey) return;
             const week = getWeekOfMonth(bKey);
             weeks[week].sessions += 1;
           });
 
           attendanceMap.forEach((rec, dateKey) => {
             if (dateKey < monthStartKey || dateKey > monthEndKey) return;
-            if (profileCreatedKey && dateKey < profileCreatedKey) return; // before login creation
+            if (profileCreatedKey && dateKey < profileCreatedKey) return;
             const wd = getWeekday(dateKey);
             if (!isWeekday(wd)) return;
             const week = getWeekOfMonth(dateKey);
@@ -153,10 +152,10 @@ export function SessionReportsSection() {
           });
 
           for (let w = 0; w < 5; w++) {
-            const { start, end } = getWeekDateRange(w, year, month);
+            const { start, end } = getWeekDateRange(w, year, monthIdx);
             let weekdays = 0;
             for (let d = start; d <= end; d++) {
-              const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+              const key = `${year}-${String(monthIdx + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
               if (isWeekday(getWeekday(key))) weekdays++;
             }
             weeks[w].weekdaysInWeek = weekdays;
@@ -174,16 +173,13 @@ export function SessionReportsSection() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [profiles]);
 
   function handleMonthChange(month: string) {
     setSelectedMonth(month);
     setReports([]);
+    if (month) loadReport(month);
   }
-
-  useEffect(() => {
-    if (selectedMonth) loadReport();
-  }, [selectedMonth]);
 
   function formatCell(report: PersonReport, weekIdx: number): string {
     const w = report.weeks[weekIdx];

@@ -34,6 +34,8 @@ function everyDayKeys(fromMs: number, toMs: number): string[] {
 
 export function TeamAttendanceSection({ onBack }: { onBack: () => void }) {
   const { profile: headProfile } = useAuth();
+  // eslint-disable-next-line react/purity
+  const now = Date.now();
   const [counsellors, setCounsellors] = useState<UserProfile[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,7 +151,7 @@ export function TeamAttendanceSection({ onBack }: { onBack: () => void }) {
 
   // ----- Level 2: daily log, every day from profile creation -----
   const recordsByDate = new Map(records.map((r) => [r.date, r]));
-  const days = everyDayKeys(selected.createdAt, Date.now());
+  const days = everyDayKeys(selected.createdAt, now);
 
   return (
     <div className="team-attendance">

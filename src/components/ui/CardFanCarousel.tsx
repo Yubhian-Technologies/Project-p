@@ -80,7 +80,6 @@ export function CardFanCarousel({ cards }: CardFanCarouselProps) {
 
   const totalCards = cards.length;
   const canCycle = totalCards > 1;
-  const needsPagination = totalCards > MAX_VISIBLE;
   const [centerIndex, setCenterIndex] = useState(HALF % (totalCards || 1));
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
