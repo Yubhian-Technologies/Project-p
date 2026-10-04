@@ -5,7 +5,12 @@ export interface DeckCardItem {
   id: string | number;
   title?: string;
   subtitle?: string;
-  imageUrl: string;
+  imageUrl?: string;
+  description?: string;
+  icon?: React.ReactNode;
+  accentColor?: string;
+  bgGradient?: string;
+  borderColor?: string;
 }
 
 interface PerspectiveDeckCarouselProps {
@@ -105,7 +110,7 @@ export const PerspectiveDeckCarousel: React.FC<PerspectiveDeckCarouselProps> = (
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      aria-label="3D Perspective Photo Gallery"
+      aria-label="3D Perspective Gallery"
     >
       {/* 3D Scene Viewport */}
       <div className="perspective-deck__stage">
@@ -121,10 +126,19 @@ export const PerspectiveDeckCarousel: React.FC<PerspectiveDeckCarouselProps> = (
           else if (slot === 3) slotClass = "perspective-deck__card--slot-3";
           else if (slot === -1) slotClass = "perspective-deck__card--slot-prev";
 
+          const isTextCard = Boolean(item.description || !item.imageUrl);
+
+          // Inline dynamic styles
+          const customStyle: React.CSSProperties = {
+            "--card-accent": item.accentColor || "#0D9488",
+            "--card-border": item.borderColor || "#86EFAC",
+            "--card-bg": item.bgGradient || "linear-gradient(145deg, #FFFFFF 0%, #F8FAFC 100%)",
+          } as React.CSSProperties;
+
           return (
             <div
               key={item.id}
-              className={`perspective-deck__card ${slotClass}`}
+              className={`perspective-deck__card ${slotClass} ${isTextCard ? "perspective-deck__card--text" : ""}`}
               onClick={() => {
                 if (slot > 0) {
                   setActiveIndex(index);
@@ -132,35 +146,53 @@ export const PerspectiveDeckCarousel: React.FC<PerspectiveDeckCarouselProps> = (
               }}
               role="button"
               tabIndex={isActive ? 0 : -1}
-              aria-label={item.title || `Photo ${index + 1}`}
+              aria-label={item.title || `Card ${index + 1}`}
               aria-current={isActive ? "true" : undefined}
+              style={customStyle}
             >
-              <div className="perspective-deck__image-wrapper">
-                <img
-                  src={item.imageUrl}
-                  alt={item.title || "Vishnu Wellness"}
-                  className="perspective-deck__image"
-                  loading={index < 2 ? "eager" : "lazy"}
-                  draggable={false}
-                />
-                <div className="perspective-deck__card-overlay" />
-
-                {/* Card Title & Subtitle Badge */}
-                {(item.title || item.subtitle) && (
-                  <div className="perspective-deck__card-badge">
+              {isTextCard ? (
+                <div
+                  className="perspective-deck__text-card-inner"
+                  style={{ background: item.bgGradient || "linear-gradient(145deg, #FFFFFF 0%, #F8FAFC 100%)" }}
+                >
+                  <div className="perspective-deck__text-card-header">
+                    {item.icon && <div className="perspective-deck__text-card-icon">{item.icon}</div>}
                     {item.subtitle && (
-                      <span className="perspective-deck__badge-subtitle">
-                        {item.subtitle}
-                      </span>
-                    )}
-                    {item.title && (
-                      <h4 className="perspective-deck__badge-title">
-                        {item.title}
-                      </h4>
+                      <span className="perspective-deck__text-card-subtitle">{item.subtitle}</span>
                     )}
                   </div>
-                )}
-              </div>
+                  {item.title && <h3 className="perspective-deck__text-card-title">{item.title}</h3>}
+                  {item.description && <p className="perspective-deck__text-card-desc">{item.description}</p>}
+                  <div className="perspective-deck__text-card-accent-line" />
+                </div>
+              ) : (
+                <div className="perspective-deck__image-wrapper">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title || "Vishnu Wellness"}
+                    className="perspective-deck__image"
+                    loading={index < 2 ? "eager" : "lazy"}
+                    draggable={false}
+                  />
+                  <div className="perspective-deck__card-overlay" />
+
+                  {/* Card Title & Subtitle Badge */}
+                  {(item.title || item.subtitle) && (
+                    <div className="perspective-deck__card-badge">
+                      {item.subtitle && (
+                        <span className="perspective-deck__badge-subtitle">
+                          {item.subtitle}
+                        </span>
+                      )}
+                      {item.title && (
+                        <h4 className="perspective-deck__badge-title">
+                          {item.title}
+                        </h4>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}

@@ -125,6 +125,12 @@
   cursor: default;
 }
 
+.perspective-deck__card--slot-0:hover {
+  transform: translate3d(calc(-50% - 170px), calc(-50% - 8px), 24px) rotateY(-2deg) scale(1.035);
+  box-shadow: 0 24px 50px -10px rgba(15, 23, 42, 0.16),
+              0 0 25px -4px var(--card-border, #86EFAC);
+}
+
 .perspective-deck__card--slot-0 .perspective-deck__card-badge {
   opacity: 1;
   transform: translateY(0);
@@ -156,12 +162,17 @@
   transform: translate3d(calc(-50% + 170px), calc(-50% - 4px), -160px) rotateY(-32deg) scale(0.76);
 }
 
-/* Slot 3: Edge right trailing card */
+/* Slot 3: Edge right trailing card (4th visible card in queue) */
 .perspective-deck__card--slot-3 {
-  transform: translate3d(calc(-50% + 280px), -50%, -280px) rotateY(-46deg) scale(0.6);
+  transform: translate3d(calc(-50% + 280px), -50%, -280px) rotateY(-44deg) scale(0.64);
   z-index: 4;
-  opacity: 0.48;
-  filter: brightness(0.68);
+  opacity: 0.65;
+  filter: brightness(0.76);
+}
+
+.perspective-deck__card--slot-3:hover {
+  filter: brightness(0.9);
+  transform: translate3d(calc(-50% + 280px), calc(-50% - 3px), -260px) rotateY(-40deg) scale(0.66);
 }
 
 /* Exiting card (leaving to the left) */
@@ -268,7 +279,7 @@
 
   .perspective-deck__card--slot-3 {
     transform: translate3d(calc(-50% + 155px), -50%, -180px) rotateY(-40deg) scale(0.64);
-    opacity: 0.35;
+    opacity: 0.55;
   }
 
   .perspective-deck__card--slot-prev {
@@ -304,3 +315,85 @@
     pointer-events: none;
   }
 }
+
+/* ==========================================================================
+   Styled 3D Text Cards (for Values Carousel)
+   ========================================================================== */
+
+.perspective-deck__card--text {
+  background: transparent;
+  border: 1.5px solid var(--card-border, #86EFAC);
+  box-shadow: 0 16px 40px -10px rgba(15, 23, 42, 0.1),
+              0 0 20px -5px var(--card-border, #86EFAC);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.perspective-deck__text-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: clamp(20px, 3vw, 32px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.perspective-deck__text-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.perspective-deck__text-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+  flex-shrink: 0;
+}
+
+.perspective-deck__text-card-subtitle {
+  font-family: var(--font-main);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--card-accent, #0D9488);
+}
+
+.perspective-deck__text-card-title {
+  font-family: 'DM Serif Display', var(--font-headline), serif;
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 400;
+  color: #0F172A;
+  margin: 12px 0 8px 0;
+  letter-spacing: -0.01em;
+}
+
+.perspective-deck__text-card-desc {
+  font-family: var(--font-main);
+  font-size: clamp(13px, 1.4vw, 15px);
+  line-height: 1.6;
+  font-weight: 450;
+  color: #475569;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.perspective-deck__text-card-accent-line {
+  width: 44px;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--card-accent, #0D9488);
+  margin-top: 14px;
+}
+

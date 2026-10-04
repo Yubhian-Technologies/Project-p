@@ -15,8 +15,8 @@
   justify-content: center;
   width: 100%;
   max-width: 80rem;
-  /* tall enough that the fan cards don't get clipped */
-  min-height: 38rem;
+  /* compact height with headroom for hover lift */
+  min-height: 20.5rem;
   position: relative;
 }
 
@@ -101,7 +101,7 @@
   align-items: center;
   justify-content: center;
   gap: 16px;
-  margin: 16px 0 20px;
+  margin: 10px 0 16px;
   z-index: 30;
 }
 
@@ -176,7 +176,7 @@
 /* ── Responsive stage heights ───────────────────────────── */
 @media (max-width: 1024px) {
   .fan-carousel-stage {
-    min-height: 34rem;
+    min-height: 17.5rem;
   }
   .fan-card {
     width: 11rem;
@@ -186,7 +186,7 @@
 
 @media (max-width: 768px) {
   .fan-carousel-stage {
-    min-height: 28rem;
+    min-height: 14.5rem;
   }
   .fan-card {
     width: 9rem;
@@ -196,7 +196,7 @@
 
 @media (max-width: 640px) {
   .fan-carousel-stage {
-    min-height: 26rem;
+    min-height: 13.5rem;
   }
   .fan-card {
     width: 8rem;
@@ -207,7 +207,7 @@
 
 @media (max-width: 480px) {
   .fan-carousel-stage {
-    min-height: 22rem;
+    min-height: 11.5rem;
   }
   .fan-card {
     width: 7rem;
