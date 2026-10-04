@@ -1695,3 +1695,123 @@ body {
   }
 }
 
+/* Mobile: About + Our Values */
+@media (max-width: 600px) {
+  .landing-about-section {
+    padding: 56px 20px;
+    overflow-x: hidden;
+  }
+
+  /* Grid columns and their children must be allowed to shrink below their
+     content width, otherwise the wide feature chips push everything off-screen */
+  .landing-about-container {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    gap: 32px;
+  }
+
+  .landing-about-content,
+  .landing-about-media,
+  .landing-about-image-wrapper {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .landing-about-features {
+    max-width: 100%;
+  }
+
+  .landing-about-title {
+    font-size: 32px;
+    margin: 8px 0 16px 0;
+  }
+
+  .landing-about-body {
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+
+  .landing-about-actions {
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .landing-about-features {
+    margin-top: 4px;
+  }
+
+  .landing-about-image {
+    max-height: 300px;
+  }
+
+  /* Keep the decorative badges inside the screen instead of spilling past the photo */
+  .landing-about-doodle--yellow {
+    top: -18px;
+    left: 8px;
+    transform: rotate(-6deg) scale(0.8);
+    transform-origin: top left;
+  }
+
+  .landing-about-doodle--mint {
+    top: -22px;
+    right: 8px;
+    transform: rotate(5deg) scale(0.8);
+    transform-origin: top right;
+  }
+
+  .landing-about-doodle {
+    right: 0;
+    bottom: -14px;
+  }
+
+  .landing-section .perspective-deck {
+    margin-top: 1.5rem;
+  }
+
+  .landing-section .perspective-deck__stage {
+    height: 360px;
+  }
+
+  .landing-section .perspective-deck__card {
+    width: min(78vw, 300px);
+    height: auto;
+    min-height: 300px;
+  }
+
+  .landing-section .perspective-deck__card--slot-0 {
+    transform: translate3d(-50%, -50%, 0) rotateY(0deg) scale(1);
+  }
+
+  .landing-section .perspective-deck__card--slot-1 {
+    transform: translate3d(calc(-50% + 34px), -50%, -60px) rotateY(-18deg) scale(0.86);
+  }
+
+  .landing-section .perspective-deck__card--slot-2 {
+    transform: translate3d(calc(-50% + 64px), -50%, -110px) rotateY(-26deg) scale(0.74);
+  }
+
+  /* Text cards need room for the full description instead of being clipped */
+  .landing-section .perspective-deck__text-card-inner {
+    height: auto;
+    min-height: 100%;
+    padding: 18px 18px 20px;
+    gap: 6px;
+  }
+
+  .landing-section .perspective-deck__text-card-title {
+    font-size: 20px;
+    margin: 8px 0 6px 0;
+  }
+
+  .landing-section .perspective-deck__text-card-desc {
+    font-size: 13px;
+    -webkit-line-clamp: 6;
+  }
+
+  .landing-section .perspective-deck__text-card-accent-line {
+    margin-top: 10px;
+  }
+}
+
