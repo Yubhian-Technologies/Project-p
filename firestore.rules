@@ -263,8 +263,13 @@ service cloud.firestore {
     // attendance on their own campus; a Head reviews their campus's
     // counsellors; Admins/Super Admins see every campus.
     match /attendance/{recordId} {
+      // The owner check is derived from the doc id ({uid}_{date}), not from
+      // resource.data — reading a field on a record that doesn't exist yet
+      // (e.g. before today's first check-in) fails the whole rule, since
+      // `resource` is null. A path-based check works whether or not the
+      // record exists yet.
       allow read: if isSignedIn() && (
-        resource.data.uid == request.auth.uid ||
+        recordId.split('_')[0] == request.auth.uid ||
         (isStaff() && resource.data.campusId == myProfile().campusId) ||
         isCampusManager()
       );
