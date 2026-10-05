@@ -23,8 +23,8 @@ The application uses a distinctive editorial serif paired with a modern geometri
 
 | Role | Font Family | CSS Variable | Fallbacks | Weights | Usage |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Display / Headlines** | `'Playfair Display'` | `var(--font-headline)` / `var(--md-sys-typescale-font-display)` | Georgia, serif | 700, 800, 900 | Hero titles, dashboard section titles, bento headlines, metric values |
-| **Body & UI Controls** | `'Work Sans'` | `var(--font-main)` / `var(--md-sys-typescale-font-body)` | -apple-system, sans-serif | 400, 600, 700, 800 | Body text, tables, navigation, buttons, inputs, chips, captions |
+| **Display / Headlines** | `'Playfair Display'` | `var(--font-headline)` / `var(--md-sys-typescale-font-display)` | Georgia, serif | 700, 800, 900 | Hero titles, dashboard section titles, bento headlines |
+| **Body & UI Controls** | `'Work Sans'` | `var(--font-main)` / `var(--md-sys-typescale-font-body)` | -apple-system, sans-serif | 400, 600, 700, 800 | Body text, tables, navigation, buttons, inputs, chips, captions, metric/KPI values |
 
 *Note: All fonts are loaded centrally in `index.html` to eliminate redundant `@import` statements and optimize FCP.*
 
