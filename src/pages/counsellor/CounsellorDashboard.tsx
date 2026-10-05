@@ -20,6 +20,7 @@ import type { GamesSectionHandle } from "../user/games/GamesSection";
 import { GamesSummaryCard } from "../user/games/GamesSummaryCard";
 import { JournalSection } from "../user/journal/JournalSection";
 import { CounsellorOverview } from "./CounsellorOverview";
+import { CounsellorTrends } from "./CounsellorTrends";
 import { DailyQuoteCard } from "../../components/common/DailyQuoteCard";
 import { CounsellorHomeActivityOverview } from "./CounsellorHomeActivityOverview";
 import type { Notification } from "../../types/notification";
@@ -215,28 +216,31 @@ export function CounsellorDashboard() {
       {activeSection === "community" && <CommunitySection />}
       {activeSection === "emergency" && <EmergencyAlertsSection />}
       {activeSection === "overview" && (
-        <div className="bento-grid">
-          <BentoCard
-            span={12}
-            variant="hero"
-            title={`Welcome, ${profile?.displayName || profile?.email || "Counsellor"}`}
-            subtitle="Certified Psychologist & Counsellor Workspace"
-            action={{
-              label: "Review Booking Requests →",
-              variant: "secondary",
-              onClick: () => setActiveSection("requests"),
-            }}
-          >
-            <div style={{ fontSize: "14px", lineHeight: "1.6" }}>
-              Review incoming session requests, update your availability, and manage your upcoming sessions.
-            </div>
-          </BentoCard>
-          <AttendanceCheckCard span={4} />
-          <CounsellorOverview />
-          <DailyQuoteCard />
-          <GamesSummaryCard onPlay={() => setActiveSection("games")} />
-          <CounsellorHomeActivityOverview onSelectSection={setActiveSection} />
-        </div>
+        <>
+          <div className="bento-grid">
+            <BentoCard
+              span={12}
+              variant="hero"
+              title={`Welcome, ${profile?.displayName || profile?.email || "Counsellor"}`}
+              subtitle="Certified Psychologist & Counsellor Workspace"
+              action={{
+                label: "Review Booking Requests →",
+                variant: "secondary",
+                onClick: () => setActiveSection("requests"),
+              }}
+            >
+              <div style={{ fontSize: "14px", lineHeight: "1.6" }}>
+                Review incoming session requests, update your availability, and manage your upcoming sessions.
+              </div>
+            </BentoCard>
+            <AttendanceCheckCard span={4} />
+            <CounsellorOverview />
+            <DailyQuoteCard />
+            <GamesSummaryCard onPlay={() => setActiveSection("games")} />
+            <CounsellorHomeActivityOverview onSelectSection={setActiveSection} />
+          </div>
+          <CounsellorTrends />
+        </>
       )}
     </AppShell>
   );
