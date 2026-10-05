@@ -1,39 +1,41 @@
 :root {
   /* Organic Base Canvas & Surface Tokens */
-  --neu-bg: #FFFFFF;
+  --neu-bg: #FCFBF9;
   --neu-surface: #FFFFFF;
 
-  /* Calm Design Tokens (soft rounded cards, diffused shadows) */
+  /* Landing Page Design Tokens (soft clean cards, refined slate shadows) */
   --sketch-radius: 20px;
-  --sketch-border: 1px solid rgba(46, 43, 39, 0.08);
-  --sketch-border-thick: 1px solid rgba(46, 43, 39, 0.1);
-  --sketch-shadow-sm: 0 4px 14px rgba(46, 43, 39, 0.05);
-  --sketch-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
-  --sketch-shadow-lg: 0 14px 36px rgba(46, 43, 39, 0.08);
-  --sketch-shadow-hover: 0 14px 36px rgba(46, 43, 39, 0.09);
+  --sketch-border: 1px solid #E2E8F0;
+  --sketch-border-thick: 1px solid #CBD5E1;
+  --sketch-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+  --sketch-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.07);
+  --sketch-shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --sketch-shadow-hover: 0 14px 36px rgba(15, 23, 42, 0.1);
 
-  /* Calm Card Shadows */
-  --neu-shadow-extruded-sm: 0 4px 14px rgba(46, 43, 39, 0.05);
-  --neu-shadow-extruded: 0 8px 24px rgba(46, 43, 39, 0.06);
-  --neu-shadow-extruded-lg: 0 14px 36px rgba(46, 43, 39, 0.08);
-  --neu-shadow-extruded-hover: 0 14px 36px rgba(46, 43, 39, 0.09);
-  --neu-shadow-accent: 0 8px 20px rgba(109, 116, 214, 0.25);
+  /* Card Shadows */
+  --neu-shadow-extruded-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+  --neu-shadow-extruded: 0 4px 20px -2px rgba(15, 23, 42, 0.07);
+  --neu-shadow-extruded-lg: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --neu-shadow-extruded-hover: 0 14px 36px rgba(15, 23, 42, 0.1);
+  --neu-shadow-accent: 0 8px 20px rgba(234, 88, 12, 0.22);
 
-  --neu-shadow-sunken: inset 0 1px 3px rgba(46, 43, 39, 0.08);
-  --neu-shadow-sunken-focus: 0 0 0 3px rgba(109, 116, 214, 0.35);
-  --neu-shadow-sunken-sm: inset 0 1px 2px rgba(46, 43, 39, 0.06);
+  --neu-shadow-sunken: inset 0 1px 3px rgba(15, 23, 42, 0.06);
+  --neu-shadow-sunken-focus: 0 0 0 3px rgba(234, 88, 12, 0.25);
+  --neu-shadow-sunken-sm: inset 0 1px 2px rgba(15, 23, 42, 0.05);
 
-  /* Color Palette - Calm Sage & Warm Cream Accents */
-  --neu-accent-primary: #6D74D6;
-  --neu-accent-vivid: #5A61C0;
-  --neu-accent-dark: #474DA0;
-  --neu-accent-hover: #5A61C0;
-  --neu-accent-light: #DCD6F7;
+  /* Color Palette - Landing Page Midnight Navy, Sunset Orange & Teal Accents */
+  --neu-accent-primary: #0B193C;
+  --neu-accent-vivid: #EA580C;
+  --neu-accent-dark: #061330;
+  --neu-accent-hover: #142858;
+  --neu-accent-light: #FFF7ED;
+  --neu-accent-teal: #0D9488;
+  --neu-accent-orange: #EA580C;
 
   /* Text Hierarchy Tokens */
-  --neu-text-primary: #2E2B27;
-  --neu-text-body: #4A453E;
-  --neu-text-muted: #8A8375;
+  --neu-text-primary: #0F172A;
+  --neu-text-body: #334155;
+  --neu-text-muted: #64748B;
 
   /* Material 3 Legacy Variable Mappings for Compatibility */
   --md-sys-color-primary: var(--neu-accent-primary);
@@ -44,7 +46,7 @@
   --md-sys-color-secondary: var(--neu-accent-dark);
   --md-sys-color-on-secondary: #ffffff;
   --md-sys-color-secondary-container: #E1E6EE;
-  --md-sys-color-on-secondary-container: #2D3748;
+  --md-sys-color-on-secondary-container: #0F172A;
 
   --md-sys-color-error: #e53e3e;
   --md-sys-color-on-error: #ffffff;
@@ -53,9 +55,9 @@
   --md-sys-color-on-background: var(--neu-text-primary);
   --md-sys-color-surface: var(--neu-surface);
   --md-sys-color-on-surface: var(--neu-text-primary);
-  --md-sys-color-surface-variant: #DCE2ED;
+  --md-sys-color-surface-variant: #F1F5F9;
   --md-sys-color-on-surface-variant: var(--neu-text-body);
-  --md-sys-color-outline: #CBD5E0;
+  --md-sys-color-outline: #E2E8F0;
 
   /* Shape Tokens */
   --md-sys-shape-corner-small: 12px;

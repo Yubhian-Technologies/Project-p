@@ -9,8 +9,8 @@ A psychology and wellness platform designed to connect **students and working pr
 * **Language:** TypeScript
 * **Frontend:** React + TypeScript with Vite
 * **Routing:** React Router
-* **Styling:** Plain CSS with Glassmorphism & Bento Grid Systems (`src/styles/glassmorphism.css`, `src/styles/bento-grid.css`)
-* **Typography:** `Plus Jakarta Sans` + `Inter` + `General Sans` + `Satoshi`
+* **Styling:** Plain CSS with Bento Grid & Design System Tokens (`src/styles/theme.css`, `src/styles/global.css`, `src/styles/glassmorphism.css`, `src/styles/bento-grid.css`) — see [DESIGN.md](./DESIGN.md) for the full design token specification
+* **Typography:** `Playfair Display` (Headlines) + `Work Sans` (Body & UI Controls)
 * **Backend/Database:** Firebase
 
   * Firebase Authentication

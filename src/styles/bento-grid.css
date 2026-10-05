@@ -3,20 +3,20 @@
 
 :root {
   --bento-bg: #FFFFFF;
-  --bento-bg-subtle: #F4F0E8;
-  --bento-border: 1px solid rgba(46, 43, 39, 0.08);
-  --bento-border-highlight: 1px solid rgba(46, 43, 39, 0.1);
-  --bento-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
-  --bento-shadow-hover: 0 14px 36px rgba(46, 43, 39, 0.09);
+  --bento-bg-subtle: #FCFBF9;
+  --bento-border: 1px solid #E2E8F0;
+  --bento-border-highlight: 1px solid #CBD5E1;
+  --bento-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.07);
+  --bento-shadow-hover: 0 12px 32px -4px rgba(15, 23, 42, 0.1);
   --bento-radius: 20px;
 
   /* Typography Tokens */
   --bento-font-title: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --bento-font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  --bento-primary: #6D74D6;
-  --bento-primary-hover: #5A61C0;
-  --bento-accent: #FFFFFF;
+  --bento-primary: #0B193C;
+  --bento-primary-hover: #142858;
+  --bento-accent: #EA580C;
   --bento-success: #059669;
   --bento-warning: #D97706;
 }
@@ -34,9 +34,9 @@
 /* Individual Bento Card */
 .bento-card {
   background: #FFFFFF;
-  border: 1px solid rgba(46, 43, 39, 0.08);
+  border: 1px solid #E2E8F0;
   border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.07);
   padding: 28px;
   box-sizing: border-box;
   display: flex;
@@ -50,7 +50,7 @@
 
 .bento-card:hover {
   transform: translate(0, -2px);
-  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
+  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.1);
 }
 
 /* Grid Column Spans */
@@ -60,19 +60,18 @@
 .bento-card--col-4  { grid-column: span 4; }
 .bento-card--col-3  { grid-column: span 3; }
 
-/* Hero Variant — the site's one deliberately bold, saturated moment; every
-   other card stays quiet so this one reads as "the" welcome card. */
+/* Hero Variant — deep midnight navy with warm accents */
 .bento-card--hero {
-  background: linear-gradient(135deg, #6D74D6 0%, #453F91 100%);
+  background: linear-gradient(135deg, #0B193C 0%, #061330 100%);
   color: #FFFFFF;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
-  box-shadow: 0 16px 40px rgba(69, 63, 145, 0.28);
+  box-shadow: 0 12px 36px rgba(11, 25, 60, 0.28);
 }
 
 .bento-card--hero:hover {
   transform: translate(0, -2px);
-  box-shadow: 0 20px 48px rgba(69, 63, 145, 0.32);
+  box-shadow: 0 16px 44px rgba(11, 25, 60, 0.35);
 }
 
 .bento-card--hero .bento-card__title {
@@ -84,8 +83,239 @@
 }
 
 .bento-card--hero .bento-card__icon {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.14);
   color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   Find Help Pastel Themes for Dashboard Cards
+   Matches the warm, welcoming pastel palette from the landing page Find Help cards:
+   1. Pink / Rose (#FFF0F2)
+   2. Soft Blue (#EFF6FF)
+   3. Mint / Sage (#ECFDF5)
+   4. Warm Peach (#FFF7ED)
+   5. Soft Lavender (#F5F3FF)
+   6. Butter Yellow (#FEFCE8)
+   ========================================================================== */
+
+/* 1. Pink / Rose */
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 2),
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 1),
+.bento-card--pink,
+.bento-card--pastel-pink {
+  background-color: #FFF0F2;
+  border-color: #FECDD3;
+}
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 2):hover,
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 1):hover,
+.bento-card--pink:hover,
+.bento-card--pastel-pink:hover {
+  border-color: #FDA4AF;
+}
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 2) .bento-card__icon,
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 1) .bento-card__icon,
+.bento-card--pink .bento-card__icon,
+.bento-card--pastel-pink .bento-card__icon {
+  background-color: #FFE4E6;
+  border-color: #FECDD3;
+  color: #BE123C;
+}
+
+/* 2. Soft Blue */
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 3),
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 2),
+.bento-card--blue,
+.bento-card--pastel-blue {
+  background-color: #EFF6FF;
+  border-color: #BFDBFE;
+}
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 3):hover,
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 2):hover,
+.bento-card--blue:hover,
+.bento-card--pastel-blue:hover {
+  border-color: #93C5FD;
+}
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 3) .bento-card__icon,
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 2) .bento-card__icon,
+.bento-card--blue .bento-card__icon,
+.bento-card--pastel-blue .bento-card__icon {
+  background-color: #DBEAFE;
+  border-color: #BFDBFE;
+  color: #1D4ED8;
+}
+
+/* 3. Mint / Sage */
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 4),
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 3),
+.bento-card--mint,
+.bento-card--pastel-mint {
+  background-color: #ECFDF5;
+  border-color: #A7F3D0;
+}
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 4):hover,
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 3):hover,
+.bento-card--mint:hover,
+.bento-card--pastel-mint:hover {
+  border-color: #6EE7B7;
+}
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 4) .bento-card__icon,
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 3) .bento-card__icon,
+.bento-card--mint .bento-card__icon,
+.bento-card--pastel-mint .bento-card__icon {
+  background-color: #D1FAE5;
+  border-color: #A7F3D0;
+  color: #047857;
+}
+
+/* 4. Warm Peach */
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 5),
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 4),
+.bento-card--peach,
+.bento-card--pastel-peach {
+  background-color: #FFF7ED;
+  border-color: #FED7AA;
+}
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 5):hover,
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 4):hover,
+.bento-card--peach:hover,
+.bento-card--pastel-peach:hover {
+  border-color: #FDBA74;
+}
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 5) .bento-card__icon,
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 4) .bento-card__icon,
+.bento-card--peach .bento-card__icon,
+.bento-card--pastel-peach .bento-card__icon {
+  background-color: #FFEDD5;
+  border-color: #FED7AA;
+  color: #C2410C;
+}
+
+/* 5. Soft Lavender */
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 6),
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 5),
+.bento-card--lavender,
+.bento-card--pastel-lavender {
+  background-color: #F5F3FF;
+  border-color: #DDD6FE;
+}
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 6):hover,
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 5):hover,
+.bento-card--lavender:hover,
+.bento-card--pastel-lavender:hover {
+  border-color: #C4B5FD;
+}
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 6) .bento-card__icon,
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 5) .bento-card__icon,
+.bento-card--lavender .bento-card__icon,
+.bento-card--pastel-lavender .bento-card__icon {
+  background-color: #EDE9FE;
+  border-color: #DDD6FE;
+  color: #6D28D9;
+}
+
+/* 6. Butter Yellow */
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 1),
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 6),
+.bento-card--yellow,
+.bento-card--pastel-yellow {
+  background-color: #FEFCE8;
+  border-color: #FEF08A;
+}
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 1):hover,
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 6):hover,
+.bento-card--yellow:hover,
+.bento-card--pastel-yellow:hover {
+  border-color: #FDE047;
+}
+.bento-grid > .bento-card:not(.bento-card--hero):nth-of-type(6n + 1) .bento-card__icon,
+.bento-grid:not(:has(.bento-card--hero)) > .bento-card:nth-of-type(6n + 6) .bento-card__icon,
+.bento-card--yellow .bento-card__icon,
+.bento-card--pastel-yellow .bento-card__icon {
+  background-color: #FEF9C3;
+  border-color: #FEF08A;
+  color: #A16207;
+}
+
+/* Modern nth-child(An + B of .selector) support for seamless cycling across all cards */
+@supports (selector(:nth-child(1 of .bento-card))) {
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 1 of .bento-card:not(.bento-card--hero)) {
+    background-color: #FFF0F2;
+    border-color: #FECDD3;
+  }
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 1 of .bento-card:not(.bento-card--hero)):hover {
+    border-color: #FDA4AF;
+  }
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 1 of .bento-card:not(.bento-card--hero)) .bento-card__icon {
+    background-color: #FFE4E6;
+    border-color: #FECDD3;
+    color: #BE123C;
+  }
+
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 2 of .bento-card:not(.bento-card--hero)) {
+    background-color: #EFF6FF;
+    border-color: #BFDBFE;
+  }
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 2 of .bento-card:not(.bento-card--hero)):hover {
+    border-color: #93C5FD;
+  }
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 2 of .bento-card:not(.bento-card--hero)) .bento-card__icon {
+    background-color: #DBEAFE;
+    border-color: #BFDBFE;
+    color: #1D4ED8;
+  }
+
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 3 of .bento-card:not(.bento-card--hero)) {
+    background-color: #ECFDF5;
+    border-color: #A7F3D0;
+  }
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 3 of .bento-card:not(.bento-card--hero)):hover {
+    border-color: #6EE7B7;
+  }
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 3 of .bento-card:not(.bento-card--hero)) .bento-card__icon {
+    background-color: #D1FAE5;
+    border-color: #A7F3D0;
+    color: #047857;
+  }
+
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 4 of .bento-card:not(.bento-card--hero)) {
+    background-color: #FFF7ED;
+    border-color: #FED7AA;
+  }
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 4 of .bento-card:not(.bento-card--hero)):hover {
+    border-color: #FDBA74;
+  }
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 4 of .bento-card:not(.bento-card--hero)) .bento-card__icon {
+    background-color: #FFEDD5;
+    border-color: #FED7AA;
+    color: #C2410C;
+  }
+
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 5 of .bento-card:not(.bento-card--hero)) {
+    background-color: #F5F3FF;
+    border-color: #DDD6FE;
+  }
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 5 of .bento-card:not(.bento-card--hero)):hover {
+    border-color: #C4B5FD;
+  }
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 5 of .bento-card:not(.bento-card--hero)) .bento-card__icon {
+    background-color: #EDE9FE;
+    border-color: #DDD6FE;
+    color: #6D28D9;
+  }
+
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 6 of .bento-card:not(.bento-card--hero)) {
+    background-color: #FEFCE8;
+    border-color: #FEF08A;
+  }
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 6 of .bento-card:not(.bento-card--hero)):hover {
+    border-color: #FDE047;
+  }
+  .bento-grid > .bento-card:not(.bento-card--hero):nth-child(6n + 6 of .bento-card:not(.bento-card--hero)) .bento-card__icon {
+    background-color: #FEF9C3;
+    border-color: #FEF08A;
+    color: #A16207;
+  }
 }
 
 /* Card Header */
@@ -106,8 +336,9 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-extruded-sm);
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -123,7 +354,7 @@
   font-family: var(--bento-font-title);
   font-size: 18px;
   font-weight: 700;
-  color: var(--neu-text-primary, #2D3748);
+  color: #0F172A;
   margin: 0;
   letter-spacing: -0.01em;
 }
@@ -131,7 +362,7 @@
 .bento-card__subtitle {
   font-family: var(--bento-font-body);
   font-size: 13px;
-  color: var(--neu-text-muted, #718096);
+  color: #64748B;
   margin: 4px 0 0 0;
 }
 
@@ -144,7 +375,7 @@
 }
 
 .bento-kpi__number {
-  font-family: var(--bento-font-title);
+  font-family: var(--bento-font-body);
   font-size: 36px;
   font-weight: 800;
   color: var(--neu-text-primary, #2D3748);
@@ -249,40 +480,45 @@
 }
 
 .bento-btn--primary {
-  background: linear-gradient(135deg, #6D74D6 0%, #474DA0 100%);
+  background: #0B193C;
   color: #ffffff;
-  box-shadow: var(--neu-shadow-accent);
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(11, 25, 60, 0.2);
 }
 
 .bento-btn--primary:hover {
-  background: linear-gradient(135deg, #8087DE 0%, #5A61C0 100%);
+  background: #142858;
+  box-shadow: 0 6px 18px rgba(11, 25, 60, 0.28);
 }
 
 .bento-btn--secondary {
-  background: var(--neu-bg, #E8ECF2);
-  color: var(--neu-accent-primary, #2563EB);
-  box-shadow: var(--neu-shadow-extruded-sm);
+  background: #FFFFFF;
+  color: #0F172A;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .bento-btn--secondary:hover {
-  box-shadow: var(--neu-shadow-extruded);
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #EA580C;
 }
 
-/* On a dark/colored hero card, the light neumorphic shadow above reads as a glow
-   against the saturated background, so give it a grounded shadow instead. */
+/* On a dark/colored hero card, secondary button stands out cleanly */
 .bento-card--hero .bento-btn--secondary {
   background: #FFFFFF;
-  color: #6D74D6;
-  border: 1px solid rgba(46, 43, 39, 0.08);
+  color: #0B193C;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
-  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.06);
-  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  font-weight: 700;
 }
 
 .bento-card--hero .bento-btn--secondary:hover {
   transform: translate(0, -1px);
-  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.08);
-  color: #5A61C0;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+  color: #EA580C;
 }
 
 

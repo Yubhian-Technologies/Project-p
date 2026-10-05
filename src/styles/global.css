@@ -17,22 +17,23 @@ html {
 }
 
 :root {
-  /* Calm palette tokens (source of truth for the design) */
-  --theme-amber: #FFFFFF; /* quiet white — dashboard chrome (topbar/hero) */
-  --theme-amber-light: #DCD6F7; /* sage tint — light chrome-adjacent tint */
-  --theme-bg: #F4F0E8; /* warm cream — main content-area background */
-  --theme-charcoal: #2E2B27;
-  --theme-text-muted: #8A8375;
-  --theme-lavender: #6D74D6; /* sage — primary interactive accent */
-  --theme-lavender-subtle: #DCD6F7; /* sage tint — light accent tint */
-  --theme-card-bg: #FFFFFF; /* white — card surface, sits on the cream page */
-  --theme-shadow: 0 10px 30px rgba(46, 43, 39, 0.06);
-  --theme-shadow-hover: 0 16px 36px rgba(46, 43, 39, 0.1);
-  --neu-bg: #FFFFFF;
-  --neu-text-primary: #2E2B27;
-  --neu-text-body: #4A453E;
-  --neu-text-muted: #8A8375;
-  --neu-accent-primary: #6D74D6;
+  /* Landing page aligned tokens */
+  --theme-amber: #FFFFFF; /* clean white — dashboard chrome (topbar) */
+  --theme-amber-light: #FFF7ED; /* warm peach tint */
+  --theme-bg: #FCFBF9; /* warm porcelain cream — main content-area background (matching landing page) */
+  --theme-charcoal: #0F172A; /* deep slate/navy */
+  --theme-text-muted: #64748B;
+  --theme-lavender: #0B193C; /* midnight navy — primary interactive accent */
+  --theme-lavender-subtle: #FFF7ED; /* light warm orange tint */
+  --theme-accent-orange: #EA580C; /* warm sunset orange */
+  --theme-card-bg: #FFFFFF; /* white — card surface, sits on porcelain page */
+  --theme-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.07);
+  --theme-shadow-hover: 0 12px 32px -4px rgba(15, 23, 42, 0.1);
+  --neu-bg: #FCFBF9;
+  --neu-text-primary: #0F172A;
+  --neu-text-body: #334155;
+  --neu-text-muted: #64748B;
+  --neu-accent-primary: #0B193C;
 }
 
 html,
@@ -42,12 +43,11 @@ body,
   background-color: var(--theme-amber);
 }
 
-html,
-body {
-  max-width: 100%;
-  /* clip (not hidden) so the sticky top bar keeps working */
-  overflow-x: clip;
-}
+/* overflow-x: clip intentionally does NOT live here on html/body — it would
+   clip position:fixed elements portalled straight onto <body> (Modal, etc.)
+   to a shrunk/offset box instead of the real viewport, misaligning them.
+   Each top-level surface (.app-shell, .landing-page) clips its own overflow
+   instead, so portals stay outside that clipping box entirely. */
 
 body {
   margin: 0;
@@ -66,13 +66,13 @@ h5,
 h6 {
   margin: 0;
   font-family: var(--md-sys-typescale-font-display);
-  color: var(--neu-text-primary, #2D3748);
+  color: var(--neu-text-primary, #0F172A);
   letter-spacing: -0.02em;
 }
 
 p {
   margin: 0;
-  color: var(--neu-text-body, #4A5568);
+  color: var(--neu-text-body, #334155);
 }
 
 button, input, select, textarea {
@@ -80,7 +80,7 @@ button, input, select, textarea {
   outline: none;
 }
 
-/* Global Sketchbook Input Utilities */
+/* Global Input Utilities */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -91,10 +91,10 @@ input[type="time"],
 select,
 textarea {
   background: #FFFFFF;
-  border: 1px solid rgba(46, 43, 39, 0.12);
+  border: 1px solid #E2E8F0;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(46, 43, 39, 0.04);
-  color: var(--neu-text-primary, #2E2B27);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  color: var(--neu-text-primary, #0F172A);
   padding: 12px 18px;
   font-size: 14px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -103,8 +103,8 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  box-shadow: 0 0 0 3px rgba(109, 116, 214, 0.25);
-  border-color: #6D74D6;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.2);
+  border-color: #EA580C;
 }
 
 input::placeholder,

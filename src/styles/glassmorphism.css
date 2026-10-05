@@ -12,14 +12,14 @@
   --radius-md: 20px;
   --radius-pill: 9999px;
 
-  --color-text-main: #2E2B27;
+  --color-text-main: #0F172A;
 }
 
 
 body {
   font-family: var(--font-main);
   color: var(--color-text-main);
-  background-color: var(--theme-bg, #F4F0E8);
+  background-color: var(--theme-bg, #FCFBF9);
   margin: 0;
   padding: 0;
 }
