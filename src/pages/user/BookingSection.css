@@ -60,6 +60,20 @@
   display: none;
 }
 
+@media (max-width: 768px) {
+  .booking-section__grid {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    overflow-x: visible;
+    overflow-y: visible;
+    scroll-snap-type: none;
+    align-items: stretch;
+    width: 100%;
+    padding: 0 0 16px 0;
+    gap: 16px;
+  }
+}
+
 .booking-section__bookings {
   display: flex;
   flex-direction: column;

@@ -336,12 +336,53 @@
 .fan-card-details__tag {
   display: inline-block;
   font-size: 0.74rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #334155;
   background: #f1f5f9;
   padding: 4px 10px;
   border-radius: 6px;
   border: 1px solid rgba(203, 213, 225, 0.6);
+  transition: transform 0.2s ease;
+}
+
+.fan-card-details__tag:hover {
+  transform: translateY(-1px);
+}
+
+.fan-card-details__tag:nth-child(6n + 1) {
+  background: #FFF0F2;
+  color: #BE123C;
+  border-color: #FECDD3;
+}
+
+.fan-card-details__tag:nth-child(6n + 2) {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border-color: #BFDBFE;
+}
+
+.fan-card-details__tag:nth-child(6n + 3) {
+  background: #ECFDF5;
+  color: #047857;
+  border-color: #A7F3D0;
+}
+
+.fan-card-details__tag:nth-child(6n + 4) {
+  background: #FFF7ED;
+  color: #C2410C;
+  border-color: #FED7AA;
+}
+
+.fan-card-details__tag:nth-child(6n + 5) {
+  background: #F5F3FF;
+  color: #6D28D9;
+  border-color: #DDD6FE;
+}
+
+.fan-card-details__tag:nth-child(6n + 6) {
+  background: #FEFCE8;
+  color: #A16207;
+  border-color: #FEF08A;
 }
 
 .fan-card-details__contact-row {

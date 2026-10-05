@@ -115,7 +115,7 @@ export function UserDashboard() {
 
   const titleBySection: Record<string, string> = {
     profile: "Profile",
-    "campus-counsellors": "Campus Counsellors & Heads",
+    "campus-counsellors": "Campus Counsellors",
     booking: "Book Session",
     "ssi-test": "SSI Assessment Test",
     events: "Events & Programs",

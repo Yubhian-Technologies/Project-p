@@ -27,21 +27,24 @@
    compact size instead of scaled-down desktop cards. */
 @media (max-width: 768px) {
   .counsellor-card {
-    flex-basis: 82vw;
-    width: 82vw;
-    height: 340px;
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 320px;
+    scroll-snap-align: none;
   }
 
   .counsellor-card__photo-wrap {
-    height: 160px;
+    height: 180px;
   }
 
   .counsellor-card__photo {
-    height: 160px;
+    height: 180px;
   }
 
   .counsellor-card__bio {
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
   }
 }
 

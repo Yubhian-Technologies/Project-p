@@ -383,6 +383,27 @@ export function LandingPage() {
       </header>
 
       <main>
+        {/* Hero */}
+        <section className="landing-hero">
+          <div className="landing-hero__content">
+            <h1 className="landing-headline">
+              Elevate Your Mind, Body &amp; Soul. <span className="landing-headline__accent">Redefined.</span>
+            </h1>
+            <p className="landing-subtitle">
+              Book 1-on-1 sessions with certified psychologists, track your personal wellness journey, and
+              receive dedicated counselling support—all in one seamless workspace.
+            </p>
+            <div className="landing-about-actions landing-hero__actions">
+              <Link to={currentUser ? dashboardPath : "/signup"} className="btn-primary landing-about-btn-primary">
+                Book a Confidential Session &rarr;
+              </Link>
+              <a href="#features" className="landing-about-btn-secondary">
+                Explore Features
+              </a>
+            </div>
+          </div>
+        </section>
+
         {/* About Section — Split 2-Column Design */}
         <section className="landing-section landing-about-section" id="about">
           <div className="landing-about-container">
@@ -403,15 +424,6 @@ export function LandingPage() {
                 life&apos;s challenges — academic, personal or emotional. Our counsellors are here to listen, guide and help
                 you build practical skills for a healthier, happier you.
               </p>
-
-              <div className="landing-about-actions">
-                <Link to={currentUser ? dashboardPath : "/signup"} className="btn-primary landing-about-btn-primary">
-                  Book a Confidential Session &rarr;
-                </Link>
-                <a href="#features" className="landing-about-btn-secondary">
-                  Explore Features
-                </a>
-              </div>
 
               <div className="landing-about-features">
                 <a href="#values" className="landing-about-feature">
