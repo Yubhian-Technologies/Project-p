@@ -24,7 +24,7 @@ export async function listJournalEntries(uid: string): Promise<JournalEntry[]> {
 export async function saveJournalEntry(
   uid: string,
   date: string,
-  input: { note: string; isReminder?: boolean; reminderTime?: string },
+  input: { note: string; isReminder?: boolean; reminderTime?: string; snoozedUntil?: number },
 ): Promise<void> {
   const ref = entryDocRef(uid, date);
   const existing = await getDoc(ref);
@@ -33,6 +33,9 @@ export async function saveJournalEntry(
     note: input.note,
     isReminder: input.isReminder ?? false,
     ...(input.isReminder && input.reminderTime ? { reminderTime: input.reminderTime } : {}),
+    // Not passed by a normal edit, so re-saving an entry from the editor
+    // clears any earlier snooze — setDoc replaces the whole document.
+    ...(input.isReminder && input.snoozedUntil ? { snoozedUntil: input.snoozedUntil } : {}),
     createdAt: existing.exists() ? existing.data().createdAt : now,
     updatedAt: now,
   });
@@ -90,6 +93,7 @@ export async function listSharedJournalEntriesForCounsellor(
  */
 export function isReminderDue(entry: JournalEntry, now: Date = new Date()): boolean {
   if (!entry.isReminder) return false;
+  if (entry.snoozedUntil && now.getTime() < entry.snoozedUntil) return false;
   const todayIso = toIsoDate(now);
   if (entry.id < todayIso) return true;
   if (entry.id > todayIso) return false;

@@ -63,6 +63,23 @@ export function JournalSection() {
       .catch(() => setSharedWithMe([]));
   }, [profile?.role, currentUser]);
 
+  async function handleDismissReminder(entry: JournalEntry) {
+    if (!currentUser) return;
+    await saveJournalEntry(currentUser.uid, entry.id, { note: entry.note, isReminder: false });
+    await refresh();
+  }
+
+  async function handleSnoozeReminder(entry: JournalEntry) {
+    if (!currentUser) return;
+    await saveJournalEntry(currentUser.uid, entry.id, {
+      note: entry.note,
+      isReminder: true,
+      reminderTime: entry.reminderTime,
+      snoozedUntil: Date.now() + 60 * 60 * 1000,
+    });
+    await refresh();
+  }
+
   const selectedEntry = entries.find((e) => e.id === selectedDate);
 
   useEffect(() => {
@@ -88,15 +105,34 @@ export function JournalSection() {
         <div className="journal-section__reminders">
           <h3 className="journal-section__reminders-title">Reminders due</h3>
           {dueReminders.map((entry) => (
-            <button
-              key={entry.id}
-              type="button"
-              className="journal-section__reminder-item"
-              onClick={() => setSelectedDate(entry.id)}
-            >
-              <strong>{entry.id}</strong> — {entry.note.slice(0, 80)}
-              {entry.note.length > 80 ? "…" : ""}
-            </button>
+            <div key={entry.id} className="journal-section__reminder-item">
+              <button
+                type="button"
+                className="journal-section__reminder-text"
+                onClick={() => setSelectedDate(entry.id)}
+              >
+                <strong>{entry.id}</strong> — {entry.note.slice(0, 80)}
+                {entry.note.length > 80 ? "…" : ""}
+              </button>
+              <div className="journal-section__reminder-actions">
+                <button
+                  type="button"
+                  className="journal-section__reminder-action"
+                  title="Mark as done — stop reminding me about this"
+                  onClick={() => handleDismissReminder(entry)}
+                >
+                  Mark as Done
+                </button>
+                <button
+                  type="button"
+                  className="journal-section__reminder-action"
+                  title="Remind me again in an hour"
+                  onClick={() => handleSnoozeReminder(entry)}
+                >
+                  Remind Later
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       )}

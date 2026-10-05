@@ -3,6 +3,9 @@ export interface JournalEntry {
   note: string;
   isReminder?: boolean;
   reminderTime?: string; // "HH:mm", 24-hour — time of day the reminder is due
+  /** Set by "Remind later" — the reminder won't show as due again until this
+      moment passes, even if its date/time would otherwise already be due. */
+  snoozedUntil?: number;
   createdAt: number;
   updatedAt: number;
 }

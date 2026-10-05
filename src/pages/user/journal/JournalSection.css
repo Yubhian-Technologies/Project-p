@@ -29,19 +29,52 @@
 }
 
 .journal-section__reminder-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   width: 100%;
+  padding: 4px 0;
+  flex-wrap: wrap;
+}
+
+.journal-section__reminder-text {
+  flex: 1 1 auto;
+  min-width: 160px;
   text-align: left;
   border: none;
   background: transparent;
   color: #2E2B27;
   font-size: 13px;
-  padding: 4px 0;
+  padding: 0;
   cursor: pointer;
 }
 
-.journal-section__reminder-item:hover {
+.journal-section__reminder-text:hover {
   text-decoration: underline;
+}
+
+.journal-section__reminder-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.journal-section__reminder-action {
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(46, 43, 39, 0.12);
+  background: #FFFFFF;
+  color: #475569;
+  cursor: pointer;
+}
+
+.journal-section__reminder-action:hover {
+  border-color: #D97706;
+  color: #D97706;
 }
 
 .journal-section__body {
