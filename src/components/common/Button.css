@@ -1,13 +1,13 @@
 .md-button {
-  border: 1px solid rgba(46, 43, 39, 0.08);
+  border: 1px solid #E2E8F0;
   border-radius: 12px;
-  padding: 10px 24px;
+  padding: 10px 22px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   background: #FFFFFF;
-  color: #2E2B27;
-  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  color: #0F172A;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
@@ -17,51 +17,52 @@
 }
 
 .md-button:hover {
-  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
-  transform: translate(-2px, -2px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
 }
 
 .md-button:active {
-  box-shadow: 0 3px 10px rgba(46, 43, 39, 0.04);
-  transform: translate(1px, 1px);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transform: translateY(0);
 }
 
 .md-button--filled {
-  background: #6D74D6;
+  background: #0B193C;
   color: #FFFFFF;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  border: 1px solid #0B193C;
+  box-shadow: 0 4px 14px rgba(11, 25, 60, 0.18);
 }
 
 .md-button--filled:hover {
-  background: #5A61C0;
-  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
-  transform: translate(-2px, -2px);
+  background: #142858;
+  border-color: #142858;
+  box-shadow: 0 8px 22px rgba(11, 25, 60, 0.25);
+  transform: translateY(-1px);
 }
 
 .md-button--filled:active {
-  transform: translate(1px, 1px);
-  box-shadow: 0 3px 10px rgba(46, 43, 39, 0.04);
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(11, 25, 60, 0.15);
 }
 
 .md-button--outlined {
   background: #FFFFFF;
-  color: #2E2B27;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  color: #0F172A;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .md-button--outlined:hover {
-  background: #F3E8FF;
-  border-color: rgba(46, 43, 39, 0.18);
-  color: #5A61C0;
-  transform: translate(-2px, -2px);
-  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #EA580C;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
 }
 
 .md-button--outlined:active {
-  box-shadow: 0 3px 10px rgba(46, 43, 39, 0.04);
-  transform: translate(1px, 1px);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transform: translateY(0);
 }
 
 .md-button:disabled {

@@ -67,8 +67,8 @@
   gap: 4px;
   padding: 12px 6px;
   border-radius: 20px;
-  border: 1.5px solid rgba(30, 30, 30, 0.06);
-  background: #F8F9FA;
+  border: 1.5px solid rgba(30, 30, 30, 0.08);
+  background: #FFFFFF;
   box-shadow: 0 4px 12px rgba(30, 30, 30, 0.04);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -77,9 +77,10 @@
 }
 
 .mood-tracker__option:hover:not(:disabled) {
-  background: #F3E8FF;
+  background: #FFF7ED;
+  border-color: #EA580C;
   transform: translateY(-4px);
-  box-shadow: 0 10px 20px rgba(109, 116, 214, 0.15);
+  box-shadow: 0 8px 20px rgba(234, 88, 12, 0.15);
 }
 
 .mood-tracker__option:active:not(:disabled) {
@@ -123,10 +124,11 @@
 
 /* ── Past 7 Days Bar ───────────────────────────────────────────── */
 .mood-tracker__week-bar {
-  background: var(--neu-bg, #E8ECF2);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   padding: 12px 10px;
   border-radius: 20px;
-  box-shadow: var(--neu-shadow-sunken-sm);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .mood-tracker__week-title {

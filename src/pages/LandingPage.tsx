@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { motion, useScroll, useSpring } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { dashboardPathForRole } from "../utils/roleRedirect";
 import { CardFanCarousel } from "../components/ui/CardFanCarousel";
 import { PerspectiveDeckCarousel } from "../components/ui/PerspectiveDeckCarousel";
+import { AnimatedHero } from "../components/ui/animated-hero";
 import "./LandingPage.css";
 
 const VALUES_CARDS = [
@@ -301,14 +303,43 @@ const FAQS = [
   },
 ];
 
+const sectionReveal = {
+  initial: { opacity: 0, y: 35 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
+  transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const },
+};
+
 export function LandingPage() {
   const { currentUser, role } = useAuth();
   const dashboardPath = dashboardPathForRole(role);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const { scrollYProgress, scrollY } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
+  useEffect(() => {
+    return scrollY.on("change", (latest) => {
+      setIsScrolled(latest > 20);
+    });
+  }, [scrollY]);
 
   return (
     <div className="landing-page">
-      <header className="landing-header">
+      {/* Top Reading Progress Bar */}
+      <motion.div className="landing-scroll-progress" style={{ scaleX }} />
+
+      <motion.header
+        className={`landing-header ${isScrolled ? "landing-header--scrolled" : ""}`}
+        initial={{ y: -25, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
         <Link to="/" className="landing-brand">
           <img src="/favicon.png" alt="Vishnu Wellness Center logo" className="landing-brand__logo" />
           <span className="landing-brand__name">Vishnu Wellness Center</span>
@@ -380,32 +411,14 @@ export function LandingPage() {
             </Link>
           )}
         </div>
-      </header>
+      </motion.header>
 
       <main>
-        {/* Hero */}
-        <section className="landing-hero">
-          <div className="landing-hero__content">
-            <h1 className="landing-headline">
-              Elevate Your Mind, Body &amp; Soul. <span className="landing-headline__accent">Redefined.</span>
-            </h1>
-            <p className="landing-subtitle">
-              Book 1-on-1 sessions with certified psychologists, track your personal wellness journey, and
-              receive dedicated counselling support—all in one seamless workspace.
-            </p>
-            <div className="landing-about-actions landing-hero__actions">
-              <Link to={currentUser ? dashboardPath : "/signup"} className="btn-primary landing-about-btn-primary">
-                Book a Confidential Session &rarr;
-              </Link>
-              <a href="#features" className="landing-about-btn-secondary">
-                Explore Features
-              </a>
-            </div>
-          </div>
-        </section>
+        {/* Animated Hero Section */}
+        <AnimatedHero currentUser={currentUser} dashboardPath={dashboardPath} />
 
         {/* About Section — Split 2-Column Design */}
-        <section className="landing-section landing-about-section" id="about">
+        <motion.section {...sectionReveal} className="landing-section landing-about-section" id="about">
           <div className="landing-about-container">
             {/* Left Column: Content */}
             <div className="landing-about-content">
@@ -493,10 +506,10 @@ export function LandingPage() {
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Core Values */}
-        <section className="landing-section" id="values">
+        <motion.section {...sectionReveal} className="landing-section" id="values">
           <div className="landing-section-container">
             <h2 className="landing-section__title">Our Values</h2>
             <p className="landing-section__body">
@@ -505,10 +518,10 @@ export function LandingPage() {
 
             <PerspectiveDeckCarousel items={VALUES_CARDS} />
           </div>
-        </section>
+        </motion.section>
 
         {/* Our Team */}
-        <section className="landing-section" id="team">
+        <motion.section {...sectionReveal} className="landing-section" id="team">
           <div className="landing-section-container">
             <h2 className="landing-section__title">The people behind Vishnu Wellness Center</h2>
             <p className="landing-section__body">
@@ -518,10 +531,10 @@ export function LandingPage() {
 
             <CardFanCarousel cards={TEAM_CARDS} />
           </div>
-        </section>
+        </motion.section>
 
         {/* Features / Why Vishnu Wellness Centre */}
-        <section className="landing-section landing-journey-section" id="features">
+        <motion.section {...sectionReveal} className="landing-section landing-journey-section" id="features">
           <div className="landing-journey-header">
             <h2 className="landing-section__title">Everything you need for your wellness journey</h2>
             <p className="landing-journey-subtitle">
@@ -608,10 +621,10 @@ export function LandingPage() {
               </p>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Find What You Need / How Are You Really Doing? */}
-        <section className="landing-section landing-doing-section" id="resources">
+        <motion.section {...sectionReveal} className="landing-section landing-doing-section" id="resources">
           <div className="landing-doing-header">
             <h2 className="landing-section__title">
               How are you <span className="landing-accent-italic">really</span> doing?
@@ -761,10 +774,10 @@ export function LandingPage() {
               </div>
             </Link>
           </div>
-        </section>
+        </motion.section>
 
         {/* FAQ */}
-        <section className="landing-section" id="faq">
+        <motion.section {...sectionReveal} className="landing-section" id="faq">
           <div className="landing-faq-layout">
             {/* Left Column: Heading & Contact Info */}
             <div className="landing-faq-sidebar">
@@ -824,10 +837,10 @@ export function LandingPage() {
               })}
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Terms and Policies */}
-        <section className="landing-section" id="terms">
+        <motion.section {...sectionReveal} className="landing-section landing-terms-section" id="terms">
           <h2 className="landing-section__title">Please review our terms before you begin</h2>
 
           <ol className="terms-list">
@@ -876,7 +889,7 @@ export function LandingPage() {
               highest standards of care and professionalism.
             </li>
           </ol>
-        </section>
+        </motion.section>
       </main>
 
       <footer className="landing-footer">

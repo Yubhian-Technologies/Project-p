@@ -4,6 +4,12 @@
   height: 100%;
 }
 
+/* Prevent subpixel shift on hover which causes 3D font rasterization blur in Chromium */
+.flash-qa-bento,
+.flash-qa-bento:hover {
+  transform: none !important;
+}
+
 .flash-qa__wrapper {
   flex: 1;
   display: flex;
@@ -18,9 +24,10 @@
   width: 100%;
   max-width: 280px;
   height: 200px;
-  perspective: 1000px;
+  perspective: 1200px;
   cursor: pointer;
   user-select: none;
+  transform: translateZ(0);
 }
 
 .flash-qa__flip-card {
@@ -28,8 +35,7 @@
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  transition: transform 0.7s cubic-bezier(0.645, 0.045, 0.355, 1);
-  will-change: transform;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 20px;
 }
 
@@ -53,6 +59,10 @@
   justify-content: space-between;
   align-items: center;
   text-align: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transform: translateZ(0);
 }
 
 /* Front Face (Question) */
@@ -60,14 +70,15 @@
   background: #FFFFFF;
   box-shadow: 0 10px 30px rgba(30, 30, 30, 0.06);
   border: 1.5px solid rgba(30, 30, 30, 0.06);
+  transform: translateZ(0);
 }
 
 /* Back Face (Answer) */
 .flash-qa__face--back {
-  background: #F3E8FF;
-  box-shadow: 0 10px 30px rgba(109, 116, 214, 0.12);
-  border: 1.5px solid rgba(109, 116, 214, 0.2);
-  transform: rotateY(180deg);
+  background: #FFF7ED;
+  box-shadow: 0 10px 30px rgba(234, 88, 12, 0.1);
+  border: 1.5px solid rgba(234, 88, 12, 0.2);
+  transform: rotateY(180deg) translateZ(0);
 }
 
 .flash-qa__tag {
@@ -88,7 +99,7 @@
 }
 
 .flash-qa__tag--back {
-  background: #6D74D6;
+  background: #0B193C;
   color: #FFFFFF;
 }
 
@@ -106,28 +117,35 @@
   margin: 0;
   font-family: var(--bento-font-title, sans-serif);
   font-weight: 700;
-  font-size: 15px;
+  font-size: 15.5px;
   line-height: 1.45;
-  color: var(--neu-text-primary, #2D3748);
+  color: #0F172A;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .flash-qa__answer {
   margin: 0;
   font-family: var(--bento-font-body, sans-serif);
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--neu-text-body, #4A5568);
+  font-size: 13.5px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: #0F172A;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .flash-qa__hint {
   margin: 0;
   font-size: 11px;
   font-weight: 600;
-  color: var(--neu-text-muted, #718096);
-  display: flex;
+  color: #64748B;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 /* Bottom Navigation & Controls */
@@ -162,7 +180,7 @@
 
 .flash-qa__dot--active {
   opacity: 1;
-  background: var(--neu-accent-primary, #2563EB);
+  background: #EA580C;
   width: 16px;
 }
 
@@ -175,15 +193,18 @@
   font-size: 12px;
   font-weight: 800;
   background: #FFFFFF;
-  color: #6D74D6;
-  border: 1px solid rgba(46, 43, 39, 0.08);
+  color: #0B193C;
+  border: 1px solid #E2E8F0;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
   transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .flash-qa__next-btn:hover {
-  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  color: #EA580C;
+  border-color: #EA580C;
+  background: #FFF7ED;
   transform: translate(-1px, -1px);
 }
 

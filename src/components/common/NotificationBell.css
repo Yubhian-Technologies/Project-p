@@ -58,8 +58,8 @@
   height: 18px;
   padding: 0 4px;
   border-radius: var(--md-sys-shape-corner-full, 9999px) !important;
-  border: 1px solid rgba(46, 43, 39, 0.08) !important;
-  background: var(--neu-accent-primary, #6D74D6);
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  background: #EA580C;
   color: #FFFFFF;
   font-size: 10px;
   font-weight: 900;
@@ -125,7 +125,7 @@
   border: 1px solid rgba(46, 43, 39, 0.08) !important;
   border-radius: var(--md-sys-shape-corner-full, 9999px) !important;
   box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045) !important;
-  color: var(--neu-accent-primary, #6D74D6);
+  color: #0B193C;
   font-family: var(--md-sys-typescale-font-body, 'Work Sans', sans-serif);
   font-size: 11px;
   font-weight: 700;
@@ -135,9 +135,11 @@
 }
 
 .notification-bell__mark-all:hover {
-  background: var(--neu-accent-light, #DCD6F7);
+  background: #FFF7ED;
+  color: #EA580C;
+  border-color: #EA580C !important;
   transform: translate(-1px, -1px);
-  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
 }
 
 .notification-bell__list {
@@ -190,12 +192,12 @@
 }
 
 .notification-bell__item--unread {
-  background: rgba(109, 116, 214, 0.08);
-  border-left: 3px solid var(--neu-accent-primary, #6D74D6) !important;
+  background: rgba(234, 88, 12, 0.05);
+  border-left: 3px solid #EA580C !important;
 }
 
 .notification-bell__item--unread:hover {
-  background: rgba(109, 116, 214, 0.14);
+  background: rgba(234, 88, 12, 0.09);
 }
 
 .notification-bell__item--emergency {
@@ -226,7 +228,7 @@
   width: 7px;
   height: 7px;
   border-radius: var(--md-sys-shape-corner-full, 9999px) !important;
-  background: var(--neu-accent-primary, #6D74D6);
+  background: #EA580C;
   margin-right: 7px;
   flex-shrink: 0;
 }

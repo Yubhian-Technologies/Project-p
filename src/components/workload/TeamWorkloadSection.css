@@ -29,7 +29,7 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #6D74D6;
+  color: #0B193C;
   margin: 0 0 4px;
 }
 
@@ -165,7 +165,7 @@
 }
 
 .twl-icon:hover {
-  color: #6D74D6;
+  color: #EA580C;
 }
 
 .twl-icon--danger:hover {

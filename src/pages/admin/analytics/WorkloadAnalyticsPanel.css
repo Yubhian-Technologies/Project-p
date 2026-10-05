@@ -18,7 +18,7 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #6D74D6;
+  color: #0B193C;
   margin: 0 0 4px;
 }
 
@@ -56,12 +56,12 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #6D74D6;
+  color: #EA580C;
   margin: 0;
 }
 
 .wla-stat__value {
-  font-family: var(--md-sys-typescale-font-display);
+  font-family: var(--md-sys-typescale-font-body);
   font-size: 26px;
   font-weight: 700;
   margin: 6px 0 0;
@@ -111,7 +111,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #6D74D6;
+  color: #0B193C;
 }
 
 .wla-pill {

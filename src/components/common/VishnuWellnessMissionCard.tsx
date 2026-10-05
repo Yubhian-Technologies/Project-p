@@ -33,7 +33,7 @@ export function VishnuWellnessMissionCard({ onSelectSection }: VishnuWellnessMis
             <button
               type="button"
               className="vwm-btn-counsellors"
-              onClick={() => onSelectSection("booking")}
+              onClick={() => onSelectSection("campus-counsellors")}
             >
               MEET OUR COUNSELLORS →
             </button>

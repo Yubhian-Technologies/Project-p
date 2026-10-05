@@ -55,7 +55,7 @@
   font-size: 32px;
   font-weight: 900;
   color: var(--neu-text-primary, #0F172A);
-  font-family: var(--md-sys-typescale-font-display, sans-serif);
+  font-family: var(--md-sys-typescale-font-body, sans-serif);
   line-height: 1;
 }
 

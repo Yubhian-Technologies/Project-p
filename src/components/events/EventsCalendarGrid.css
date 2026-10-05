@@ -112,7 +112,7 @@
 .events-calendar__icon-btn {
   border: none;
   background: none;
-  color: #5A61C0;
+  color: #EA580C;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -189,19 +189,19 @@
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  background: #5A61C0;
+  background: #0B193C;
   color: #FFFFFF;
   font-size: 11px;
   font-weight: 800;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  box-shadow: 0 4px 12px rgba(46, 43, 39, 0.045);
-  border-radius: 0;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  border-radius: 6px;
   flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
 .events-calendar__chip:hover .events-calendar__chip-view-btn {
-  background: #474DA0;
+  background: #142858;
   transform: scale(1.02);
 }
 
@@ -227,7 +227,7 @@
   align-self: flex-start;
   border: none;
   background: none;
-  color: #5A61C0;
+  color: #EA580C;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;

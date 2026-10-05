@@ -190,9 +190,9 @@
 .counsellor-profile__chip {
   font-size: 12px;
   font-weight: 800;
-  color: #5B21B6;
-  background: #EDE9FE;
-  border: 1px solid rgba(46, 43, 39, 0.08);
+  color: #0F172A;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
   box-shadow: var(--sketch-shadow-sm);
   border-radius: var(--sketch-radius) !important;
   padding: 5px 14px;

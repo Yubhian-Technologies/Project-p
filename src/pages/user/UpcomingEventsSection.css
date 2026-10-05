@@ -41,9 +41,10 @@
   flex-shrink: 0;
   width: 38px;
   height: 38px;
-  background: #F3E8FF;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  color: #5A61C0;
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
+  color: #EA580C;
+  border-radius: 12px;
 }
 
 .upcoming-events__icon svg {

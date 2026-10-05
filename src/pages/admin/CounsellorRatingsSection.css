@@ -45,7 +45,7 @@
 }
 
 .counsellor-ratings__stat-value {
-  font-family: var(--md-sys-typescale-font-display);
+  font-family: var(--md-sys-typescale-font-body);
   font-size: 22px;
   font-weight: 800;
   color: var(--neu-accent-primary, #2065F6);

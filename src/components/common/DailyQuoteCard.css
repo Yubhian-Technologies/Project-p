@@ -24,8 +24,8 @@
   text-align: center;
   background: #FFFFFF;
   border-radius: 20px;
-  border: 1.5px solid rgba(30, 30, 30, 0.06);
-  box-shadow: 0 6px 18px rgba(30, 30, 30, 0.04);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
   padding: 22px;
   box-sizing: border-box;
 }
@@ -36,12 +36,12 @@
   font-weight: 800;
   font-size: 16px;
   line-height: 1.5;
-  color: #2E2B27;
+  color: #0F172A;
 }
 
 .daily-quote__author {
   margin: 0;
   font-size: 13px;
   font-weight: 700;
-  color: #6D74D6;
+  color: #EA580C;
 }

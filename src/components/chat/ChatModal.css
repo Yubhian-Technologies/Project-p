@@ -12,10 +12,10 @@
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
-  background: #F3E8FF;
-  color: #6D74D6;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+  background: #FFF7ED;
+  color: #EA580C;
+  border: 1px solid #FED7AA;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
   padding: 2px 8px;
   border-radius: 12px;
 }
@@ -80,7 +80,9 @@
 }
 
 .chat-modal__bubble--mine {
-  background: #F3E8FF;
+  background: #0B193C;
+  color: #FFFFFF;
+  border-color: #0B193C;
 }
 
 .chat-modal__bubble--them {
@@ -123,6 +125,6 @@
 }
 
 .chat-modal__input:focus {
-  border-color: #6D74D6;
-  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  border-color: #EA580C;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.2);
 }

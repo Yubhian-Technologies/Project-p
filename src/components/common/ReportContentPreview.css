@@ -15,17 +15,17 @@
   font-weight: 700;
   font-family: var(--md-sys-typescale-font-body);
   cursor: pointer;
-  border: var(--sketch-border);
-  background: #EDE9FE;
-  color: #5B21B6;
-  box-shadow: var(--sketch-shadow-sm);
+  border: 1px solid #0B193C;
+  background: #0B193C;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(11, 25, 60, 0.2);
   transition: all 0.18s var(--md-sys-motion-easing-standard);
 }
 
 .report-preview__download:hover:not(:disabled) {
   transform: translate(-1px, -1px);
-  box-shadow: var(--sketch-shadow);
-  background: #DDD6FE;
+  box-shadow: 0 4px 14px rgba(11, 25, 60, 0.3);
+  background: #142858;
 }
 
 .report-preview__download:disabled {

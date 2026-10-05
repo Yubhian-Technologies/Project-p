@@ -92,7 +92,7 @@ export function MeditationGame() {
       <div className={`med-visual ${running ? "med-visual--pulsing" : ""}`}>
         <div
           className="med-visual__progress-ring"
-          style={{ background: `conic-gradient(#5A61C0 ${progressPercent}%, #EDE9FE 0%)` }}
+          style={{ background: `conic-gradient(#0D9488 ${progressPercent}%, #CCFBF1 0%)` }}
         />
         <div className="med-visual__content">
           <span className="med-visual__timer">{timeLeft}s</span>

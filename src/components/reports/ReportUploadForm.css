@@ -255,14 +255,15 @@
 
 .report-upload-card__btn--voice {
   background: #FFFFFF;
-  color: #5A61C0;
-  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+  color: #0B193C;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
 }
 
 .report-upload-card__btn--voice:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
-  background: #F3E8FF;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  background: #FFF7ED;
+  color: #EA580C;
 }
 
 .report-upload-card__btn--voice-active {

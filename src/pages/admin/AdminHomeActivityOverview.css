@@ -488,7 +488,7 @@
   display: block;
   font-size: 22px;
   font-weight: 800;
-  font-family: var(--md-sys-typescale-font-display);
+  font-family: var(--md-sys-typescale-font-body);
   color: #0F172A;
   line-height: 1.1;
 }
@@ -542,7 +542,7 @@
 }
 
 .aha-table__campus {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   font-weight: 800;

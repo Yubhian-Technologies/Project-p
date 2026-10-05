@@ -133,8 +133,8 @@
 .auth-field input:focus,
 .auth-field select:focus {
   outline: none;
-  border-color: #6D74D6;
-  box-shadow: 0 0 0 3px rgba(109, 116, 214, 0.2);
+  border-color: #EA580C;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.2);
 }
 
 .auth-field__password-wrap {
@@ -155,10 +155,10 @@
   width: 34px;
   height: 34px;
   padding: 0;
-  border: 1px solid rgba(30, 30, 30, 0.08);
+  border: 1px solid #E2E8F0;
   background: #FFFFFF;
   border-radius: 50%;
-  color: #6B7280;
+  color: #64748B;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -167,8 +167,8 @@
 }
 
 .auth-field__toggle-visibility:hover {
-  background: #F3E8FF;
-  color: #6D74D6;
+  background: #FFF7ED;
+  color: #EA580C;
 }
 
 .auth-field__toggle-visibility svg {
@@ -197,19 +197,19 @@
   font-size: 15px;
   font-weight: 800;
   color: #FFFFFF;
-  background: #6D74D6;
+  background: #0B193C;
   border: none;
   border-radius: 9999px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(109, 116, 214, 0.35);
+  box-shadow: 0 4px 16px rgba(11, 25, 60, 0.25);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 10px;
 }
 
 .auth-card__submit:hover:not(:disabled) {
+  background: #142858;
   transform: translateY(-2px);
-  background: #5A61C0;
-  box-shadow: 0 10px 24px rgba(109, 116, 214, 0.45);
+  box-shadow: 0 8px 24px rgba(11, 25, 60, 0.35);
 }
 
 .auth-card__submit:active:not(:disabled) {

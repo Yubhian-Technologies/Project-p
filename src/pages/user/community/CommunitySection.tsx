@@ -114,10 +114,42 @@ useEffect(() => {
 
   return (
     <div className="community-section">
-      {/* Header bar */}
-      <div className="community-section__topbar">
-        <span className="community-section__title">Wellness Community</span>
-        <span className="community-section__subtitle">Anonymous · Safe · Supportive</span>
+      {/* Community Hero & Quick Prompt Bar */}
+      <div className="community-hero">
+        <div className="community-hero__content">
+          <div className="community-hero__badge">
+            <span className="community-hero__dot" />
+            Anonymous • Safe • Compassionate
+          </div>
+          <h2 className="community-hero__title">Wellness Community</h2>
+          <p className="community-hero__desc">
+            A gentle, judgment-free space to share your thoughts, support peers, and read inspiring reflections from our campus community.
+          </p>
+        </div>
+
+        {/* Quick Compose Trigger */}
+        <div
+          className="community-compose-bar"
+          onClick={handleOpenCompose}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleOpenCompose(); }}
+        >
+          <div className="community-compose-bar__avatar">A</div>
+          <span className="community-compose-bar__placeholder">
+            Share a thought, quote, or feelings anonymously…
+          </span>
+          <button
+            type="button"
+            className="community-compose-bar__btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenCompose();
+            }}
+          >
+            Post +
+          </button>
+        </div>
       </div>
 
       {/* Feed */}
@@ -154,19 +186,6 @@ useEffect(() => {
           )}
         </div>
       )}
-
-      {/* Instagram-style FAB */}
-      <button
-        type="button"
-        className="community-section__fab"
-        aria-label="Create new post"
-        onClick={handleOpenCompose}
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </button>
 
       {/* Dedicated Guidelines Modal for First-time Posters */}
       {guidelinesModalOpen && (

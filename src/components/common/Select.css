@@ -24,8 +24,8 @@
 }
 
 .md-select__control:focus-visible {
-  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
-  border-color: #6D74D6;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+  border-color: #EA580C;
   outline: none;
 }
 
@@ -88,7 +88,8 @@
 }
 
 .md-select__option:hover {
-  background: #F3E8FF;
+  background: #FFF7ED;
+  color: #EA580C;
 }
 
 .md-select__option--selected {

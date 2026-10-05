@@ -50,23 +50,23 @@
 }
 
 .hch-btn--primary {
-  background: #6D74D6;
+  background: #0B193C;
   color: #FFFFFF;
 }
 
 .hch-btn--primary:hover {
-  background: #5A61C0;
+  background: #142858;
 }
 
 .hch-btn--ghost {
   background: #FFFFFF;
-  color: #3F3B36;
-  border-color: rgba(46, 43, 39, 0.14);
+  color: #0F172A;
+  border-color: #E2E8F0;
 }
 
 .hch-btn--ghost:hover:not(:disabled) {
-  border-color: #6D74D6;
-  color: #6D74D6;
+  border-color: #EA580C;
+  color: #EA580C;
 }
 
 /* Hero */
@@ -93,7 +93,7 @@
 .hch-hero__subtitle {
   font-size: 14px;
   font-weight: 600;
-  color: #6D74D6;
+  color: #EA580C;
   margin: 4px 0 0;
 }
 
@@ -132,7 +132,7 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #6D74D6;
+  color: #0B193C;
   margin: 0 0 12px;
 }
 
@@ -179,8 +179,8 @@
 }
 
 .hch-chip--active {
-  background: #6D74D6;
-  border-color: #6D74D6;
+  background: #0B193C;
+  border-color: #0B193C;
   color: #FFFFFF;
 }
 
@@ -203,12 +203,12 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #6D74D6;
+  color: #EA580C;
   margin: 0;
 }
 
 .hch-kpi__value {
-  font-family: var(--md-sys-typescale-font-display);
+  font-family: var(--md-sys-typescale-font-body);
   font-size: 32px;
   font-weight: 700;
   margin: 6px 0 0;
@@ -247,7 +247,7 @@
   width: 100%;
   display: flex;
   align-items: flex-end;
-  background: #F4F0E8;
+  background: #F1F5F9;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -255,7 +255,7 @@
 .hch-bar__fill {
   width: 100%;
   min-height: 2px;
-  background: linear-gradient(180deg, #8F95E6 0%, #6D74D6 100%);
+  background: linear-gradient(180deg, #EA580C 0%, #C2410C 100%);
   border-radius: 8px 8px 0 0;
 }
 
@@ -448,7 +448,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #6D74D6;
+  color: #0B193C;
 }
 
 .hch-util {
@@ -530,7 +530,7 @@
 }
 
 .hch-actions button:hover {
-  color: #6D74D6;
+  color: #EA580C;
   text-decoration: underline;
 }
 
@@ -611,8 +611,8 @@
 }
 
 .hch-quick button:hover:not(:disabled) {
-  border-color: #6D74D6;
-  color: #6D74D6;
+  border-color: #EA580C;
+  color: #EA580C;
 }
 
 .hch-quick button:disabled {
@@ -653,7 +653,7 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  color: #6D74D6;
+  color: #EA580C;
 }
 
 .hch-star {

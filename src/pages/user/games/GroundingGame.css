@@ -99,9 +99,9 @@
 }
 
 .grounding-steps__dot--active {
-  background: #5A61C0;
+  background: #0B193C;
   color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+  box-shadow: 0 4px 14px rgba(11, 25, 60, 0.2);
 }
 
 .grounding-steps__dot--done {

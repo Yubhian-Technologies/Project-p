@@ -4,13 +4,13 @@
   overflow-x: clip;
   min-height: 100vh;
   background-color: var(--theme-amber, #FFFFFF);
-  color: var(--theme-charcoal, #2E2B27);
+  color: var(--theme-charcoal, #0F172A);
 }
 
 .app-shell__topbar {
   background: var(--theme-amber, #FFFFFF);
-  border-bottom: 1px solid rgba(46, 43, 39, 0.08);
-  box-shadow: none;
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -36,7 +36,7 @@
   font-family: var(--md-sys-typescale-font-display, 'Playfair Display', serif);
   font-size: 21px;
   font-weight: 600;
-  color: #2E2B27;
+  color: #0F172A;
   white-space: nowrap;
   gap: 12px;
   letter-spacing: -0.01em;
@@ -47,31 +47,30 @@
   width: 40px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 4px 12px rgba(30, 30, 30, 0.12);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.1);
 }
 
 .app-shell__menu-toggle {
   display: none;
   background: #FFFFFF;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  border-radius: 0;
-  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055);
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
   font-size: 18px;
   line-height: 1;
-  padding: 10px 14px;
-  color: #2E2B27;
+  padding: 9px 13px;
+  color: #0F172A;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .app-shell__menu-toggle:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 0 10px 28px rgba(46, 43, 39, 0.07);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
 
 .app-shell__menu-toggle:active {
-  transform: translate(2px, 2px);
-  box-shadow: 0 0 0 rgba(46, 43, 39, 0);
+  transform: translate(1px, 1px);
 }
 
 .app-shell__topbar-right {
@@ -82,20 +81,18 @@
 
 .app-shell__role-badge {
   background: #FFFFFF;
-  color: #6D74D6;
-  border: 1.5px solid rgba(109, 116, 214, 0.3);
-  box-shadow: 0 4px 12px rgba(109, 116, 214, 0.12);
+  color: #0F172A;
+  border: 1.5px solid #E2E8F0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
   border-radius: 9999px;
   padding: 6px 16px;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-/* Wave divider retired for the calm design — the topbar's own hairline
-   bottom border now does the separation. Hidden via CSS only (the element
-   still renders) rather than removed from the markup. */
+/* Wave divider retired for the clean design — hairline bottom border handles separation */
 .app-shell__wave-wrap {
   display: none;
 }
@@ -112,7 +109,7 @@
   align-items: flex-start;
   min-height: calc(100vh - 76px);
   width: 100%;
-  background: var(--theme-bg, #F4F0E8);
+  background: var(--theme-bg, #FCFBF9);
   border-radius: 0;
   box-shadow: none;
   position: relative;
@@ -147,13 +144,11 @@
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: var(--theme-charcoal, #2E2B27);
+  color: #0F172A;
   margin: 0;
 }
 
-/* A small icon-only "←" button any page can put beside its title via
-   AppShell's titleLeadingAction prop — e.g. Wellness Exercise uses it to get
-   back out of whichever exercise is open. */
+/* A small icon-only "←" button any page can put beside its title */
 .app-shell__title-back {
   display: inline-flex;
   align-items: center;
@@ -165,23 +160,25 @@
   font-size: 18px;
   font-weight: 800;
   font-family: inherit;
-  color: #2E2B27;
+  color: #0F172A;
   background: #FFFFFF;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .app-shell__title-back:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
-  color: #5A61C0;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  color: #EA580C;
+  border-color: #FED7AA;
 }
 
 .app-shell__title-back:active {
   transform: translate(0, 0);
-  box-shadow: 0 3px 10px rgba(46, 43, 39, 0.04);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
 }
 
 .app-shell__title-action {

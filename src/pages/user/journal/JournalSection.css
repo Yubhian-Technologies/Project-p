@@ -134,8 +134,8 @@
 
 .journal-editor__textarea:focus-visible {
   outline: none;
-  border-color: #6D74D6;
-  box-shadow: 0 0 0 3px rgba(109, 116, 214, 0.2);
+  border-color: #EA580C;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.2);
 }
 
 .journal-editor__reminder {

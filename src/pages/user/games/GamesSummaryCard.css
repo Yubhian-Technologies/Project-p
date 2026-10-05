@@ -36,17 +36,17 @@
   font-family: var(--md-sys-typescale-font-display);
   font-weight: 800;
   font-size: 17px;
-  color: #2E2B27;
+  color: #0F172A;
 }
 
 .games-summary__score {
   font-size: 13px;
   font-weight: 600;
-  color: #6B7280;
+  color: #64748B;
 }
 
 .games-summary__score--best {
-  color: #6D74D6;
+  color: #EA580C;
   font-weight: 700;
 }
 
@@ -54,11 +54,11 @@
   flex-shrink: 0;
   width: 34px;
   height: 34px;
-  border: 1px solid rgba(30, 30, 30, 0.08);
+  border: 1px solid #E2E8F0;
   border-radius: 9999px;
   background: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(30, 30, 30, 0.06);
-  color: #6D74D6;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  color: #0B193C;
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -66,7 +66,9 @@
 }
 
 .games-summary__arrow:hover {
-  background: #F3E8FF;
+  background: #FFF7ED;
+  color: #EA580C;
+  border-color: #EA580C;
   transform: scale(1.08);
 }
 
@@ -83,7 +85,7 @@
   padding: 0;
   border: none;
   border-radius: 9999px;
-  background: #6B7280;
+  background: #94A3B8;
   opacity: 0.35;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -91,7 +93,7 @@
 
 .games-summary__dot--active {
   opacity: 1;
-  background: #6D74D6;
+  background: #EA580C;
   width: 16px;
   border-radius: 9999px;
 }

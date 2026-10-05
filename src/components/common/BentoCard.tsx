@@ -11,6 +11,7 @@ export interface BentoCardProps {
   };
   span?: 3 | 4 | 6 | 8 | 12;
   variant?: "default" | "hero";
+  pastelTheme?: "pink" | "blue" | "mint" | "peach" | "lavender" | "yellow";
   action?: {
     label: string;
     onClick?: () => void;
@@ -27,17 +28,18 @@ export function BentoCard({
   badge,
   span = 4,
   variant = "default",
+  pastelTheme,
   action,
   className = "",
   children,
 }: BentoCardProps) {
   const spanClass = `bento-card--col-${span}`;
-  const variantClass = variant === "hero" ? "bento-card--hero" : "";
+  const variantClass = variant === "hero" ? "bento-card--hero" : (pastelTheme ? `bento-card--${pastelTheme}` : "");
   const badgeVariant = badge?.variant ? `bento-badge--${badge.variant}` : "bento-badge--primary";
   const btnVariant = action?.variant ? `bento-btn--${action.variant}` : "bento-btn--primary";
 
   return (
-    <div className={`bento-card ${spanClass} ${variantClass} ${className}`}>
+    <div className={`bento-card ${spanClass} ${variantClass} ${className}`.trim()}>
       <div>
         {(title || icon || badge) && (
           <div className="bento-card__header">

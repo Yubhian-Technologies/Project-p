@@ -29,7 +29,7 @@
   padding: 0;
   font-size: 13px;
   font-weight: 700;
-  color: #6d74d6;
+  color: #0B193C;
   cursor: pointer;
 }
 
@@ -87,7 +87,7 @@
 }
 
 .counsellor-worksheet__add-inline input[type="text"]:focus {
-  border-color: #6d74d6;
+  border-color: #EA580C;
 }
 
 .counsellor-worksheet__list {
@@ -117,7 +117,7 @@
 }
 
 .counsellor-worksheet__list-row-name:hover {
-  color: #6d74d6;
+  color: #EA580C;
 }
 
 .counsellor-worksheet__row-delete {
@@ -146,7 +146,7 @@
 }
 
 .counsellor-worksheet__row-edit:hover {
-  color: #6d74d6;
+  color: #EA580C;
 }
 
 /* ── Excel-style worksheet grid ─────────────────────────────────────── */
@@ -226,7 +226,7 @@
 }
 
 .counsellor-worksheet__table td input[type="text"]:focus {
-  border-color: #6d74d6;
+  border-color: #EA580C;
 }
 
 .counsellor-worksheet__empty {
@@ -319,7 +319,7 @@
 }
 
 .counsellor-worksheet__add-row-fields input[type="text"]:focus {
-  border-color: #6d74d6;
+  border-color: #EA580C;
 }
 
 @media (max-width: 640px) {

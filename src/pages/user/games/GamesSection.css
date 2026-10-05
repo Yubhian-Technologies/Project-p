@@ -81,7 +81,7 @@
   margin: 0;
   font-size: 13.5px;
   font-weight: 800;
-  color: #5A61C0;
+  color: #EA580C;
 }
 
 .games-section__fact {
@@ -135,10 +135,10 @@
 }
 
 .game-shell__stat-value {
-  font-family: var(--md-sys-typescale-font-display);
+  font-family: var(--md-sys-typescale-font-body);
   font-size: 18px;
   font-weight: 800;
-  color: #5A61C0;
+  color: #EA580C;
 }
 
 .game-shell__stat-label {

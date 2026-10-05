@@ -82,13 +82,13 @@
   margin-left: auto;
   font-size: 13px;
   font-weight: 700;
-  color: #6D74D6;
+  color: #EA580C;
   white-space: nowrap;
   transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .counsellor-session-detail__entry-header:hover .counsellor-session-detail__hint {
-  color: #5A61C0;
+  color: #C2410C;
   transform: translateX(3px);
 }
 
