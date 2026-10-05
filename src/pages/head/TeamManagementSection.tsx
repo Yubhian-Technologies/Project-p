@@ -117,7 +117,6 @@ export function TeamManagementSection({
   return (
     <div className="team-management">
       <div className="team-management__header">
-        <h3 className="team-management__heading">Team Management</h3>
         <div className="team-management__actions">
           {onOpenTransferRequests && (
             <Button type="button" variant="outlined" onClick={onOpenTransferRequests}>

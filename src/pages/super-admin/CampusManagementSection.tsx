@@ -46,7 +46,6 @@ export function CampusManagementSection() {
   return (
     <div className="campus-management">
       <div className="campus-management__header">
-        <h2 className="campus-management__heading">Campuses</h2>
         <Button type="button" onClick={() => setAddOpen(true)}>
           + Add Campus
         </Button>

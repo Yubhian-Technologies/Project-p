@@ -117,7 +117,6 @@ export function MonthlyReportsViewSection() {
             <FolderOpenIcon />
           </div>
           <div>
-            <h2 className="mrv-header__title">Consolidated Reports</h2>
             <p className="mrv-header__sub">Consolidated monthly reports submitted by Department Heads</p>
           </div>
         </div>

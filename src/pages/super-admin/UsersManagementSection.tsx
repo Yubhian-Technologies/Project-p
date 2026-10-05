@@ -58,10 +58,6 @@ export function UsersManagementSection() {
 
   return (
     <div className="logins-management">
-      <div className="logins-management__header">
-        <h2 className="logins-management__heading">Users</h2>
-      </div>
-
       <div className="logins-management__filters">
         <div className="logins-management__field">
           <label htmlFor="users-campus">Campus</label>

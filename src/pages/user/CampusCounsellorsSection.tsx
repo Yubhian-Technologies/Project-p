@@ -39,9 +39,8 @@ export function CampusCounsellorsSection() {
   return (
     <div className="booking-section">
       <section>
-        <h2 className="booking-section__heading">Campus Counsellors & Heads</h2>
         {counsellorsAndHeads.length === 0 ? (
-          <p>No campus counsellors or heads are available at the moment.</p>
+          <p>No campus counsellors are available at the moment.</p>
         ) : (
           <div className="booking-section__grid">
             {counsellorsAndHeads.map((p) => (

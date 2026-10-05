@@ -111,7 +111,7 @@
 
 .session-reports__name {
   display: block;
-  font-family: var(--font-title, 'Fraunces', Georgia, 'Times New Roman', serif);
+  font-family: var(--font-title, 'Playfair Display', Georgia, 'Times New Roman', serif);
   font-weight: 700;
   font-size: 13px;
   color: var(--neu-text-primary, #2D3748);
@@ -144,7 +144,7 @@
 }
 
 .session-reports__week-label {
-  font-family: var(--font-title, 'Fraunces', Georgia, 'Times New Roman', serif);
+  font-family: var(--font-title, 'Playfair Display', Georgia, 'Times New Roman', serif);
   font-weight: 700;
   font-size: 14px;
   color: var(--neu-text-primary, #2D3748);
@@ -169,7 +169,7 @@
 }
 
 .session-reports__total-cell {
-  font-family: var(--font-title, 'Fraunces', Georgia, 'Times New Roman', serif);
+  font-family: var(--font-title, 'Playfair Display', Georgia, 'Times New Roman', serif);
   font-weight: 800;
   color: #2563EB;
   background: #EFF6FF;
@@ -181,7 +181,7 @@
 }
 
 .session-reports__grand-label {
-  font-family: var(--font-title, 'Fraunces', Georgia, 'Times New Roman', serif);
+  font-family: var(--font-title, 'Playfair Display', Georgia, 'Times New Roman', serif);
   font-weight: 800;
   font-size: 14px;
   color: #1E293B;
@@ -190,7 +190,7 @@
 }
 
 .session-reports__grand-cell {
-  font-family: var(--font-title, 'Fraunces', Georgia, 'Times New Roman', serif);
+  font-family: var(--font-title, 'Playfair Display', Georgia, 'Times New Roman', serif);
   font-weight: 800;
   font-size: 13px;
   color: #1E293B;
@@ -198,7 +198,7 @@
 }
 
 .session-reports__grand-total-cell {
-  font-family: var(--font-title, 'Fraunces', Georgia, 'Times New Roman', serif);
+  font-family: var(--font-title, 'Playfair Display', Georgia, 'Times New Roman', serif);
   font-weight: 900;
   font-size: 14px;
   color: #DC2626;
@@ -210,14 +210,14 @@
 }
 
 .session-reports__total-cell--week {
-  font-family: var(--font-title, 'Fraunces', Georgia, 'Times New Roman', serif);
+  font-family: var(--font-title, 'Playfair Display', Georgia, 'Times New Roman', serif);
   font-weight: 800;
   color: #2563EB;
   background: #EFF6FF;
 }
 
 .session-reports__td--week-total {
-  font-family: var(--font-title, 'Fraunces', Georgia, 'Times New Roman', serif);
+  font-family: var(--font-title, 'Playfair Display', Georgia, 'Times New Roman', serif);
   font-weight: 800;
   color: #2563EB;
   background: #EFF6FF;

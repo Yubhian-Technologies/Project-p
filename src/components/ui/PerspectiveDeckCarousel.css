@@ -403,7 +403,7 @@
 }
 
 .perspective-deck__text-card-title {
-  font-family: 'Fraunces', var(--font-headline), serif;
+  font-family: 'Playfair Display', var(--font-headline), serif;
   font-size: clamp(20px, 2.4vw, 28px);
   font-weight: 400;
   color: #0F172A;

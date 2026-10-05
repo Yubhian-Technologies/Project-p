@@ -47,7 +47,6 @@ export function SsiCollegeResultsSection() {
       <Card className="ssi-results__header-card">
         <div className="ssi-results__header-row">
           <div>
-            <h2 className="ssi-results__title">SSI Test Results</h2>
             <p className="ssi-results__subtitle">
               Standalone SSI check-ins submitted by students at your college, sorted by severity.
             </p>

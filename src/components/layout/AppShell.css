@@ -33,7 +33,7 @@
 }
 
 .app-shell__brand {
-  font-family: var(--md-sys-typescale-font-display, 'Fraunces', serif);
+  font-family: var(--md-sys-typescale-font-display, 'Playfair Display', serif);
   font-size: 21px;
   font-weight: 600;
   color: #2E2B27;

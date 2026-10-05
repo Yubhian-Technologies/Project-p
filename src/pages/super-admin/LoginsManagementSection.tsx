@@ -71,7 +71,6 @@ export function LoginsManagementSection() {
   return (
     <div className="logins-management">
       <div className="logins-management__header">
-        <h2 className="logins-management__heading">Logins</h2>
         <Button type="button" onClick={() => setAddOpen(true)}>
           + Add Login
         </Button>

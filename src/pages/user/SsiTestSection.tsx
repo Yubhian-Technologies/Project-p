@@ -69,7 +69,6 @@ export function SsiTestSection() {
   return (
     <div className="ssi-test-section">
       <Card className="ssi-test-section__header-card">
-        <h2 className="ssi-test-section__title">SSI Assessment Test</h2>
         <p className="ssi-test-section__subtitle">
           A short, confidential wellbeing check-in that helps your college's counsellor and head understand
           how you've been feeling lately — takes about 5 minutes across 4 quick pages. Take it whenever you
