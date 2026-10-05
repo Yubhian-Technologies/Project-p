@@ -14,3 +14,13 @@ export async function createCampusLogin(input: CreateCampusLoginInput): Promise<
   const fn = httpsCallable(getFunctions(app), "createCampusLogin");
   await fn(input);
 }
+
+interface CreateStudentLoginInput {
+  email: string;
+  collegeId: string;
+}
+
+export async function createStudentLogin(input: CreateStudentLoginInput): Promise<void> {
+  const fn = httpsCallable(getFunctions(app), "createStudentLogin");
+  await fn(input);
+}

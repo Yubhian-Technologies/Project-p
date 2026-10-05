@@ -12,6 +12,7 @@ import {
 } from "../../services/firebase/firestore";
 import { getSignatureURL, saveSignatureURL } from "../../services/firebase/signature";
 import { AttendanceCheckCard } from "../attendance/AttendanceCheckCard";
+import { ImportLoginsModal } from "../profile/ImportLoginsModal";
 import { authErrorMessage, changeOwnPassword } from "../../services/firebase/auth";
 import { defaultAvailabilitySchedule } from "../../types/availability";
 import type { DayAvailability } from "../../types/availability";
@@ -95,6 +96,8 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const [uploadingSignature, setUploadingSignature] = useState(false);
   const [signatureError, setSignatureError] = useState<string | null>(null);
 
+  const [showImportLogins, setShowImportLogins] = useState(false);
+
   useEffect(() => {
     const eligible = profile?.role === "head" || profile?.role === "counsellor" || profile?.role === "admin";
     if (!currentUser || !eligible) {
@@ -112,6 +115,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const isCounsellorLike = profile.role === "counsellor" || profile.role === "head";
   const isUser = profile.role === "user";
   const canHaveSignature = profile.role === "head" || profile.role === "counsellor" || profile.role === "admin";
+  const isHead = profile.role === "head";
 
   async function handleSignatureFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -732,9 +736,21 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
             )}
           </div>
         )}
+
+        {isHead && !!profile.campusId && (
+          <div className="profile-section__password">
+            <p className="profile-section__subheading">TEAM</p>
+            <Button type="button" variant="outlined" onClick={() => setShowImportLogins(true)}>
+              Import Login Mails
+            </Button>
+          </div>
+        )}
         </div>
       </div>
     </Card>
+    {showImportLogins && profile.campusId && (
+      <ImportLoginsModal campusId={profile.campusId} onClose={() => setShowImportLogins(false)} />
+    )}
   </div>
   );
 }

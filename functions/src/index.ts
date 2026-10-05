@@ -97,6 +97,54 @@ export const createCampusLogin = onCall<CreateCampusLoginRequest>(async (request
   return { success: true, uid: userRecord.uid };
 });
 
+interface CreateStudentLoginRequest {
+  email: string;
+  collegeId: string;
+}
+
+const STUDENT_DEFAULT_PASSWORD = "123456";
+
+export const createStudentLogin = onCall<CreateStudentLoginRequest>(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+
+  const callerDoc = await db.collection("users").doc(callerUid).get();
+  const callerData = callerDoc.data();
+  if (callerData?.role !== "head" || !callerData?.campusId) {
+    throw new HttpsError("permission-denied", "Only a Head with a campus can import student logins.");
+  }
+  const campusId = callerData.campusId as string;
+
+  const { email, collegeId } = request.data;
+  if (!email || !collegeId) {
+    throw new HttpsError("invalid-argument", "Email and college are required.");
+  }
+
+  const collegeDoc = await db.collection("colleges").doc(collegeId).get();
+  if (!collegeDoc.exists || collegeDoc.data()?.campusId !== campusId) {
+    throw new HttpsError("invalid-argument", "That college does not belong to your campus.");
+  }
+
+  const userRecord = await auth.createUser({ email, password: STUDENT_DEFAULT_PASSWORD });
+  try {
+    await db.collection("users").doc(userRecord.uid).set({
+      uid: userRecord.uid,
+      email,
+      role: "user",
+      campusId,
+      collegeId,
+      createdAt: Date.now(),
+    });
+  } catch (err) {
+    await auth.deleteUser(userRecord.uid);
+    throw err;
+  }
+
+  return { success: true, uid: userRecord.uid };
+});
+
 interface UpdateCampusLoginRequest {
   uid: string;
   displayName: string;
