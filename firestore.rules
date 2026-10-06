@@ -582,6 +582,7 @@ service cloud.firestore {
                       'senderName', 'senderRole', 'text', 'createdAt'
                     ])
                     && (
+                      isStaff() ||
                       bookingOf(request.resource.data.chatRoomId).userId == request.auth.uid ||
                       bookingOf(request.resource.data.chatRoomId).counsellorId == request.auth.uid
                     );
