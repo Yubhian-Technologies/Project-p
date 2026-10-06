@@ -238,26 +238,26 @@
 .session-reports__th {
   padding: 16px 18px;
   text-align: center;
-  background: #F8FAFC;
-  border-bottom: 1.5px solid #E2E8F0;
-  border-right: 1px solid #F1F5F9;
+  background: #EEF2FA;
+  border-bottom: 2px solid #CBD5E1;
+  border-right: 1px solid #E2E8F0;
   vertical-align: middle;
 }
 
 .session-reports__th--sticky {
   position: sticky;
   left: 0;
-  background: #F8FAFC;
+  background: #EEF2FA;
   z-index: 3;
   text-align: left;
   padding-left: 24px;
   min-width: 170px;
-  border-right: 1.5px solid #E2E8F0;
+  border-right: 2px solid #CBD5E1;
 }
 
 .session-reports__th--total {
-  background: #F8FAFC;
-  border-left: 1.5px solid #E2E8F0;
+  background: #EEF2FA;
+  border-left: 2px solid #CBD5E1;
   border-right: none;
   min-width: 130px;
 }
@@ -269,14 +269,14 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #334155;
+  color: #0B193C;
 }
 
 .session-reports__th-sub {
   display: block;
   font-size: 11px;
-  font-weight: 500;
-  color: #94A3B8;
+  font-weight: 600;
+  color: #64748B;
   margin-top: 2px;
 }
 
@@ -361,34 +361,36 @@
 .session-reports__week-label {
   position: sticky;
   left: 0;
-  background: #FFFFFF;
+  background: #F8FAFC;
   z-index: 2;
   padding: 14px 24px;
-  border-bottom: 1px solid #F1F5F9;
-  border-right: 1.5px solid #E2E8F0;
+  border-bottom: 1px solid #E2E8F0;
+  border-right: 2px solid #CBD5E1;
   transition: background 0.15s ease;
 }
 
 .session-reports__row:hover .session-reports__week-label {
-  background: #F8FAFC;
+  background: #EEF2FA;
 }
 
 .session-week-header {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  border-left: 3px solid #0B193C;
+  padding-left: 10px;
 }
 
 .session-week-title {
   font-family: var(--bento-font-title, 'Playfair Display', Georgia, serif);
   font-size: 14.5px;
   font-weight: 700;
-  color: #0F172A;
+  color: #0B193C;
 }
 
 .session-week-sub {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   color: #64748B;
 }
 
@@ -396,8 +398,8 @@
 .session-reports__cell {
   padding: 14px 18px;
   text-align: center;
-  border-bottom: 1px solid #F1F5F9;
-  border-right: 1px solid #F1F5F9;
+  border-bottom: 1px solid #E2E8F0;
+  border-right: 1px solid #E2E8F0;
   font-variant-numeric: tabular-nums;
 }
 
@@ -442,8 +444,8 @@
 .session-reports__total-cell {
   padding: 14px 18px;
   text-align: center;
-  border-bottom: 1px solid #F1F5F9;
-  border-left: 1.5px solid #E2E8F0;
+  border-bottom: 1px solid #E2E8F0;
+  border-left: 2px solid #CBD5E1;
   background: #FAFAFA;
 }
 

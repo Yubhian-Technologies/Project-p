@@ -44,6 +44,27 @@
   color: #0F172A;
 }
 
+.report-list-block__view-more {
+  align-self: center;
+  margin-top: 4px;
+  padding: 10px 20px;
+  border-radius: 999px !important;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  background: #FFFFFF;
+  color: #0B193C;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+  transition: all 0.18s ease;
+}
+
+.report-list-block__view-more:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  background: #F8FAFC;
+}
+
 .report-list-block__empty {
   text-align: center;
   padding: 40px 20px;

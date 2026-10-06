@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   FolderOpenIcon,
   CalendarIcon,
@@ -10,6 +11,8 @@ import {
   HourglassIcon,
 } from "../common/icons";
 import "./ReportList.css";
+
+const INITIAL_VISIBLE = 5;
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -70,6 +73,10 @@ export function ReportList<T extends ReportListItem>({
   onVerify,
   verifyingId,
 }: ReportListProps<T>) {
+  const [expanded, setExpanded] = useState(false);
+  const visibleReports = expanded ? reports : reports.slice(0, INITIAL_VISIBLE);
+  const hiddenCount = reports.length - visibleReports.length;
+
   return (
     <div className="report-list-block">
       <div className="report-list-block__header">
@@ -92,7 +99,7 @@ export function ReportList<T extends ReportListItem>({
         </div>
       ) : (
         <div className="report-list-block__list">
-          {reports.map((r) => (
+          {visibleReports.map((r) => (
             <div key={r.id} className="report-list-block__row">
               <div className="report-list-block__row-info">
                 <span className="report-list-block__row-title">{r.title}</span>
@@ -140,6 +147,11 @@ export function ReportList<T extends ReportListItem>({
               </div>
             </div>
           ))}
+          {hiddenCount > 0 && (
+            <button type="button" className="report-list-block__view-more" onClick={() => setExpanded(true)}>
+              View More ({hiddenCount} more)
+            </button>
+          )}
         </div>
       )}
     </div>
