@@ -24,8 +24,6 @@ interface CounsellorStats {
   followedUp: number;
   missed: number;
   cancelled: number;
-  avgRating: number;
-  ratingCount: number;
   totalHours: number;
 }
 
@@ -37,11 +35,6 @@ function computeStats(profiles: UserProfile[], bookings: Booking[]): CounsellorS
     const followedUp = own.filter((b) => b.status === "completed" && b.outcome === "followup").length;
     const missed = own.filter((b) => b.status === "completed" && b.outcome === "missed").length;
     const cancelled = bookings.filter((b) => b.counsellorId === profile.uid && b.status === "cancelled").length;
-    const rated = own.filter((b) => b.status === "completed" && b.outcome !== "missed" && b.userRatingOfCounsellor !== undefined);
-    const avgRating =
-      rated.length > 0
-        ? rated.reduce((sum, b) => sum + (b.userRatingOfCounsellor ?? 0), 0) / rated.length
-        : 0;
     const totalHours = own.reduce((sum, b) => sum + b.durationMinutes, 0) / 60;
     return {
       profile,
@@ -51,8 +44,6 @@ function computeStats(profiles: UserProfile[], bookings: Booking[]): CounsellorS
       followedUp,
       missed,
       cancelled,
-      avgRating,
-      ratingCount: rated.length,
       totalHours,
     };
   });
@@ -91,6 +82,7 @@ export function TeamManagementSection({
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react/set-state-in-effect -- initial data fetch, not resetting state from a prop change
     load();
   }, []);
 
@@ -129,11 +121,11 @@ export function TeamManagementSection({
         </div>
       </div>
       {stats.length === 0 && <p>No counsellors or heads are set up yet.</p>}
-      {stats.map(({ profile, sessionsTaken, usersServed, completed, followedUp, missed, cancelled, avgRating, ratingCount, totalHours }) => {
+      {stats.map(({ profile, sessionsTaken, usersServed, completed, followedUp, missed, cancelled, totalHours }) => {
         const status = computeLiveStatus(profile, scheduledBookings);
         const feedbackAgg = feedbackAggregates.get(profile.uid);
-        const displayedAvg = feedbackAgg ? feedbackAgg.average : avgRating;
-        const displayedCount = feedbackAgg ? feedbackAgg.count : ratingCount;
+        const displayedAvg = feedbackAgg?.average ?? 0;
+        const displayedCount = feedbackAgg?.count ?? 0;
         return (
           <Card
             key={profile.uid}
@@ -143,7 +135,6 @@ export function TeamManagementSection({
             <div>
               <p className="team-management__name">
                 {profile.displayName || profile.email}
-                <span className="team-management__verified-tag">✓ Verified</span>
               </p>
               <p className="team-management__role">{ROLE_LABELS[profile.role]}</p>
               {displayedCount > 0 && <StarRating value={displayedAvg} count={displayedCount} />}

@@ -41,13 +41,6 @@
   font-weight: 600;
 }
 
-.team-management__verified-tag {
-  margin-left: 10px;
-  font-size: 12px;
-  font-weight: 800;
-  color: #16a34a;
-}
-
 .team-management__stats {
   display: flex;
   gap: 18px;

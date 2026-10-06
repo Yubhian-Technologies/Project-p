@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { listBookingsForCounsellor } from "../../services/firebase/bookings";
 import { listSsiCollegeResultsForCollege, type SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
+import { listFeedbackForCounsellor } from "../../services/firebase/feedback";
 import type { Booking } from "../../types/booking";
+import type { SessionFeedback } from "../../types/feedback";
 import {
   PERIOD_LABELS,
   computeHomeMetrics,
@@ -35,6 +37,7 @@ export function CounsellorTrends() {
   const { currentUser, profile } = useAuth();
   const [bookings, setBookings] = useState<Booking[] | null>(null);
   const [ssiResults, setSsiResults] = useState<SsiCollegeResult[]>([]);
+  const [feedbackList, setFeedbackList] = useState<SessionFeedback[]>([]);
   const [period, setPeriod] = useState<HomePeriod>("month");
   const [now] = useState(() => new Date());
 
@@ -44,10 +47,12 @@ export function CounsellorTrends() {
     Promise.all([
       listBookingsForCounsellor(currentUser.uid),
       profile?.collegeId ? listSsiCollegeResultsForCollege(profile.collegeId) : Promise.resolve([]),
-    ]).then(([myBookings, ssi]) => {
+      listFeedbackForCounsellor(currentUser.uid),
+    ]).then(([myBookings, ssi, feedback]) => {
       if (!active) return;
       setBookings(myBookings);
       setSsiResults(ssi);
+      setFeedbackList(feedback);
     });
     return () => {
       active = false;
@@ -64,6 +69,7 @@ export function CounsellorTrends() {
     reports: [],
     transfers: [],
     ssiResults,
+    feedbackList,
     period,
     now,
   });

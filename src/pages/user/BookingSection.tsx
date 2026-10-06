@@ -11,6 +11,7 @@ import {
   isSessionEndedPending,
   getBookingIntake,
   respondToCompensationOffer,
+  rateCounsellor,
   SESSION_DURATION_LABEL,
 } from "../../services/firebase/bookings";
 import { computeLiveStatus } from "../../utils/counsellorStatus";
@@ -159,6 +160,7 @@ export function BookingSection({
   const [submittedFeedbackIds, setSubmittedFeedbackIds] = useState<Set<string>>(new Set());
   const [feedbackBooking, setFeedbackBooking] = useState<Booking | null>(null);
   const [feedbackAnswers, setFeedbackAnswers] = useState<Record<string, string>>({});
+  const [publicReview, setPublicReview] = useState("");
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   // Shared by every one-off action below (reschedule, cancel, accept
@@ -430,6 +432,7 @@ export function BookingSection({
   function openFeedback(booking: Booking) {
     setFeedbackBooking(booking);
     setFeedbackAnswers({});
+    setPublicReview("");
     setFeedbackError(null);
   }
 
@@ -479,6 +482,13 @@ export function BookingSection({
         .filter(({ value }) => value.length > 0)
         .map(({ q, value }) => ({ label: q.label, value }));
       const bookingId = await createSessionFeedback(feedbackBookingRef, overallRating, answers);
+      try {
+        await rateCounsellor(bookingId, overallRating, publicReview.trim() || undefined);
+      } catch (err) {
+        // Best-effort — the private feedback above already saved; the public
+        // review is a bonus that shows up on the counsellor's profile card.
+        console.error("Failed to post public counsellor rating", err);
+      }
       setSubmittedFeedbackIds((prev) => {
         const next = new Set(prev);
         next.add(bookingId);
@@ -1146,6 +1156,18 @@ export function BookingSection({
               )}
             </div>
           ))}
+
+          <div className="booking-section__feedback-field">
+            <span className="booking-section__feedback-label">
+              Want to leave a public review for other students browsing this counsellor? (optional)
+            </span>
+            <textarea
+              rows={3}
+              value={publicReview}
+              placeholder="Shown on the counsellor's profile — don't include anything private."
+              onChange={(e) => setPublicReview(e.target.value)}
+            />
+          </div>
 
           {feedbackError && (
             <p role="alert" className="booking-section__feedback-error">

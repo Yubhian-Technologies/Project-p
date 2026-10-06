@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { listBookingsForCounsellor } from "../../../services/firebase/bookings";
+import { listFeedbackForCounsellor } from "../../../services/firebase/feedback";
 import type { UserProfile } from "../../../types/user";
 import "./AnalyticsSection.css";
 
@@ -61,37 +62,35 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
 
   useEffect(() => {
     setLoading(true);
-    listBookingsForCounsellor(staff.uid).then((bookings) => {
-      const months = getLastSixMonths();
+    Promise.all([listBookingsForCounsellor(staff.uid), listFeedbackForCounsellor(staff.uid)]).then(
+      ([bookings, feedback]) => {
+        const months = getLastSixMonths();
 
-      const points: MonthPoint[] = months.map(({ year, month, label }) => {
-        const inMonth = bookings.filter((b) => {
-          const d = new Date(b.createdAt);
-          return d.getFullYear() === year && d.getMonth() === month;
+        const points: MonthPoint[] = months.map(({ year, month, label }) => {
+          const inMonth = bookings.filter((b) => {
+            const d = new Date(b.createdAt);
+            return d.getFullYear() === year && d.getMonth() === month;
+          });
+          const completed = inMonth.filter((b) => b.status === "completed" && b.outcome !== "missed").length;
+          const missed = inMonth.filter((b) => b.status === "completed" && b.outcome === "missed").length;
+          const rated = feedback.filter((f) => {
+            const d = new Date(f.submittedAt);
+            return d.getFullYear() === year && d.getMonth() === month;
+          });
+          const avgRating = rated.length > 0 ? rated.reduce((s, f) => s + f.rating, 0) / rated.length : null;
+          return { label, completed, missed, avgRating };
         });
-        const completed = inMonth.filter((b) => b.status === "completed" && b.outcome !== "missed").length;
-        const missed = inMonth.filter((b) => b.status === "completed" && b.outcome === "missed").length;
-        const rated = inMonth.filter((b) => b.status === "completed" && b.outcome !== "missed" && b.userRatingOfCounsellor !== undefined);
-        const avgRating =
-          rated.length > 0
-            ? rated.reduce((s, b) => s + (b.userRatingOfCounsellor ?? 0), 0) / rated.length
-            : null;
-        return { label, completed, missed, avgRating };
-      });
 
-      // Overall totals (all time)
-      const allTaken = bookings.filter((b) => ["accepted", "scheduled", "completed"].includes(b.status));
-      const allMissed = bookings.filter((b) => b.status === "completed" && b.outcome === "missed").length;
-      const allRated = bookings.filter((b) => b.status === "completed" && b.outcome !== "missed" && b.userRatingOfCounsellor !== undefined);
-      const avgRating =
-        allRated.length > 0
-          ? allRated.reduce((s, b) => s + (b.userRatingOfCounsellor ?? 0), 0) / allRated.length
-          : 0;
+        // Overall totals (all time)
+        const allTaken = bookings.filter((b) => ["accepted", "scheduled", "completed"].includes(b.status));
+        const allMissed = bookings.filter((b) => b.status === "completed" && b.outcome === "missed").length;
+        const avgRating = feedback.length > 0 ? feedback.reduce((s, f) => s + f.rating, 0) / feedback.length : 0;
 
-      setMonthData(points);
-      setTotals({ sessions: allTaken.length, missed: allMissed, avgRating, ratingCount: allRated.length });
-      setLoading(false);
-    });
+        setMonthData(points);
+        setTotals({ sessions: allTaken.length, missed: allMissed, avgRating, ratingCount: feedback.length });
+        setLoading(false);
+      },
+    );
   }, [staff.uid]);
 
   if (loading) return <p className="analytics-inline__loading">Loading analytics…</p>;

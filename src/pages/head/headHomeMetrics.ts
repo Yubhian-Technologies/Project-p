@@ -5,6 +5,8 @@ import type { College } from "../../types/college";
 import type { EventProgram } from "../../types/event";
 import type { CounsellorMonthlyReport } from "../../services/firebase/counsellorMonthlyReports";
 import type { SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
+import type { SessionFeedback } from "../../types/feedback";
+import { FEEDBACK_FORM } from "../../config/feedbackForm";
 
 export type HomePeriod = "week" | "month" | "semester" | "year";
 
@@ -54,10 +56,21 @@ export interface CounsellorWorkloadRow {
   uid: string;
   name: string;
   collegeName: string;
+  /** All-time accepted/scheduled/completed bookings for this person — not
+      scoped to any period, and not meant to equal completed + upcoming +
+      pending + missed on its own: it also includes past accepted/scheduled
+      bookings that were never closed out (not yet marked completed or
+      missed), which don't show up as a single bucket elsewhere. */
   total: number;
+  /** Status "completed" with outcome NOT "missed" — a missed booking still
+      has status "completed" in the data model, so this explicitly excludes
+      those to keep "completed" and "missed" mutually exclusive everywhere. */
   completed: number;
+  missed: number;
   upcoming: number;
   pending: number;
+  /** All-time bookings for this person flagged isEmergency (Crisis SOS). */
+  crisisSos: number;
   workload: "Light" | "Balanced" | "High";
   role?: "counsellor" | "head";
 }
@@ -107,7 +120,14 @@ export interface HomeMetrics {
     risingInstitution: { name: string; changePct: number } | null;
   };
   programs: { title: string; collegeName: string; eventDate: number }[];
-  feedback: { averageRating: number | null; ratedCount: number };
+  feedback: {
+    averageRating: number | null;
+    ratedCount: number;
+    /** % derived from the 1–5 "felt heard" question's average, or null if unanswered so far. */
+    feltHeardPct: number | null;
+    feltComfortablePct: number | null;
+    wouldRecommendPct: number | null;
+  };
   reports: ReportStatusRow[];
 }
 
@@ -119,12 +139,27 @@ export interface HomeInput {
   reports: CounsellorMonthlyReport[];
   transfers: Booking[];
   ssiResults: SsiCollegeResult[];
+  feedbackList: SessionFeedback[];
   period: HomePeriod;
   now: Date;
 }
 
+/** Average of a rating question's numeric answers (matched by label), scaled to a 0–100%. */
+function ratingAnswerPct(feedbackList: SessionFeedback[], questionId: string): number | null {
+  const label = FEEDBACK_FORM.questions.find((q) => q.id === questionId)?.label;
+  if (!label) return null;
+  const values = feedbackList
+    .flatMap((f) => f.answers ?? [])
+    .filter((a) => a.label === label)
+    .map((a) => Number(a.value))
+    .filter((n) => Number.isFinite(n));
+  if (values.length === 0) return null;
+  const average = values.reduce((sum, n) => sum + n, 0) / values.length;
+  return Math.round((average / 5) * 100);
+}
+
 export function computeHomeMetrics(input: HomeInput): HomeMetrics {
-  const { bookings, counsellors, colleges, events, reports, transfers, ssiResults, period, now } = input;
+  const { bookings, counsellors, colleges, events, reports, transfers, ssiResults, feedbackList, period, now } = input;
   const nowMs = now.getTime();
   const startMs = periodStart(period, now);
 
@@ -185,9 +220,11 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
         name: displayName(p),
         collegeName: counsellorCollege(p.uid),
         total: mine.filter(isSession).length,
-        completed: mine.filter((b) => b.status === "completed").length,
+        completed: mine.filter((b) => b.status === "completed" && !isMissed(b)).length,
+        missed: mine.filter(isMissed).length,
         upcoming,
         pending,
+        crisisSos: mine.filter((b) => b.isEmergency).length,
         workload: load === 0 ? "Light" : load >= 8 ? "High" : "Balanced",
         role: p.role as "counsellor" | "head",
       };
@@ -311,8 +348,11 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
     .map((e) => ({ title: e.title, collegeName: collegeName.get(e.collegeId) ?? "Unassigned", eventDate: e.eventDate }));
 
   // ── Feedback ─────────────────────────────────────────────────────────
-  const ratings = bookings.map((b) => b.userRatingOfCounsellor).filter((r): r is number => typeof r === "number");
+  const ratings = feedbackList.map((f) => f.rating).filter((r): r is number => typeof r === "number");
   const averageRating = ratings.length > 0 ? Math.round((ratings.reduce((s, r) => s + r, 0) / ratings.length) * 10) / 10 : null;
+  const feltHeardPct = ratingAnswerPct(feedbackList, "felt-heard");
+  const feltComfortablePct = ratingAnswerPct(feedbackList, "felt-comfortable");
+  const wouldRecommendPct = ratingAnswerPct(feedbackList, "recommend");
 
   return {
     kpis: {
@@ -345,7 +385,7 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
       risingInstitution,
     },
     programs,
-    feedback: { averageRating, ratedCount: ratings.length },
+    feedback: { averageRating, ratedCount: ratings.length, feltHeardPct, feltComfortablePct, wouldRecommendPct },
     reports: reportRows,
   };
 }
