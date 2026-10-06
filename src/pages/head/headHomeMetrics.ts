@@ -1,4 +1,5 @@
-import type { Booking } from "../../types/booking";
+import type { Booking, ConcernCategory } from "../../types/booking";
+import { CONCERN_CATEGORY_LABELS } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
 import type { College } from "../../types/college";
 import type { EventProgram } from "../../types/event";
@@ -58,6 +59,7 @@ export interface CounsellorWorkloadRow {
   upcoming: number;
   pending: number;
   workload: "Light" | "Balanced" | "High";
+  role?: "counsellor" | "head";
 }
 
 export interface InstitutionRow {
@@ -92,6 +94,8 @@ export interface HomeMetrics {
   };
   team: CounsellorWorkloadRow[];
   severity: { healthy: number; mild: number; higher: number; total: number };
+  concernCategories: { category: ConcernCategory; label: string; count: number; pct: number }[];
+  concernCategoriesTotal: number;
   institutions: InstitutionRow[];
   today: { total: number; completed: number; upcoming: number; pending: number; cancelled: number; noShow: number };
   actions: {
@@ -127,8 +131,13 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
   const collegeName = new Map(colleges.map((c) => [c.id, c.name]));
   const counsellorById = new Map(counsellors.map((c) => [c.uid, c]));
   const counsellorCollege = (uid: string) => {
-    const collegeId = counsellorById.get(uid)?.collegeId;
-    return collegeId ? collegeName.get(collegeId) ?? "Unassigned" : "Unassigned";
+    const p = counsellorById.get(uid);
+    if (!p) return "Unassigned";
+    const cName = p.collegeId ? collegeName.get(p.collegeId) : null;
+    if (p.role === "head") {
+      return cName ? `${cName} • Campus Head` : "Campus Head";
+    }
+    return cName ?? "Unassigned";
   };
   const displayName = (p: UserProfile) => p.displayName || p.email;
 
@@ -165,7 +174,7 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
 
   // ── Team pulse ──────────────────────────────────────────────────────
   const counsellorRows = counsellors
-    .filter((p) => p.role === "counsellor")
+    .filter((p) => p.role === "counsellor" || p.role === "head")
     .map((p): CounsellorWorkloadRow => {
       const mine = bookings.filter((b) => b.counsellorId === p.uid);
       const upcoming = mine.filter((b) => ["accepted", "scheduled"].includes(b.status) && (b.scheduledAt ?? 0) >= nowMs).length;
@@ -180,7 +189,13 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
         upcoming,
         pending,
         workload: load === 0 ? "Light" : load >= 8 ? "High" : "Balanced",
+        role: p.role as "counsellor" | "head",
       };
+    })
+    .sort((a, b) => {
+      if (a.role === "head" && b.role !== "head") return -1;
+      if (b.role === "head" && a.role !== "head") return 1;
+      return a.name.localeCompare(b.name);
     });
 
   // ── Wellness check-in severity (aggregated, de-identified) ─────────────
@@ -193,6 +208,27 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
     higher: pct(severityCount("severe")),
     total: severityTotal,
   };
+
+  // ── What students are coming in with (student-chosen at booking time) ──
+  const concernCounts = new Map<ConcernCategory, number>();
+  let concernTaggedBookings = 0;
+  for (const b of bookings) {
+    if (!b.concernCategories?.length) continue;
+    concernTaggedBookings += 1;
+    for (const c of b.concernCategories) concernCounts.set(c, (concernCounts.get(c) ?? 0) + 1);
+  }
+  const concernCategories = (Object.keys(CONCERN_CATEGORY_LABELS) as ConcernCategory[])
+    .map((category) => {
+      const count = concernCounts.get(category) ?? 0;
+      return {
+        category,
+        label: CONCERN_CATEGORY_LABELS[category],
+        count,
+        pct: concernTaggedBookings > 0 ? Math.round((count / concernTaggedBookings) * 100) : 0,
+      };
+    })
+    .filter((row) => row.count > 0)
+    .sort((a, b) => b.count - a.count);
 
   // ── Institutions ─────────────────────────────────────────────────────
   const instStats = new Map<string, { students: Set<string>; sessions: number }>();
@@ -296,6 +332,8 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
     },
     team: counsellorRows,
     severity,
+    concernCategories,
+    concernCategoriesTotal: concernTaggedBookings,
     institutions,
     today: todayStats,
     actions: {

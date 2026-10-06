@@ -13,16 +13,18 @@ import {
   respondToCompensationOffer,
   SESSION_DURATION_LABEL,
 } from "../../services/firebase/bookings";
+import { computeLiveStatus } from "../../utils/counsellorStatus";
 import { listFeedbackForUser, createSessionFeedback } from "../../services/firebase/feedback";
 import { subscribeToNotifications } from "../../services/firebase/notifications";
 import { listSsiResultsForUser, submitSsiResult } from "../../services/firebase/ssiTest";
 import { sanitizePhoneInput, isValidWhatsappNumber } from "../../utils/phone";
 import { FEEDBACK_FORM } from "../../config/feedbackForm";
 import type { UserProfile } from "../../types/user";
-import type { Booking, BookingIntake } from "../../types/booking";
-import { computeLiveStatus } from "../../utils/counsellorStatus";
-import { CounsellorProfileModal } from "../../components/booking/CounsellorProfileModal";
+import type { Booking, BookingIntake, ConcernCategory } from "../../types/booking";
+import { CONCERN_CATEGORY_LABELS } from "../../types/booking";
 import { SsiTestModal } from "../../components/booking/SsiTestModal";
+import { CounsellorCard } from "../../components/booking/CounsellorCard";
+import { CounsellorProfileModal } from "../../components/booking/CounsellorProfileModal";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { Modal } from "../../components/common/Modal";
@@ -122,6 +124,8 @@ export function BookingSection({
   onResourceOpened,
   openCompensationBookingId,
   onCompensationOpened,
+  openCounsellorId,
+  onCounsellorOpened,
 }: {
   openChatBookingId?: string;
   onChatOpened?: () => void;
@@ -131,11 +135,18 @@ export function BookingSection({
   onResourceOpened?: () => void;
   openCompensationBookingId?: string;
   onCompensationOpened?: () => void;
+  /** A counsellor uid picked elsewhere (e.g. the Campus Counsellors page) to
+      jump straight into the booking consent flow for, bypassing the profile
+      preview modal since the student already chose who to book. */
+  openCounsellorId?: string;
+  onCounsellorOpened?: () => void;
 }) {
   const { currentUser, profile } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPicker, setShowPicker] = useState(false);
   const [viewingProfile, setViewingProfile] = useState<UserProfile | null>(null);
   const [target, setTarget] = useState<UserProfile | null>(null);
   const [agreed, setAgreed] = useState(false);
@@ -160,6 +171,7 @@ export function BookingSection({
   const [occupationField, setOccupationField] = useState<"student" | "professional">("student");
   const [whatsappField, setWhatsappField] = useState("");
   const [issueField, setIssueField] = useState("");
+  const [concernCategoriesField, setConcernCategoriesField] = useState<ConcernCategory[]>([]);
   const [slot1Field, setSlot1Field] = useState("");
   const [slot2Field, setSlot2Field] = useState("");
 
@@ -191,13 +203,14 @@ export function BookingSection({
 
   async function refresh() {
     if (!currentUser) return;
-    const [, userBookings, liveBookings, feedback, ssiResults] = await Promise.all([
+    const [allBookableProfiles, userBookings, liveBookings, feedback, ssiResults] = await Promise.all([
       listBookableProfiles(),
       listBookingsForUser(currentUser.uid),
       listScheduledBookings(),
       listFeedbackForUser(currentUser.uid).catch(() => []),
       listSsiResultsForUser(currentUser.uid).catch(() => []),
     ]);
+    setAllProfiles(allBookableProfiles);
     setBookings(userBookings);
     setScheduledBookings(liveBookings);
     setSubmittedFeedbackIds(new Set(feedback.map((f) => f.bookingId)));
@@ -284,10 +297,20 @@ export function BookingSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openResourceBookingId, bookings, onResourceOpened]);
 
-  const activeBooking = bookings.find((b) => ACTIVE_STATUSES.includes(b.status) && !isSessionEndedPending(b));
+  // Jump straight into the booking consent flow for a counsellor picked on
+  // the Campus Counsellors page — that page only browses/previews profiles,
+  // the actual booking flow lives here.
+  useEffect(() => {
+    if (!openCounsellorId || target) return;
+    const counsellor = allProfiles.find((p) => p.uid === openCounsellorId);
+    if (counsellor) {
+      openConsent(counsellor);
+      onCounsellorOpened?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openCounsellorId, allProfiles, target, onCounsellorOpened]);
 
   function openConsent(counsellor: UserProfile) {
-    setViewingProfile(null);
     setTarget(counsellor);
     setAgreed(false);
     setBookingStep("terms");
@@ -295,9 +318,16 @@ export function BookingSection({
     setOccupationField(profile?.studentOrProfessional ?? "student");
     setWhatsappField(profile?.whatsappNumber ?? "");
     setIssueField("");
+    setConcernCategoriesField([]);
     setSlot1Field("");
     setSlot2Field("");
     setBookingError("");
+  }
+
+  function toggleConcernCategory(category: ConcernCategory) {
+    setConcernCategoriesField((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category],
+    );
   }
 
   const formValid =
@@ -326,6 +356,7 @@ export function BookingSection({
         intake,
         [new Date(slot1Field).getTime(), new Date(slot2Field).getTime()],
         profile.campusId,
+        concernCategoriesField,
       );
       setTarget(null);
       await refresh();
@@ -466,7 +497,12 @@ export function BookingSection({
   return (
     <div className="booking-section">
       <section>
-        <h2 className="booking-section__heading">My Bookings</h2>
+        <div className="booking-section__header-row">
+          <h2 className="booking-section__heading">My Bookings</h2>
+          <Button type="button" onClick={() => setShowPicker(true)}>
+            + Book a Session
+          </Button>
+        </div>
         {bookings.length === 0 && <p>You haven't requested a session yet.</p>}
         {bookings.length > 0 && (
           <div className="booking-section__date-filter">
@@ -725,12 +761,38 @@ export function BookingSection({
         </Modal>
       )}
 
+      {showPicker && (
+        <Modal title="Choose a counsellor or Head" onClose={() => setShowPicker(false)}>
+          {(() => {
+            const counsellorsAndHeads = allProfiles.filter((p) => p.role === "counsellor" || p.role === "head");
+            return counsellorsAndHeads.length === 0 ? (
+              <p>No campus counsellors are available at the moment.</p>
+            ) : (
+              <div className="booking-section__grid">
+                {counsellorsAndHeads.map((p) => (
+                  <CounsellorCard
+                    key={p.uid}
+                    profile={p}
+                    status={computeLiveStatus(p, scheduledBookings)}
+                    onClick={() => setViewingProfile(p)}
+                  />
+                ))}
+              </div>
+            );
+          })()}
+        </Modal>
+      )}
+
       {viewingProfile && (
         <CounsellorProfileModal
           profile={viewingProfile}
           status={computeLiveStatus(viewingProfile, scheduledBookings)}
-          bookingDisabled={!!activeBooking}
-          onBook={() => openConsent(viewingProfile)}
+          bookingDisabled={false}
+          onBook={() => {
+            openConsent(viewingProfile);
+            setViewingProfile(null);
+            setShowPicker(false);
+          }}
           onClose={() => setViewingProfile(null)}
         />
       )}
@@ -909,6 +971,28 @@ export function BookingSection({
                   value={issueField}
                   onChange={(e) => setIssueField(e.target.value)}
                 />
+              </div>
+              <div className="booking-section__field">
+                <label htmlFor="booking-concerns">What's this mainly about? (optional)</label>
+                <div id="booking-concerns" className="booking-section__concern-chips">
+                  {(Object.keys(CONCERN_CATEGORY_LABELS) as ConcernCategory[]).map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      className={`booking-section__concern-chip ${
+                        concernCategoriesField.includes(category) ? "booking-section__concern-chip--active" : ""
+                      }`}
+                      aria-pressed={concernCategoriesField.includes(category)}
+                      onClick={() => toggleConcernCategory(category)}
+                    >
+                      {CONCERN_CATEGORY_LABELS[category]}
+                    </button>
+                  ))}
+                </div>
+                <p className="booking-section__concern-hint">
+                  Helps the centre understand common concerns — never shown to anyone per-person, only combined
+                  with everyone else's.
+                </p>
               </div>
               <div className="booking-section__field">
                 <label htmlFor="booking-slot-1">

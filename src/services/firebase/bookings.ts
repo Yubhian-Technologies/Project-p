@@ -14,7 +14,7 @@ import {
 import { httpsCallable } from "firebase/functions";
 import { db, functions } from "./config";
 import type { UserProfile } from "../../types/user";
-import type { Booking, BookingIntake, BookingOutcome } from "../../types/booking";
+import type { Booking, BookingIntake, BookingOutcome, ConcernCategory } from "../../types/booking";
 import { createNotification } from "./notifications";
 import type { OfflineSessionRow } from "../../utils/offlineSessionImport";
 import { clientDisplayLabel, syntheticClientId } from "../../utils/offlineSessionImport";
@@ -47,6 +47,7 @@ export async function createBooking(
   intake: BookingIntake,
   proposedSlots: [number, number],
   campusId?: string,
+  concernCategories?: ConcernCategory[],
 ): Promise<string> {
   const callable = httpsCallable<
     {
@@ -55,6 +56,7 @@ export async function createBooking(
       intake: BookingIntake;
       proposedSlots: [number, number];
       campusId?: string;
+      concernCategories?: ConcernCategory[];
     },
     { bookingId: string }
   >(functions, "createBooking");
@@ -64,6 +66,7 @@ export async function createBooking(
     intake,
     proposedSlots,
     campusId,
+    ...(concernCategories?.length ? { concernCategories } : {}),
   });
   return result.data.bookingId;
 }

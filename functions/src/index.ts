@@ -421,6 +421,8 @@ interface BookingIntakeInput {
   issue: string;
 }
 
+const CONCERN_CATEGORIES = ["anxiety", "academic-stress", "relationships", "sleep", "self-esteem", "other"];
+
 // Creates a normal session request. This is the ONLY way a client can create
 // a non-emergency booking now — firestore.rules no longer lets a client
 // write bookings/{id} directly with userId == themselves for anything but an
@@ -436,6 +438,7 @@ export const createBooking = onCall<{
   intake: BookingIntakeInput;
   proposedSlots: [number, number];
   campusId?: string;
+  concernCategories?: string[];
 }>(async (request) => {
   const callerUid = request.auth?.uid;
   if (!callerUid) {
@@ -459,6 +462,12 @@ export const createBooking = onCall<{
     !intake.issue?.trim()
   ) {
     throw new HttpsError("invalid-argument", "Missing or invalid booking details.");
+  }
+  if (
+    data.concernCategories !== undefined &&
+    (!Array.isArray(data.concernCategories) || !data.concernCategories.every((c) => CONCERN_CATEGORIES.includes(c)))
+  ) {
+    throw new HttpsError("invalid-argument", "Invalid concern category.");
   }
 
   const callerSnap = await db.collection("users").doc(callerUid).get();
@@ -505,6 +514,7 @@ export const createBooking = onCall<{
     durationMinutes: SESSION_DURATION_MINUTES,
     proposedSlots: data.proposedSlots,
     ...(data.campusId ? { campusId: data.campusId } : {}),
+    ...(data.concernCategories?.length ? { concernCategories: data.concernCategories } : {}),
     createdAt: now,
     updatedAt: now,
   });

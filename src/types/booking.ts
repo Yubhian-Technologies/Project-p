@@ -8,6 +8,23 @@ export type BookingStatus =
 
 export type BookingOutcome = "completed" | "followup" | "missed";
 
+export type ConcernCategory =
+  | "anxiety"
+  | "academic-stress"
+  | "relationships"
+  | "sleep"
+  | "self-esteem"
+  | "other";
+
+export const CONCERN_CATEGORY_LABELS: Record<ConcernCategory, string> = {
+  anxiety: "Anxiety",
+  "academic-stress": "Academic Stress",
+  relationships: "Relationships",
+  sleep: "Sleep",
+  "self-esteem": "Self-Esteem",
+  other: "Other",
+};
+
 export interface RescheduleProposal {
   proposedBy: "user" | "counsellor";
   proposedAt: number; // epoch ms of the newly proposed session time
@@ -67,6 +84,9 @@ export interface Booking {
       now" notification has gone out, so it's never sent twice. */
   reminderStartSent?: boolean;
   campusId?: string; // set on every booking so campus staff (e.g. the Head) can find it
+  /** Optional, student-chosen at booking time — aggregated (never shown
+      per-person) in the Head's wellness-trends dashboard. */
+  concernCategories?: ConcernCategory[];
   /** The counsellor/head's session summary, explicitly shared with the
       student — a separate copy from the private working notes in the
       intake doc, so only the counsellor/head ever controls what (and

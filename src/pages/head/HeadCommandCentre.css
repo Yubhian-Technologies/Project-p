@@ -105,19 +105,31 @@
   max-width: 560px;
 }
 
+/* Counsellor Dashboard Trends Wrapper */
+.counsellor-trends-wrap {
+  margin-top: 36px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 /* Sections */
 .hch-section {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hch-section__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hch-section__title {
@@ -162,26 +174,40 @@
 /* Period filter */
 .hch-filters {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
+  flex-shrink: 0;
+  padding-right: 6px;
+  box-sizing: border-box;
 }
 
 .hch-chip {
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 700;
-  padding: 7px 14px;
+  padding: 7px 16px;
   border-radius: 999px;
   border: 1px solid rgba(46, 43, 39, 0.14);
   background: #FFFFFF;
   color: #4A453E;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.hch-chip:hover:not(.hch-chip--active) {
+  border-color: #0B193C;
+  color: #0B193C;
 }
 
 .hch-chip--active {
   background: #0B193C;
   border-color: #0B193C;
   color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(11, 25, 60, 0.18);
 }
 
 /* KPIs */
@@ -305,11 +331,82 @@
   color: #B45309;
 }
 
-/* Team cards */
+/* Team pulse header actions & carousel */
+.hch-team-pulse-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hch-carousel-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hch-carousel-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #0F172A;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  padding: 0;
+}
+
+.hch-carousel-arrow:hover:not(:disabled) {
+  background: #F8FAFC;
+  border-color: #0D9488;
+  color: #0D9488;
+  transform: scale(1.06);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.12);
+}
+
+.hch-carousel-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+  border-color: #F1F5F9;
+}
+
+.hch-team-carousel-viewport {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Team cards track & carousel */
 .hch-team {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 14px;
+}
+
+.hch-team--carousel {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 4px 4px 16px 4px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hch-team--carousel::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .hch-counsellor {
@@ -320,6 +417,50 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hch-team--carousel .hch-counsellor {
+  flex: 0 0 280px;
+  width: 280px;
+  min-width: 280px;
+  scroll-snap-align: start;
+  box-sizing: border-box;
+}
+
+.hch-team--carousel .hch-counsellor:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08);
+}
+
+.hch-counsellor--head {
+  border-color: #C7D2FE;
+  background: linear-gradient(180deg, #FAFAFE 0%, #FFFFFF 100%);
+  box-shadow: 0 4px 12px -2px rgba(79, 70, 229, 0.06);
+}
+
+.hch-counsellor__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hch-role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hch-role-badge--head {
+  background: #EEF2FF;
+  color: #4338CA;
+  border: 1px solid #C7D2FE;
 }
 
 .hch-counsellor__name {

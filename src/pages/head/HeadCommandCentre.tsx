@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useRef, useCallback, type ReactNode } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../services/firebase/config";
 import { useAuth } from "../../hooks/useAuth";
@@ -21,7 +21,7 @@ import "./HeadCommandCentre.css";
 
 type LoadedData = Omit<HomeInput, "period" | "now">;
 
-const PERIODS: HomePeriod[] = ["week", "month", "semester", "year"];
+const PERIODS: HomePeriod[] = ["week", "month"];
 
 function formatPct(value: number | null, suffix = "%"): string {
   return value === null ? "—" : `${value}${suffix}`;
@@ -50,6 +50,26 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<HomePeriod>("month");
   const [now] = useState(() => new Date());
+
+  const teamCarouselRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const updateScrollButtons = useCallback(() => {
+    const el = teamCarouselRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 4);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
+  }, []);
+
+  const scrollTeamCarousel = (dir: "left" | "right") => {
+    const el = teamCarouselRef.current;
+    if (!el) return;
+    const scrollAmount = 300;
+    el.scrollBy({ left: dir === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
+    setTimeout(updateScrollButtons, 350);
+  };
 
   useEffect(() => {
     if (!campusId) return;
@@ -90,6 +110,12 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
       active = false;
     };
   }, [campusId]);
+
+  useEffect(() => {
+    updateScrollButtons();
+    window.addEventListener("resize", updateScrollButtons);
+    return () => window.removeEventListener("resize", updateScrollButtons);
+  }, [updateScrollButtons, data]);
 
   if (!campusId) {
     return <p className="hch-muted">Your profile isn't linked to a campus yet.</p>;
@@ -201,43 +227,78 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
       <section className="hch-section">
         <div className="hch-section__head">
           <h3 className="hch-section__title">Team pulse</h3>
-          <button type="button" className="hch-btn hch-btn--ghost" onClick={() => onNavigate("team-management")}>
-            View Full Team →
-          </button>
+          <div className="hch-team-pulse-actions">
+            {m.team.length > 1 && (
+              <div className="hch-carousel-controls" role="group" aria-label="Team carousel navigation">
+                <button
+                  type="button"
+                  className="hch-carousel-arrow"
+                  onClick={() => scrollTeamCarousel("left")}
+                  disabled={!canScrollLeft}
+                  aria-label="Previous team member"
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                </button>
+                <button
+                  type="button"
+                  className="hch-carousel-arrow"
+                  onClick={() => scrollTeamCarousel("right")}
+                  disabled={!canScrollRight}
+                  aria-label="Next team member"
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                </button>
+              </div>
+            )}
+            <button type="button" className="hch-btn hch-btn--ghost" onClick={() => onNavigate("team-management")}>
+              View Full Team →
+            </button>
+          </div>
         </div>
         {m.team.length === 0 ? (
-          <p className="hch-muted">No counsellors on this campus yet.</p>
+          <p className="hch-muted">No team members on this campus yet.</p>
         ) : (
-          <div className="hch-team">
-            {m.team.map((c) => (
-              <article key={c.uid} className="hch-counsellor">
-                <header>
-                  <p className="hch-counsellor__name">{c.name}</p>
-                  <p className="hch-muted hch-small">{c.collegeName}</p>
-                </header>
-                <dl className="hch-counsellor__stats">
-                  <div>
-                    <dt>Sessions</dt>
-                    <dd>{c.total}</dd>
-                  </div>
-                  <div>
-                    <dt>Completed</dt>
-                    <dd>{c.completed}</dd>
-                  </div>
-                  <div>
-                    <dt>Upcoming</dt>
-                    <dd>{c.upcoming}</dd>
-                  </div>
-                  <div>
-                    <dt>Pending</dt>
-                    <dd>{c.pending}</dd>
-                  </div>
-                </dl>
-                <span className={`hch-workload hch-workload--${c.workload.toLowerCase()}`}>
-                  Workload: {c.workload}
-                </span>
-              </article>
-            ))}
+          <div className="hch-team-carousel-viewport">
+            <div
+              ref={teamCarouselRef}
+              className="hch-team hch-team--carousel"
+              onScroll={updateScrollButtons}
+            >
+              {m.team.map((c) => (
+                <article key={c.uid} className={`hch-counsellor ${c.role === "head" ? "hch-counsellor--head" : ""}`}>
+                  <header>
+                    <div className="hch-counsellor__header-row">
+                      <p className="hch-counsellor__name">{c.name}</p>
+                      {c.role === "head" && (
+                        <span className="hch-role-badge hch-role-badge--head">Head</span>
+                      )}
+                    </div>
+                    <p className="hch-muted hch-small">{c.collegeName}</p>
+                  </header>
+                  <dl className="hch-counsellor__stats">
+                    <div>
+                      <dt>Sessions</dt>
+                      <dd>{c.total}</dd>
+                    </div>
+                    <div>
+                      <dt>Completed</dt>
+                      <dd>{c.completed}</dd>
+                    </div>
+                    <div>
+                      <dt>Upcoming</dt>
+                      <dd>{c.upcoming}</dd>
+                    </div>
+                    <div>
+                      <dt>Pending</dt>
+                      <dd>{c.pending}</dd>
+                    </div>
+                  </dl>
+                  <span className={`hch-workload hch-workload--${c.workload.toLowerCase()}`}>
+                    Workload: {c.workload}
+                  </span>
+                </article>
+              ))}
+            </div>
           </div>
         )}
       </section>
@@ -268,10 +329,27 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
             </p>
           </div>
           <div className="hch-panel">
-            <p className="hch-label">What are students coming in with?</p>
-            <p className="hch-muted">
-              <Placeholder>Not tracked yet</Placeholder> Concern categories (anxiety, academic stress, relationships,
-              sleep, self-esteem) need a categorisation field on bookings before they can be shown.
+            <p className="hch-label">What are students coming in with? ({m.concernCategoriesTotal} tagged)</p>
+            {m.concernCategories.length === 0 ? (
+              <p className="hch-muted">
+                <Placeholder>Not tracked yet</Placeholder> No one has selected a concern category at booking time
+                yet — it's an optional field, so this fills in as students start using it.
+              </p>
+            ) : (
+              <ul className="hch-severity">
+                {m.concernCategories.map((row) => (
+                  <li key={row.category} className="hch-severity__row">
+                    <span>{row.label}</span>
+                    <span className="hch-severity__bar">
+                      <span className="hch-severity__fill hch-severity__fill--ok" style={{ width: `${row.pct}%` }} />
+                    </span>
+                    <strong>{row.pct}%</strong>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="hch-small hch-muted">
+              Optional, student-chosen at booking time. Aggregated and de-identified.
             </p>
           </div>
         </div>
