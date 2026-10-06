@@ -64,6 +64,16 @@ service firebase.storage {
       allow delete: if request.auth != null && request.auth.uid == uid;
     }
 
+    // Signed/stamped copy of a consolidated report, produced by the
+    // verifyMonthlyReport Cloud Function (functions/src/index.ts) once an
+    // Admin with a signature on file verifies it. Written only by that
+    // function via the Admin SDK, which bypasses these rules entirely — no
+    // client ever writes here, hence allow write: if false.
+    match /monthly-reports-signed/{reportId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // Counsellor-submitted monthly reports: same pattern as monthly-reports
     // above (src/services/firebase/counsellorMonthlyReports.ts uploads to
     // counsellor-monthly-reports/{uploaderUid}/{year}/{month}/{fileName}).

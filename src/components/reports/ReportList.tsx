@@ -41,6 +41,9 @@ export interface ReportListItem {
   fileName: string;
   downloadURL: string;
   status?: "pending" | "verified";
+  signedDownloadURL?: string;
+  signedFileName?: string;
+  signedKind?: "stamped" | "certificate";
 }
 
 export interface ReportListProps<T extends ReportListItem> {
@@ -124,6 +127,15 @@ export function ReportList<T extends ReportListItem>({
                 >
                   <DownloadIcon /> Download
                 </a>
+                {r.signedDownloadURL && (
+                  <a
+                    href={r.signedDownloadURL}
+                    download={r.signedFileName}
+                    className="report-list-block__btn report-list-block__btn--download"
+                  >
+                    <DownloadIcon /> {r.signedKind === "stamped" ? "Download Signed Document" : "Download Verification Certificate"}
+                  </a>
+                )}
                 {onVerify && r.status === "pending" && (
                   <button
                     type="button"

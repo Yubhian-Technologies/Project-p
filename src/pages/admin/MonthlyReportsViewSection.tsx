@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../../hooks/useAuth";
 import {
   listMonthlyReports,
   verifyMonthlyReport,
@@ -47,8 +46,6 @@ function formatDate(iso: string) {
 }
 
 export function MonthlyReportsViewSection() {
-  const { profile } = useAuth();
-
   // ── Campus state ─────────────────────────────────────────────────
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [selectedCampusId, setSelectedCampusId] = useState("");
@@ -93,7 +90,7 @@ export function MonthlyReportsViewSection() {
   async function handleVerify(report: MonthlyReport) {
     setVerifyingId(report.id);
     try {
-      await verifyMonthlyReport(report.id, profile?.displayName || profile?.email || "Admin", profile?.uid ?? "");
+      await verifyMonthlyReport(report.id);
       await loadReports();
     } finally {
       setVerifyingId(null);
@@ -252,6 +249,15 @@ export function MonthlyReportsViewSection() {
                   >
                     <DownloadIcon /> View / Download
                   </a>
+                  {r.signedDownloadURL && (
+                    <a
+                      href={r.signedDownloadURL}
+                      download={r.signedFileName}
+                      className="mrv-btn-download"
+                    >
+                      <DownloadIcon /> {r.signedKind === "stamped" ? "Download Signed Document" : "Download Verification Certificate"}
+                    </a>
+                  )}
                   {r.status === "pending" && (
                     <button
                       type="button"

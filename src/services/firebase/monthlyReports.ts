@@ -5,14 +5,14 @@ import {
   deleteDoc,
   doc,
   getDoc,
-  updateDoc,
   query,
   orderBy,
   where,
   serverTimestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { db, storage } from "./config";
+import { httpsCallable, getFunctions } from "firebase/functions";
+import { db, storage, app } from "./config";
 import { createNotification } from "./notifications";
 import { listUsersByRole } from "./firestore";
 import { attachmentMetadata } from "../../utils/attachmentMetadata";
@@ -37,6 +37,13 @@ export interface MonthlyReport {
   verifiedBy?: string;
   verifiedByUid?: string;
   verifiedAt?: string;
+  // populated only when the verifying Admin had a signature on file — see
+  // the verifyMonthlyReport Cloud Function. "stamped" = the original PDF
+  // with a verification page appended; "certificate" = a standalone
+  // verification page (the original wasn't a PDF, so it couldn't be stamped).
+  signedDownloadURL?: string;
+  signedFileName?: string;
+  signedKind?: "stamped" | "certificate";
 }
 
 const COLLECTION = "monthlyReports";
@@ -110,14 +117,17 @@ export async function uploadMonthlyReport(
   };
 }
 
-/** Admin verifies a Head's consolidated report. */
-export async function verifyMonthlyReport(id: string, verifiedBy: string, verifiedByUid: string): Promise<void> {
-  await updateDoc(doc(db, COLLECTION, id), {
-    status: "verified",
-    verifiedBy,
-    verifiedByUid,
-    verifiedAt: serverTimestamp(),
-  });
+/**
+ * Admin verifies a Head's consolidated report. Runs server-side (not a plain
+ * updateDoc) because stamping the Admin's own uploaded signature onto a copy
+ * of the report requires reading the original file's bytes from Storage —
+ * this bucket has no CORS configured (see utils/attachmentMetadata.ts), so a
+ * client-side fetch() of it would silently fail. verifiedBy/verifiedByUid are
+ * derived server-side from the caller's own profile, not passed in.
+ */
+export async function verifyMonthlyReport(id: string): Promise<void> {
+  const fn = httpsCallable(getFunctions(app), "verifyMonthlyReport");
+  await fn({ reportId: id });
 }
 
 /** Fetch all monthly reports ordered by most recent first. */
@@ -178,5 +188,8 @@ function docToReport(id: string, data: Record<string, unknown>): MonthlyReport {
     verifiedByUid: (data.verifiedByUid as string | undefined) ?? undefined,
     verifiedAt:
       (data.verifiedAt as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString?.() ?? undefined,
+    signedDownloadURL: (data.signedDownloadURL as string | undefined) ?? undefined,
+    signedFileName: (data.signedFileName as string | undefined) ?? undefined,
+    signedKind: (data.signedKind as "stamped" | "certificate" | undefined) ?? undefined,
   };
 }

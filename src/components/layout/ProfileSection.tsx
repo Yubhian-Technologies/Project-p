@@ -99,11 +99,12 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const [showImportLogins, setShowImportLogins] = useState(false);
 
   useEffect(() => {
-    const eligible = profile?.role === "head" || profile?.role === "counsellor" || profile?.role === "admin";
-    if (!currentUser || !eligible) {
-      setLoadingSignature(false);
-      return;
-    }
+    // Only Admin/Super Admin ever see the signature block (see canHaveSignature
+    // below) — loadingSignature is never read for anyone else, so there's
+    // nothing to reset for an ineligible viewer; just skip the fetch.
+    const eligible = profile?.role === "admin" || profile?.role === "super-admin";
+    if (!currentUser || !eligible) return;
+    // eslint-disable-next-line react/set-state-in-effect -- starting a fetch, not resetting state from a prop change
     setLoadingSignature(true);
     getSignatureURL(currentUser.uid)
       .then(setSignatureURL)
@@ -114,13 +115,24 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
 
   const isCounsellorLike = profile.role === "counsellor" || profile.role === "head";
   const isUser = profile.role === "user";
-  const canHaveSignature = profile.role === "head" || profile.role === "counsellor" || profile.role === "admin";
+  // Only Admin/Super Admin ever verify a consolidated report, so only they
+  // need a signature on file to stamp one — Head/Counsellor never did
+  // anything with theirs.
+  const canHaveSignature = profile.role === "admin" || profile.role === "super-admin";
   const isHead = profile.role === "head";
 
   async function handleSignatureFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file || !currentUser) return;
+
+    // Only PNG/JPG can actually be embedded by the verifyMonthlyReport Cloud
+    // Function when stamping a consolidated report — anything else would
+    // silently fall back to a text-only placeholder there.
+    if (file.type !== "image/png" && file.type !== "image/jpeg") {
+      setSignatureError("Please upload a PNG or JPG image.");
+      return;
+    }
 
     setSignatureError(null);
     setUploadingSignature(true);
@@ -719,7 +731,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                 <input
                   ref={signatureFileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg"
                   className="profile-section__file-input"
                   onChange={handleSignatureFileChange}
                 />
@@ -731,6 +743,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                 >
                   {uploadingSignature ? "Uploading…" : signatureURL ? "Change signature" : "Upload signature"}
                 </Button>
+                <p className="profile-section__intake-hint">Upload only PNG or JPG format.</p>
                 {signatureError && <p className="profile-section__error">{signatureError}</p>}
               </>
             )}
