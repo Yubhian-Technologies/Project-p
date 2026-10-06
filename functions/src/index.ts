@@ -2,12 +2,16 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldPath } from "firebase-admin/firestore";
+import { getFirestore, FieldPath, FieldValue } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
+import { randomUUID } from "crypto";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 initializeApp();
 
 const auth = getAuth();
 const db = getFirestore();
+const storage = getStorage();
 
 function isCampusManagerRole(role: unknown): boolean {
   return role === "admin" || role === "super-admin";
@@ -409,6 +413,195 @@ export const getCounsellorReviews = onCall<{ counsellorId: string }>(async (requ
   return { reviews };
 });
 
+// ── Consolidated report signing ─────────────────────────────────────────────
+// Verifying a Head's consolidated report runs server-side (not a plain client
+// updateDoc) because stamping the Admin's signature onto a copy of the report
+// requires reading the original file's bytes from Storage — this bucket has
+// no CORS configured (see src/utils/attachmentMetadata.ts), so a client-side
+// fetch() of it silently fails. The Admin SDK talks to Storage directly, no
+// CORS involved.
+
+const A4_WIDTH = 595.28;
+const A4_HEIGHT = 841.89;
+
+function detectImageKind(bytes: Buffer): "png" | "jpg" | null {
+  if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "png";
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpg";
+  return null;
+}
+
+/** One verification page: report metadata + the Admin's signature image.
+    Used standalone as the "certificate" for a non-PDF original, or copied in
+    as an appended last page when the original is itself a PDF. */
+async function buildVerificationPage(opts: {
+  reportTitle: string;
+  periodLabel: string;
+  submittedBy: string;
+  verifiedBy: string;
+  verifiedAtLabel: string;
+  signatureBytes: Buffer | null;
+  signatureKind: "png" | "jpg" | null;
+}): Promise<PDFDocument> {
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([A4_WIDTH, A4_HEIGHT]);
+  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const regular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const marginX = 70;
+  let y = A4_HEIGHT - 120;
+
+  page.drawText("Verification Certificate", { x: marginX, y, size: 22, font: bold, color: rgb(0.06, 0.09, 0.23) });
+  y -= 36;
+  page.drawLine({ start: { x: marginX, y }, end: { x: A4_WIDTH - marginX, y }, thickness: 1, color: rgb(0.85, 0.85, 0.85) });
+  y -= 40;
+
+  function field(label: string, value: string) {
+    page.drawText(label, { x: marginX, y, size: 11, font: bold, color: rgb(0.4, 0.4, 0.4) });
+    y -= 18;
+    page.drawText(value, { x: marginX, y, size: 14, font: regular, color: rgb(0.1, 0.1, 0.1) });
+    y -= 36;
+  }
+
+  field("REPORT", opts.reportTitle);
+  field("PERIOD", opts.periodLabel);
+  field("SUBMITTED BY", opts.submittedBy);
+  field("VERIFIED BY", `${opts.verifiedBy} on ${opts.verifiedAtLabel}`);
+
+  y -= 10;
+  page.drawText("Authorized signature", { x: marginX, y, size: 11, font: bold, color: rgb(0.4, 0.4, 0.4) });
+  y -= 14;
+
+  if (opts.signatureBytes && opts.signatureKind) {
+    const img =
+      opts.signatureKind === "png"
+        ? await pdfDoc.embedPng(opts.signatureBytes)
+        : await pdfDoc.embedJpg(opts.signatureBytes);
+    const maxWidth = 180;
+    const scale = Math.min(1, maxWidth / img.width);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    y -= h;
+    page.drawImage(img, { x: marginX, y, width: w, height: h });
+  } else {
+    y -= 16;
+    page.drawText("(signature image unavailable — unsupported file format)", {
+      x: marginX,
+      y,
+      size: 10,
+      font: regular,
+      color: rgb(0.6, 0.2, 0.2),
+    });
+  }
+
+  return pdfDoc;
+}
+
+interface VerifyMonthlyReportRequest {
+  reportId: string;
+}
+
+export const verifyMonthlyReport = onCall<VerifyMonthlyReportRequest>(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+
+  const callerDoc = await db.collection("users").doc(callerUid).get();
+  const callerData = callerDoc.data();
+  if (!isCampusManagerRole(callerData?.role)) {
+    throw new HttpsError("permission-denied", "Only an Admin or Super Admin can verify a consolidated report.");
+  }
+  const verifiedByUid = callerUid;
+  const verifiedBy = (callerData?.displayName as string | undefined) || (callerData?.email as string | undefined) || "Admin";
+
+  const { reportId } = request.data;
+  if (!reportId || typeof reportId !== "string") {
+    throw new HttpsError("invalid-argument", "reportId is required.");
+  }
+
+  const reportRef = db.collection("monthlyReports").doc(reportId);
+  const reportSnap = await reportRef.get();
+  if (!reportSnap.exists) {
+    throw new HttpsError("not-found", "Report not found.");
+  }
+  const report = reportSnap.data()!;
+
+  // No signature uploaded — verify exactly as before, no signed artifact.
+  const signatureSnap = await db.collection("users").doc(callerUid).collection("signature").doc("current").get();
+  const signatureURL = signatureSnap.exists ? (signatureSnap.data()?.signatureURL as string | undefined) : undefined;
+  if (!signatureURL) {
+    await reportRef.update({
+      status: "verified",
+      verifiedBy,
+      verifiedByUid,
+      verifiedAt: FieldValue.serverTimestamp(),
+    });
+    return { success: true, signed: false };
+  }
+
+  const bucket = storage.bucket();
+  const storagePath = report.storagePath as string;
+  const fileName = (report.fileName as string) || "report";
+  const isPdf = fileName.toLowerCase().endsWith(".pdf");
+
+  const [originalBytes] = await bucket.file(storagePath).download();
+  const sigResponse = await fetch(signatureURL);
+  const sigBytes = Buffer.from(await sigResponse.arrayBuffer());
+  const signatureKind = detectImageKind(sigBytes);
+
+  const now = Date.now();
+  const monthLabel = new Date(2000, ((report.month as number) || 1) - 1, 1).toLocaleString("en-US", { month: "long" });
+  const periodLabel = `${monthLabel} ${report.year ?? ""}`;
+  const verifiedAtLabel = new Date(now).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
+  const verificationDoc = await buildVerificationPage({
+    reportTitle: (report.title as string) || "Consolidated Report",
+    periodLabel,
+    submittedBy: (report.uploadedBy as string) || "Head",
+    verifiedBy,
+    verifiedAtLabel,
+    signatureBytes: signatureKind ? sigBytes : null,
+    signatureKind,
+  });
+
+  let outputDoc: PDFDocument;
+  let signedKind: "stamped" | "certificate";
+  if (isPdf) {
+    outputDoc = await PDFDocument.load(originalBytes);
+    const [copiedPage] = await outputDoc.copyPages(verificationDoc, [0]);
+    outputDoc.addPage(copiedPage);
+    signedKind = "stamped";
+  } else {
+    outputDoc = verificationDoc;
+    signedKind = "certificate";
+  }
+
+  const outputBytes = await outputDoc.save();
+  const baseName = fileName.replace(/\.[^.]+$/, "");
+  const signedFileName = signedKind === "stamped" ? `Signed_${baseName}.pdf` : `Verification_Certificate_${baseName}.pdf`;
+  const token = randomUUID();
+  const signedStoragePath = `monthly-reports-signed/${reportId}/${now}.pdf`;
+  await bucket.file(signedStoragePath).save(Buffer.from(outputBytes), {
+    metadata: {
+      contentType: "application/pdf",
+      contentDisposition: `attachment; filename="${signedFileName.replace(/"/g, '\\"')}"`,
+      metadata: { firebaseStorageDownloadTokens: token },
+    },
+  });
+  const signedDownloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(signedStoragePath)}?alt=media&token=${token}`;
+
+  await reportRef.update({
+    status: "verified",
+    verifiedBy,
+    verifiedByUid,
+    verifiedAt: FieldValue.serverTimestamp(),
+    signedDownloadURL,
+    signedFileName,
+    signedKind,
+  });
+
+  return { success: true, signed: true };
+});
+
 // Session length for a normal (non-emergency, non-offline-import) booking —
 // mirrors SESSION_DURATION_MINUTES in src/services/firebase/bookings.ts.
 const SESSION_DURATION_MINUTES = 90;
@@ -610,9 +803,21 @@ export const sendSessionReminders = onSchedule("every 5 minutes", async () => {
 // the app. This is the server-side backstop that fires regardless. Shares
 // the same `missedNotified` flag as the client-side version so whichever
 // runs first wins and the other is a no-op.
+// Crisis SOS sessions are handled immediately and never reach "scheduled" —
+// they stay at status "accepted" the whole time they're being handled, so
+// the scan below checks that status/scheduledAt combo separately. This is
+// how long one can sit accepted-but-not-closed-out before it's flagged,
+// shorter than a normal session's own duration since a crisis left open for
+// hours unclosed is itself worth surfacing. Keep in sync with the client-side
+// copy of this constant in services/firebase/bookings.ts.
+const EMERGENCY_REVIEW_GRACE_MS = 2 * 60 * 60 * 1000;
+
 export const flagMissedSessions = onSchedule("every 15 minutes", async () => {
   const now = Date.now();
-  const snapshot = await db.collection("bookings").where("status", "==", "scheduled").get();
+  const [scheduledSnap, emergencySnap] = await Promise.all([
+    db.collection("bookings").where("status", "==", "scheduled").get(),
+    db.collection("bookings").where("status", "==", "accepted").where("isEmergency", "==", true).get(),
+  ]);
 
   const bookingUpdates: FirebaseFirestore.DocumentReference[] = [];
   const notifications: Record<string, unknown>[] = [];
@@ -631,22 +836,20 @@ export const flagMissedSessions = onSchedule("every 15 minutes", async () => {
     return head;
   }
 
-  for (const docRef of snapshot.docs) {
+  async function queueReview(
+    docRef: FirebaseFirestore.QueryDocumentSnapshot,
+    counsellorMessage: string,
+    headMessage: string,
+  ): Promise<void> {
     const b = docRef.data();
-    const scheduledAt = b.scheduledAt as number | undefined;
-    if (typeof scheduledAt !== "number" || b.missedNotified) continue;
-    const durationMinutes = typeof b.durationMinutes === "number" ? b.durationMinutes : 90;
-    if (now < scheduledAt + durationMinutes * 60000) continue;
-
     const counsellorId = b.counsellorId as string;
-    const userEmail = b.userEmail as string;
     bookingUpdates.push(docRef.ref);
     notifications.push({
       recipientId: counsellorId,
       type: "session_needs_review",
       bookingId: docRef.id,
       title: "Session needs review",
-      message: `Your session with ${userEmail} was scheduled to end and hasn't been marked yet — let us know what happened.`,
+      message: counsellorMessage,
       read: false,
       createdAt: now,
     });
@@ -660,12 +863,41 @@ export const flagMissedSessions = onSchedule("every 15 minutes", async () => {
           type: "session_needs_review",
           bookingId: docRef.id,
           title: "Counsellor session needs review",
-          message: `${b.counsellorEmail ?? "A counsellor"}'s session with ${userEmail} was scheduled to end and hasn't been marked yet.`,
+          message: headMessage,
           read: false,
           createdAt: now,
         });
       }
     }
+  }
+
+  for (const docRef of scheduledSnap.docs) {
+    const b = docRef.data();
+    const scheduledAt = b.scheduledAt as number | undefined;
+    if (typeof scheduledAt !== "number" || b.missedNotified) continue;
+    const durationMinutes = typeof b.durationMinutes === "number" ? b.durationMinutes : 90;
+    if (now < scheduledAt + durationMinutes * 60000) continue;
+
+    const userEmail = b.userEmail as string;
+    await queueReview(
+      docRef,
+      `Your session with ${userEmail} was scheduled to end and hasn't been marked yet — let us know what happened.`,
+      `${b.counsellorEmail ?? "A counsellor"}'s session with ${userEmail} was scheduled to end and hasn't been marked yet.`,
+    );
+  }
+
+  for (const docRef of emergencySnap.docs) {
+    const b = docRef.data();
+    const scheduledAt = b.scheduledAt as number | undefined;
+    if (typeof scheduledAt !== "number" || b.missedNotified) continue;
+    if (now < scheduledAt + EMERGENCY_REVIEW_GRACE_MS) continue;
+
+    const userEmail = b.userEmail as string;
+    await queueReview(
+      docRef,
+      `Your Crisis SOS session with ${userEmail} is still open and hasn't been closed out — let us know what happened.`,
+      `${b.counsellorEmail ?? "A counsellor"}'s Crisis SOS session with ${userEmail} is still open and hasn't been closed out.`,
+    );
   }
 
   if (bookingUpdates.length === 0 && notifications.length === 0) return;
@@ -688,6 +920,3 @@ export const flagMissedSessions = onSchedule("every 15 minutes", async () => {
 
   for (const b of batches) await b.commit();
 });
-
-
-export { emailNotification } from "./email";
