@@ -3,10 +3,11 @@ function csvCell(value: string | number): string {
   return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
 }
 
-/** Downloads a CSV file built from headers and rows — no external library needed. */
-export function downloadCsv(filename: string, headers: string[], rows: (string | number)[][]): void {
-  const body = rows.map((row) => row.map(csvCell).join(","));
-  const csv = [headers.map(csvCell).join(","), ...body].join("\r\n");
+/** Downloads a CSV file built from a flat list of rows — no forced header
+ *  row, so callers that need meta lines (e.g. "Academic Year: 2026-2027")
+ *  above the real table header can just include them as rows themselves. */
+export function downloadCsvRows(filename: string, rows: (string | number)[][]): void {
+  const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -16,4 +17,9 @@ export function downloadCsv(filename: string, headers: string[], rows: (string |
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+/** Downloads a CSV file built from headers and rows — no external library needed. */
+export function downloadCsv(filename: string, headers: string[], rows: (string | number)[][]): void {
+  downloadCsvRows(filename, [headers, ...rows]);
 }

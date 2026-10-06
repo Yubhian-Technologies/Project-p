@@ -1,9 +1,15 @@
-import type { EventCategory } from "../types/event";
+import type { EventCategory, EventPhase } from "../types/event";
 
 export const EVENT_CATEGORIES: { id: EventCategory; label: string }[] = [
   { id: "main-program", label: "Main Programs" },
   { id: "group-session", label: "Group Session" },
 ];
+
+export const PHASE_BADGE: Record<EventPhase, { label: string; variant: string }> = {
+  scheduled: { label: "Scheduled", variant: "primary" },
+  completed: { label: "Completed", variant: "success" },
+  "not-conducted": { label: "Not conducted", variant: "neutral" },
+};
 
 export const SESSION_YEAR_OPTIONS: { value: string; label: string }[] = [
   { value: "1", label: "Year 1" },

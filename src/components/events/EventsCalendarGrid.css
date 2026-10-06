@@ -36,7 +36,7 @@
   font-family: inherit;
   font-size: 14px;
   padding: 10px 16px;
-  border-radius: 0;
+  border-radius: 12px;
   border: 1px solid rgba(46, 43, 39, 0.08);
   background: #FFFFFF;
   box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
@@ -53,55 +53,6 @@
   margin: 8px 0 16px;
 }
 
-.events-calendar__grid {
-  display: grid;
-  grid-template-columns: 140px repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.events-calendar__header {
-  font-family: var(--bento-font-body);
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--neu-text-muted, #718096);
-  padding: 0 4px 6px;
-}
-
-.events-calendar__row {
-  display: contents;
-}
-
-.events-calendar__month-label {
-  font-family: var(--bento-font-title);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--neu-text-primary, #2D3748);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 14px 10px;
-  background: #FFFFFF;
-  border-radius: 20px;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
-}
-
-.events-calendar__month-edit-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px;
-  background: var(--neu-bg, #E8ECF2);
-  border-radius: 20px;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
-}
-
 .events-calendar__row-actions {
   display: flex;
   align-items: center;
@@ -110,41 +61,219 @@
 }
 
 .events-calendar__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   border: none;
   background: none;
   color: #EA580C;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.events-calendar__icon-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
 .events-calendar__icon-btn:hover {
-  text-decoration: underline;
+  background: rgba(234, 88, 12, 0.1);
 }
 
 .events-calendar__icon-btn:disabled {
   color: var(--neu-text-muted, #718096);
   cursor: not-allowed;
-  text-decoration: none;
+  background: none;
 }
 
 .events-calendar__icon-btn--danger {
   color: #dc2626;
 }
 
-.events-calendar__cell {
+.events-calendar__icon-btn--danger:hover {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.events-calendar__icon-btn--view {
+  color: #0B193C;
+}
+
+.events-calendar__icon-btn--view:hover {
+  background: rgba(11, 25, 60, 0.08);
+}
+
+/* ── Step label + back button, shared by every drill-down step ──────────── */
+.events-calendar__month-step-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.events-calendar__month-step-head .events-calendar__step-label {
+  margin: 0;
+}
+
+.events-calendar__month-step-head .md-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.events-calendar__step-label {
+  margin: 0 0 14px;
+  font-family: var(--bento-font-body);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--neu-text-muted, #718096);
+}
+
+.events-calendar__back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  color: #0B193C;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 0 12px;
+}
+
+.events-calendar__back-btn:hover {
+  text-decoration: underline;
+}
+
+/* ── Step 1: Main Programs / Group Session ───────────────────────────────── */
+.events-calendar__category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  max-width: 560px;
+}
+
+.events-calendar__category-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px;
+  align-items: flex-start;
+  gap: 6px;
+  text-align: left;
+  padding: 22px 20px;
   background: #FFFFFF;
-  border-radius: 0;
   border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px;
   box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
-  min-height: 72px;
-  min-width: 0;
-  box-sizing: border-box;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.events-calendar__category-card:hover {
+  transform: translate(-1.5px, -1.5px);
+  box-shadow: 0 12px 30px rgba(46, 43, 39, 0.09);
+  border-color: #0B193C;
+}
+
+.events-calendar__category-card-title {
+  font-family: var(--bento-font-title);
+  font-size: 18px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.events-calendar__category-card-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neu-text-muted, #718096);
+}
+
+.events-calendar__category-card-arrow {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #EA580C;
+}
+
+/* ── Step 2: months within the chosen category ───────────────────────────── */
+.events-calendar__month-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.events-calendar__month-card {
+  display: flex;
+  flex-direction: column;
+  background: #FFFFFF;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055);
+  overflow: hidden;
+}
+
+.events-calendar__month-card-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 16px 18px;
+  transition: background 0.15s ease;
+}
+
+.events-calendar__month-card-main:hover {
+  background: #F8FAFC;
+}
+
+.events-calendar__month-card-title {
+  font-family: var(--bento-font-title);
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.events-calendar__month-card-count {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--neu-text-muted, #718096);
+}
+
+.events-calendar__month-card-actions {
+  padding: 0 18px 12px;
+}
+
+.events-calendar__month-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+}
+
+.events-calendar__add-month {
+  margin-top: 4px;
+}
+
+/* ── Step 3: that month's events ─────────────────────────────────────────── */
+.events-calendar__event-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  align-items: start;
 }
 
 .events-calendar__chip {
@@ -153,8 +282,8 @@
   gap: 8px;
   text-align: left;
   border: 1px solid rgba(46, 43, 39, 0.08);
-  border-radius: 0;
-  padding: 12px 14px;
+  border-radius: 20px;
+  padding: 16px 18px;
   background: #FFFFFF;
   box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055);
   cursor: pointer;
@@ -238,64 +367,25 @@
   text-decoration: underline;
 }
 
+.events-calendar__add--block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  border: 1.5px dashed rgba(46, 43, 39, 0.18);
+  border-radius: 20px;
+  background: transparent;
+}
+
 .events-calendar__cell-empty {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--neu-text-muted, #718096);
 }
 
-.events-calendar__add-month {
-  margin-top: 16px;
-}
-
 @media (max-width: 900px) {
-  .events-calendar__grid {
+  .events-calendar__category-grid,
+  .events-calendar__month-grid,
+  .events-calendar__event-grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-  }
-
-  .events-calendar__header {
-    display: none;
-  }
-
-  .events-calendar__row {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-width: 0;
-    background: #FFFFFF;
-    border: 1px solid rgba(46, 43, 39, 0.08);
-    border-radius: 0;
-    box-shadow: 0 10px 28px rgba(46, 43, 39, 0.07);
-    padding: 14px;
-    box-sizing: border-box;
-  }
-
-  .events-calendar__month-label {
-    border: none;
-    border-bottom: 1px dashed rgba(46, 43, 39, 0.15);
-    box-shadow: none;
-    background: transparent;
-    padding: 0 0 10px;
-    font-size: 16px;
-    font-weight: 800;
-  }
-
-  .events-calendar__month-edit-form {
-    box-shadow: none;
-  }
-
-  .events-calendar__cell {
-    box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .events-calendar__cell::before {
-    content: attr(data-label);
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #64748B;
   }
 }

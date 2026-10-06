@@ -8,11 +8,9 @@ import { uploadEventReport } from "../../services/firebase/storage";
 import { Modal } from "../../components/common/Modal";
 import { Button } from "../../components/common/Button";
 import { FileInput } from "../../components/common/FileInput";
-import { Select } from "../../components/common/Select";
 import { MultiSelect } from "../../components/common/MultiSelect";
 import { DateTimePicker } from "../../components/common/DateTimePicker";
-import { EVENT_CATEGORIES, SESSION_YEAR_OPTIONS, formatSessionYears } from "../../utils/academicCalendar";
-import { PHASE_BADGE } from "../../components/events/EventsCalendarGrid";
+import { EVENT_CATEGORIES, PHASE_BADGE, SESSION_YEAR_OPTIONS, formatSessionYears } from "../../utils/academicCalendar";
 import "./EventDetailModal.css";
 
 type Mode = "create" | "manage" | "view";
@@ -68,7 +66,10 @@ export function EventDetailModal({
   const { profile } = useAuth();
   const [title, setTitle] = useState(event?.title ?? "");
   const [description, setDescription] = useState(event?.description ?? "");
-  const [category, setCategory] = useState<EventCategory>(event?.category ?? defaultCategory ?? "main-program");
+  // Fixed at creation by which category (Main Programs / Group Session) the
+  // Head drilled into — not user-editable, so this is a plain derived value
+  // rather than state.
+  const category: EventCategory = event?.category ?? defaultCategory ?? "main-program";
   const [sessionYears, setSessionYears] = useState<string[]>(event?.sessionYears ?? []);
   const [targetGroup, setTargetGroup] = useState(event?.targetGroup ?? "");
   const [importantDay, setImportantDay] = useState(event?.importantDay ?? "");
@@ -80,9 +81,7 @@ export function EventDetailModal({
 
   const [dateBounds] = useState(() => monthBounds(event ? toDateTimeValue(event.eventDate) : defaultDate ?? ""));
 
-  const [actionMode, setActionMode] = useState<
-    "complete" | "not-conducted" | "postponed" | "preponed" | null
-  >(null);
+  const [actionMode, setActionMode] = useState<"complete" | "not-conducted" | "reschedule" | null>(null);
   const [reportFile, setReportFile] = useState<File | null>(null);
   const [notConductedReason, setNotConductedReason] = useState(event?.notConductedReason ?? "");
   const [rescheduleDateValue, setRescheduleDateValue] = useState("");
@@ -151,6 +150,7 @@ export function EventDetailModal({
 
   async function handleDelete() {
     if (!event) return;
+    if (!window.confirm(`Delete "${event.title}"? This cannot be undone.`)) return;
     setDeleting(true);
     setError("");
     try {
@@ -228,13 +228,15 @@ export function EventDetailModal({
     }
   }
 
-  async function handleConfirmReschedule(type: "postponed" | "preponed") {
+  async function handleConfirmReschedule() {
     if (!event || !rescheduleDateValue) return;
+    const newDate = new Date(rescheduleDateValue).getTime();
+    const type: "postponed" | "preponed" = newDate >= event.eventDate ? "postponed" : "preponed";
     setActionBusy(true);
     setError("");
     try {
       await updateEvent(event.id, {
-        eventDate: new Date(rescheduleDateValue).getTime(),
+        eventDate: newDate,
         reschedule: {
           type,
           previousDate: event.eventDate,
@@ -277,9 +279,9 @@ export function EventDetailModal({
                 <span>{formatSessionYears(event.sessionYears)}</span>
               </div>
             )}
-            {event.category === "group-session" && event.organizerNames.length > 0 && (
+            {event.organizerNames.length > 0 && (
               <div className="event-detail-modal__view-row">
-                <span className="event-detail-modal__view-label">Organizers</span>
+                <span className="event-detail-modal__view-label">Counsellor(s)</span>
                 <span>{event.organizerNames.join(", ")}</span>
               </div>
             )}
@@ -351,14 +353,15 @@ export function EventDetailModal({
           </div>
 
           <div className="event-detail-modal__field">
-            <label htmlFor="ed-category">Category</label>
-            <Select id="ed-category" value={category} onChange={(v) => setCategory(v as EventCategory)}>
-              {EVENT_CATEGORIES.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </Select>
+            <label htmlFor="ed-organizers">Select Counsellor</label>
+            <MultiSelect
+              id="ed-organizers"
+              options={organizers.map((o) => ({ value: o.uid, label: o.displayName || o.email }))}
+              selected={selectedOrganizerIds}
+              onChange={setSelectedOrganizerIds}
+              placeholder="Select counsellor(s) or head(s)…"
+              emptyMessage="No team members on this campus"
+            />
           </div>
 
           {category === "group-session" && (
@@ -371,18 +374,6 @@ export function EventDetailModal({
                   selected={sessionYears}
                   onChange={setSessionYears}
                   placeholder="Select years…"
-                />
-              </div>
-
-              <div className="event-detail-modal__field">
-                <label htmlFor="ed-organizers">Organizers</label>
-                <MultiSelect
-                  id="ed-organizers"
-                  options={organizers.map((o) => ({ value: o.uid, label: o.displayName || o.email }))}
-                  selected={selectedOrganizerIds}
-                  onChange={setSelectedOrganizerIds}
-                  placeholder="Select organizers…"
-                  emptyMessage="No team members on this campus"
                 />
               </div>
 
@@ -494,11 +485,8 @@ export function EventDetailModal({
                 <Button type="button" variant="outlined" onClick={() => setActionMode("not-conducted")}>
                   Mark Not Conducted
                 </Button>
-                <Button type="button" variant="outlined" onClick={() => setActionMode("postponed")}>
-                  Postpone
-                </Button>
-                <Button type="button" variant="outlined" onClick={() => setActionMode("preponed")}>
-                  Prepone
+                <Button type="button" variant="outlined" onClick={() => setActionMode("reschedule")}>
+                  Reschedule
                 </Button>
               </div>
 
@@ -537,11 +525,9 @@ export function EventDetailModal({
                 </div>
               )}
 
-              {(actionMode === "postponed" || actionMode === "preponed") && (
+              {actionMode === "reschedule" && (
                 <div className="event-detail-modal__subpanel">
-                  <label htmlFor="ed-reschedule-date">
-                    New date &amp; time ({actionMode === "postponed" ? "postponed" : "preponed"})
-                  </label>
+                  <label htmlFor="ed-reschedule-date">New date &amp; time</label>
                   <DateTimePicker id="ed-reschedule-date" value={rescheduleDateValue} onChange={setRescheduleDateValue} />
                   <label htmlFor="ed-reschedule-note">Note (optional)</label>
                   <textarea
@@ -553,7 +539,7 @@ export function EventDetailModal({
                   <Button
                     type="button"
                     disabled={actionBusy || !rescheduleDateValue}
-                    onClick={() => handleConfirmReschedule(actionMode)}
+                    onClick={handleConfirmReschedule}
                   >
                     {actionBusy ? "Saving…" : "Confirm"}
                   </Button>
