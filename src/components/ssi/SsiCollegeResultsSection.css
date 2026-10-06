@@ -22,6 +22,17 @@
   flex-wrap: wrap;
 }
 
+.ssi-results__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ssi-results__header-actions .md-select {
+  min-width: 180px;
+}
+
 .ssi-results__title {
   margin: 0 0 8px;
   font-family: var(--md-sys-typescale-font-display);

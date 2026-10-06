@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { SSI_SEVERITY_LABELS, type SsiSeverity } from "../../config/ssiForm";
 import { listSsiCollegeResultsForCollege, type SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
 import { exportSsiResultsCsv } from "../../utils/exportSsiResultsCsv";
+import { toIsoDate } from "../../utils/dateFormat";
 import { Card } from "../common/Card";
 import { Button } from "../common/Button";
 import { Modal } from "../common/Modal";
+import { Select } from "../common/Select";
 import "./SsiCollegeResultsSection.css";
 
 const SEVERITY_RANK: Record<SsiSeverity, number> = { severe: 0, medium: 1, normal: 2 };
@@ -15,6 +17,7 @@ export function SsiCollegeResultsSection() {
   const [results, setResults] = useState<SsiCollegeResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<SsiCollegeResult | null>(null);
+  const [dateFilter, setDateFilter] = useState("");
 
   useEffect(() => {
     if (!profile?.collegeId) {
@@ -31,6 +34,24 @@ export function SsiCollegeResultsSection() {
       })
       .finally(() => setLoading(false));
   }, [profile?.collegeId]);
+
+  // Distinct submission dates, newest first, each with how many check-ins
+  // landed that day — lets a Head/Counsellor jump straight to a specific
+  // day's results instead of scrolling the whole severity-sorted list.
+  const availableDates = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of results) {
+      const key = toIsoDate(new Date(r.submittedAt));
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([key, count]) => ({ key, count }));
+  }, [results]);
+
+  const filteredResults = dateFilter
+    ? results.filter((r) => toIsoDate(new Date(r.submittedAt)) === dateFilter)
+    : results;
 
   if (loading) return null;
 
@@ -51,25 +72,55 @@ export function SsiCollegeResultsSection() {
               Standalone SSI check-ins submitted by students at your college, sorted by severity.
             </p>
           </div>
-          <Button
-            type="button"
-            variant="outlined"
-            disabled={results.length === 0}
-            onClick={() => exportSsiResultsCsv(results)}
-          >
-            Export to CSV
-          </Button>
+          <div className="ssi-results__header-actions">
+            <Select
+              id="ssi-results-date-filter"
+              value={dateFilter}
+              onChange={setDateFilter}
+              disabled={availableDates.length === 0}
+            >
+              <option value="">All dates</option>
+              {availableDates.map((d) => {
+                // Parsed as local y/m/d, not via `new Date(isoString)` — that
+                // reads "YYYY-MM-DD" as UTC midnight, which can display as
+                // the previous day in timezones behind UTC.
+                const [y, m, day] = d.key.split("-").map(Number);
+                const label = new Date(y, m - 1, day).toLocaleDateString(undefined, {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                });
+                return (
+                  <option key={d.key} value={d.key}>
+                    {label} · {d.count}
+                  </option>
+                );
+              })}
+            </Select>
+            <Button
+              type="button"
+              variant="outlined"
+              disabled={filteredResults.length === 0}
+              onClick={() => exportSsiResultsCsv(filteredResults, dateFilter ? `ssi-test-results-${dateFilter}.csv` : undefined)}
+            >
+              Export to CSV
+            </Button>
+          </div>
         </div>
       </Card>
 
-      {results.length === 0 && (
+      {filteredResults.length === 0 && (
         <Card className="ssi-results__empty-card">
-          <p>No SSI check-ins have been submitted by students at your college yet.</p>
+          <p>
+            {results.length === 0
+              ? "No SSI check-ins have been submitted by students at your college yet."
+              : "No check-ins were submitted on this date."}
+          </p>
         </Card>
       )}
 
       <div className="ssi-results__list">
-        {results.map((r) => (
+        {filteredResults.map((r) => (
           <Card
             key={r.id}
             className={`ssi-results__row ssi-results__row--${r.severity}`}
