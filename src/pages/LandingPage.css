@@ -78,7 +78,7 @@ body {
   gap: 10px;
   text-decoration: none;
   color: var(--neu-text-primary, #0F172A);
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .landing-brand__logo {
@@ -86,6 +86,7 @@ body {
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .landing-brand__name {
@@ -95,6 +96,13 @@ body {
   letter-spacing: -0.01em;
   color: #0f172a;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.landing-brand__name-break {
+  display: inline;
 }
 
 /* Floating Navigation Links */
@@ -749,26 +757,20 @@ body {
 }
 
 .landing-doodle-note {
-  position: absolute;
-  right: -140px;
-  top: -10px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: rotate(4deg);
+  margin-top: 16px;
 }
 
 .landing-doodle-note__text {
   font-family: 'Playfair Display', var(--font-headline), serif;
   font-size: 13px;
   font-weight: 800;
+  font-style: italic;
   color: #0F172A;
   letter-spacing: 0.04em;
   white-space: nowrap;
-}
-
-.landing-doodle-note__svg {
-  margin-top: -2px;
 }
 
 .landing-doing-grid {
@@ -920,9 +922,6 @@ body {
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
   }
-  .landing-doodle-note {
-    right: -20px;
-  }
 }
 
 @media (max-width: 768px) {
@@ -930,9 +929,7 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
   .landing-doodle-note {
-    position: static;
     margin-top: 12px;
-    transform: none;
   }
 }
 
@@ -1140,6 +1137,11 @@ body {
 
   .landing-faq-sidebar {
     position: static;
+    order: 2;
+  }
+
+  .faq-list {
+    order: 1;
   }
 
   .landing-faq-subtitle,
@@ -1243,7 +1245,7 @@ body {
 
 .landing-footer__columns {
   display: grid;
-  grid-template-columns: 1.6fr repeat(4, 1fr);
+  grid-template-columns: 1.6fr repeat(3, 1fr);
   gap: 32px;
 }
 
@@ -1274,6 +1276,27 @@ body {
 
 .landing-footer__col a:hover {
   color: #FFFFFF;
+}
+
+.landing-footer__crisis-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #FCA5A5 !important;
+  font-weight: 800 !important;
+}
+
+.landing-footer__crisis-link::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #EF4444;
+  flex-shrink: 0;
+}
+
+.landing-footer__crisis-link:hover {
+  color: #FEE2E2 !important;
 }
 
 .landing-footer__col--signup h4 {
@@ -1370,6 +1393,17 @@ body {
   color: rgba(255, 255, 255, 0.6);
 }
 
+.landing-footer__bottom-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.landing-footer__bottom-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
 .landing-footer__bottom a {
   color: #F97316;
   text-decoration: none;
@@ -1415,8 +1449,26 @@ body {
     padding: 14px 16px;
   }
 
+  .landing-brand {
+    align-items: center;
+  }
+
   .landing-brand__name {
     font-size: 14px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.25;
+  }
+
+  .landing-brand__name-break {
+    display: block;
+  }
+
+  .landing-header__actions .btn-primary {
+    padding: 9px 14px;
+    font-size: 13px;
+    white-space: nowrap;
   }
 
   .landing-hero__media {
@@ -1646,11 +1698,6 @@ body {
   flex-direction: column;
   align-items: flex-start;
   transform: rotate(-6deg);
-}
-
-.landing-about-doodle__rays {
-  margin-left: 20px;
-  margin-bottom: -4px;
 }
 
 .landing-about-doodle__card {

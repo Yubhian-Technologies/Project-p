@@ -58,7 +58,7 @@ const VALUES_CARDS = [
   },
   {
     id: 4,
-    title: "Student-Centered",
+    title: "Student-Centric",
     subtitle: "Campus & Academic Life",
     description:
       "Tailored specifically to academic life, exam pressure, career adjustments, relationships, and personal growth for Vishnu students.",
@@ -342,7 +342,9 @@ export function LandingPage() {
       >
         <Link to="/" className="landing-brand">
           <img src="/favicon.png" alt="Vishnu Wellness Center logo" className="landing-brand__logo" />
-          <span className="landing-brand__name">Vishnu Wellness Center</span>
+          <span className="landing-brand__name">
+            Vishnu Wellness <span className="landing-brand__name-break">Center</span>
+          </span>
         </Link>
 
         <nav className="landing-nav">
@@ -483,9 +485,6 @@ export function LandingPage() {
 
               {/* Doodle Sticker 1 (Top Left) */}
               <div className="landing-about-doodle landing-about-doodle--yellow">
-                <svg className="landing-about-doodle__rays" width="36" height="24" viewBox="0 0 40 30" fill="none">
-                  <path d="M8 20L2 12M20 10V2M32 20L38 12" stroke="#1E293B" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
                 <div className="landing-about-doodle__card">
                   <span className="landing-about-doodle__line1">You</span>
                   <span className="landing-about-doodle__line2">Matter</span>
@@ -634,10 +633,7 @@ export function LandingPage() {
             </p>
 
             <div className="landing-doodle-note">
-              <span className="landing-doodle-note__text">IT&apos;S OKAY TO NOT BE OKAY &hearts;</span>
-              <svg width="110" height="14" viewBox="0 0 110 14" fill="none" className="landing-doodle-note__svg">
-                <path d="M2 9C24 4 56 12 108 5" stroke="#0D9488" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
+              <span className="landing-doodle-note__text">IT&apos;S OKAY TO NOT BE OKAY</span>
             </div>
           </div>
 
@@ -895,11 +891,10 @@ export function LandingPage() {
       <footer className="landing-footer">
         <div className="landing-footer__accent-bar" />
 
-        {/* Placeholder copy — replace with a real crisis/helpline message */}
         <div className="landing-footer__crisis">
           <p>
-            If you're experiencing an emergency and need immediate help, call a crisis helpline or go to the
-            nearest hospital.
+            Your well-being. Your space. Your journey. A safe, confidential and student-focused space to talk,
+            understand what you're going through, and build practical skills for a healthier college life.
           </p>
         </div>
 
@@ -926,7 +921,7 @@ export function LandingPage() {
               <p className="landing-footer__question">
                 Have a question?
                 <br />
-                Email us anytime: <a href="mailto:care@vishnuwellness.app">care@vishnuwellness.app</a>
+                Email us anytime: <a href="mailto:psy@srivishnu.edu.in">psy@srivishnu.edu.in</a>
               </p>
               <div className="landing-footer__socials">
                 <a
@@ -951,27 +946,60 @@ export function LandingPage() {
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                   </svg>
                 </a>
+                {/* TODO: placeholder href — real WhatsApp link to be provided */}
+                <a
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="social-icon-btn"
+                  aria-label="WhatsApp"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12.004 2C6.477 2 2 6.477 2 12.004c0 1.996.587 3.86 1.6 5.425L2 22l4.676-1.566a9.94 9.94 0 0 0 5.328 1.537h.004c5.527 0 10.004-4.477 10.004-10.004C22.012 6.477 17.531 2 12.004 2zm0 18.17h-.003a8.14 8.14 0 0 1-4.153-1.136l-.298-.177-3.1 1.04 1.056-3.023-.194-.31a8.147 8.147 0 0 1-1.25-4.356c0-4.503 3.665-8.168 8.172-8.168 2.182 0 4.233.851 5.776 2.396a8.112 8.112 0 0 1 2.39 5.78c0 4.503-3.665 8.168-8.396 8.168zm4.48-6.118c-.245-.123-1.452-.717-1.677-.8-.225-.082-.389-.123-.553.123-.164.246-.635.8-.779.964-.144.164-.287.185-.533.062-.245-.123-1.036-.382-1.973-1.216-.729-.65-1.221-1.453-1.364-1.699-.144-.246-.015-.379.108-.501.11-.11.246-.287.369-.43.123-.144.164-.246.246-.41.082-.164.041-.308-.021-.431-.062-.123-.553-1.334-.758-1.827-.2-.48-.403-.414-.553-.422l-.472-.008a.91.91 0 0 0-.656.308c-.225.246-.86.84-.86 2.05 0 1.21.881 2.378 1.004 2.542.123.164 1.733 2.646 4.2 3.71.587.253 1.044.404 1.401.517.588.187 1.123.161 1.546.098.472-.07 1.452-.594 1.657-1.167.205-.574.205-1.066.144-1.168-.062-.103-.225-.164-.471-.287z" />
+                  </svg>
+                </a>
+                {/* TODO: placeholder href — real Facebook link to be provided */}
+                <a
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="social-icon-btn"
+                  aria-label="Facebook"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <path d="M22 12.06C22 6.505 17.523 2 12 2S2 6.505 2 12.06c0 5.02 3.657 9.184 8.438 9.94v-7.03H7.898v-2.91h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.772-1.63 1.563v1.877h2.773l-.443 2.91h-2.33V22c4.78-.756 8.437-4.92 8.437-9.94z" />
+                  </svg>
+                </a>
               </div>
             </div>
 
-            {/* Placeholder columns — links and copy to be finalised later */}
             <div className="landing-footer__col">
-              <h4>Popular</h4>
+              <h4>Explore</h4>
               <ul>
-                <li><a href="#about">About</a></li>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#resources">Resources</a></li>
-                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#">How It Works</a></li>
+                <li><a href="#">Counselling</a></li>
+                <li><a href="#">Wellness Programs</a></li>
+                <li><a href="#">Wellness Hub</a></li>
+                <li><a href="#faq">FAQs</a></li>
+                <li><a href="mailto:psy@srivishnu.edu.in">Contact Us</a></li>
               </ul>
             </div>
 
             <div className="landing-footer__col">
-              <h4>Learn</h4>
+              <h4>Support</h4>
               <ul>
-                <li><a href="#team">Our Team</a></li>
-                <li><a href="#">How It Works</a></li>
-                <li><a href="#">Testimonials</a></li>
-                <li><a href="#">Our Approach</a></li>
+                <li>
+                  <Link to={currentUser ? dashboardPath : "/login"} className="landing-footer__crisis-link">
+                    Crisis SOS
+                  </Link>
+                </li>
+                <li><a href="#team">Our Wellness Counsellors</a></li>
+                <li><a href="#resources">Student Resources</a></li>
+                <li><a href="#">Wellness Check-In</a></li>
+                <li><a href="#">Refer a Student</a></li>
+                <li><a href="#">For Faculty</a></li>
+                <li><a href="#">For Parents</a></li>
               </ul>
             </div>
 
@@ -984,30 +1012,24 @@ export function LandingPage() {
                     Instagram
                   </a>
                 </li>
-                <li><a href="#">Facebook</a></li>
                 <li>
                   <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
                     YouTube
                   </a>
                 </li>
-              </ul>
-            </div>
-
-            <div className="landing-footer__col">
-              <h4>Careers</h4>
-              <ul>
-                <li><a href="#">For Counsellors</a></li>
-                <li><a href="#">For Admins</a></li>
-                <li><a href="#">Others</a></li>
+                <li><a href="#">Facebook</a></li>
               </ul>
             </div>
           </div>
         </div>
 
         <div className="landing-footer__bottom">
-          <span>&copy; 2026 Vishnu Wellness Center</span>
+          <div className="landing-footer__bottom-left">
+            <span>&copy; 2018 Vishnu Wellness Center</span>
+            <span className="landing-footer__bottom-sub">A wellness initiative of Sri Vishnu Educational Society</span>
+          </div>
           <span>
-            All Rights Reserved | <a href="#terms">Terms and Conditions</a> | <a href="#">Privacy Policy</a>
+            <a href="#">Privacy &amp; Confidentiality</a> | <a href="#terms">Terms of Use</a> | <a href="#">Accessibility</a>
           </span>
         </div>
       </footer>

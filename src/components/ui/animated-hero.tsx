@@ -79,7 +79,7 @@ function Hero({ currentUser, dashboardPath = "/user" }: HeroProps) {
 
             {/* Subtitle */}
             <p className="animated-hero__subtitle">
-              Book 1-on-1 confidential sessions with certified psychologists, track
+              Book a therapy session with certified psychologists, track
               your personal wellness journey, and receive dedicated counselling
               support—all in one seamless, compassionate space.
             </p>
