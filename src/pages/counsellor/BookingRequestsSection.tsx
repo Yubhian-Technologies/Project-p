@@ -47,7 +47,10 @@ type Tab = "new" | "upcoming" | "completed" | "missed";
 const TABS: { id: Tab; label: string }[] = [
   { id: "new", label: "New Requests" },
   { id: "upcoming", label: "Upcoming Sessions" },
-  { id: "completed", label: "Completed" },
+  // Groups completed + cancelled + rejected requests together (everything no
+  // longer active), not just sessions that actually happened — labelled to
+  // make that explicit rather than implying it's a pure "completed" count.
+  { id: "completed", label: "Completed / Cancelled" },
   { id: "missed", label: "Missed Sessions" },
 ];
 
