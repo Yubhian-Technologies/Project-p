@@ -64,7 +64,9 @@
 .counsellor-profile__footer {
   flex-shrink: 0;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   border-top: var(--sketch-border);
   padding: 18px 28px;
   background: #FFFFFF;
@@ -72,6 +74,14 @@
 
 .counsellor-profile__footer .md-button {
   min-width: 240px;
+}
+
+.counsellor-profile__footer-hint {
+  margin: 0;
+  max-width: 420px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--neu-text-muted, #718096);
 }
 
 .counsellor-profile__name {

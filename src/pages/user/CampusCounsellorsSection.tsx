@@ -7,7 +7,11 @@ import type { UserProfile } from "../../types/user";
 import type { Booking } from "../../types/booking";
 import "./BookingSection.css";
 
-export function CampusCounsellorsSection() {
+interface CampusCounsellorsSectionProps {
+  onBookCounsellor: (counsellorId: string) => void;
+}
+
+export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellorsSectionProps) {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +64,10 @@ export function CampusCounsellorsSection() {
           profile={selectedProfile}
           status={computeLiveStatus(selectedProfile, scheduledBookings)}
           bookingDisabled={false}
-          onBook={() => {}}
+          onBook={() => {
+            onBookCounsellor(selectedProfile.uid);
+            setSelectedProfile(null);
+          }}
           onClose={() => setSelectedProfile(null)}
         />
       )}

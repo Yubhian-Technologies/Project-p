@@ -214,6 +214,21 @@
   flex-shrink: 0;
 }
 
+.uha-view-all {
+  align-self: center;
+  background: none;
+  border: none;
+  padding: 6px 4px 0;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #2065F6;
+  cursor: pointer;
+}
+
+.uha-view-all:hover {
+  text-decoration: underline;
+}
+
 .uha-btn-sm {
   background: #FFFFFF;
   border: 1px solid rgba(46, 43, 39, 0.08) !important;

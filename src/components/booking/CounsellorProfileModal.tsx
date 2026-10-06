@@ -217,6 +217,17 @@ export function CounsellorProfileModal({
           <Button type="button" disabled={status !== "available" || bookingDisabled} onClick={onBook}>
             Book Session
           </Button>
+          {bookingDisabled && (
+            <p className="counsellor-profile__footer-hint">
+              You already have an active booking — finish, cancel, or wait for it to complete before booking
+              another session.
+            </p>
+          )}
+          {!bookingDisabled && status !== "available" && (
+            <p className="counsellor-profile__footer-hint">
+              This counsellor isn't available to book right now.
+            </p>
+          )}
         </div>
       </div>
     </Modal>

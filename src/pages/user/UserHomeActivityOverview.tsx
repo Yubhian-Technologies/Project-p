@@ -24,11 +24,17 @@ export function UserHomeActivityOverview({ onSelectSection }: UserHomeActivityOv
 
   useEffect(() => {
     if (!profile?.uid) return;
-    setLoading(true);
-    listBookingsForUser(profile.uid)
-      .then(setMyBookings)
-      .catch((err) => console.error("Failed to load user bookings overview", err))
-      .finally(() => setLoading(false));
+    async function load(uid: string) {
+      setLoading(true);
+      try {
+        setMyBookings(await listBookingsForUser(uid));
+      } catch (err) {
+        console.error("Failed to load user bookings overview", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load(profile.uid);
   }, [profile?.uid]);
 
   const activeBookings = myBookings.filter(
@@ -108,6 +114,15 @@ export function UserHomeActivityOverview({ onSelectSection }: UserHomeActivityOv
                   </button>
                 </div>
               ))}
+              {myBookings.length > 4 && (
+                <button
+                  type="button"
+                  className="uha-view-all"
+                  onClick={() => onSelectSection("booking")}
+                >
+                  View All {myBookings.length} Sessions →
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -134,7 +149,7 @@ export function UserHomeActivityOverview({ onSelectSection }: UserHomeActivityOv
             <button type="button" onClick={() => onSelectSection("community")}>
               <MessageCircleIcon /> Wellness Community
             </button>
-            <button type="button" className="uha-btn-urgent" onClick={() => onSelectSection("emergency")}>
+            <button type="button" className="uha-btn-urgent" onClick={() => onSelectSection("crisis-sos")}>
               <AlertTriangleIcon /> Emergency SOS Assistance
             </button>
           </div>

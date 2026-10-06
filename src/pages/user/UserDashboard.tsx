@@ -97,6 +97,7 @@ export function UserDashboard() {
   const [resourceBookingId, setResourceBookingId] = useState<string | undefined>();
   const [compensationBookingId, setCompensationBookingId] = useState<string | undefined>();
   const [ssiBookingId, setSsiBookingId] = useState<string | undefined>();
+  const [bookCounsellorId, setBookCounsellorId] = useState<string | undefined>();
   const gamesRef = useRef<GamesSectionHandle>(null);
   const [gameOpen, setGameOpen] = useState(false);
 
@@ -148,7 +149,14 @@ export function UserDashboard() {
       onNotificationClick={handleNotificationClick}
     >
       {activeSection === "profile" && <ProfileSection />}
-      {activeSection === "campus-counsellors" && <CampusCounsellorsSection />}
+      {activeSection === "campus-counsellors" && (
+        <CampusCounsellorsSection
+          onBookCounsellor={(counsellorId) => {
+            setBookCounsellorId(counsellorId);
+            setActiveSection("booking");
+          }}
+        />
+      )}
       {activeSection === "booking" && (
         <BookingSection
           openChatBookingId={chatBookingId}
@@ -159,6 +167,8 @@ export function UserDashboard() {
           onResourceOpened={() => setResourceBookingId(undefined)}
           openCompensationBookingId={compensationBookingId}
           onCompensationOpened={() => setCompensationBookingId(undefined)}
+          openCounsellorId={bookCounsellorId}
+          onCounsellorOpened={() => setBookCounsellorId(undefined)}
         />
       )}
       {activeSection === "ssi-test" && <SsiTestSection />}
