@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { listBookableProfiles } from "../../services/firebase/bookings";
+import { listEventsForCampus } from "../../services/firebase/events";
 import {
   addWorkloadRow,
   deleteWorkloadRow,
@@ -16,7 +17,9 @@ import {
   type WorkloadRow,
 } from "../../types/workloadSheet";
 import type { WorksheetRowStatus } from "../../types/worksheet";
-import { downloadCsv } from "../../utils/csvExport";
+import type { EventProgram } from "../../types/event";
+import { PHASE_BADGE } from "../../utils/academicCalendar";
+import { downloadXlsx } from "../../utils/excelExport";
 import { Button } from "../common/Button";
 import { Select } from "../common/Select";
 import "./TeamWorkloadSection.css";
@@ -95,6 +98,8 @@ export function TeamWorkloadSection() {
   const [people, setPeople] = useState<Person[]>([]);
   const [ownerUid, setOwnerUid] = useState("");
   const [rows, setRows] = useState<WorkloadRow[]>([]);
+  const [groupSessionEvents, setGroupSessionEvents] = useState<EventProgram[]>([]);
+  const myGroupSessions = groupSessionEvents.filter((e) => e.organizerIds.includes(ownerUid));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -135,6 +140,16 @@ export function TeamWorkloadSection() {
       })
       .finally(() => setLoading(false));
   }, [campusId, ownerUid]);
+
+  // Group sessions a person organizes live on the campus-wide events
+  // calendar, not on the workload sheet itself — fetched once per campus so
+  // participation can be tracked and exported alongside the sheet rows.
+  useEffect(() => {
+    if (!campusId) return;
+    listEventsForCampus(campusId)
+      .then((list) => setGroupSessionEvents(list.filter((e) => e.category === "group-session")))
+      .catch((err) => console.error("Failed to load group sessions:", err));
+  }, [campusId]);
 
   async function reload() {
     if (!campusId || !ownerUid) return;
@@ -203,8 +218,9 @@ export function TeamWorkloadSection() {
     }
   }
 
-  function handleDownload() {
+  async function handleDownload() {
     const ownerName = people.find((p) => p.uid === ownerUid)?.name ?? selfName;
+    const COLS = 9;
     const headers = [
       "Owner",
       "Group",
@@ -231,8 +247,25 @@ export function TeamWorkloadSection() {
           r.feedback ? (r.feedback === "yes" ? "Yes" : "No") : "",
         ]),
     );
+
+    const allRows: (string | number)[][] = [headers, ...body];
+    const merges = [];
+
+    allRows.push([]);
+    const bannerRow = allRows.length;
+    allRows.push([`Group Session Participation (${myGroupSessions.length})`]);
+    merges.push({ s: { r: bannerRow, c: 0 }, e: { r: bannerRow, c: COLS - 1 } });
+
+    allRows.push(
+      ["Title", "Date", "Status"],
+      ...myGroupSessions.map((e) => [e.title, new Date(e.eventDate).toLocaleDateString(), PHASE_BADGE[e.phase].label]),
+    );
+
     const safeName = ownerName.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
-    downloadCsv(`workload-${safeName}.csv`, headers, body);
+    await downloadXlsx(`workload-${safeName}.xlsx`, "Workload", allRows, {
+      merges,
+      colWidths: [18, 12, 26, 16, 18, 12, 12, 12, 10],
+    });
   }
 
   if (!campusId) {
@@ -249,6 +282,11 @@ export function TeamWorkloadSection() {
         <div>
           <p className="twl-label">Workload sheet</p>
           <h3 className="twl-title">{ownerName}</h3>
+          <p className="twl-group-sessions-note">
+            {myGroupSessions.length} group session{myGroupSessions.length === 1 ? "" : "s"} organized
+            {myGroupSessions.length > 0 &&
+              ` (${myGroupSessions.filter((e) => e.phase === "completed").length} completed)`}
+          </p>
         </div>
         <div className="twl-toolbar__actions">
           {isHead && people.length > 1 && (
@@ -262,8 +300,13 @@ export function TeamWorkloadSection() {
               </Select>
             </div>
           )}
-          <Button type="button" variant="outlined" onClick={handleDownload} disabled={loading || rows.length === 0}>
-            Download CSV
+          <Button
+            type="button"
+            variant="outlined"
+            onClick={handleDownload}
+            disabled={loading || (rows.length === 0 && myGroupSessions.length === 0)}
+          >
+            Export
           </Button>
         </div>
       </div>

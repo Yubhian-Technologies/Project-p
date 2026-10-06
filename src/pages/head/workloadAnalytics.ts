@@ -33,11 +33,16 @@ export interface CampusWorkloadAnalytics {
     missed: number;
     completionPct: number | null;
   };
+  groupSessions: {
+    total: number;
+    completed: number;
+  };
   counsellorWorkload: {
     uid: string;
     name: string;
     upcoming: number;
     pending: number;
+    groupSessions: number;
     label: "Light" | "Balanced" | "High";
   }[];
   sheets: {
@@ -82,7 +87,7 @@ export function computeCampusWorkloadAnalytics(input: CampusWorkloadInput): Camp
     completionPct: pct(completedEvents, pastEvents.length),
   };
 
-  // Sessions
+  // Sessions (individual, 1-on-1 bookings)
   const sessions = bookings.filter((b) => SESSION_STATUSES.includes(b.status));
   const completedSessions = sessions.filter((b) => b.status === "completed").length;
   const missedSessions = sessions.filter((b) => b.status === "completed" && b.outcome === "missed").length;
@@ -93,19 +98,31 @@ export function computeCampusWorkloadAnalytics(input: CampusWorkloadInput): Camp
     completionPct: pct(completedSessions, sessions.length),
   };
 
-  // Counsellor workload
+  // Group sessions — EventProgram entries of category "group-session", which
+  // one or more counsellors/heads are assigned to as organizers.
+  const groupSessionEvents = events.filter((e) => e.category === "group-session");
+  const groupSessionsBlock = {
+    total: groupSessionEvents.length,
+    completed: groupSessionEvents.filter((e) => e.phase === "completed").length,
+  };
+
+  // Counsellor & Head workload — heads can also organize group sessions
+  // (sometimes without taking individual bookings at all), so they're
+  // included here too rather than only counsellors.
   const counsellorWorkload = people
-    .filter((p) => p.role === "counsellor")
+    .filter((p) => p.role === "counsellor" || p.role === "head")
     .map((p) => {
       const mine = bookings.filter((b) => b.counsellorId === p.uid);
       const upcoming = mine.filter((b) => ["accepted", "scheduled"].includes(b.status) && (b.scheduledAt ?? 0) >= nowMs).length;
       const pending = mine.filter((b) => b.status === "pending").length;
+      const groupSessions = groupSessionEvents.filter((e) => e.organizerIds.includes(p.uid)).length;
       const load = upcoming + pending;
       return {
         uid: p.uid,
         name: p.name,
         upcoming,
         pending,
+        groupSessions,
         label: load === 0 ? ("Light" as const) : load >= 8 ? ("High" as const) : ("Balanced" as const),
       };
     });
@@ -139,6 +156,7 @@ export function computeCampusWorkloadAnalytics(input: CampusWorkloadInput): Camp
   return {
     events: eventsBlock,
     sessions: sessionsBlock,
+    groupSessions: groupSessionsBlock,
     counsellorWorkload,
     sheets: {
       people: sheetPeople,

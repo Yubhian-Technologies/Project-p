@@ -98,24 +98,26 @@ export function WorkloadAnalyticsPanel() {
           <section className="wla-cards">
             <Stat label="Events completed" value={`${analytics.events.completed} / ${analytics.events.total}`} note={`${analytics.events.upcoming} upcoming`} />
             <Stat label="Event completion" value={fmt(analytics.events.completionPct)} note="Of events whose date has passed" />
-            <Stat label="Sessions booked" value={analytics.sessions.booked} note={`${analytics.sessions.missed} missed`} />
+            <Stat label="Individual sessions" value={analytics.sessions.booked} note={`${analytics.sessions.missed} missed`} />
             <Stat label="Session completion" value={fmt(analytics.sessions.completionPct)} note="Completed of booked" />
+            <Stat label="Group sessions" value={analytics.groupSessions.total} note={`${analytics.groupSessions.completed} completed`} />
             <Stat label="Sheet rows done" value={fmt(analytics.sheets.donePct)} note={`${analytics.sheets.totalRows} rows`} />
             <Stat label="Attendance recorded" value={analytics.sheets.totalAttendance} note={`Feedback yes ${fmt(analytics.sheets.feedbackYesPct)}`} />
           </section>
 
           <section className="wla-panel">
-            <h3 className="wla-title">Counsellor workload</h3>
+            <h3 className="wla-title">Counsellor &amp; Head workload</h3>
             {analytics.counsellorWorkload.length === 0 ? (
-              <p className="wla-muted">No counsellors on this campus.</p>
+              <p className="wla-muted">No counsellors or heads on this campus.</p>
             ) : (
               <div className="wla-table-wrap">
                 <table className="wla-table">
                   <thead>
                     <tr>
-                      <th>Counsellor</th>
+                      <th>Person</th>
                       <th>Upcoming</th>
                       <th>Pending</th>
+                      <th>Group Sessions</th>
                       <th>Workload</th>
                     </tr>
                   </thead>
@@ -125,6 +127,7 @@ export function WorkloadAnalyticsPanel() {
                         <td>{c.name}</td>
                         <td>{c.upcoming}</td>
                         <td>{c.pending}</td>
+                        <td>{c.groupSessions}</td>
                         <td>
                           <span className={`wla-pill wla-pill--${c.label.toLowerCase()}`}>{c.label}</span>
                         </td>
