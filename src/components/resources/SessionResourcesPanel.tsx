@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SessionResource } from "../../types/sessionResource";
+import { useDynamicIsland } from "../../context/DynamicIslandContext";
 import {
   newSessionResourceId,
   removeSessionResource,
@@ -60,10 +61,24 @@ export function SessionResourcesPanel({
   const [saving, setSaving] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { nowPlaying, isPlaying, playMusic, togglePlayback, showAlert } = useDynamicIsland();
+  const knownIds = useRef<Set<string> | null>(null);
 
   useEffect(() => {
-    const unsubscribe = subscribeSessionResources(bookingId, setResources);
+    const unsubscribe = subscribeSessionResources(bookingId, (list) => {
+      // Only alert for resources added after the first load — otherwise the
+      // initial fetch itself would fire an alert for every existing one.
+      if (knownIds.current !== null) {
+        const added = list.find((r) => !knownIds.current!.has(r.id));
+        if (added) {
+          showAlert(`New ${added.type === "music" ? "music" : "link"} resource: ${added.title}`);
+        }
+      }
+      knownIds.current = new Set(list.map((r) => r.id));
+      setResources(list);
+    });
     return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
 
   function resetForm() {
@@ -257,14 +272,19 @@ export function SessionResourcesPanel({
                 </div>
 
                 {resource.type === "music" && resource.audioUrl && (
-                  <audio
-                    className="sr-panel__audio"
-                    controls
-                    preload="none"
-                    src={resource.audioUrl}
+                  <button
+                    type="button"
+                    className="sr-panel__play-btn"
+                    onClick={() => {
+                      if (nowPlaying?.id === resource.id) {
+                        togglePlayback();
+                      } else {
+                        playMusic({ id: resource.id, title: resource.title, audioUrl: resource.audioUrl! });
+                      }
+                    }}
                   >
-                    Your browser doesn't support audio playback.
-                  </audio>
+                    {nowPlaying?.id === resource.id && isPlaying ? "⏸ Pause" : "▶ Play"}
+                  </button>
                 )}
 
                 {resource.type === "link" && resource.url && (youtube || spotify) && (

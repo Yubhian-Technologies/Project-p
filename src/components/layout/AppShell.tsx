@@ -4,6 +4,8 @@ import { useAuth } from "../../hooks/useAuth";
 import { ROLE_LABELS } from "../../config/roles";
 import { Button } from "../common/Button";
 import { NotificationBell } from "../common/NotificationBell";
+import { DynamicIsland } from "../common/DynamicIsland";
+import { DynamicIslandProvider } from "../../context/DynamicIslandContext";
 import { Sidebar } from "./Sidebar";
 import type { SidebarSection } from "./Sidebar";
 import type { Notification } from "../../types/notification";
@@ -43,8 +45,13 @@ export function AppShell({
     window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
   }, [activeSection]);
 
+  const showDynamicIsland =
+    profile?.role === "user" || profile?.role === "counsellor" || profile?.role === "head";
+
   return (
+    <DynamicIslandProvider>
     <div className="app-shell">
+      {showDynamicIsland && <DynamicIsland />}
       {/* Organic Amber Header Bar */}
       <header className="app-shell__topbar">
         <div className="app-shell__topbar-inner">
@@ -112,5 +119,6 @@ export function AppShell({
         </main>
       </div>
     </div>
+    </DynamicIslandProvider>
   );
 }

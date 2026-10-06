@@ -12,6 +12,7 @@ import {
   TargetIcon,
 } from "../../../components/common/icons";
 import { useAuth } from "../../../hooks/useAuth";
+import { useDynamicIsland } from "../../../context/DynamicIslandContext";
 import { MemoryMatchGame } from "./MemoryMatchGame";
 import { BreatheFocusGame } from "./BreatheFocusGame";
 import { Breathing478Game } from "./Breathing478Game";
@@ -128,10 +129,14 @@ export const GamesSection = forwardRef<GamesSectionHandle, GamesSectionProps>(fu
 ) {
   const { role } = useAuth();
   const [activeGame, setActiveGame] = useState<GameId | null>(null);
+  const { setActiveGame: setIslandGame } = useDynamicIsland();
 
   useEffect(() => {
     onActiveChange?.(activeGame !== null);
-  }, [activeGame, onActiveChange]);
+    const current = GAMES.find((g) => g.id === activeGame);
+    setIslandGame(current ? { label: current.title } : null);
+    return () => setIslandGame(null);
+  }, [activeGame, onActiveChange, setIslandGame]);
 
   useImperativeHandle(ref, () => ({
     goBack: () => setActiveGame(null),

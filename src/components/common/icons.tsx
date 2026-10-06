@@ -420,3 +420,30 @@ export function ShieldIcon(props: IconProps) {
     </Svg>
   );
 }
+
+export function MusicIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 18V5l12-2v13" />
+      <circle cx="6" cy="18" r="3" />
+      <circle cx="18" cy="16" r="3" />
+    </Svg>
+  );
+}
+
+export function PlayIcon(props: IconProps) {
+  return (
+    <Svg {...props} fill="currentColor" stroke="none">
+      <polygon points="6 3 20 12 6 21 6 3" />
+    </Svg>
+  );
+}
+
+export function PauseIcon(props: IconProps) {
+  return (
+    <Svg {...props} fill="currentColor" stroke="none">
+      <rect x="6" y="4" width="4" height="16" rx="1" />
+      <rect x="14" y="4" width="4" height="16" rx="1" />
+    </Svg>
+  );
+}

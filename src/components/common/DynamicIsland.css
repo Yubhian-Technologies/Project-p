@@ -1,0 +1,108 @@
+.dyn-island-wrap {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 100vw;
+}
+
+.dyn-island {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  background: #0B193C;
+  color: #FFFFFF;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px -4px rgba(11, 25, 60, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
+  padding: 9px 16px;
+  max-width: min(420px, calc(100vw - 32px));
+}
+
+.dyn-island--alert {
+  background: #0B193C;
+}
+
+.dyn-island--music {
+  background: #0B193C;
+}
+
+.dyn-island--game {
+  background: #14532D;
+}
+
+.dyn-island__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dyn-island__icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: #EA580C;
+}
+
+.dyn-island__icon--pulse {
+  color: #4ADE80;
+  animation: dyn-island-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes dyn-island-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.dyn-island__text {
+  font-family: var(--font-main, 'Work Sans', sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dyn-island__btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.dyn-island__btn:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.dyn-island__btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+@media (max-width: 480px) {
+  .dyn-island-wrap {
+    top: 10px;
+  }
+
+  .dyn-island {
+    padding: 8px 14px;
+  }
+
+  .dyn-island__text {
+    font-size: 12px;
+    max-width: 160px;
+  }
+}

@@ -179,9 +179,22 @@
   color: #0F766E;
 }
 
-.sr-panel__audio {
-  width: 100%;
-  height: 42px;
+.sr-panel__play-btn {
+  align-self: flex-start;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(11, 25, 60, 0.12);
+  background: #0B193C;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sr-panel__play-btn:hover {
+  background: #142858;
 }
 
 .sr-panel__embed {
