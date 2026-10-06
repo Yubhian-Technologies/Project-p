@@ -22,6 +22,13 @@ import { clientDisplayLabel, syntheticClientId } from "../../utils/offlineSessio
 export const SESSION_DURATION_MINUTES = 90;
 export const SESSION_DURATION_LABEL = `${Math.floor(SESSION_DURATION_MINUTES / 60)}h ${SESSION_DURATION_MINUTES % 60}m`;
 
+/** Crisis SOS sessions are handled immediately and never get a "scheduled"
+    time picked for them — they stay at status "accepted" the whole time
+    they're being handled (see RequestDetailModal). This is how long one can
+    sit accepted-but-not-closed-out before it's flagged as needing review,
+    same idea as a normal session's duration-based overdue check. */
+export const EMERGENCY_REVIEW_GRACE_MS = 2 * 60 * 60 * 1000;
+
 const bookingsCollection = collection(db, "bookings");
 
 function intakeDocRef(bookingId: string) {
@@ -158,11 +165,17 @@ export async function listEmergencyBookingsForCampus(campusId: string): Promise<
  * matters more than the original best-guess assignment.
  */
 export async function claimEmergencyBooking(booking: Booking, staff: { uid: string; email: string }): Promise<void> {
+  const now = Date.now();
   await updateDoc(doc(db, "bookings", booking.id), {
     counsellorId: staff.uid,
     counsellorEmail: staff.email,
     status: "accepted",
-    updatedAt: Date.now(),
+    // Stamped here (rather than left unset) so this session always carries a
+    // real time — without it, an accepted-but-never-closed-out emergency was
+    // invisible everywhere: not "upcoming" (no date to show), not "missed"
+    // (status never leaves "accepted"), just silently stuck.
+    scheduledAt: now,
+    updatedAt: now,
   });
   await createNotification({
     recipientId: booking.userId,
@@ -284,7 +297,10 @@ export async function listScheduledBookings(): Promise<Booking[]> {
 }
 
 export async function acceptBooking(booking: Booking): Promise<void> {
-  await updateDoc(doc(db, "bookings", booking.id), { status: "accepted", updatedAt: Date.now() });
+  const now = Date.now();
+  // Same reasoning as claimEmergencyBooking above: stamp scheduledAt so this
+  // session is trackable instead of silently invisible if never closed out.
+  await updateDoc(doc(db, "bookings", booking.id), { status: "accepted", scheduledAt: now, updatedAt: now });
   await createNotification({
     recipientId: booking.userId,
     type: "booking_accepted",
@@ -710,9 +726,15 @@ export async function respondToCompensationOffer(booking: Booking, accept: boole
 /**
  * A "scheduled" booking whose end time (scheduledAt + duration) has already
  * passed with no closing action taken — i.e. it should show as missed even
- * though nobody has written a reason yet.
+ * though nobody has written a reason yet. Also covers a Crisis SOS booking
+ * (status stays "accepted", never "scheduled") that's been open longer than
+ * EMERGENCY_REVIEW_GRACE_MS with nobody closing it out — without this, those
+ * sat in "accepted" forever with no overdue check ever looking at them.
  */
 export function isSessionEndedPending(booking: Booking): boolean {
+  if (booking.isEmergency && booking.status === "accepted") {
+    return booking.scheduledAt !== undefined && Date.now() >= booking.scheduledAt + EMERGENCY_REVIEW_GRACE_MS;
+  }
   return (
     booking.status === "scheduled" &&
     booking.scheduledAt !== undefined &&
