@@ -11,7 +11,7 @@ import {
 } from "../head/headHomeMetrics";
 import "../head/HeadCommandCentre.css";
 
-const PERIODS: HomePeriod[] = ["week", "month", "semester", "year"];
+const PERIODS: HomePeriod[] = ["week", "month"];
 
 function formatPct(value: number | null, suffix = "%"): string {
   return value === null ? "—" : `${value}${suffix}`;
@@ -72,7 +72,7 @@ export function CounsellorTrends() {
   const maxMonth = Math.max(1, ...m.centre.sessionsByMonth.map((s) => s.count));
 
   return (
-    <div className="hch">
+    <div className="hch counsellor-trends-wrap">
       <section className="hch-section">
         <div className="hch-section__head">
           <h3 className="hch-section__title">My session trends</h3>

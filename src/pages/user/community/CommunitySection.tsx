@@ -117,10 +117,6 @@ useEffect(() => {
       {/* Community Hero & Quick Prompt Bar */}
       <div className="community-hero">
         <div className="community-hero__content">
-          <div className="community-hero__badge">
-            <span className="community-hero__dot" />
-            Anonymous • Safe • Compassionate
-          </div>
           <h2 className="community-hero__title">Wellness Community</h2>
           <p className="community-hero__desc">
             A gentle, judgment-free space to share your thoughts, support peers, and read inspiring reflections from our campus community.
