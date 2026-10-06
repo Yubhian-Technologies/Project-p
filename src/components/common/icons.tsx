@@ -456,3 +456,84 @@ export function PencilIcon(props: IconProps) {
     </Svg>
   );
 }
+
+export function MoodAmazingIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="10" />
+      {/* Star/sparkle eyes */}
+      <polygon
+        points="9 6.8 9.7 8.3 11.3 8.6 10.1 9.8 10.4 11.4 9 10.6 7.6 11.4 7.9 9.8 6.7 8.6 8.3 8.3"
+        fill="currentColor"
+        stroke="none"
+      />
+      <polygon
+        points="15 6.8 15.7 8.3 17.3 8.6 16.1 9.8 16.4 11.4 15 10.6 13.6 11.4 13.9 9.8 12.7 8.6 14.3 8.3"
+        fill="currentColor"
+        stroke="none"
+      />
+      {/* Broad radiant smile */}
+      <path d="M8 13.5a4 4 0 0 0 8 0" />
+      <line x1="8" y1="13.5" x2="16" y2="13.5" />
+    </Svg>
+  );
+}
+
+export function MoodGoodIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="10" />
+      {/* Upward curved smiling eyes */}
+      <path d="M7.5 10a2.2 2.2 0 0 1 3.5 0" />
+      <path d="M13 10a2.2 2.2 0 0 1 3.5 0" />
+      {/* Warm content smile */}
+      <path d="M8 14.2a4.2 4.2 0 0 0 8 0" />
+    </Svg>
+  );
+}
+
+export function MoodOkayIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="10" />
+      {/* Balanced neutral eyes */}
+      <circle cx="9" cy="10" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="10" r="1.3" fill="currentColor" stroke="none" />
+      {/* Steady horizontal mouth */}
+      <line x1="8.5" y1="15" x2="15.5" y2="15" />
+    </Svg>
+  );
+}
+
+export function MoodLowIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="10" />
+      {/* Empathetic downward brows */}
+      <path d="M7.5 8.5l2.5 1" />
+      <path d="M16.5 8.5l-2.5 1" />
+      {/* Gentle pensive eyes */}
+      <circle cx="9" cy="11.5" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="11.5" r="1.1" fill="currentColor" stroke="none" />
+      {/* Soft sad downward arc */}
+      <path d="M8.5 16.5a3.8 3.8 0 0 1 7 0" />
+    </Svg>
+  );
+}
+
+export function MoodStressedIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="10" />
+      {/* Furrowed intense brows */}
+      <path d="M7.5 8.2l2.5 1.3" />
+      <path d="M16.5 8.2l-2.5 1.3" />
+      {/* Squinted/tense eyes */}
+      <path d="M8 10.8l2 1.2-2 1.2" />
+      <path d="M16 10.8l-2 1.2 2 1.2" />
+      {/* Wavy tension mouth */}
+      <path d="M8.5 16.5l1.8-.9 1.7 1.2 1.8-.9 1.7 1.2" />
+    </Svg>
+  );
+}
+

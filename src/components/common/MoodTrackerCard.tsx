@@ -1,17 +1,34 @@
 import { useEffect, useState } from "react";
 import { BentoCard } from "./BentoCard";
-import { FlameIcon, TrophyIcon, CalendarIcon } from "./icons";
+import {
+  FlameIcon,
+  TrophyIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  MoodAmazingIcon,
+  MoodGoodIcon,
+  MoodOkayIcon,
+  MoodLowIcon,
+  MoodStressedIcon,
+} from "./icons";
 import { useAuth } from "../../hooks/useAuth";
 import { computeStreakStats, getMoodLogs, logMood } from "../../services/firebase/mood";
 import type { MoodType, StreakStats } from "../../types/mood";
 import "./MoodTrackerCard.css";
 
-const MOOD_OPTIONS: { type: MoodType; emoji: string; label: string }[] = [
-  { type: "amazing", emoji: "🤩", label: "Amazing" },
-  { type: "good", emoji: "😊", label: "Good" },
-  { type: "okay", emoji: "😐", label: "Okay" },
-  { type: "low", emoji: "😔", label: "Low" },
-  { type: "stressed", emoji: "😤", label: "Stressed" },
+interface MoodOptionItem {
+  type: MoodType;
+  label: string;
+  Icon: React.ComponentType<{ className?: string }>;
+  accentColor: string;
+}
+
+const MOOD_OPTIONS: MoodOptionItem[] = [
+  { type: "amazing", label: "Amazing", Icon: MoodAmazingIcon, accentColor: "#F59E0B" },
+  { type: "good", label: "Good", Icon: MoodGoodIcon, accentColor: "#0D9488" },
+  { type: "okay", label: "Okay", Icon: MoodOkayIcon, accentColor: "#64748B" },
+  { type: "low", label: "Low", Icon: MoodLowIcon, accentColor: "#6366F1" },
+  { type: "stressed", label: "Stressed", Icon: MoodStressedIcon, accentColor: "#EA580C" },
 ];
 
 export function MoodTrackerCard() {
@@ -74,26 +91,36 @@ export function MoodTrackerCard() {
             </span>
           </div>
           <span className="mood-tracker__sub">
-            {stats?.todayLogged
-              ? "✅ You've logged your mood today!"
-              : "Tap an emoji below to check in today!"}
+            {stats?.todayLogged ? (
+              <span className="mood-tracker__logged-pill">
+                <CheckCircleIcon className="mood-tracker__logged-check" />
+                <span>You've logged your mood today!</span>
+              </span>
+            ) : (
+              "Select how you're feeling today"
+            )}
           </span>
         </div>
 
-        {/* 5 Mood Emoji Buttons */}
+        {/* 5 Bespoke Mood UI Icon Buttons */}
         <div className="mood-tracker__options">
           {MOOD_OPTIONS.map((item) => {
             const isSelected = selectedMood === item.type;
+            const Icon = item.Icon;
             return (
               <button
                 key={item.type}
                 type="button"
                 disabled={submitting}
-                className={`mood-tracker__option ${isSelected ? "mood-tracker__option--selected" : ""}`}
+                className={`mood-tracker__option mood-tracker__option--${item.type} ${
+                  isSelected ? "mood-tracker__option--selected" : ""
+                }`}
                 onClick={() => handleSelectMood(item.type)}
                 title={item.label}
               >
-                <span className="mood-tracker__emoji">{item.emoji}</span>
+                <span className="mood-tracker__icon-wrap">
+                  <Icon className="mood-tracker__icon" />
+                </span>
                 <span className="mood-tracker__label">{item.label}</span>
               </button>
             );
@@ -107,29 +134,35 @@ export function MoodTrackerCard() {
           <div className="mood-tracker__week-bar">
             <h4 className="mood-tracker__week-title">Past 7 Days Activity</h4>
             <div className="mood-tracker__days">
-              {stats.weekDays.map((day) => (
-                <div
-                  key={day.dateISO}
-                  className={`mood-tracker__day-col ${day.isToday ? "mood-tracker__day-col--today" : ""}`}
-                >
-                  <span className="mood-tracker__day-name">{day.dayLabel}</span>
+              {stats.weekDays.map((day) => {
+                const dayMoodOpt = day.mood ? MOOD_OPTIONS.find((m) => m.type === day.mood) : null;
+                const DayIcon = dayMoodOpt ? dayMoodOpt.Icon : null;
+
+                return (
                   <div
-                    className={`mood-tracker__day-badge ${
-                      day.logged ? "mood-tracker__day-badge--logged" : ""
-                    }`}
+                    key={day.dateISO}
+                    className={`mood-tracker__day-col ${day.isToday ? "mood-tracker__day-col--today" : ""}`}
                   >
-                    {day.logged ? (
-                      day.mood ? (
-                        MOOD_OPTIONS.find((m) => m.type === day.mood)?.emoji ?? "✓"
+                    <span className="mood-tracker__day-name">{day.dayLabel}</span>
+                    <div
+                      className={`mood-tracker__day-badge ${
+                        day.logged ? "mood-tracker__day-badge--logged" : ""
+                      } ${dayMoodOpt ? `mood-tracker__day-badge--${dayMoodOpt.type}` : ""}`}
+                      title={dayMoodOpt ? `${day.dayLabel}: ${dayMoodOpt.label}` : day.dayLabel}
+                    >
+                      {day.logged ? (
+                        DayIcon ? (
+                          <DayIcon className="mood-tracker__day-icon" />
+                        ) : (
+                          <CheckCircleIcon className="mood-tracker__day-icon" />
+                        )
                       ) : (
-                        "✓"
-                      )
-                    ) : (
-                      "·"
-                    )}
+                        <span className="mood-tracker__day-empty">·</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
