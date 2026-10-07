@@ -52,6 +52,19 @@
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Campus shown as fixed context (not a dropdown) when Add Login is opened
+   from an already-selected campus — same pill look as the inputs above, just
+   not interactive. */
+.logins-management__fixed-value {
+  margin: 0;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 12px 18px;
+  border-radius: 16px;
+  background: var(--neu-bg, #E8ECF2);
+  color: var(--neu-text-primary, #2D3748);
+}
+
 .logins-management__field input:focus {
   box-shadow: var(--neu-shadow-sunken-focus);
 }

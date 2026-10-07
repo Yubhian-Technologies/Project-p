@@ -1,8 +1,6 @@
-import { WorkloadAnalyticsPanel } from "./analytics/WorkloadAnalyticsPanel";
 import { useState } from "react";
 import { AppShell } from "../../components/layout/AppShell";
 import { ProfileSection } from "../../components/layout/ProfileSection";
-import { BentoCard } from "../../components/common/BentoCard";
 import { useAuth } from "../../hooks/useAuth";
 import { CampusManagementSection } from "../super-admin/CampusManagementSection";
 import { LoginsManagementSection } from "../super-admin/LoginsManagementSection";
@@ -12,6 +10,7 @@ import { MonthlyReportsViewSection } from "./MonthlyReportsViewSection";
 import { CounsellorWorksheetSection } from "./CounsellorWorksheetSection";
 import { AdminHomeActivityOverview } from "./AdminHomeActivityOverview";
 import "../../styles/bento-grid.css";
+import "./AdminDashboard.css";
 
 const SECTIONS = [
   {
@@ -57,13 +56,6 @@ const SECTIONS = [
     ),
   },
   {
-    id: "workload-analytics",
-    label: "Team Workload",
-    icon: (
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="3" y1="15" x2="21" y2="15" /><line x1="9" y1="3" x2="9" y2="21" /></svg>
-    ),
-  },
-  {
     id: "monthly-reports",
     label: "Consolidated Reports",
     icon: (
@@ -79,7 +71,6 @@ const TITLES: Record<string, string> = {
   events: "Events & Programs",
   analytics: "Analytics",
   "counsellor-worksheet": "Counsellor Worksheet",
-  "workload-analytics": "Team Workload Analytics",
   "monthly-reports": "Consolidated Reports",
 };
 
@@ -106,22 +97,13 @@ export function AdminDashboard() {
         <AnalyticsSection />
       ) : activeSection === "counsellor-worksheet" ? (
         <CounsellorWorksheetSection />
-      ) : activeSection === "workload-analytics" ? (
-        <WorkloadAnalyticsPanel />
       ) : activeSection === "monthly-reports" ? (
         <MonthlyReportsViewSection />
       ) : (
         <div className="bento-grid">
-          <BentoCard
-            span={12}
-            variant="hero"
-            title={`Welcome, ${profile?.displayName || profile?.email || "Administrator"}`}
-            subtitle="Vishnu Wellness Center Platform Administration"
-          >
-            <div style={{ marginTop: "16px", fontSize: "14px", lineHeight: "1.6" }}>
-              Overseeing platform user accounts, counsellor access permissions, and platform administration.
-            </div>
-          </BentoCard>
+          <h2 className="admin-dashboard__welcome">
+            Welcome, {profile?.displayName || profile?.email || "Administrator"}
+          </h2>
 
           <AdminHomeActivityOverview onSelectSection={setActiveSection} />
         </div>

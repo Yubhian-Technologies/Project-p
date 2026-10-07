@@ -1,0 +1,9 @@
+.admin-dashboard__welcome {
+  grid-column: 1 / -1;
+  font-family: var(--bento-font-title);
+  font-size: 24px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}

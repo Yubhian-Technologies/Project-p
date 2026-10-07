@@ -6,20 +6,18 @@ import { listColleges } from "../../../services/firebase/colleges";
 import type { Campus } from "../../../types/campus";
 import type { College } from "../../../types/college";
 import type { UserProfile } from "../../../types/user";
+import { useViewMore } from "../../../hooks/useViewMore";
 import { Card } from "../../../components/common/Card";
 import { Select } from "../../../components/common/Select";
+import { Button } from "../../../components/common/Button";
 import { Modal } from "../../../components/common/Modal";
 import { ROLE_LABELS } from "../../../config/roles";
 import { StaffAnalyticsInline } from "./StaffAnalyticsInline";
-import { GroupSessionsPanel } from "./GroupSessionsPanel";
 import "./AnalyticsSection.css";
-
-type Mode = "individual" | "group";
 
 export function AnalyticsSection() {
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [campusId, setCampusId] = useState("");
-  const [mode, setMode] = useState<Mode>("individual");
 
   const [staff, setStaff] = useState<UserProfile[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
@@ -32,7 +30,7 @@ export function AnalyticsSection() {
 
   useEffect(() => {
     setSelectedStaffForModal(null);
-    if (!campusId || mode !== "individual") return;
+    if (!campusId) return;
     setLoadingStaff(true);
     async function load() {
       const q = query(collection(db, "users"), where("campusId", "==", campusId));
@@ -46,7 +44,9 @@ export function AnalyticsSection() {
       setLoadingStaff(false);
     }
     load();
-  }, [campusId, mode]);
+  }, [campusId]);
+
+  const { visible: visibleStaff, hiddenCount, showMore } = useViewMore(staff, 7);
 
   return (
     <div className="analytics-section">
@@ -64,31 +64,12 @@ export function AnalyticsSection() {
         </Select>
       </div>
 
-      {campusId && (
-        <div className="analytics-section__tabs">
-          <button
-            type="button"
-            className={`analytics-section__tab${mode === "individual" ? " analytics-section__tab--active" : ""}`}
-            onClick={() => setMode("individual")}
-          >
-            Individual
-          </button>
-          <button
-            type="button"
-            className={`analytics-section__tab${mode === "group" ? " analytics-section__tab--active" : ""}`}
-            onClick={() => setMode("group")}
-          >
-            Group Sessions
-          </button>
-        </div>
-      )}
-
       {!campusId && <p>Select a campus to view analytics.</p>}
 
-      {campusId && mode === "individual" && !loadingStaff && (
+      {campusId && !loadingStaff && (
         <div className="analytics-section__list">
           {staff.length === 0 && <p>No head or counsellors assigned to this campus yet.</p>}
-          {staff.map((person) => {
+          {visibleStaff.map((person) => {
             const college = colleges.find((c) => c.id === person.collegeId);
             return (
               <Card
@@ -116,6 +97,11 @@ export function AnalyticsSection() {
               </Card>
             );
           })}
+          {hiddenCount > 0 && (
+            <Button type="button" variant="outlined" style={{ alignSelf: "center" }} onClick={showMore}>
+              View More ({hiddenCount} more)
+            </Button>
+          )}
         </div>
       )}
 
@@ -128,8 +114,6 @@ export function AnalyticsSection() {
           <StaffAnalyticsInline staff={selectedStaffForModal} />
         </Modal>
       )}
-
-      {campusId && mode === "group" && <GroupSessionsPanel campusId={campusId} />}
     </div>
   );
 }

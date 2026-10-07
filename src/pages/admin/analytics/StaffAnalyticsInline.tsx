@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { listBookingsForCounsellor } from "../../../services/firebase/bookings";
 import { listFeedbackForCounsellor } from "../../../services/firebase/feedback";
+import { listEventsForCampus } from "../../../services/firebase/events";
 import type { UserProfile } from "../../../types/user";
 import "./AnalyticsSection.css";
 
@@ -23,6 +24,7 @@ interface Totals {
   missed: number;
   avgRating: number;
   ratingCount: number;
+  groupSessions: number;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -62,8 +64,12 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([listBookingsForCounsellor(staff.uid), listFeedbackForCounsellor(staff.uid)]).then(
-      ([bookings, feedback]) => {
+    Promise.all([
+      listBookingsForCounsellor(staff.uid),
+      listFeedbackForCounsellor(staff.uid),
+      staff.campusId ? listEventsForCampus(staff.campusId) : Promise.resolve([]),
+    ]).then(
+      ([bookings, feedback, events]) => {
         const months = getLastSixMonths();
 
         const points: MonthPoint[] = months.map(({ year, month, label }) => {
@@ -85,13 +91,16 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
         const allTaken = bookings.filter((b) => ["accepted", "scheduled", "completed"].includes(b.status));
         const allMissed = bookings.filter((b) => b.status === "completed" && b.outcome === "missed").length;
         const avgRating = feedback.length > 0 ? feedback.reduce((s, f) => s + f.rating, 0) / feedback.length : 0;
+        const groupSessions = events.filter(
+          (e) => e.category === "group-session" && e.organizerIds.includes(staff.uid),
+        ).length;
 
         setMonthData(points);
-        setTotals({ sessions: allTaken.length, missed: allMissed, avgRating, ratingCount: feedback.length });
+        setTotals({ sessions: allTaken.length, missed: allMissed, avgRating, ratingCount: feedback.length, groupSessions });
         setLoading(false);
       },
     );
-  }, [staff.uid]);
+  }, [staff.uid, staff.campusId]);
 
   if (loading) return <p className="analytics-inline__loading">Loading analytics…</p>;
   if (!totals) return null;
@@ -159,6 +168,21 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
               </span>
             </div>
             <span className="analytics-stat-card__label">Avg Rating</span>
+          </div>
+        </div>
+
+        <div className="analytics-stat-card analytics-stat-card--purple">
+          <div className="analytics-stat-card__icon-wrap">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <div className="analytics-stat-card__data">
+            <span className="analytics-stat-card__value">{totals.groupSessions}</span>
+            <span className="analytics-stat-card__label">Group Sessions</span>
           </div>
         </div>
       </div>

@@ -72,23 +72,29 @@ export function AddLoginModal({ defaultCampusId, defaultCollegeId, onClose, onCr
       <form onSubmit={handleSubmit} className="logins-management__form">
         <div className="logins-management__field">
           <label htmlFor="add-login-campus">Campus</label>
-          <Select
-            id="add-login-campus"
-            value={campusId}
-            onChange={(v) => {
-              setCampusId(v);
-              setCollegeId("");
-            }}
-          >
-            <option value="" disabled>
-              Select a campus…
-            </option>
-            {campuses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
+          {defaultCampusId ? (
+            <p className="logins-management__fixed-value">
+              {campuses.find((c) => c.id === campusId)?.name ?? "…"}
+            </p>
+          ) : (
+            <Select
+              id="add-login-campus"
+              value={campusId}
+              onChange={(v) => {
+                setCampusId(v);
+                setCollegeId("");
+              }}
+            >
+              <option value="" disabled>
+                Select a campus…
               </option>
-            ))}
-          </Select>
+              {campuses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+          )}
         </div>
         <div className="logins-management__field">
           <label htmlFor="add-login-college">College</label>
@@ -108,6 +114,7 @@ export function AddLoginModal({ defaultCampusId, defaultCollegeId, onClose, onCr
           <input
             id="add-login-display-name"
             type="text"
+            autoComplete="off"
             required
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
@@ -115,13 +122,26 @@ export function AddLoginModal({ defaultCampusId, defaultCollegeId, onClose, onCr
         </div>
         <div className="logins-management__field">
           <label htmlFor="add-login-email">Email</label>
-          <input id="add-login-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input
+            id="add-login-email"
+            type="email"
+            autoComplete="off"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
         <div className="logins-management__field">
           <label htmlFor="add-login-password">Password</label>
+          {/* Plain text, not masked — this is a shared default password the
+              admin is typing/handing out, not a secret they're entering for
+              themselves, so there's nothing to hide it from. autoComplete
+              "new-password" stops the browser from offering to fill in one
+              of the admin's own saved passwords here. */}
           <input
             id="add-login-password"
-            type="password"
+            type="text"
+            autoComplete="new-password"
             required
             minLength={6}
             value={password}

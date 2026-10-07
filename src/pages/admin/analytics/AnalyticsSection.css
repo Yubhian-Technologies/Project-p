@@ -18,38 +18,6 @@
   color: var(--neu-text-muted, #718096);
 }
 
-.analytics-section__tabs {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.analytics-section__tab {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 10px 18px;
-  border-radius: 20px;
-  border: 1px solid rgba(46, 43, 39, 0.08);
-  cursor: pointer;
-  background: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
-  color: var(--neu-text-body, #4A5568);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.analytics-section__tab:hover {
-  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
-  transform: translate(-1px, -1px);
-}
-
-.analytics-section__tab--active {
-  background: #F59E0B !important;
-  color: #2E2B27 !important;
-  font-weight: 800;
-  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05) !important;
-}
-
 .analytics-section__list {
   display: flex;
   flex-direction: column;
@@ -142,7 +110,7 @@
 
 .analytics-inline__stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   width: 100%;
   box-sizing: border-box;
@@ -151,13 +119,13 @@
 .analytics-stat-card {
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04);
-  padding: 14px 16px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
   box-sizing: border-box;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -169,13 +137,18 @@
 }
 
 .analytics-stat-card__icon-wrap {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.analytics-stat-card__icon-wrap svg {
+  width: 16px;
+  height: 16px;
 }
 
 .analytics-stat-card--sessions {
@@ -208,6 +181,16 @@
   color: #D97706;
 }
 
+.analytics-stat-card--purple {
+  background: linear-gradient(145deg, #FFFFFF 0%, #F5F3FF 100%);
+  border-color: #DDD6FE;
+}
+
+.analytics-stat-card--purple .analytics-stat-card__icon-wrap {
+  background: #EDE9FE;
+  color: #6D28D9;
+}
+
 .analytics-stat-card__data {
   display: flex;
   flex-direction: column;
@@ -217,11 +200,12 @@
 
 .analytics-stat-card__value {
   font-family: var(--bento-font-body, 'Work Sans', sans-serif);
-  font-size: 26px;
+  font-size: 19px;
   font-weight: 800;
   color: #0F172A;
-  line-height: 1;
+  line-height: 1.1;
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .analytics-stat-card--red .analytics-stat-card__value {
@@ -236,52 +220,12 @@
 
 .analytics-stat-card__label {
   font-family: var(--bento-font-body, 'Work Sans', sans-serif);
-  font-size: 11.5px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   color: #64748B;
-}
-
-/* Group Sessions panel */
-.analytics-group {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.analytics-group__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  background: var(--neu-bg, #E8ECF2);
-  border: none;
-  border-radius: 20px;
-  padding: 18px 24px;
-  box-shadow: var(--neu-shadow-extruded);
-}
-
-.analytics-group__title {
-  margin: 0;
-  font-family: var(--md-sys-typescale-font-display);
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--neu-text-primary, #2D3748);
-}
-
-.analytics-group__meta {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--neu-text-muted, #718096);
-  font-weight: 600;
-}
-
-.analytics-group__attendance {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  white-space: nowrap;
 }
 
 /* ── Analytics chart (Vishnu Wellness Design) ─────────────────────────────────────────────────────── */
