@@ -1,9 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { sendTeamChatMessage, subscribeTeamChatMessages } from "../../services/firebase/teamChat";
 import type { TeamChatMessage } from "../../types/teamChat";
 import { Button } from "../common/Button";
 import "./TeamChatSection.css";
+
+// Space left below the chat on every screen, roughly matching the page's own
+// bottom padding so the box doesn't butt right up against the edge.
+const BOTTOM_MARGIN_PX = 24;
 
 /** A single shared chat room per campus, for that campus's Head and every
     counsellor to coordinate in — not tied to any specific booking. */
@@ -14,8 +18,30 @@ export function TeamChatSection() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | null>(null);
 
   const campusId = profile?.campusId;
+
+  // Fill exactly to the bottom of the screen instead of guessing how tall
+  // the header/sidebar chrome is above it (that guess drifted out of sync
+  // and left a gap on some screens) — same "measure what's actually
+  // rendered" approach Select.tsx uses to position its dropdown.
+  useLayoutEffect(() => {
+    function updateHeight() {
+      if (!rootRef.current) return;
+      const top = rootRef.current.getBoundingClientRect().top;
+      const available = window.innerHeight - top - BOTTOM_MARGIN_PX;
+      setHeight(Math.max(360, available));
+    }
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    window.visualViewport?.addEventListener("resize", updateHeight);
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+      window.visualViewport?.removeEventListener("resize", updateHeight);
+    };
+  }, []);
 
   useEffect(() => {
     if (!campusId) return;
@@ -66,7 +92,7 @@ export function TeamChatSection() {
   }
 
   return (
-    <div className="team-chat">
+    <div className="team-chat" ref={rootRef} style={height !== null ? { height } : undefined}>
       <div className="team-chat__messages">
         {messages.length === 0 ? (
           <p className="team-chat__empty">No messages yet. Say hello to your campus team!</p>

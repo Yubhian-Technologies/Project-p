@@ -4,7 +4,7 @@ import type { EventCategory, EventProgram } from "../../types/event";
 import type { UserProfile } from "../../types/user";
 import { useAuth } from "../../hooks/useAuth";
 import { createEvent, deleteEvent, updateEvent } from "../../services/firebase/events";
-import { uploadEventReport } from "../../services/firebase/storage";
+import { uploadEventReport, uploadEventPoster } from "../../services/firebase/storage";
 import { Modal } from "../../components/common/Modal";
 import { Button } from "../../components/common/Button";
 import { FileInput } from "../../components/common/FileInput";
@@ -76,6 +76,7 @@ export function EventDetailModal({
   const [selectedOrganizerIds, setSelectedOrganizerIds] = useState<string[]>(event?.organizerIds ?? []);
   const [dateValue, setDateValue] = useState(event ? toDateTimeValue(event.eventDate) : defaultDate ?? "");
   const [attendeeCount, setAttendeeCount] = useState(String(event?.attendeeCount ?? 0));
+  const [posterFile, setPosterFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -109,7 +110,7 @@ export function EventDetailModal({
     try {
       if (mode === "create") {
         if (!calendarYearId || !calendarMonthId) return;
-        await createEvent({
+        const newId = await createEvent({
           campusId,
           collegeId,
           calendarYearId,
@@ -126,7 +127,16 @@ export function EventDetailModal({
           phase: "scheduled",
           createdBy: createdBy ?? "",
         });
+        if (posterFile) {
+          const posterUrl = await uploadEventPoster(newId, profile?.uid ?? "", posterFile);
+          await updateEvent(newId, { posterUrl, posterFileName: posterFile.name });
+        }
       } else if (event) {
+        let posterFields: { posterUrl?: string; posterFileName?: string } = {};
+        if (posterFile) {
+          const posterUrl = await uploadEventPoster(event.id, profile?.uid ?? "", posterFile);
+          posterFields = { posterUrl, posterFileName: posterFile.name };
+        }
         await updateEvent(event.id, {
           title: title.trim(),
           description: description.trim(),
@@ -137,6 +147,7 @@ export function EventDetailModal({
           organizerNames: selectedOrganizers.map((o) => o.displayName || o.email),
           eventDate,
           attendeeCount: Number(attendeeCount) || 0,
+          ...posterFields,
         });
       }
       onSaved();
@@ -266,6 +277,10 @@ export function EventDetailModal({
             )}
           </div>
 
+          {event.posterUrl && (
+            <img src={event.posterUrl} alt={`${event.title} poster`} className="event-detail-modal__poster" />
+          )}
+
           <p className="event-detail-modal__view-description">{event.description}</p>
 
           <div className="event-detail-modal__view-details">
@@ -350,6 +365,14 @@ export function EventDetailModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What's this event or program about?"
             />
+          </div>
+
+          <div className="event-detail-modal__field">
+            <label htmlFor="ed-poster">Poster / image (optional)</label>
+            {event?.posterUrl && (
+              <img src={event.posterUrl} alt="Current poster" className="event-detail-modal__poster-thumb" />
+            )}
+            <FileInput id="ed-poster" accept="image/*" file={posterFile} onChange={setPosterFile} />
           </div>
 
           <div className="event-detail-modal__field">

@@ -25,6 +25,7 @@ export type NotificationType =
   | "transfer_requested"
   | "transfer_declined"
   | "event_added"
+  | "event_today"
   | "monthly_report_uploaded"
   | "journal_entry_shared"
   | "session_summary_shared"

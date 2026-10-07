@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { listBookableProfiles, listScheduledBookings } from "../../services/firebase/bookings";
+import { useAuth } from "../../hooks/useAuth";
+import {
+  listBookableProfiles,
+  listScheduledBookings,
+  listBookingsForUser,
+  isSessionEndedPending,
+} from "../../services/firebase/bookings";
 import { CounsellorCard } from "../../components/booking/CounsellorCard";
 import { CounsellorProfileModal } from "../../components/booking/CounsellorProfileModal";
 import { computeLiveStatus } from "../../utils/counsellorStatus";
@@ -7,13 +13,17 @@ import type { UserProfile } from "../../types/user";
 import type { Booking } from "../../types/booking";
 import "./BookingSection.css";
 
+const ACTIVE_STATUSES = ["pending", "accepted", "scheduled"];
+
 interface CampusCounsellorsSectionProps {
   onBookCounsellor: (counsellorId: string) => void;
 }
 
 export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellorsSectionProps) {
+  const { currentUser } = useAuth();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
+  const [myBookings, setMyBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
 
@@ -22,10 +32,15 @@ export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellors
     async function load() {
       setLoading(true);
       try {
-        const [p, b] = await Promise.all([listBookableProfiles(), listScheduledBookings()]);
+        const [p, b, mine] = await Promise.all([
+          listBookableProfiles(),
+          listScheduledBookings(),
+          currentUser ? listBookingsForUser(currentUser.uid) : Promise.resolve([]),
+        ]);
         if (cancelled) return;
         setProfiles(p);
         setScheduledBookings(b);
+        setMyBookings(mine);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -34,9 +49,15 @@ export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellors
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currentUser]);
 
   if (loading) return null;
+
+  // Mirrors the server-side rule in createBooking (one active booking per
+  // student) — see BookingSection.tsx's own "+ Book a Session" guard.
+  const hasActiveBooking = myBookings.some(
+    (b) => ACTIVE_STATUSES.includes(b.status) && !(b.status === "scheduled" && isSessionEndedPending(b)),
+  );
 
   const counsellorsAndHeads = profiles.filter((p) => p.role === "counsellor" || p.role === "head");
 
@@ -63,7 +84,7 @@ export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellors
         <CounsellorProfileModal
           profile={selectedProfile}
           status={computeLiveStatus(selectedProfile, scheduledBookings)}
-          bookingDisabled={false}
+          bookingDisabled={hasActiveBooking}
           onBook={() => {
             onBookCounsellor(selectedProfile.uid);
             setSelectedProfile(null);

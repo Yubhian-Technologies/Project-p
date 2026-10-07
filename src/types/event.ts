@@ -30,6 +30,9 @@ export interface EventProgram {
   reportUrl?: string;
   reportFileName?: string;
   reportUploadedAt?: number;
+  posterUrl?: string;
+  posterFileName?: string;
+  todayNotifSentOn?: string; // IST date key "YYYY-MM-DD" — dedup guard for the daily "event today" reminder
   createdBy: string;
   createdAt: number;
   updatedAt: number;

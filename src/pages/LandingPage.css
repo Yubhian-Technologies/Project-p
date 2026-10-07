@@ -783,21 +783,57 @@ body {
 
 .landing-doing-card {
   border-radius: 20px;
-  padding: 14px 14px 20px 14px;
-  display: flex;
-  flex-direction: column;
+  height: 190px;
   text-decoration: none;
-  text-align: left;
+  text-align: center;
   position: relative;
-  overflow: hidden;
+  cursor: pointer;
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform, box-shadow;
+  perspective: 1200px;
 }
 
 .landing-doing-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.12);
+}
+
+/* Click/tap flips the card from its question face to its answer face — the
+   same 3D flip technique as the dashboard's Flash Q/A card. Driven only by
+   the --flipped class (JS), not :hover: a hover-triggered flip fought with
+   the click toggle, since the mouse stays over the card after clicking it,
+   so hover kept forcing it back open right after a click closed it. */
+.landing-doing-card__flipper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.landing-doing-card--flipped .landing-doing-card__flipper {
+  transform: rotateY(180deg);
+}
+
+.landing-doing-card__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 20px;
+  padding: 14px 44px 20px 14px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: inherit;
+}
+
+
+.landing-doing-card__face--back {
+  transform: rotateY(180deg);
 }
 
 /* Pastel Theme Backgrounds */
@@ -825,40 +861,13 @@ body {
   background-color: #FEFCE8;
 }
 
-.landing-doing-card__image-wrapper {
-  width: 100%;
-  height: 175px;
-  border-radius: 14px;
-  overflow: hidden;
-  margin-bottom: 16px;
-  background-color: #E2E8F0;
-}
-
-.landing-doing-card__image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.45s ease;
-}
-
-.landing-doing-card:hover .landing-doing-card__image {
-  transform: scale(1.05);
-}
-
-.landing-doing-card__content {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
-
 .landing-doing-card__title {
   font-family: 'Playfair Display', var(--font-headline), serif;
   font-size: 17.5px;
   line-height: 1.35;
   font-weight: 400;
   color: #0F172A;
-  margin: 0 0 10px 0;
+  margin: 0;
   letter-spacing: -0.01em;
 }
 
@@ -868,12 +877,15 @@ body {
   line-height: 1.55;
   font-weight: 500;
   color: #64748B;
-  margin: 0 0 18px 0;
+  margin: 0;
 }
 
+/* Sits outside the flipping faces (a sibling of __flipper, not inside it)
+   so it never rotates with the text — only the card's wording flips. */
 .landing-doing-card__arrow {
-  margin-top: auto;
-  align-self: flex-end;
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -917,6 +929,11 @@ body {
   transform: translateX(3px) scale(1.05);
 }
 
+/* Mobile carousel navigation controls hidden on desktop */
+.landing-doing-carousel-controls {
+  display: none;
+}
+
 @media (max-width: 1280px) {
   .landing-doing-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -925,17 +942,153 @@ body {
 }
 
 @media (max-width: 768px) {
-  .landing-doing-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .landing-doing-section {
+    padding-left: 0;
+    padding-right: 0;
+    overflow: hidden;
   }
+
+  .landing-doing-header {
+    padding: 0 20px;
+    margin-bottom: 2rem;
+  }
+
+  .landing-doing-grid {
+    display: flex;
+    grid-template-columns: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    gap: 16px;
+    padding: 12px 20px 24px 20px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .landing-doing-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .landing-doing-card {
+    flex: 0 0 clamp(270px, 80vw, 340px);
+    scroll-snap-align: center;
+    scroll-snap-stop: normal;
+    transform: scale(0.96);
+    opacity: 0.88;
+    box-shadow: 0 4px 18px -6px rgba(15, 23, 42, 0.08);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .landing-doing-card.landing-doing-card--active {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 16px 36px -10px rgba(15, 23, 42, 0.15);
+  }
+
+  .landing-doing-card:hover {
+    transform: scale(1);
+  }
+
   .landing-doodle-note {
     margin-top: 12px;
+  }
+
+  /* Carousel Navigation Bar on Mobile */
+  .landing-doing-carousel-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 6px;
+    padding: 0 20px;
+  }
+
+  .landing-doing-nav-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1.5px solid #E2E8F0;
+    background: #FFFFFF;
+    color: #0F172A;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 0;
+  }
+
+  .landing-doing-nav-btn:active {
+    transform: scale(0.92);
+    background: #F8FAFC;
+  }
+
+  .landing-doing-nav-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    background: #F8FAFC;
+    border-color: #E2E8F0;
+  }
+
+  .landing-doing-dots {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .landing-doing-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    border: none;
+    background-color: #CBD5E1;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .landing-doing-dot--active {
+    width: 26px;
+    background-color: #0D9488;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.35);
+  }
+
+  /* Matching theme colors for active dots */
+  .landing-doing-dot--pink.landing-doing-dot--active {
+    background-color: #F43F5E;
+    box-shadow: 0 2px 8px rgba(244, 63, 94, 0.35);
+  }
+  .landing-doing-dot--blue.landing-doing-dot--active {
+    background-color: #3B82F6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+  }
+  .landing-doing-dot--mint.landing-doing-dot--active {
+    background-color: #10B981;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+  }
+  .landing-doing-dot--peach.landing-doing-dot--active {
+    background-color: #F97316;
+    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.35);
+  }
+  .landing-doing-dot--lavender.landing-doing-dot--active {
+    background-color: #8B5CF6;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.35);
+  }
+  .landing-doing-dot--yellow.landing-doing-dot--active {
+    background-color: #EAB308;
+    box-shadow: 0 2px 8px rgba(234, 179, 8, 0.35);
   }
 }
 
 @media (max-width: 480px) {
-  .landing-doing-grid {
-    grid-template-columns: 1fr;
+  .landing-doing-card {
+    flex: 0 0 84vw;
   }
 }
 
@@ -1224,7 +1377,8 @@ body {
 }
 
 .landing-footer__brand-line {
-  width: 64px;
+  flex: 0 1 64px;
+  min-width: 12px;
   height: 1px;
   background: rgba(255, 255, 255, 0.2);
 }
@@ -1241,6 +1395,18 @@ body {
   font-size: 18px;
   font-weight: 800;
   color: #FFFFFF;
+  white-space: nowrap;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .landing-footer__brand {
+    gap: 10px;
+  }
+
+  .landing-footer__brand-name {
+    font-size: 15px;
+  }
 }
 
 .landing-footer__columns {
@@ -1275,6 +1441,23 @@ body {
 }
 
 .landing-footer__col a:hover {
+  color: #FFFFFF;
+}
+
+.landing-footer__morph-trigger {
+  font-family: var(--font-main);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #93C5FD;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.landing-footer__morph-trigger:hover {
   color: #FFFFFF;
 }
 
@@ -1411,6 +1594,48 @@ body {
 
 .landing-footer__bottom a:hover {
   text-decoration: underline;
+}
+
+.landing-parents-modal {
+  max-width: 600px;
+}
+
+.landing-parents-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.landing-parents-modal__body h4 {
+  margin: 0 0 6px;
+  font-family: var(--bento-font-title, inherit);
+  font-size: 15px;
+  font-weight: 800;
+  color: #2E2B27;
+}
+
+.landing-parents-modal__body p {
+  margin: 0;
+}
+
+.landing-parents-modal__body ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.landing-parents-modal__closing {
+  padding-top: 12px;
+  border-top: 1px solid rgba(46, 43, 39, 0.08);
+  line-height: 1.6;
+}
+
+.landing-parents-modal__lead {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(46, 43, 39, 0.08);
+  line-height: 1.6;
 }
 
 /* Responsive */

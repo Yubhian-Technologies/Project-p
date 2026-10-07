@@ -32,27 +32,32 @@ export function JournalReminderControls({
       </label>
 
       {isReminder && (
-        <div className="journal-reminder__time-row">
-          <span className="journal-reminder__time-label">At</span>
-          <Select value={String(hour12)} onChange={(v) => commit(to24Hour(Number(v), ampm), minute)}>
-            {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
-              <option key={h} value={String(h)}>
-                {h}
-              </option>
-            ))}
-          </Select>
-          <Select value={String(minute)} onChange={(v) => commit(hour24, Number(v))}>
-            {Array.from({ length: 60 }, (_, i) => i).map((m) => (
-              <option key={m} value={String(m)}>
-                {pad(m)}
-              </option>
-            ))}
-          </Select>
-          <Select value={ampm} onChange={(v) => commit(to24Hour(hour12, v as "AM" | "PM"), minute)}>
-            <option value="AM">AM</option>
-            <option value="PM">PM</option>
-          </Select>
-        </div>
+        <>
+          <div className="journal-reminder__time-row">
+            <span className="journal-reminder__time-label">At</span>
+            <Select value={String(hour12)} onChange={(v) => commit(to24Hour(Number(v), ampm), minute)}>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
+                <option key={h} value={String(h)}>
+                  {h}
+                </option>
+              ))}
+            </Select>
+            <Select value={pad(minute)} onChange={(v) => commit(hour24, Number(v))}>
+              {Array.from({ length: 60 }, (_, i) => i).map((m) => (
+                <option key={m} value={pad(m)}>
+                  {pad(m)}
+                </option>
+              ))}
+            </Select>
+            <Select value={ampm} onChange={(v) => commit(to24Hour(hour12, v as "AM" | "PM"), minute)}>
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </Select>
+          </div>
+          <div className="journal-reminder__status-badge">
+            ✓ Reminder scheduled for {hour12}:{pad(minute)} {ampm}
+          </div>
+        </>
       )}
     </div>
   );

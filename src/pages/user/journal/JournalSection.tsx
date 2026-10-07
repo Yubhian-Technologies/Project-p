@@ -80,6 +80,36 @@ export function JournalSection() {
     await refresh();
   }
 
+  async function handleToggleReminder(checked: boolean) {
+    setIsReminder(checked);
+    if (!currentUser) return;
+    try {
+      await saveJournalEntry(currentUser.uid, selectedDate, {
+        note: selectedEntry?.note ?? "",
+        isReminder: checked,
+        reminderTime,
+      });
+      await refresh();
+    } catch (err) {
+      console.error("Failed to toggle reminder", err);
+    }
+  }
+
+  async function handleChangeReminderTime(time: string) {
+    setReminderTime(time);
+    if (!currentUser || !isReminder) return;
+    try {
+      await saveJournalEntry(currentUser.uid, selectedDate, {
+        note: selectedEntry?.note ?? "",
+        isReminder: true,
+        reminderTime: time,
+      });
+      await refresh();
+    } catch (err) {
+      console.error("Failed to update reminder time", err);
+    }
+  }
+
   const selectedEntry = entries.find((e) => e.id === selectedDate);
 
   useEffect(() => {
@@ -111,7 +141,7 @@ export function JournalSection() {
                 className="journal-section__reminder-text"
                 onClick={() => setSelectedDate(entry.id)}
               >
-                <strong>{entry.id}</strong> — {entry.note.slice(0, 80)}
+                <strong>{entry.id}</strong> — {entry.note.slice(0, 80) || "Time to write your journal entry"}
                 {entry.note.length > 80 ? "…" : ""}
               </button>
               <div className="journal-section__reminder-actions">
@@ -147,9 +177,9 @@ export function JournalSection() {
           />
           <JournalReminderControls
             isReminder={isReminder}
-            onToggleReminder={setIsReminder}
+            onToggleReminder={handleToggleReminder}
             reminderTime={reminderTime}
-            onChangeReminderTime={setReminderTime}
+            onChangeReminderTime={handleChangeReminderTime}
           />
         </div>
         <JournalEntryEditor

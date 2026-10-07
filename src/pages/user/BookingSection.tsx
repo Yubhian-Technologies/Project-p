@@ -504,14 +504,27 @@ export function BookingSection({
 
   if (loading) return null;
 
+  // Mirrors the server-side rule in createBooking (one active booking per
+  // student) so the button reflects reality instead of letting the student
+  // walk through the whole form only to be rejected at the very end.
+  const activeBooking = bookings.find(
+    (b) => ACTIVE_STATUSES.includes(b.status) && !(b.status === "scheduled" && isSessionEndedPending(b)),
+  );
+
   return (
     <div className="booking-section">
       <section>
         <div className="booking-section__header-row">
           <h2 className="booking-section__heading">My Bookings</h2>
-          <Button type="button" onClick={() => setShowPicker(true)}>
-            + Book a Session
-          </Button>
+          {activeBooking ? (
+            <span className="booking-section__active-notice">
+              You already have an active booking — cancel it or wait for it to finish before booking another.
+            </span>
+          ) : (
+            <Button type="button" onClick={() => setShowPicker(true)}>
+              + Book a Session
+            </Button>
+          )}
         </div>
         {bookings.length === 0 && <p>You haven't requested a session yet.</p>}
         {bookings.length > 0 && (
@@ -545,11 +558,13 @@ export function BookingSection({
               className="booking-section__booking-row booking-section__booking-row--collapsed"
               onClick={() => setDetailTarget(b)}
             >
-              <span className="booking-section__row-email">
-                {b.counsellorEmail}
+              <div className="booking-section__row-top">
+                <span className="booking-section__row-email">
+                  {b.counsellorEmail}
+                </span>
                 {b.isEmergency && <span className="booking-section__emergency-tag">Crisis SOS</span>}
                 {b.followUpOfBookingId && <span className="booking-section__followup-tag">(follow-up)</span>}
-              </span>
+              </div>
               <span className="booking-section__row-date">{formatDay(sessionTimestamp(b))}</span>
               <div className="booking-section__row-right booking-section__row-right--pinned">
                 <span className={`booking-section__status booking-section__status--${statusClass(b)}`}>

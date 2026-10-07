@@ -102,6 +102,10 @@ export function UserDashboard() {
   const [gameOpen, setGameOpen] = useState(false);
 
   function handleNotificationClick(notification: Notification) {
+    if (notification.type === "event_today" || notification.type === "event_added") {
+      setActiveSection("events");
+      return;
+    }
     setActiveSection("booking");
     if (notification.type === "chat_message") {
       setChatBookingId(notification.bookingId);

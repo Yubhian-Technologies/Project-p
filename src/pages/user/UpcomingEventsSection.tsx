@@ -3,12 +3,14 @@ import { useAuth } from "../../hooks/useAuth";
 import { listEventsForCampus } from "../../services/firebase/events";
 import type { EventProgram } from "../../types/event";
 import { CalendarIcon } from "../../components/common/icons";
+import { EventPreviewModal } from "./EventPreviewModal";
 import "./UpcomingEventsSection.css";
 
 export function UpcomingEventsSection() {
   const { profile } = useAuth();
   const [events, setEvents] = useState<EventProgram[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<EventProgram | null>(null);
 
   useEffect(() => {
     if (!profile?.campusId) {
@@ -59,10 +61,19 @@ export function UpcomingEventsSection() {
                   })}
                 </span>
               </div>
+              <button
+                type="button"
+                className="upcoming-events__view-btn"
+                onClick={() => setSelected(event)}
+              >
+                View →
+              </button>
             </div>
           ))}
         </div>
       )}
+
+      {selected && <EventPreviewModal event={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }

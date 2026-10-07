@@ -88,3 +88,18 @@ export async function listAttendance(uid: string, campusId: string): Promise<Att
     .map((d) => ({ id: d.id, ...d.data() }) as AttendanceRecord)
     .sort((a, b) => (a.date < b.date ? -1 : 1));
 }
+
+/** Every attendance record for a whole campus on one day — one per person
+    who has checked in or out that day; nothing for anyone who hasn't yet. */
+export async function listAttendanceForCampusOnDate(
+  campusId: string,
+  date: string,
+): Promise<AttendanceRecord[]> {
+  const q = query(
+    attendanceCollection,
+    where("campusId", "==", campusId),
+    where("date", "==", date),
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as AttendanceRecord);
+}

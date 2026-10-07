@@ -4,6 +4,7 @@ import { listEventsForCampus } from "../../services/firebase/events";
 import type { EventProgram } from "../../types/event";
 import { BentoCard } from "../../components/common/BentoCard";
 import { CalendarIcon } from "../../components/common/icons";
+import { EventPreviewModal } from "./EventPreviewModal";
 
 interface UpcomingEventsCardProps {
   onViewEvents: () => void;
@@ -15,6 +16,7 @@ export function UpcomingEventsCard({ onViewEvents }: UpcomingEventsCardProps) {
   const { profile } = useAuth();
   const [events, setEvents] = useState<EventProgram[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<EventProgram | null>(null);
 
   useEffect(() => {
     if (!profile?.campusId) {
@@ -49,7 +51,12 @@ export function UpcomingEventsCard({ onViewEvents }: UpcomingEventsCardProps) {
       ) : (
         <div className="bento-list">
           {preview.map((event) => (
-            <div key={event.id} className="bento-list-item">
+            <div
+              key={event.id}
+              className="bento-list-item"
+              style={{ cursor: "pointer" }}
+              onClick={() => setSelected(event)}
+            >
               <span className="bento-list-item__title">{event.title}</span>
               <span>
                 {new Date(event.eventDate).toLocaleDateString(undefined, {
@@ -62,6 +69,8 @@ export function UpcomingEventsCard({ onViewEvents }: UpcomingEventsCardProps) {
           ))}
         </div>
       )}
+
+      {selected && <EventPreviewModal event={selected} onClose={() => setSelected(null)} />}
     </BentoCard>
   );
 }

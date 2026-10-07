@@ -64,12 +64,35 @@
   justify-content: space-between;
 }
 
-/* Dropdown menu opens UPWARDS over the reminder card so it never spills out */
 .journal-reminder__time-row .md-select__menu {
-  top: auto !important;
-  bottom: calc(100% + 6px) !important;
-  max-height: 160px !important;
-  z-index: 100 !important;
-  box-shadow: 0 10px 28px rgba(46, 43, 39, 0.07) !important;
+  z-index: 1000 !important;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.12) !important;
+  padding: 4px !important;
+  border-radius: 12px !important;
+  max-height: 140px !important;
+}
+
+.journal-reminder__time-row .md-select__option {
+  padding: 6px 8px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  text-align: center;
+  min-height: unset !important;
+}
+
+.journal-reminder__status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #059669;
+  background: #ECFDF5;
+  border: 1px solid rgba(5, 150, 105, 0.15);
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin-top: 2px;
+  align-self: flex-start;
 }
 

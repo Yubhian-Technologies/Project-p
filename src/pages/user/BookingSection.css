@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 36px;
+  width: 100%;
 }
 
 .booking-section__heading {
@@ -23,6 +24,13 @@
 
 .booking-section__header-row .booking-section__heading {
   margin-bottom: 0;
+}
+
+.booking-section__active-notice {
+  font-size: 13px;
+  font-weight: 600;
+  color: #8A8375;
+  white-space: nowrap;
 }
 
 .booking-section__notice {
@@ -49,6 +57,10 @@
 
   .booking-section__header-row {
     margin-bottom: 12px;
+  }
+
+  .booking-section__active-notice {
+    white-space: normal;
   }
 
   .booking-section__notice {
@@ -92,9 +104,11 @@
 }
 
 .booking-section__bookings {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Date filter above the list — a dropdown of only the days that actually have
@@ -109,6 +123,9 @@
   padding: 8px 14px;
   box-shadow: 0 4px 14px rgba(46, 43, 39, 0.06);
   margin-bottom: 20px;
+  max-width: 480px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .booking-section__date-filter-field {
@@ -116,6 +133,7 @@
   flex-direction: column;
   gap: 4px;
   min-width: 220px;
+  flex: 1;
 }
 
 .booking-section__date-filter-label {
@@ -132,6 +150,7 @@
   font-size: 12px;
   font-weight: 700;
   color: #64748B;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -140,6 +159,7 @@
     align-items: stretch;
     gap: 10px;
     padding: 14px 16px;
+    max-width: 100%;
   }
 
   .booking-section__date-filter-field {
@@ -154,88 +174,95 @@
 
 .booking-section__booking-row {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 20px;
-  flex-direction: row;
+  gap: 12px;
   background: #FFFFFF;
   border: 1px solid rgba(46, 43, 39, 0.08);
   border-radius: 20px;
-  padding: 22px 26px;
-  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  padding: 18px 20px;
+  box-shadow: 0 4px 20px rgba(46, 43, 39, 0.06);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .booking-section__booking-row:hover {
-  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
-  transform: translate(-2px, -2px);
+  box-shadow: 0 10px 30px rgba(46, 43, 39, 0.09);
+  transform: translateY(-2px);
 }
 
 .booking-section__booking-row--collapsed {
   cursor: pointer;
-  padding: 18px 24px;
-  flex-wrap: nowrap;
+}
+
+.booking-section__row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
 }
 
 .booking-section__row-email {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0F172A;
   min-width: 0;
-  flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+}
+
+.booking-section__row-date {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748B;
   white-space: nowrap;
 }
 
 .booking-section__row-right--pinned {
-  flex-shrink: 0;
-  flex-wrap: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(46, 43, 39, 0.06);
 }
 
-/* The day the session falls on, so the date filter is verifiable at a glance. */
-.booking-section__row-date {
-  flex-shrink: 0;
+.booking-section__row-right--pinned .booking-section__status {
+  padding: 4px 12px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  border-radius: 20px;
+}
+
+.booking-section__row-right--pinned .md-button {
+  padding: 6px 14px;
   font-size: 12px;
-  font-weight: 700;
-  color: var(--neu-text-muted, #718096);
-  white-space: nowrap;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(46, 43, 39, 0.04);
 }
 
-/* Phones — matches the breakpoint the rest of this page's mobile styling uses. */
 @media (max-width: 768px) {
+  .booking-section__bookings {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
   .booking-section__booking-row--collapsed {
-    flex-wrap: wrap;
     padding: 14px 16px;
-    gap: 8px;
+    gap: 10px;
   }
 
-  .booking-section__row-email {
-    white-space: normal;
-    flex-basis: 100%;
-    font-size: 14px;
-  }
-
-  .booking-section__row-date {
-    flex-basis: 100%;
-  }
-
-  .booking-section__row-right--pinned {
-    margin-left: auto;
-    gap: 8px;
-  }
-
-  .booking-section__row-right--pinned .booking-section__status {
-    padding: 4px 10px;
-    font-size: 10px;
-  }
-
-  .booking-section__row-right--pinned .md-button {
-    padding: 6px 12px;
-    font-size: 12px;
-    box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
-  }
-
-  .booking-section__row-right--pinned .md-button:hover {
-    box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
+  .booking-section__row-top {
+    flex-wrap: wrap;
+    gap: 6px;
   }
 }
 

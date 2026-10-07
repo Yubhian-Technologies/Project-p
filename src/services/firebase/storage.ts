@@ -13,6 +13,12 @@ export async function uploadEventReport(eventId: string, uploaderUid: string, fi
   return getDownloadURL(reportRef);
 }
 
+export async function uploadEventPoster(eventId: string, uploaderUid: string, file: File): Promise<string> {
+  const posterRef = ref(storage, `event-posters/${eventId}/${uploaderUid}/poster`);
+  await uploadBytes(posterRef, file);
+  return getDownloadURL(posterRef);
+}
+
 /** Private to the owner — only Head/Counsellor/Admin have a signature at all. */
 export async function uploadSignatureImage(uid: string, file: File): Promise<string> {
   const signatureRef = ref(storage, `signatures/${uid}`);

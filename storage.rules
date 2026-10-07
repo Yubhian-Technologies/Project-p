@@ -34,13 +34,26 @@ service firebase.storage {
     // below, which hit the identical storage/unauthorized failure). The real
     // access control lives in the Firestore "events" rule (only Head/
     // Counsellor on the event's own campus can update it); any signed-in user
-    // can read here (the download link is only ever reached through that
-    // already-gated event data — students have no UI path to events at all).
+    // can read here — students do have a read-only Events & Programs view
+    // (EventPreviewModal), but reports are staff-only content never surfaced
+    // there, so this stays scoped the same as before.
     match /event-reports/{eventId}/{uid}/{fileName} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == uid &&
         request.resource.size < 15 * 1024 * 1024 &&
         request.resource.contentType.matches('application/pdf|image/.*');
+      allow delete: if false;
+    }
+
+    // Event poster/banner images: src/services/firebase/storage.ts uploads to
+    // event-posters/{eventId}/{uploaderUid}/poster. Same uid-scoped pattern as
+    // event-reports above. Unlike reports, this IS shown to students (Events &
+    // Programs → View), so any signed-in user reading it is intentional.
+    match /event-posters/{eventId}/{uid}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid &&
+        request.resource.size < 10 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
       allow delete: if false;
     }
 

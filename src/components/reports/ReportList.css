@@ -153,6 +153,7 @@
   align-items: center;
   flex-shrink: 0;
   flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .report-list-block__badge {
@@ -173,6 +174,7 @@
 .report-list-block__btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 8px 16px;
   border-radius: 12px !important;
@@ -182,6 +184,9 @@
   border: 1px solid rgba(46, 43, 39, 0.08);
   transition: all 0.18s ease;
   text-decoration: none;
+  white-space: normal;
+  max-width: 100%;
+  text-align: center;
 }
 
 .report-list-block__btn--download {
@@ -245,4 +250,19 @@
   opacity: 0.55;
   cursor: not-allowed;
   transform: none;
+}
+
+/* On narrow screens the period/status badges plus Download (and Verify/
+   Delete, where present) can add up to more pill width than the row has
+   room for, pushing the last one past the edge of the card. Stack the whole
+   action group full-width instead of trying to fit everything on one line. */
+@media (max-width: 640px) {
+  .report-list-block__row-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .report-list-block__btn {
+    flex: 1 1 auto;
+  }
 }

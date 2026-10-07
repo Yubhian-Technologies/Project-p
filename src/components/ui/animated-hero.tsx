@@ -97,7 +97,7 @@ function Hero({ currentUser, dashboardPath = "/user" }: HeroProps) {
                 size="lg"
                 className="animated-hero__btn-primary"
               >
-                <span>Book a Confidential Session</span>
+                <span>Book a Session</span>
                 <MoveRight className="w-4 h-4" />
               </Button>
             </Link>

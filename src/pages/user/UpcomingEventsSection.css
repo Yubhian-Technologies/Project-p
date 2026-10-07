@@ -71,6 +71,22 @@
   color: var(--neu-text-muted, #718096);
 }
 
+.upcoming-events__view-btn {
+  flex-shrink: 0;
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: #EA580C;
+  cursor: pointer;
+  padding: 6px 4px;
+}
+
+.upcoming-events__view-btn:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 768px) {
   .upcoming-events__item {
     padding: 12px 14px;

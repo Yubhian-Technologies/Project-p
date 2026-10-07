@@ -151,8 +151,20 @@
 
 .journal-editor__actions {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
   flex-shrink: 0;
+}
+
+.journal-editor__actions .md-button {
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  line-height: 1.25;
 }
 
 .journal-editor__share {
@@ -270,6 +282,7 @@
      different day, so it shouldn't push today's note below the fold. */
   .journal-editor {
     order: 0;
+    padding: 18px 16px;
   }
 
   .journal-editor__textarea {

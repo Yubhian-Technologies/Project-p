@@ -73,6 +73,9 @@ export async function updateEvent(
       | "reportUrl"
       | "reportFileName"
       | "reportUploadedAt"
+      | "posterUrl"
+      | "posterFileName"
+      | "todayNotifSentOn"
     >
   >,
 ): Promise<void> {

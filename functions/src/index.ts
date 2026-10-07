@@ -673,44 +673,48 @@ export const createBooking = onCall<{
   // One active booking per student, same rule the UI already tried to show —
   // now actually guaranteed. A "scheduled" session whose time has already
   // passed doesn't block a new one (mirrors isSessionEndedPending()
-  // client-side — it just hasn't been formally closed yet).
-  const existing = await db
-    .collection("bookings")
-    .where("userId", "==", callerUid)
-    .where("status", "in", ACTIVE_BOOKING_STATUSES)
-    .get();
-
+  // client-side — it just hasn't been formally closed yet). The check and
+  // the create run inside one transaction so two near-simultaneous requests
+  // (a double-click, two tabs) can't both pass the check before either has
+  // written — Firestore aborts and retries whichever one loses that race.
   const now = Date.now();
-  const stillActive = existing.docs.some((docRef) => {
-    const b = docRef.data();
-    if (b.status === "scheduled" && typeof b.scheduledAt === "number") {
-      const durationMinutes = typeof b.durationMinutes === "number" ? b.durationMinutes : SESSION_DURATION_MINUTES;
-      return now < b.scheduledAt + durationMinutes * 60000;
-    }
-    return true;
-  });
-
-  if (stillActive) {
-    throw new HttpsError(
-      "already-exists",
-      "You already have an active booking. Cancel it or wait for it to finish before booking another.",
-    );
-  }
-
   const bookingRef = db.collection("bookings").doc();
-  await bookingRef.set({
-    userId: callerUid,
-    userEmail: callerEmail,
-    counsellorId: data.counsellorId,
-    counsellorEmail: data.counsellorEmail,
-    status: "pending",
-    durationMinutes: SESSION_DURATION_MINUTES,
-    proposedSlots: data.proposedSlots,
-    ...(data.campusId ? { campusId: data.campusId } : {}),
-    ...(data.concernCategories?.length ? { concernCategories: data.concernCategories } : {}),
-    createdAt: now,
-    updatedAt: now,
+  await db.runTransaction(async (tx) => {
+    const existing = await tx.get(
+      db.collection("bookings").where("userId", "==", callerUid).where("status", "in", ACTIVE_BOOKING_STATUSES),
+    );
+
+    const stillActive = existing.docs.some((docRef) => {
+      const b = docRef.data();
+      if (b.status === "scheduled" && typeof b.scheduledAt === "number") {
+        const durationMinutes = typeof b.durationMinutes === "number" ? b.durationMinutes : SESSION_DURATION_MINUTES;
+        return now < b.scheduledAt + durationMinutes * 60000;
+      }
+      return true;
+    });
+
+    if (stillActive) {
+      throw new HttpsError(
+        "already-exists",
+        "You already have an active booking. Cancel it or wait for it to finish before booking another.",
+      );
+    }
+
+    tx.set(bookingRef, {
+      userId: callerUid,
+      userEmail: callerEmail,
+      counsellorId: data.counsellorId,
+      counsellorEmail: data.counsellorEmail,
+      status: "pending",
+      durationMinutes: SESSION_DURATION_MINUTES,
+      proposedSlots: data.proposedSlots,
+      ...(data.campusId ? { campusId: data.campusId } : {}),
+      ...(data.concernCategories?.length ? { concernCategories: data.concernCategories } : {}),
+      createdAt: now,
+      updatedAt: now,
+    });
   });
+
   await bookingRef.collection("private").doc("details").set({
     username: intake.username.trim(),
     occupation: intake.occupation,
@@ -920,3 +924,89 @@ export const flagMissedSessions = onSchedule("every 15 minutes", async () => {
 
   for (const b of batches) await b.commit();
 });
+
+// Runs once a day and notifies every student on a campus that has an event
+// scheduled for today. "Today" is computed in IST (UTC+5:30) since that's
+// this app's own timezone convention everywhere else (see attendance.ts's
+// istDateKey on the client). The `todayNotifSentOn` flag on the event doc
+// guards against double-notifying if this ever runs more than once on the
+// same calendar day.
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+export const sendEventTodayReminders = onSchedule(
+  { schedule: "0 7 * * *", timeZone: "Asia/Kolkata" },
+  async () => {
+    const now = Date.now();
+    const istNow = new Date(now + IST_OFFSET_MS);
+    const todayKey = `${istNow.getUTCFullYear()}-${String(istNow.getUTCMonth() + 1).padStart(2, "0")}-${String(istNow.getUTCDate()).padStart(2, "0")}`;
+    const istMidnightUtcMs = Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate()) - IST_OFFSET_MS;
+    const startOfDay = istMidnightUtcMs;
+    const endOfDay = startOfDay + 24 * 60 * 60 * 1000 - 1;
+
+    const eventsSnap = await db
+      .collection("events")
+      .where("eventDate", ">=", startOfDay)
+      .where("eventDate", "<=", endOfDay)
+      .get();
+
+    const eventUpdates: FirebaseFirestore.DocumentReference[] = [];
+    const notifications: Record<string, unknown>[] = [];
+    const studentsByCampus = new Map<string, string[]>();
+
+    async function studentsOnCampus(campusId: string): Promise<string[]> {
+      if (studentsByCampus.has(campusId)) return studentsByCampus.get(campusId) ?? [];
+      const snap = await db
+        .collection("users")
+        .where("role", "==", "user")
+        .where("campusId", "==", campusId)
+        .get();
+      const uids = snap.docs.map((d) => d.id);
+      studentsByCampus.set(campusId, uids);
+      return uids;
+    }
+
+    for (const docRef of eventsSnap.docs) {
+      const e = docRef.data();
+      if (e.todayNotifSentOn === todayKey) continue;
+      const campusId = e.campusId as string | undefined;
+      if (!campusId) continue;
+
+      const studentUids = await studentsOnCampus(campusId);
+      if (studentUids.length === 0) continue;
+
+      eventUpdates.push(docRef.ref);
+      for (const uid of studentUids) {
+        notifications.push({
+          recipientId: uid,
+          type: "event_today",
+          title: "Event today",
+          message: `${e.title as string} is happening today on your campus.`,
+          read: false,
+          createdAt: now,
+        });
+      }
+    }
+
+    if (eventUpdates.length === 0 && notifications.length === 0) return;
+
+    let batch = db.batch();
+    let opsInBatch = 0;
+    const batches: FirebaseFirestore.WriteBatch[] = [];
+    function queue(op: () => void) {
+      op();
+      opsInBatch++;
+      if (opsInBatch === 400) {
+        batches.push(batch);
+        batch = db.batch();
+        opsInBatch = 0;
+      }
+    }
+    for (const ref of eventUpdates) queue(() => batch.update(ref, { todayNotifSentOn: todayKey }));
+    for (const n of notifications) queue(() => batch.set(db.collection("notifications").doc(), n));
+    if (opsInBatch > 0) batches.push(batch);
+
+    for (const b of batches) await b.commit();
+  },
+);
+
+export { sendAppointmentEmails } from "./appointmentEmails";

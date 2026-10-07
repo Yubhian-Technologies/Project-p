@@ -268,6 +268,7 @@
   align-items: center;
   flex-shrink: 0;
   flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .mrv-badge {
@@ -300,6 +301,7 @@
 .mrv-btn-verify {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   padding: 9px 18px;
   border-radius: 12px !important;
@@ -312,6 +314,9 @@
   color: #FFFFFF;
   box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
   transition: all 0.18s ease;
+  white-space: normal;
+  max-width: 100%;
+  text-align: center;
 }
 
 .mrv-btn-verify:hover {
@@ -329,6 +334,7 @@
 .mrv-btn-download {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   padding: 9px 18px;
   border-radius: 12px !important;
@@ -342,10 +348,30 @@
   color: #FFFFFF;
   box-shadow: 0 6px 18px rgba(46, 43, 39, 0.055) !important;
   transition: all 0.18s ease;
+  white-space: normal;
+  max-width: 100%;
+  text-align: center;
 }
 
 .mrv-btn-download:hover {
   background: #1A55E0;
   transform: translate(-1px, -1px);
   box-shadow: 0 10px 26px rgba(46, 43, 39, 0.065) !important;
+}
+
+/* On narrow screens the period/status badges plus View/Download, the
+   signed-document download, and Verify could add up to more pill width than
+   the row has room for, pushing the last one or two past the edge of the
+   screen. Stack the whole action group full-width instead of trying to fit
+   everything on one line. */
+@media (max-width: 640px) {
+  .mrv-list__row-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .mrv-btn-verify,
+  .mrv-btn-download {
+    flex: 1 1 auto;
+  }
 }

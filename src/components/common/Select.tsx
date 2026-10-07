@@ -59,11 +59,12 @@ export function Select({ id, value, onChange, disabled, children }: SelectProps)
     if (!open || !containerRef.current) return;
     function updatePosition() {
       const rect = containerRef.current!.getBoundingClientRect();
-      const menuHeight = 220;
+      const estimatedMenuHeight = Math.min(220, Math.max(50, options.length * 34 + 12));
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
-      const openUp = spaceBelow < menuHeight && spaceAbove > spaceBelow;
-      const maxHeight = openUp ? Math.max(180, spaceAbove - 16) : Math.max(180, spaceBelow - 16);
+      const openUp = spaceBelow < estimatedMenuHeight && spaceAbove > spaceBelow;
+      const availableSpace = openUp ? spaceAbove - 16 : spaceBelow - 16;
+      const maxHeight = Math.max(60, Math.min(estimatedMenuHeight, availableSpace));
       setMenuStyle({
         position: "fixed",
         ...(openUp
@@ -88,7 +89,7 @@ export function Select({ id, value, onChange, disabled, children }: SelectProps)
       window.visualViewport?.removeEventListener("resize", onResize);
       window.visualViewport?.removeEventListener("scroll", onResize);
     };
-  }, [open]);
+  }, [open, options.length]);
 
   // Only close on *page* scroll/resize (not when scrolling inside the menu).
   // Also don't close on scroll events that originate from inside the menu.

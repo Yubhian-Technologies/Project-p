@@ -28,9 +28,6 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-const THIS_YEAR = new Date().getFullYear();
-const YEARS = Array.from({ length: 6 }, (_, i) => THIS_YEAR - i);
-
 function monthLabel(m: number) {
   return MONTHS[(m - 1 + 12) % 12];
 }
@@ -105,6 +102,9 @@ export function MonthlyReportsViewSection() {
     return true;
   });
   const { visible: visibleReports, hiddenCount, showMore } = useViewMore(filtered, 7);
+  // Only years this campus actually has a report for — not a fixed guess at
+  // a recent range, which showed years with nothing to filter to.
+  const availableYears = Array.from(new Set(reports.map((r) => r.year))).sort((a, b) => b - a);
 
   const hasSelection = !!selectedCampusId;
 
@@ -183,7 +183,7 @@ export function MonthlyReportsViewSection() {
               onChange={(v) => setFilterYear(Number(v))}
             >
               <option value="0">All years</option>
-              {YEARS.map((y) => (
+              {availableYears.map((y) => (
                 <option key={y} value={String(y)}>{y}</option>
               ))}
             </Select>

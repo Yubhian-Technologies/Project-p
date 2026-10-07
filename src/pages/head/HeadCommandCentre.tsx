@@ -7,6 +7,7 @@ import { listColleges } from "../../services/firebase/colleges";
 import { listEventsForCampus } from "../../services/firebase/events";
 import { listCounsellorMonthlyReportsForCampus } from "../../services/firebase/counsellorMonthlyReports";
 import { AttendanceCheckCard } from "../../components/attendance/AttendanceCheckCard";
+import { TeamAttendanceTodayCard } from "./TeamAttendanceTodayCard";
 import { listSsiCollegeResultsForCollege, type SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
 import { getAllFeedback } from "../../services/firebase/feedback";
 import type { Booking } from "../../types/booking";
@@ -462,6 +463,8 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
           </div>
         </div>
       </section>
+
+      <TeamAttendanceTodayCard onViewAll={() => onNavigate("team-management")} />
 
       {/* 8. Programs */}
       <section className="hch-section">

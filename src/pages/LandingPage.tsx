@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useSpring } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
@@ -6,7 +6,59 @@ import { dashboardPathForRole } from "../utils/roleRedirect";
 import { CardFanCarousel } from "../components/ui/CardFanCarousel";
 import { PerspectiveDeckCarousel } from "../components/ui/PerspectiveDeckCarousel";
 import { AnimatedHero } from "../components/ui/animated-hero";
+import { MorphingPopover, MorphingPopoverTrigger, MorphingPopoverContent } from "../components/common/MorphingPopover";
 import "./LandingPage.css";
+
+const DOING_CARDS = [
+  {
+    id: 1,
+    title: "My brain won't switch off.",
+    desc: "Overthinking • Anxiety • Racing thoughts",
+    image: "/find-help/find-help-1.jpg",
+    theme: "pink",
+    alt: "My brain won't switch off",
+  },
+  {
+    id: 2,
+    title: "Academics are getting to me.",
+    desc: "Exam stress • Performance pressure • Procrastination",
+    image: "/find-help/find-help-2.jpg",
+    theme: "blue",
+    alt: "Academics are getting to me",
+  },
+  {
+    id: 3,
+    title: "I'm running on empty.",
+    desc: "Burnout • Sleep • Motivation • Digital overload",
+    image: "/find-help/find-help-3.jpg",
+    theme: "mint",
+    alt: "I'm running on empty",
+  },
+  {
+    id: 4,
+    title: "It's complicated.",
+    desc: "Relationships • Friendships • Family • Boundaries",
+    image: "/find-help/find-help-4.jpg",
+    theme: "peach",
+    alt: "It's complicated",
+  },
+  {
+    id: 5,
+    title: "I'm figuring myself out.",
+    desc: "Confidence • Self-esteem • Identity • Personal growth",
+    image: "/find-help/find-help-5.jpg",
+    theme: "lavender",
+    alt: "I'm figuring myself out",
+  },
+  {
+    id: 6,
+    title: "I need someone to talk to.",
+    desc: "A safe space to share and get support",
+    image: "/find-help/find-help-6.jpg",
+    theme: "yellow",
+    alt: "I need someone to talk to",
+  },
+];
 
 const VALUES_CARDS = [
   {
@@ -158,6 +210,7 @@ const TEAM_CARDS = [
     ],
     phone: "7075214208",
     email: "AngelBenny99@gmail.com",
+    languages: "English, Malayalam, Hindi, Tamil, Arabic & Telugu",
     alt: "Angel Mariam Benny — Wellness Counsellor",
   },
   {
@@ -315,6 +368,66 @@ export function LandingPage() {
   const dashboardPath = dashboardPathForRole(role);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeDoingIndex, setActiveDoingIndex] = useState(0);
+  // Hover flips the card on desktop; touch screens have no hover, so a tap
+  // toggles the same flip here instead.
+  const [flippedDoingIds, setFlippedDoingIds] = useState<Set<number>>(new Set());
+  const doingCarouselRef = useRef<HTMLDivElement>(null);
+
+  function toggleDoingFlip(id: number) {
+    setFlippedDoingIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const scrollToDoingCard = useCallback((index: number) => {
+    if (!doingCarouselRef.current) return;
+    const cards = doingCarouselRef.current.querySelectorAll<HTMLElement>(".landing-doing-card");
+    const targetCard = cards[index];
+    if (targetCard) {
+      targetCard.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+      setActiveDoingIndex(index);
+    }
+  }, []);
+
+  const handleDoingScroll = useCallback(() => {
+    if (!doingCarouselRef.current) return;
+    const container = doingCarouselRef.current;
+    const cards = container.querySelectorAll<HTMLElement>(".landing-doing-card");
+    if (!cards.length) return;
+
+    const containerCenter = container.scrollLeft + container.clientWidth / 2;
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    cards.forEach((card, idx) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const distance = Math.abs(containerCenter - cardCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = idx;
+      }
+    });
+
+    setActiveDoingIndex(closestIndex);
+  }, []);
+
+  const handleDoingPrev = () => {
+    const prev = Math.max(0, activeDoingIndex - 1);
+    scrollToDoingCard(prev);
+  };
+
+  const handleDoingNext = () => {
+    const next = Math.min(DOING_CARDS.length - 1, activeDoingIndex + 1);
+    scrollToDoingCard(next);
+  };
 
   const { scrollYProgress, scrollY } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -637,138 +750,90 @@ export function LandingPage() {
             </div>
           </div>
 
-          <div className="landing-doing-grid">
-            {/* Card 1 */}
-            <Link to={currentUser ? dashboardPath : "/login"} className="landing-doing-card landing-doing-card--pink">
-              <div className="landing-doing-card__image-wrapper">
-                <img
-                  src="/find-help/find-help-1.jpg"
-                  alt="My brain won't switch off"
-                  className="landing-doing-card__image"
-                  loading="lazy"
-                />
-              </div>
-              <div className="landing-doing-card__content">
-                <h3 className="landing-doing-card__title">My brain won&apos;t switch off.</h3>
-                <p className="landing-doing-card__desc">Overthinking &bull; Anxiety &bull; Racing thoughts</p>
-                <div className="landing-doing-card__arrow">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
+          <div
+            ref={doingCarouselRef}
+            onScroll={handleDoingScroll}
+            className="landing-doing-grid"
+          >
+            {DOING_CARDS.map((card, idx) => {
+              const isActive = activeDoingIndex === idx;
+              const isFlipped = flippedDoingIds.has(card.id);
+              return (
+                <div
+                  key={card.id}
+                  className={`landing-doing-card landing-doing-card--${card.theme} ${isActive ? "landing-doing-card--active" : ""} ${isFlipped ? "landing-doing-card--flipped" : ""}`}
+                  onClick={() => toggleDoingFlip(card.id)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={isFlipped ? `${card.title} — showing related topics, tap to flip back` : `${card.title} — tap to see related topics`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      toggleDoingFlip(card.id);
+                    }
+                  }}
+                >
+                  <div className="landing-doing-card__flipper">
+                    <div className="landing-doing-card__face landing-doing-card__face--front">
+                      <h3 className="landing-doing-card__title">{card.title}</h3>
+                    </div>
+                    <div className="landing-doing-card__face landing-doing-card__face--back">
+                      <p className="landing-doing-card__desc">{card.desc}</p>
+                    </div>
+                  </div>
+                  <Link
+                    to={currentUser ? dashboardPath : "/login"}
+                    className="landing-doing-card__arrow"
+                    aria-label={`Get started: ${card.title}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </Link>
                 </div>
-              </div>
-            </Link>
+              );
+            })}
+          </div>
 
-            {/* Card 2 */}
-            <Link to={currentUser ? dashboardPath : "/login"} className="landing-doing-card landing-doing-card--blue">
-              <div className="landing-doing-card__image-wrapper">
-                <img
-                  src="/find-help/find-help-2.jpg"
-                  alt="Academics are getting to me"
-                  className="landing-doing-card__image"
-                  loading="lazy"
-                />
-              </div>
-              <div className="landing-doing-card__content">
-                <h3 className="landing-doing-card__title">Academics are getting to me.</h3>
-                <p className="landing-doing-card__desc">Exam stress &bull; Performance pressure &bull; Procrastination</p>
-                <div className="landing-doing-card__arrow">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </div>
-              </div>
-            </Link>
+          {/* Mobile-Only Carousel Navigation Controls */}
+          <div className="landing-doing-carousel-controls" aria-label="Carousel navigation">
+            <button
+              type="button"
+              className="landing-doing-nav-btn landing-doing-nav-btn--prev"
+              onClick={handleDoingPrev}
+              disabled={activeDoingIndex === 0}
+              aria-label="Previous card"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
 
-            {/* Card 3 */}
-            <Link to={currentUser ? dashboardPath : "/login"} className="landing-doing-card landing-doing-card--mint">
-              <div className="landing-doing-card__image-wrapper">
-                <img
-                  src="/find-help/find-help-3.jpg"
-                  alt="I'm running on empty"
-                  className="landing-doing-card__image"
-                  loading="lazy"
+            <div className="landing-doing-dots">
+              {DOING_CARDS.map((card, idx) => (
+                <button
+                  key={card.id}
+                  type="button"
+                  className={`landing-doing-dot landing-doing-dot--${card.theme} ${activeDoingIndex === idx ? "landing-doing-dot--active" : ""}`}
+                  onClick={() => scrollToDoingCard(idx)}
+                  aria-label={`Go to slide ${idx + 1}: ${card.title}`}
                 />
-              </div>
-              <div className="landing-doing-card__content">
-                <h3 className="landing-doing-card__title">I&apos;m running on empty.</h3>
-                <p className="landing-doing-card__desc">Burnout &bull; Sleep &bull; Motivation &bull; Digital overload</p>
-                <div className="landing-doing-card__arrow">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </div>
-              </div>
-            </Link>
+              ))}
+            </div>
 
-            {/* Card 4 */}
-            <Link to={currentUser ? dashboardPath : "/login"} className="landing-doing-card landing-doing-card--peach">
-              <div className="landing-doing-card__image-wrapper">
-                <img
-                  src="/find-help/find-help-4.jpg"
-                  alt="It's complicated"
-                  className="landing-doing-card__image"
-                  loading="lazy"
-                />
-              </div>
-              <div className="landing-doing-card__content">
-                <h3 className="landing-doing-card__title">It&apos;s complicated.</h3>
-                <p className="landing-doing-card__desc">Relationships &bull; Friendships &bull; Family &bull; Boundaries</p>
-                <div className="landing-doing-card__arrow">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </div>
-              </div>
-            </Link>
-
-            {/* Card 5 */}
-            <Link to={currentUser ? dashboardPath : "/login"} className="landing-doing-card landing-doing-card--lavender">
-              <div className="landing-doing-card__image-wrapper">
-                <img
-                  src="/find-help/find-help-5.jpg"
-                  alt="I'm figuring myself out"
-                  className="landing-doing-card__image"
-                  loading="lazy"
-                />
-              </div>
-              <div className="landing-doing-card__content">
-                <h3 className="landing-doing-card__title">I&apos;m figuring myself out.</h3>
-                <p className="landing-doing-card__desc">Confidence &bull; Self-esteem &bull; Identity &bull; Personal growth</p>
-                <div className="landing-doing-card__arrow">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </div>
-              </div>
-            </Link>
-
-            {/* Card 6 */}
-            <Link to={currentUser ? dashboardPath : "/login"} className="landing-doing-card landing-doing-card--yellow">
-              <div className="landing-doing-card__image-wrapper">
-                <img
-                  src="/find-help/find-help-6.jpg"
-                  alt="I need someone to talk to"
-                  className="landing-doing-card__image"
-                  loading="lazy"
-                />
-              </div>
-              <div className="landing-doing-card__content">
-                <h3 className="landing-doing-card__title">I need someone to talk to.</h3>
-                <p className="landing-doing-card__desc">A safe space to share and get support</p>
-                <div className="landing-doing-card__arrow">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </div>
-              </div>
-            </Link>
+            <button
+              type="button"
+              className="landing-doing-nav-btn landing-doing-nav-btn--next"
+              onClick={handleDoingNext}
+              disabled={activeDoingIndex === DOING_CARDS.length - 1}
+              aria-label="Next card"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
           </div>
         </motion.section>
 
@@ -936,19 +1001,7 @@ export function LandingPage() {
                   </svg>
                 </a>
                 <a
-                  href="https://youtube.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="social-icon-btn"
-                  aria-label="YouTube"
-                >
-                  <svg viewBox="0 0 24 24">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                  </svg>
-                </a>
-                {/* TODO: placeholder href — real WhatsApp link to be provided */}
-                <a
-                  href="#"
+                  href="https://wa.me/919100972237"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="social-icon-btn"
@@ -958,18 +1011,6 @@ export function LandingPage() {
                     <path d="M12.004 2C6.477 2 2 6.477 2 12.004c0 1.996.587 3.86 1.6 5.425L2 22l4.676-1.566a9.94 9.94 0 0 0 5.328 1.537h.004c5.527 0 10.004-4.477 10.004-10.004C22.012 6.477 17.531 2 12.004 2zm0 18.17h-.003a8.14 8.14 0 0 1-4.153-1.136l-.298-.177-3.1 1.04 1.056-3.023-.194-.31a8.147 8.147 0 0 1-1.25-4.356c0-4.503 3.665-8.168 8.172-8.168 2.182 0 4.233.851 5.776 2.396a8.112 8.112 0 0 1 2.39 5.78c0 4.503-3.665 8.168-8.396 8.168zm4.48-6.118c-.245-.123-1.452-.717-1.677-.8-.225-.082-.389-.123-.553.123-.164.246-.635.8-.779.964-.144.164-.287.185-.533.062-.245-.123-1.036-.382-1.973-1.216-.729-.65-1.221-1.453-1.364-1.699-.144-.246-.015-.379.108-.501.11-.11.246-.287.369-.43.123-.144.164-.246.246-.41.082-.164.041-.308-.021-.431-.062-.123-.553-1.334-.758-1.827-.2-.48-.403-.414-.553-.422l-.472-.008a.91.91 0 0 0-.656.308c-.225.246-.86.84-.86 2.05 0 1.21.881 2.378 1.004 2.542.123.164 1.733 2.646 4.2 3.71.587.253 1.044.404 1.401.517.588.187 1.123.161 1.546.098.472-.07 1.452-.594 1.657-1.167.205-.574.205-1.066.144-1.168-.062-.103-.225-.164-.471-.287z" />
                   </svg>
                 </a>
-                {/* TODO: placeholder href — real Facebook link to be provided */}
-                <a
-                  href="#"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="social-icon-btn"
-                  aria-label="Facebook"
-                >
-                  <svg viewBox="0 0 24 24">
-                    <path d="M22 12.06C22 6.505 17.523 2 12 2S2 6.505 2 12.06c0 5.02 3.657 9.184 8.438 9.94v-7.03H7.898v-2.91h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.772-1.63 1.563v1.877h2.773l-.443 2.91h-2.33V22c4.78-.756 8.437-4.92 8.437-9.94z" />
-                  </svg>
-                </a>
               </div>
             </div>
 
@@ -977,10 +1018,8 @@ export function LandingPage() {
               <h4>Explore</h4>
               <ul>
                 <li><a href="#about">About Us</a></li>
-                <li><a href="#">How It Works</a></li>
-                <li><a href="#">Counselling</a></li>
+                <li><a href="#values">How It Works</a></li>
                 <li><a href="#">Wellness Programs</a></li>
-                <li><a href="#">Wellness Hub</a></li>
                 <li><a href="#faq">FAQs</a></li>
                 <li><a href="mailto:psy@srivishnu.edu.in">Contact Us</a></li>
               </ul>
@@ -996,28 +1035,128 @@ export function LandingPage() {
                 </li>
                 <li><a href="#team">Our Wellness Counsellors</a></li>
                 <li><a href="#resources">Student Resources</a></li>
-                <li><a href="#">Wellness Check-In</a></li>
                 <li><a href="#">Refer a Student</a></li>
-                <li><a href="#">For Faculty</a></li>
-                <li><a href="#">For Parents</a></li>
+                <li>
+                  <MorphingPopover>
+                    <MorphingPopoverTrigger className="landing-footer__morph-trigger">
+                      For Faculty
+                    </MorphingPopoverTrigger>
+                    <MorphingPopoverContent title="For Faculty & Staff" className="landing-parents-modal">
+                      <div className="landing-parents-modal__body">
+                        <p className="landing-parents-modal__lead">
+                          <strong>Supporting Students Starts With Noticing.</strong>
+                          <br />
+                          Faculty members are often the first to notice when a student's behaviour, performance or
+                          engagement begins to change.
+                        </p>
+                        <section>
+                          <h4>How We Can Support You</h4>
+                        </section>
+                        <section>
+                          <h4>Notice</h4>
+                          <p>Recognise changes in behaviour, mood, academic engagement and social interaction.</p>
+                        </section>
+                        <section>
+                          <h4>Approach</h4>
+                          <p>Learn how to start a supportive conversation without judgement or pressure.</p>
+                        </section>
+                        <section>
+                          <h4>Listen</h4>
+                          <p>Create a safe space for the student to express what they're experiencing.</p>
+                        </section>
+                        <section>
+                          <h4>Connect</h4>
+                          <p>Know when and how to connect a student with counselling support.</p>
+                        </section>
+                        <section>
+                          <h4>Refer</h4>
+                          <p>Use the appropriate referral pathway when additional support is needed.</p>
+                        </section>
+                        <p className="landing-parents-modal__closing">
+                          <strong>You don't have to have all the answers.</strong>
+                          <br />
+                          You just need to notice, listen and help connect the student to the right support.
+                        </p>
+                      </div>
+                    </MorphingPopoverContent>
+                  </MorphingPopover>
+                </li>
+                <li>
+                  <MorphingPopover>
+                    <MorphingPopoverTrigger className="landing-footer__morph-trigger">
+                      For Parents
+                    </MorphingPopoverTrigger>
+                    <MorphingPopoverContent title="For Parents & Guardians" className="landing-parents-modal">
+                      <div className="landing-parents-modal__body">
+                        <section>
+                          <h4>1. Understanding Student Well-being</h4>
+                          <p>Help parents understand the emotional, academic and social challenges students may experience during college.</p>
+                        </section>
+                        <section>
+                          <h4>2. How Can I Support My Student?</h4>
+                          <p>Practical guidance on listening, communicating and supporting students without creating additional pressure.</p>
+                        </section>
+                        <section>
+                          <h4>3. When Should I Be Concerned?</h4>
+                          <p>Common changes in mood, behaviour, academics, sleep, attendance, social interaction and daily functioning that may indicate a student needs support.</p>
+                        </section>
+                        <section>
+                          <h4>4. Starting the Conversation</h4>
+                          <p>Simple ways to ask:</p>
+                          <ul>
+                            <li>"How are you really doing?"</li>
+                            <li>"Is there anything you've been finding difficult lately?"</li>
+                            <li>"Would you like me to listen, or would you like help finding support?"</li>
+                          </ul>
+                        </section>
+                        <section>
+                          <h4>5. When Professional Support May Help</h4>
+                          <p>Explain when counselling or additional professional support may be useful.</p>
+                        </section>
+                        <section>
+                          <h4>6. Academic Stress & College Life</h4>
+                          <p>Guidance around exam pressure, performance expectations, procrastination, adjustment and academic setbacks.</p>
+                        </section>
+                        <section>
+                          <h4>7. Digital Well-being & Lifestyle</h4>
+                          <p>Sleep, screen time, social media, routines, physical activity and healthy habits.</p>
+                        </section>
+                        <section>
+                          <h4>8. Connecting With Vishnu Wellness Centre</h4>
+                          <p>Explain how students can access counseling and how parents can encourage them to seek support.</p>
+                        </section>
+                        <section>
+                          <h4>9. Parent FAQs</h4>
+                          <p>Questions about counselling, confidentiality, appointments, referrals and what parents can expect.</p>
+                        </section>
+                        <section>
+                          <h4>10. Urgent Support</h4>
+                          <p>Clear guidance about what to do when there is an immediate safety concern or emergency.</p>
+                        </section>
+                        <p className="landing-parents-modal__closing">
+                          <strong>Supporting Your Student Starts With Understanding.</strong><br />
+                          Learn how to listen, communicate and connect your students with the right support when they need it.
+                        </p>
+                      </div>
+                    </MorphingPopoverContent>
+                  </MorphingPopover>
+                </li>
               </ul>
             </div>
 
             <div className="landing-footer__col">
               <h4>Connect</h4>
               <ul>
-                <li><a href="#">WhatsApp</a></li>
+                <li>
+                  <a href="https://wa.me/919100972237" target="_blank" rel="noopener noreferrer">
+                    WhatsApp
+                  </a>
+                </li>
                 <li>
                   <a href="https://www.instagram.com/vishnu_wellness_centre" target="_blank" rel="noopener noreferrer">
                     Instagram
                   </a>
                 </li>
-                <li>
-                  <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
-                    YouTube
-                  </a>
-                </li>
-                <li><a href="#">Facebook</a></li>
               </ul>
             </div>
           </div>

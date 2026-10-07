@@ -1,7 +1,9 @@
 .team-chat {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 220px);
+  /* Actual height is set inline once JS measures the real space available
+     below it (see TeamChatSection.tsx) — this is just the fallback before
+     that runs. */
   min-height: 420px;
   gap: 16px;
 }
@@ -134,8 +136,3 @@
   box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.2);
 }
 
-@media (max-width: 640px) {
-  .team-chat {
-    height: calc(100vh - 260px);
-  }
-}
