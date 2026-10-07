@@ -533,23 +533,22 @@ export function CounsellorWorksheetSection() {
           {worksheetsList.length === 0 && <p>No worksheets yet{isHead ? " — add the first one below." : "."}</p>}
           {worksheetsList.map((w) => (
             <Card key={w.id} className="counsellor-worksheet__list-row">
-              <button
-                type="button"
-                className="counsellor-worksheet__list-row-name"
-                onClick={() => setSelectedWorksheetId(w.id)}
-              >
-                {w.name}
-              </button>
-              {isHead && (
-                <button
-                  type="button"
-                  className="counsellor-worksheet__row-delete"
-                  aria-label="Delete worksheet"
-                  onClick={() => handleDeleteWorksheet(w)}
-                >
-                  ✕
-                </button>
-              )}
+              <span className="counsellor-worksheet__list-row-name">{w.name}</span>
+              <div className="counsellor-worksheet__list-row-actions">
+                <Button type="button" variant="outlined" onClick={() => setSelectedWorksheetId(w.id)}>
+                  View
+                </Button>
+                {isHead && (
+                  <button
+                    type="button"
+                    className="counsellor-worksheet__row-delete"
+                    aria-label="Delete worksheet"
+                    onClick={() => handleDeleteWorksheet(w)}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </Card>
           ))}
         </div>

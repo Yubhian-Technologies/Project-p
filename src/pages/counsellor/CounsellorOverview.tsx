@@ -29,7 +29,6 @@ function isToday(ts: number): boolean {
 
 export function CounsellorOverview() {
   const { currentUser } = useAuth();
-  const [loading, setLoading] = useState(true);
   const [appointmentsToday, setAppointmentsToday] = useState(0);
   const [pendingRequests, setPendingRequests] = useState(0);
   const [followUps, setFollowUps] = useState(0);
@@ -98,8 +97,6 @@ export function CounsellorOverview() {
         setTimeline(rows);
       } catch (error) {
         console.error("Failed to load counsellor overview", error);
-      } finally {
-        if (active) setLoading(false);
       }
     })();
 
@@ -108,8 +105,6 @@ export function CounsellorOverview() {
       unsub();
     };
   }, [currentUser]);
-
-  if (loading) return null;
 
   return (
     <div className="counsellor-overview">

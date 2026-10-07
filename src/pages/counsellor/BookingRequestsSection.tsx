@@ -42,21 +42,22 @@ const ImportSessionsModal = lazy(() =>
   import("../../components/booking/ImportSessionsModal").then((m) => ({ default: m.ImportSessionsModal })),
 );
 
-type Tab = "new" | "upcoming" | "completed" | "missed";
+type Tab = "new" | "upcoming" | "completed" | "cancelled" | "missed";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "new", label: "New Requests" },
-  { id: "upcoming", label: "Upcoming Sessions" },
-  // Groups completed + cancelled + rejected requests together (everything no
-  // longer active), not just sessions that actually happened — labelled to
-  // make that explicit rather than implying it's a pure "completed" count.
-  { id: "completed", label: "Completed / Cancelled" },
-  { id: "missed", label: "Missed Sessions" },
+// Only New Requests and Upcoming Sessions show a live count in the tab —
+// those are the two that need regular attention; the rest are history.
+const TABS: { id: Tab; label: string; showCount: boolean }[] = [
+  { id: "new", label: "New Requests", showCount: true },
+  { id: "upcoming", label: "Upcoming Sessions", showCount: true },
+  { id: "completed", label: "Completed", showCount: false },
+  { id: "cancelled", label: "Cancelled", showCount: false },
+  { id: "missed", label: "Missed Sessions", showCount: false },
 ];
 
 const NEW_STATUSES = ["pending"];
 const UPCOMING_STATUSES = ["accepted", "scheduled"];
-const COMPLETED_STATUSES = ["completed", "cancelled", "rejected"];
+const COMPLETED_STATUSES = ["completed"];
+const CANCELLED_STATUSES = ["cancelled", "rejected"];
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -113,6 +114,8 @@ export function BookingRequestsSection({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [completedFilterMonth, setCompletedFilterMonth] = useState(0);
   const [completedFilterYear, setCompletedFilterYear] = useState(0);
+  const [cancelledFilterMonth, setCancelledFilterMonth] = useState(0);
+  const [cancelledFilterYear, setCancelledFilterYear] = useState(0);
   const [missedFilterMonth, setMissedFilterMonth] = useState(0);
   const [missedFilterYear, setMissedFilterYear] = useState(0);
 
@@ -228,6 +231,7 @@ export function BookingRequestsSection({
   const newRequests = bookings.filter((b) => NEW_STATUSES.includes(b.status));
   const upcoming = bookings.filter((b) => UPCOMING_STATUSES.includes(b.status) && !isSessionEndedPending(b));
   const completed = bookings.filter((b) => COMPLETED_STATUSES.includes(b.status) && b.outcome !== "missed");
+  const cancelled = bookings.filter((b) => CANCELLED_STATUSES.includes(b.status));
   const missed = bookings.filter(
     (b) => (b.status === "completed" && b.outcome === "missed") || isSessionEndedPending(b),
   );
@@ -241,6 +245,14 @@ export function BookingRequestsSection({
     return true;
   });
   const completedFiltersActive = completedFilterMonth !== 0 || completedFilterYear !== 0;
+  const filteredCancelled = cancelled.filter((b) => {
+    if (!cancelledFilterMonth && !cancelledFilterYear) return true;
+    const d = completedDate(b);
+    if (cancelledFilterMonth && d.getMonth() + 1 !== cancelledFilterMonth) return false;
+    if (cancelledFilterYear && d.getFullYear() !== cancelledFilterYear) return false;
+    return true;
+  });
+  const cancelledFiltersActive = cancelledFilterMonth !== 0 || cancelledFilterYear !== 0;
   const filteredMissed = missed.filter((b) => {
     if (!missedFilterMonth && !missedFilterYear) return true;
     const d = completedDate(b);
@@ -254,6 +266,7 @@ export function BookingRequestsSection({
     new: newRequests.length,
     upcoming: upcoming.length,
     completed: completed.length,
+    cancelled: cancelled.length,
     missed: missed.length,
   };
 
@@ -274,7 +287,7 @@ export function BookingRequestsSection({
               className={`booking-requests-section__tab ${activeTab === tab.id ? "booking-requests-section__tab--active" : ""}`}
               onClick={() => setActiveTab(tab.id)}
             >
-              {tab.label} ({tabCounts[tab.id]})
+              {tab.label}{tab.showCount ? ` (${tabCounts[tab.id]})` : ""}
             </button>
           ))}
         </div>
@@ -364,6 +377,62 @@ export function BookingRequestsSection({
             <p>{completed.length === 0 ? "No completed sessions yet." : "No sessions match the selected filters."}</p>
           ) : (
             filteredCompleted.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
+          )}
+        </>
+      )}
+
+      {activeTab === "cancelled" && (
+        <>
+          {cancelled.length > 0 && (
+            <div className="booking-requests-section__filters">
+              <div className="booking-requests-section__filter-field">
+                <label htmlFor="cancelled-filter-month">Month</label>
+                <Select
+                  id="cancelled-filter-month"
+                  value={String(cancelledFilterMonth)}
+                  onChange={(v) => setCancelledFilterMonth(Number(v))}
+                >
+                  <option value="0">All months</option>
+                  {MONTHS.map((m, i) => (
+                    <option key={m} value={String(i + 1)}>{m}</option>
+                  ))}
+                </Select>
+              </div>
+              <div className="booking-requests-section__filter-field">
+                <label htmlFor="cancelled-filter-year">Year</label>
+                <Select
+                  id="cancelled-filter-year"
+                  value={String(cancelledFilterYear)}
+                  onChange={(v) => setCancelledFilterYear(Number(v))}
+                >
+                  <option value="0">All years</option>
+                  {YEARS.map((y) => (
+                    <option key={y} value={String(y)}>{y}</option>
+                  ))}
+                </Select>
+              </div>
+              {cancelledFiltersActive && (
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={() => {
+                    setCancelledFilterMonth(0);
+                    setCancelledFilterYear(0);
+                  }}
+                >
+                  Clear filters
+                </Button>
+              )}
+              <span className="booking-requests-section__filter-count">
+                {filteredCancelled.length} of {cancelled.length}
+              </span>
+            </div>
+          )}
+
+          {filteredCancelled.length === 0 ? (
+            <p>{cancelled.length === 0 ? "No cancelled or rejected requests yet." : "No sessions match the selected filters."}</p>
+          ) : (
+            filteredCancelled.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
           )}
         </>
       )}

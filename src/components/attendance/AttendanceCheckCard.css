@@ -1,3 +1,11 @@
+/* Opt this card out of the bento grid's automatic pastel color rotation
+   (see styles/bento-grid.css) — it should always look like a plain card,
+   not whichever pastel its position in the grid happens to land on. */
+.attn-card {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+}
+
 .attn {
   display: flex;
   flex-direction: column;
