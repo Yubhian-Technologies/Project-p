@@ -6,6 +6,7 @@ import { deleteCampusLogin, functionsErrorMessage } from "../../services/firebas
 import type { Campus } from "../../types/campus";
 import type { College } from "../../types/college";
 import type { UserProfile } from "../../types/user";
+import { useViewMore } from "../../hooks/useViewMore";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { Select } from "../../components/common/Select";
@@ -19,7 +20,6 @@ export function LoginsManagementSection() {
   const [colleges, setColleges] = useState<College[]>([]);
   const [logins, setLogins] = useState<UserProfile[]>([]);
   const [campusId, setCampusId] = useState("");
-  const [collegeId, setCollegeId] = useState("");
   const [loadingCampuses, setLoadingCampuses] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
   const [editingLogin, setEditingLogin] = useState<UserProfile | null>(null);
@@ -43,15 +43,11 @@ export function LoginsManagementSection() {
     if (!campusId) {
       setColleges([]);
       setLogins([]);
-      setCollegeId("");
       return;
     }
-    setCollegeId("");
     loadForCampus(campusId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campusId]);
-
-  const visibleLogins = collegeId === "all" ? logins : collegeId ? logins.filter((l) => l.collegeId === collegeId) : [];
 
   async function handleDelete(uid: string) {
     setDeleteError(null);
@@ -65,6 +61,8 @@ export function LoginsManagementSection() {
       setDeletingUid(null);
     }
   }
+
+  const { visible: visibleLogins, hiddenCount, showMore } = useViewMore(logins);
 
   if (loadingCampuses) return null;
 
@@ -90,41 +88,21 @@ export function LoginsManagementSection() {
             ))}
           </Select>
         </div>
-        <div className="logins-management__field">
-          <label htmlFor="logins-college">College</label>
-          <Select id="logins-college" value={collegeId} onChange={setCollegeId} disabled={!campusId || colleges.length === 0}>
-            <option value="" disabled>
-              {!campusId ? "Select a campus first" : colleges.length === 0 ? "No colleges on this campus" : "Select a college…"}
-            </option>
-            {colleges.length > 0 && <option value="all">All Colleges</option>}
-            {colleges.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
-        </div>
       </div>
 
       {deleteError && <p className="logins-management__error">{deleteError}</p>}
-      {!campusId && <p>Select a campus and college to view logins.</p>}
-      {campusId && !collegeId && <p>Select a college to view its logins.</p>}
-      {campusId && collegeId && visibleLogins.length === 0 && (
-        <p>{collegeId === "all" ? "No logins on this campus yet." : "No logins for this college yet."}</p>
-      )}
+      {!campusId && <p>Select a campus to view its logins.</p>}
+      {campusId && logins.length === 0 && <p>No logins on this campus yet.</p>}
 
       {campusId &&
-        collegeId &&
         visibleLogins.map((login) => (
           <Card key={login.uid} className="logins-management__row">
             <div>
               <p className="logins-management__name">{login.displayName || login.email}</p>
               <p className="logins-management__role">{ROLE_LABELS[login.role]}</p>
-              {collegeId === "all" && (
-                <p className="logins-management__college">
-                  {colleges.find((c) => c.id === login.collegeId)?.name ?? "—"}
-                </p>
-              )}
+              <p className="logins-management__college">
+                {colleges.find((c) => c.id === login.collegeId)?.name ?? "—"}
+              </p>
             </div>
             <div className="logins-management__row-actions">
               <Button type="button" variant="outlined" onClick={() => setEditingLogin(login)}>
@@ -142,10 +120,15 @@ export function LoginsManagementSection() {
           </Card>
         ))}
 
+      {campusId && hiddenCount > 0 && (
+        <Button type="button" variant="outlined" style={{ alignSelf: "center" }} onClick={showMore}>
+          View More ({hiddenCount} more)
+        </Button>
+      )}
+
       {addOpen && (
         <AddLoginModal
           defaultCampusId={campusId || undefined}
-          defaultCollegeId={collegeId && collegeId !== "all" ? collegeId : undefined}
           onClose={() => setAddOpen(false)}
           onCreated={async () => {
             if (campusId) await loadForCampus(campusId);

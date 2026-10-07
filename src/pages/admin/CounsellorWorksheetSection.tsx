@@ -7,8 +7,10 @@ import {
 } from "../../services/firebase/worksheets";
 import type { WorksheetAcademicYear, Worksheet, WorksheetRow, WorksheetRowStatus } from "../../types/worksheet";
 import type { Campus } from "../../types/campus";
+import { useViewMore } from "../../hooks/useViewMore";
 import { Card } from "../../components/common/Card";
 import { Select } from "../../components/common/Select";
+import { Button } from "../../components/common/Button";
 import "./CounsellorWorksheetSection.css";
 
 const STATUS_LABELS: Record<WorksheetRowStatus, string> = {
@@ -94,6 +96,8 @@ export function CounsellorWorksheetSection() {
   const selectedYear = years.find((y) => y.id === selectedYearId);
   const selectedWorksheet = worksheetsList.find((w) => w.id === selectedWorksheetId);
   const selectedCampus = campuses.find((c) => c.id === selectedCampusId);
+  const { visible: visibleWorksheets, hiddenCount: hiddenWorksheetCount, showMore: showMoreWorksheets } =
+    useViewMore(worksheetsList, 7);
 
   if (!selectedCampusId || !selectedYear) {
     return (
@@ -157,17 +161,21 @@ export function CounsellorWorksheetSection() {
 
         <div className="counsellor-worksheet__list">
           {worksheetsList.length === 0 && <p>No worksheets yet.</p>}
-          {worksheetsList.map((w) => (
+          {visibleWorksheets.map((w) => (
             <Card key={w.id} className="counsellor-worksheet__list-row">
-              <button
-                type="button"
-                className="counsellor-worksheet__list-row-name"
-                onClick={() => setSelectedWorksheetId(w.id)}
-              >
-                {w.name}
-              </button>
+              <span className="counsellor-worksheet__list-row-name">{w.name}</span>
+              <div className="counsellor-worksheet__list-row-actions">
+                <Button type="button" variant="outlined" onClick={() => setSelectedWorksheetId(w.id)}>
+                  View
+                </Button>
+              </div>
             </Card>
           ))}
+          {hiddenWorksheetCount > 0 && (
+            <Button type="button" variant="outlined" style={{ alignSelf: "center" }} onClick={showMoreWorksheets}>
+              View More ({hiddenWorksheetCount} more)
+            </Button>
+          )}
         </div>
       </div>
     );

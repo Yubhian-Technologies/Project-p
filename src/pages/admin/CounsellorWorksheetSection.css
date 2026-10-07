@@ -153,19 +153,17 @@
 }
 
 .counsellor-worksheet__list-row-name {
-  background: none;
-  border: none;
-  padding: 0;
-  text-align: left;
   font-family: var(--md-sys-typescale-font-display);
   font-size: 14.5px;
   font-weight: 700;
   color: var(--neu-text-primary, #2d3748);
-  cursor: pointer;
 }
 
-.counsellor-worksheet__list-row-name:hover {
-  color: #EA580C;
+.counsellor-worksheet__list-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .counsellor-worksheet__row-delete {

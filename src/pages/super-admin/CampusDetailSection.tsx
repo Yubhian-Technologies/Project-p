@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { listColleges, deleteCollege } from "../../services/firebase/colleges";
 import type { Campus } from "../../types/campus";
 import type { College } from "../../types/college";
+import { useViewMore } from "../../hooks/useViewMore";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { BackLink } from "../../components/common/BackLink";
@@ -41,6 +42,8 @@ export function CampusDetailSection({ campus, onBack }: CampusDetailSectionProps
     }
   }
 
+  const { visible: visibleColleges, hiddenCount, showMore } = useViewMore(colleges);
+
   if (loading) return null;
 
   return (
@@ -56,7 +59,7 @@ export function CampusDetailSection({ campus, onBack }: CampusDetailSectionProps
 
       {colleges.length === 0 && <p>No colleges added for this campus yet.</p>}
 
-      {colleges.map((college) => (
+      {visibleColleges.map((college) => (
         <Card key={college.id} className="campus-detail-section__row">
           <p className="campus-detail-section__name">{college.name}</p>
           <div className="campus-detail-section__actions">
@@ -78,6 +81,12 @@ export function CampusDetailSection({ campus, onBack }: CampusDetailSectionProps
           </div>
         </Card>
       ))}
+
+      {hiddenCount > 0 && (
+        <Button type="button" variant="outlined" style={{ alignSelf: "center" }} onClick={showMore}>
+          View More ({hiddenCount} more)
+        </Button>
+      )}
 
       {addOpen && (
         <AddCollegeModal campusId={campus.id} onClose={() => setAddOpen(false)} onCreated={load} />

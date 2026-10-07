@@ -6,7 +6,9 @@ import {
 } from "../../services/firebase/monthlyReports";
 import { listCampuses } from "../../services/firebase/campuses";
 import type { Campus } from "../../types/campus";
+import { useViewMore } from "../../hooks/useViewMore";
 import { Select } from "../../components/common/Select";
+import { Button } from "../../components/common/Button";
 import {
   FolderOpenIcon,
   CalendarIcon,
@@ -102,6 +104,7 @@ export function MonthlyReportsViewSection() {
     if (filterYear && r.year !== filterYear) return false;
     return true;
   });
+  const { visible: visibleReports, hiddenCount, showMore } = useViewMore(filtered, 7);
 
   const hasSelection = !!selectedCampusId;
 
@@ -219,7 +222,7 @@ export function MonthlyReportsViewSection() {
           </div>
         ) : (
           <div className="mrv-list">
-            {filtered.map((r) => (
+            {visibleReports.map((r) => (
               <div key={r.id} className="mrv-list__row">
                 <div className="mrv-list__row-left">
                   <span className="mrv-list__row-title">{r.title}</span>
@@ -234,9 +237,6 @@ export function MonthlyReportsViewSection() {
                 <div className="mrv-list__row-right">
                   <span className="mrv-badge">
                     {monthLabel(r.month)} {r.year}
-                  </span>
-                  <span className="mrv-badge mrv-badge--green">
-                    <CheckIcon /> By Head
                   </span>
                   <span className={`mrv-badge ${r.status === "verified" ? "mrv-badge--green" : "mrv-badge--amber"}`}>
                     {r.status === "verified" ? <><CheckIcon /> Verified</> : <><HourglassIcon /> Pending</>}
@@ -271,6 +271,11 @@ export function MonthlyReportsViewSection() {
                 </div>
               </div>
             ))}
+            {hiddenCount > 0 && (
+              <Button type="button" variant="outlined" style={{ alignSelf: "center" }} onClick={showMore}>
+                View More ({hiddenCount} more)
+              </Button>
+            )}
           </div>
         )
       )}

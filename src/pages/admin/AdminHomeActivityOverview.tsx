@@ -5,6 +5,7 @@ import {
 } from "../../services/firebase/monthlyReports";
 import { listCampuses } from "../../services/firebase/campuses";
 import type { Campus } from "../../types/campus";
+import { useViewMore } from "../../hooks/useViewMore";
 import { Button } from "../../components/common/Button";
 import {
   TrendingUpIcon,
@@ -42,6 +43,7 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react/set-state-in-effect -- initial data fetch, not resetting state from a prop change
     loadData();
   }, []);
 
@@ -50,9 +52,15 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
   const currentYear = now.getFullYear();
   const periodLabel = now.toLocaleString("en-IN", { month: "long", year: "numeric" });
 
-  const reportsThisMonth = monthlyReports.filter(
-    (r) => r.month === currentMonth && r.year === currentYear,
-  );
+  // "Submitted this period" is based on when a report was actually uploaded
+  // (uploadedAt), not the month/year a Head tagged it with — that field
+  // defaults to the current month at upload time with no guidance to change
+  // it, so a campus that just submitted last month's report would otherwise
+  // show as permanently "Pending" for the whole current month.
+  const reportsThisMonth = monthlyReports.filter((r) => {
+    const d = new Date(r.uploadedAt);
+    return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+  });
 
   const submittedCampusIds = new Set(
     reportsThisMonth.map((r) => r.campusId).filter((id): id is string => Boolean(id)),
@@ -64,14 +72,19 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
 
   const campusRows = campuses
     .map((campus) => {
-      const campusReports = monthlyReports.filter((r) => r.campusId === campus.id);
-      const lastUpload = campusReports.reduce((max, r) => {
-        const t = new Date(r.uploadedAt).getTime();
-        return Number.isNaN(t) ? max : Math.max(max, t);
-      }, 0);
+      // "Reports Uploaded" is scoped to this period (reportsThisMonth), not
+      // all-time — lastUpload stays all-time since "last activity ever" is
+      // still useful context even for a campus with 0 uploads this month.
+      const campusReportsThisMonth = reportsThisMonth.filter((r) => r.campusId === campus.id);
+      const lastUpload = monthlyReports
+        .filter((r) => r.campusId === campus.id)
+        .reduce((max, r) => {
+          const t = new Date(r.uploadedAt).getTime();
+          return Number.isNaN(t) ? max : Math.max(max, t);
+        }, 0);
       return {
         campus,
-        reportCount: campusReports.length,
+        reportCount: campusReportsThisMonth.length,
         submitted: submittedCampusIds.has(campus.id),
         lastUpload,
       };
@@ -82,6 +95,8 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
         b.reportCount - a.reportCount ||
         a.campus.name.localeCompare(b.campus.name),
     );
+
+  const { visible: visibleCampusRows, hiddenCount, showMore } = useViewMore(campusRows, 7);
 
   const kpis = [
     { label: "Total Campuses", value: campuses.length, icon: BuildingIcon, color: "#2563EB", bg: "#DBEAFE" },
@@ -117,7 +132,7 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
             <div className="aha-card__title-wrap">
               <span className="aha-card__icon"><FolderOpenIcon /></span>
               <div>
-                <h4 className="aha-card__title">Head Monthly Reports Submitted</h4>
+                <h4 className="aha-card__title">Consolidated Reports Submitted</h4>
                 <span className="aha-card__subtitle">
                   Which campuses shared their reports for {periodLabel} — and which haven't yet.
                 </span>
@@ -163,12 +178,12 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
                       <tr>
                         <th>Campus</th>
                         <th>Status ({periodLabel})</th>
-                        <th>Reports Uploaded</th>
+                        <th>Reports Uploaded ({periodLabel})</th>
                         <th>Last Upload</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {campusRows.map(({ campus, reportCount, submitted, lastUpload }) => (
+                      {visibleCampusRows.map(({ campus, reportCount, submitted, lastUpload }) => (
                         <tr key={campus.id}>
                           <td>
                             <span className="aha-table__campus">
@@ -191,6 +206,13 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
                       ))}
                     </tbody>
                   </table>
+                  {hiddenCount > 0 && (
+                    <div className="aha-table__view-more">
+                      <Button type="button" variant="outlined" onClick={showMore}>
+                        View More ({hiddenCount} more)
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </>
@@ -202,7 +224,7 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
               className="aha-link-btn"
               onClick={() => onSelectSection("monthly-reports")}
             >
-              Open Monthly Reports Section →
+              Open Consolidated Reports Section →
             </button>
           </div>
         </div>

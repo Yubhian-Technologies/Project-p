@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { listCampuses, deleteCampus } from "../../services/firebase/campuses";
 import type { Campus } from "../../types/campus";
+import { useViewMore } from "../../hooks/useViewMore";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { AddCampusModal } from "./AddCampusModal";
@@ -37,6 +38,8 @@ export function CampusManagementSection() {
     }
   }
 
+  const { visible: visibleCampuses, hiddenCount, showMore } = useViewMore(campuses);
+
   if (selectedCampus) {
     return <CampusDetailSection campus={selectedCampus} onBack={() => setSelectedCampus(null)} />;
   }
@@ -53,7 +56,7 @@ export function CampusManagementSection() {
 
       {campuses.length === 0 && <p>No campuses yet.</p>}
 
-      {campuses.map((campus) => (
+      {visibleCampuses.map((campus) => (
         <Card key={campus.id} className="campus-management__row" onClick={() => setSelectedCampus(campus)}>
           <div>
             <p className="campus-management__name">{campus.name}</p>
@@ -93,6 +96,12 @@ export function CampusManagementSection() {
           </div>
         </Card>
       ))}
+
+      {hiddenCount > 0 && (
+        <Button type="button" variant="outlined" style={{ alignSelf: "center" }} onClick={showMore}>
+          View More ({hiddenCount} more)
+        </Button>
+      )}
 
       {addOpen && <AddCampusModal onClose={() => setAddOpen(false)} onCreated={load} />}
       {editingCampus && (

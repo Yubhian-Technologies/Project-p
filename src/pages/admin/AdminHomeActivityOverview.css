@@ -505,6 +505,12 @@
   overflow-x: auto;
 }
 
+.aha-table__view-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
 .aha-table {
   width: 100%;
   border-collapse: collapse;
