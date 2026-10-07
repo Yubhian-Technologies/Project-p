@@ -1,0 +1,99 @@
+.refer-student-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.refer-student-form__intro {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #4A5568;
+}
+
+.refer-student-form__row {
+  display: flex;
+  gap: 14px;
+}
+
+.refer-student-form__row .refer-student-form__field {
+  flex: 1;
+  min-width: 0;
+}
+
+.refer-student-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.refer-student-form__field span,
+.refer-student-form__field > label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #718096;
+}
+
+.refer-student-form__field input,
+.refer-student-form__field select,
+.refer-student-form__field textarea {
+  font-family: var(--font-main);
+  font-size: 13.5px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(46, 43, 39, 0.12);
+  background: #FAFAF9;
+  color: #2E2B27;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.refer-student-form__field input:focus,
+.refer-student-form__field select:focus,
+.refer-student-form__field textarea:focus {
+  outline: none;
+  border-color: #F97316;
+}
+
+.refer-student-form__submit {
+  align-self: flex-start;
+  font-family: var(--font-main);
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #FFFFFF;
+  background: #EA580C;
+  border: none;
+  padding: 11px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.refer-student-form__submit:hover {
+  background: #C2410C;
+}
+
+.refer-student-form__done {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.refer-student-form__done p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #2E2B27;
+}
+
+.refer-student-form__done-hint {
+  font-size: 12.5px !important;
+  color: #718096 !important;
+}
+
+@media (max-width: 560px) {
+  .refer-student-form__row {
+    flex-direction: column;
+    gap: 16px;
+  }
+}

@@ -2,15 +2,13 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { listEventsForCampus } from "../../services/firebase/events";
 import type { EventProgram } from "../../types/event";
-import { CalendarIcon } from "../../components/common/icons";
-import { EventPreviewModal } from "./EventPreviewModal";
+import { EventCard } from "./EventCard";
 import "./UpcomingEventsSection.css";
 
 export function UpcomingEventsSection() {
   const { profile } = useAuth();
   const [events, setEvents] = useState<EventProgram[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<EventProgram | null>(null);
 
   useEffect(() => {
     if (!profile?.campusId) {
@@ -44,36 +42,12 @@ export function UpcomingEventsSection() {
       {upcoming.length === 0 ? (
         <p className="upcoming-events__empty">No upcoming events right now — check back later.</p>
       ) : (
-        <div className="upcoming-events__list">
+        <div className="upcoming-events__grid">
           {upcoming.map((event) => (
-            <div key={event.id} className="upcoming-events__item">
-              <span className="upcoming-events__icon">
-                <CalendarIcon />
-              </span>
-              <div className="upcoming-events__details">
-                <span className="upcoming-events__title">{event.title}</span>
-                <span className="upcoming-events__date">
-                  {new Date(event.eventDate).toLocaleDateString(undefined, {
-                    weekday: "short",
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
-              <button
-                type="button"
-                className="upcoming-events__view-btn"
-                onClick={() => setSelected(event)}
-              >
-                View →
-              </button>
-            </div>
+            <EventCard key={event.id} event={event} />
           ))}
         </div>
       )}
-
-      {selected && <EventPreviewModal event={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }

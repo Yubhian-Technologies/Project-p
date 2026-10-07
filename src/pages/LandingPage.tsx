@@ -7,6 +7,7 @@ import { CardFanCarousel } from "../components/ui/CardFanCarousel";
 import { PerspectiveDeckCarousel } from "../components/ui/PerspectiveDeckCarousel";
 import { AnimatedHero } from "../components/ui/animated-hero";
 import { MorphingPopover, MorphingPopoverTrigger, MorphingPopoverContent } from "../components/common/MorphingPopover";
+import { ReferStudentForm } from "./ReferStudentForm";
 import "./LandingPage.css";
 
 const DOING_CARDS = [
@@ -146,7 +147,7 @@ const TEAM_CARDS = [
   {
     imgUrl: "/team/counsellor-1.jpg",
     name: "Ram Prudhvi Teja",
-    role: "Senior Wellness Counsellor • Author • Mind-Body Therapist",
+    role: "Senior Wellness Counsellor • Incharge",
     institution: "Vishnu Institute of Technology",
     qualification: "Master's in Psychology & PGDMH",
     experience: "7+ Years Experience",
@@ -986,7 +987,7 @@ export function LandingPage() {
               <p className="landing-footer__question">
                 Have a question?
                 <br />
-                Email us anytime: <a href="mailto:psy@srivishnu.edu.in">psy@srivishnu.edu.in</a>
+                Email us anytime: <a href="mailto:vishnuwellnesscentre@gmail.com">vishnuwellnesscentre@gmail.com</a>
               </p>
               <div className="landing-footer__socials">
                 <a
@@ -1019,9 +1020,189 @@ export function LandingPage() {
               <ul>
                 <li><a href="#about">About Us</a></li>
                 <li><a href="#values">How It Works</a></li>
-                <li><a href="#">Wellness Programs</a></li>
+                <li>
+                  <MorphingPopover>
+                    <MorphingPopoverTrigger className="landing-footer__morph-trigger">
+                      Wellness Programs
+                    </MorphingPopoverTrigger>
+                    <MorphingPopoverContent title="Wellness Programs" className="landing-parents-modal">
+                      <div className="landing-parents-modal__body">
+                        <p className="landing-parents-modal__lead">
+                          <strong>Building a healthier, more connected campus.</strong>
+                          <br />
+                          Our wellness programs support students, faculty and the wider campus community
+                          through awareness, prevention, emotional support, skill-building and meaningful
+                          engagement. Explore the programs happening across Vishnu Educational Society and
+                          find opportunities to learn, connect, participate and grow.
+                        </p>
+
+                        <section>
+                          <h4>Core Wellness Programs</h4>
+                          <p>The key programs conducted as part of the Vishnu Wellness Centre's annual wellness plan.</p>
+                        </section>
+
+                        <section>
+                          <h4 className="landing-parents-modal__item-title">Orientation Program – 1st Year Students</h4>
+                          <p className="landing-parents-modal__meta">For: First-year students · When: July–August · Format: Interactive orientation</p>
+                          <p>
+                            A student-friendly introduction to campus life, emotional well-being, available
+                            support systems, healthy adjustment, relationships, academic expectations and
+                            help-seeking.
+                          </p>
+                          <p>What students can expect:</p>
+                          <ul>
+                            <li>Understanding the transition to college life</li>
+                            <li>Emotional adjustment and coping</li>
+                            <li>Building healthy routines</li>
+                            <li>Knowing when and where to seek support</li>
+                            <li>Introduction to Vishnu Wellness Centre</li>
+                          </ul>
+                        </section>
+
+                        <section>
+                          <h4 className="landing-parents-modal__item-title">Faculty Training on Mental Health & Well-being</h4>
+                          <p className="landing-parents-modal__meta">For: Faculty & academic staff · When: July–August · Format: Training / Workshop</p>
+                          <p>
+                            Interactive faculty development sessions designed to help educators recognise
+                            emotional and behavioural concerns among students and respond appropriately.
+                          </p>
+                          <p>Focus areas:</p>
+                          <ul>
+                            <li>Understanding student well-being</li>
+                            <li>Recognising early warning signs</li>
+                            <li>Supportive communication</li>
+                            <li>Appropriate referral</li>
+                            <li>Building a supportive classroom environment</li>
+                          </ul>
+                        </section>
+
+                        <section>
+                          <h4 className="landing-parents-modal__item-title">Strong Minds, Healthy Cycles</h4>
+                          <p className="landing-parents-modal__meta">For: Students · When: March, on occasion of International Women's Day · Format: Awareness & interactive session</p>
+                          <p>
+                            A wellness initiative focusing on menstrual health, emotional well-being, body
+                            awareness, healthy coping, and creating a comfortable space for conversations
+                            around menstrual experiences.
+                          </p>
+                        </section>
+
+                        <section>
+                          <h4 className="landing-parents-modal__item-title">World Mental Health Day</h4>
+                          <p className="landing-parents-modal__meta">For: Girls · When: October · Format: Campus-wide campaign</p>
+                          <p>
+                            A special annual wellness campaign featuring awareness activities, interactive
+                            experiences, student engagement and conversations around emotional well-being.
+                          </p>
+                        </section>
+
+                        <section>
+                          <h4 className="landing-parents-modal__item-title">Suicide Prevention Day</h4>
+                          <p className="landing-parents-modal__meta">For: Entire campus community · When: September · Format: Awareness campaign</p>
+                          <p>
+                            A campus-wide initiative promoting suicide prevention, help-seeking, peer support
+                            and compassionate conversations.
+                          </p>
+                          <p className="landing-parents-modal__quote">"Talk. Listen. Support. Be the Change."</p>
+                        </section>
+
+                        <section>
+                          <h4 className="landing-parents-modal__item-title">Group Wellness Sessions</h4>
+                          <p className="landing-parents-modal__meta">For: 1st, 2nd, 3rd & 4th Year Students · When: Throughout the academic year · Format: Group sessions</p>
+                          <p>Interactive sessions designed around common student experiences and developmental needs.</p>
+                          <p>Possible themes:</p>
+                          <ul>
+                            <li>Managing academic stress</li>
+                            <li>Emotional regulation</li>
+                            <li>Relationships & communication</li>
+                            <li>Self-esteem</li>
+                            <li>Overthinking</li>
+                            <li>Digital well-being</li>
+                            <li>Exam anxiety</li>
+                            <li>Peer relationships</li>
+                            <li>Coping skills</li>
+                            <li>Personal growth</li>
+                          </ul>
+                        </section>
+
+                        <section>
+                          <h4 className="landing-parents-modal__item-title">Digital Detox Sessions</h4>
+                          <p className="landing-parents-modal__meta">For: 1st & 2nd Year Students · When: Throughout the academic year · Format: Interactive wellness activity</p>
+                          <p>
+                            Sessions that encourage students to reflect on their relationship with technology
+                            and develop healthier digital habits.
+                          </p>
+                          <p>Focus areas:</p>
+                          <ul>
+                            <li>Screen awareness</li>
+                            <li>Social media habits</li>
+                            <li>Attention & concentration</li>
+                            <li>Digital boundaries</li>
+                            <li>Offline connection</li>
+                            <li>Mindful technology use</li>
+                          </ul>
+                          <p className="landing-parents-modal__quote">"Disconnect to Reconnect."</p>
+                        </section>
+
+                        <section>
+                          <h4 className="landing-parents-modal__item-title">Psychology Club Activities</h4>
+                          <p className="landing-parents-modal__meta">For: Interested students · Frequency: Monthly</p>
+                          <p>
+                            A student-led platform for exploring psychology through interactive activities,
+                            discussions, experiments, games, awareness campaigns and creative learning.
+                          </p>
+                        </section>
+
+                        <section>
+                          <h4 className="landing-parents-modal__item-title">Movie Screening</h4>
+                          <p className="landing-parents-modal__meta">For: Students · Frequency: Yearly / Periodic</p>
+                          <p>
+                            Curated movie screenings followed by guided discussions connecting cinema with
+                            psychology, relationships, emotions, behaviour and well-being.
+                          </p>
+                        </section>
+
+                        <section>
+                          <h4 className="landing-parents-modal__item-title">Open Mic</h4>
+                          <p className="landing-parents-modal__meta">For: Students · Frequency: Yearly / Periodic</p>
+                          <p>A safe and supportive platform for students to express themselves through:</p>
+                          <ul>
+                            <li>Spoken Word</li>
+                            <li>Music</li>
+                            <li>Poetry</li>
+                            <li>Storytelling</li>
+                            <li>Performance</li>
+                          </ul>
+                          <p className="landing-parents-modal__quote">"Express. Explore. Connect."</p>
+                        </section>
+
+                        <section>
+                          <h4 className="landing-parents-modal__item-title">Wellness Awareness Campaigns</h4>
+                          <p className="landing-parents-modal__meta">For: Entire campus community · Frequency: Yearly / Periodic</p>
+                          <p>
+                            Interactive campaigns designed to make wellness conversations more accessible and
+                            engaging for students.
+                          </p>
+                          <p>Campaigns may include:</p>
+                          <ul>
+                            <li>Awareness booths</li>
+                            <li>Myth vs Fact</li>
+                            <li>Interactive walls</li>
+                            <li>Wellness challenges</li>
+                            <li>Peer activities</li>
+                            <li>Creative campaigns</li>
+                            <li>Information resources</li>
+                          </ul>
+                        </section>
+                      </div>
+                    </MorphingPopoverContent>
+                  </MorphingPopover>
+                </li>
                 <li><a href="#faq">FAQs</a></li>
-                <li><a href="mailto:psy@srivishnu.edu.in">Contact Us</a></li>
+                <li>
+                  <a href="https://wa.me/919100972237" target="_blank" rel="noopener noreferrer">
+                    Contact Us
+                  </a>
+                </li>
               </ul>
             </div>
 
@@ -1035,7 +1216,16 @@ export function LandingPage() {
                 </li>
                 <li><a href="#team">Our Wellness Counsellors</a></li>
                 <li><a href="#resources">Student Resources</a></li>
-                <li><a href="#">Refer a Student</a></li>
+                <li>
+                  <MorphingPopover>
+                    <MorphingPopoverTrigger className="landing-footer__morph-trigger">
+                      Refer a Student
+                    </MorphingPopoverTrigger>
+                    <MorphingPopoverContent title="Refer a Student" className="landing-parents-modal">
+                      <ReferStudentForm />
+                    </MorphingPopoverContent>
+                  </MorphingPopover>
+                </li>
                 <li>
                   <MorphingPopover>
                     <MorphingPopoverTrigger className="landing-footer__morph-trigger">
@@ -1053,29 +1243,31 @@ export function LandingPage() {
                           <h4>How We Can Support You</h4>
                         </section>
                         <section>
-                          <h4>Notice</h4>
+                          <h4 className="landing-parents-modal__item-title">Notice</h4>
                           <p>Recognise changes in behaviour, mood, academic engagement and social interaction.</p>
                         </section>
                         <section>
-                          <h4>Approach</h4>
+                          <h4 className="landing-parents-modal__item-title">Approach</h4>
                           <p>Learn how to start a supportive conversation without judgement or pressure.</p>
                         </section>
                         <section>
-                          <h4>Listen</h4>
+                          <h4 className="landing-parents-modal__item-title">Listen</h4>
                           <p>Create a safe space for the student to express what they're experiencing.</p>
                         </section>
                         <section>
-                          <h4>Connect</h4>
+                          <h4 className="landing-parents-modal__item-title">Connect</h4>
                           <p>Know when and how to connect a student with counselling support.</p>
                         </section>
                         <section>
-                          <h4>Refer</h4>
+                          <h4 className="landing-parents-modal__item-title">Refer</h4>
                           <p>Use the appropriate referral pathway when additional support is needed.</p>
                         </section>
                         <p className="landing-parents-modal__closing">
                           <strong>You don't have to have all the answers.</strong>
                           <br />
-                          You just need to notice, listen and help connect the student to the right support.
+                          <strong className="landing-parents-modal__quote">
+                            "You just need to notice, listen and help connect the student to the right support."
+                          </strong>
                         </p>
                       </div>
                     </MorphingPopoverContent>
@@ -1089,19 +1281,19 @@ export function LandingPage() {
                     <MorphingPopoverContent title="For Parents & Guardians" className="landing-parents-modal">
                       <div className="landing-parents-modal__body">
                         <section>
-                          <h4>1. Understanding Student Well-being</h4>
+                          <h4 className="landing-parents-modal__item-title">1. Understanding Student Well-being</h4>
                           <p>Help parents understand the emotional, academic and social challenges students may experience during college.</p>
                         </section>
                         <section>
-                          <h4>2. How Can I Support My Student?</h4>
+                          <h4 className="landing-parents-modal__item-title">2. How Can I Support My Student?</h4>
                           <p>Practical guidance on listening, communicating and supporting students without creating additional pressure.</p>
                         </section>
                         <section>
-                          <h4>3. When Should I Be Concerned?</h4>
+                          <h4 className="landing-parents-modal__item-title">3. When Should I Be Concerned?</h4>
                           <p>Common changes in mood, behaviour, academics, sleep, attendance, social interaction and daily functioning that may indicate a student needs support.</p>
                         </section>
                         <section>
-                          <h4>4. Starting the Conversation</h4>
+                          <h4 className="landing-parents-modal__item-title">4. Starting the Conversation</h4>
                           <p>Simple ways to ask:</p>
                           <ul>
                             <li>"How are you really doing?"</li>
@@ -1110,27 +1302,27 @@ export function LandingPage() {
                           </ul>
                         </section>
                         <section>
-                          <h4>5. When Professional Support May Help</h4>
+                          <h4 className="landing-parents-modal__item-title">5. When Professional Support May Help</h4>
                           <p>Explain when counselling or additional professional support may be useful.</p>
                         </section>
                         <section>
-                          <h4>6. Academic Stress & College Life</h4>
+                          <h4 className="landing-parents-modal__item-title">6. Academic Stress & College Life</h4>
                           <p>Guidance around exam pressure, performance expectations, procrastination, adjustment and academic setbacks.</p>
                         </section>
                         <section>
-                          <h4>7. Digital Well-being & Lifestyle</h4>
+                          <h4 className="landing-parents-modal__item-title">7. Digital Well-being & Lifestyle</h4>
                           <p>Sleep, screen time, social media, routines, physical activity and healthy habits.</p>
                         </section>
                         <section>
-                          <h4>8. Connecting With Vishnu Wellness Centre</h4>
+                          <h4 className="landing-parents-modal__item-title">8. Connecting With Vishnu Wellness Centre</h4>
                           <p>Explain how students can access counseling and how parents can encourage them to seek support.</p>
                         </section>
                         <section>
-                          <h4>9. Parent FAQs</h4>
+                          <h4 className="landing-parents-modal__item-title">9. Parent FAQs</h4>
                           <p>Questions about counselling, confidentiality, appointments, referrals and what parents can expect.</p>
                         </section>
                         <section>
-                          <h4>10. Urgent Support</h4>
+                          <h4 className="landing-parents-modal__item-title">10. Urgent Support</h4>
                           <p>Clear guidance about what to do when there is an immediate safety concern or emergency.</p>
                         </section>
                         <p className="landing-parents-modal__closing">
