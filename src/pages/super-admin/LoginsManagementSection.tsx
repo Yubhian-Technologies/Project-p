@@ -109,7 +109,10 @@ export function LoginsManagementSection() {
         visibleLogins.map((login) => (
           <Card key={login.uid} className="logins-management__row">
             <div>
-              <p className="logins-management__name">{login.displayName || login.email}</p>
+              <p className="logins-management__name">
+                {login.displayName || login.email}
+                {login.active === false && <span className="logins-management__status-badge">Inactive</span>}
+              </p>
               <p className="logins-management__role">{ROLE_LABELS[login.role]}</p>
               <p className="logins-management__college">
                 {colleges.find((c) => c.id === login.collegeId)?.name ?? "—"}

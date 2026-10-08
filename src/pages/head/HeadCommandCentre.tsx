@@ -8,7 +8,7 @@ import { listEventsForCampus } from "../../services/firebase/events";
 import { listCounsellorMonthlyReportsForCampus } from "../../services/firebase/counsellorMonthlyReports";
 import { AttendanceCheckCard } from "../../components/attendance/AttendanceCheckCard";
 import { TeamAttendanceTodayCard } from "./TeamAttendanceTodayCard";
-import { listSsiCollegeResultsForCollege, type SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
+import { listSsiCollegeResultsForCampus, type SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
 import { getAllFeedback } from "../../services/firebase/feedback";
 import type { Booking } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
@@ -77,22 +77,31 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
     if (!campusId) return;
     let active = true;
 
+    // Each read is individually labeled so a permission/other failure in
+    // Promise.all tells us exactly which one broke, instead of one opaque
+    // "something failed" error with no way to tell which query it was.
+    function labeled<T>(label: string, p: Promise<T>): Promise<T> {
+      return p.catch((err) => {
+        const message = err instanceof Error ? err.message : String(err);
+        throw new Error(`[${label}] ${message}`, { cause: err });
+      });
+    }
+
     async function load(id: string) {
       try {
         const [bookingSnap, allProfiles, colleges, events, reports, transfers, feedbackList] = await Promise.all([
-          getDocs(query(collection(db, "bookings"), where("campusId", "==", id))),
-          listBookableProfiles(),
-          listColleges(id),
-          listEventsForCampus(id),
-          listCounsellorMonthlyReportsForCampus(id),
-          listPendingTransferRequestsForCampus(id),
-          getAllFeedback(id),
+          labeled("bookings", getDocs(query(collection(db, "bookings"), where("campusId", "==", id)))),
+          labeled("bookableProfiles", listBookableProfiles()),
+          labeled("colleges", listColleges(id)),
+          labeled("events", listEventsForCampus(id)),
+          labeled("counsellorMonthlyReports", listCounsellorMonthlyReportsForCampus(id)),
+          labeled("pendingTransfers", listPendingTransferRequestsForCampus(id)),
+          labeled("feedback", getAllFeedback(id)),
         ]);
-        const ssiGroups = await Promise.all(colleges.map((c) => listSsiCollegeResultsForCollege(c.id)));
+        const ssiResults: SsiCollegeResult[] = await labeled("ssiResults", listSsiCollegeResultsForCampus(id));
         if (!active) return;
         const bookings = bookingSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Booking);
         const counsellors = allProfiles.filter((p: UserProfile) => p.campusId === id);
-        const ssiResults: SsiCollegeResult[] = ssiGroups.flat();
         setData({
           bookings,
           counsellors,
@@ -105,7 +114,10 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
         });
       } catch (err) {
         console.error("Failed to load head home:", err);
-        if (active) setError("Couldn't load the dashboard data. Please refresh.");
+        if (active) {
+          const detail = err instanceof Error ? err.message : "";
+          setError(`Couldn't load the dashboard data. Please refresh.${detail ? ` (${detail})` : ""}`);
+        }
       }
     }
 

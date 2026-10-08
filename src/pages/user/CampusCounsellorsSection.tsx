@@ -62,8 +62,11 @@ export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellors
   // Bug fix: this was only filtering by role, with no campus check at all —
   // listBookableProfiles() returns counsellors/heads platform-wide, so every
   // student on every campus was seeing every other campus's staff here.
+  // Inactive logins (Admin/Super Admin "Status: Inactive") are also hidden —
+  // that account can't sign in to handle a session anymore, so it shouldn't
+  // be bookable or even visible here at all.
   const counsellorsAndHeads = profiles.filter(
-    (p) => (p.role === "counsellor" || p.role === "head") && p.campusId === profile?.campusId,
+    (p) => (p.role === "counsellor" || p.role === "head") && p.campusId === profile?.campusId && p.active !== false,
   );
 
   return (

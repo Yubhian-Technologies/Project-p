@@ -73,9 +73,18 @@ export async function listSsiCollegeResultsForUser(uid: string): Promise<SsiColl
   return snap.docs.map((d) => toSsiCollegeResult(d.id, d.data()));
 }
 
-/** Every standalone SSI submission for a college — used by that college's counsellors/head. */
+/** Every standalone SSI submission for a college — used by that college's own counsellors. */
 export async function listSsiCollegeResultsForCollege(collegeId: string): Promise<SsiCollegeResult[]> {
   const q = query(collection(db, COLLECTION), where("collegeId", "==", collegeId));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => toSsiCollegeResult(d.id, d.data()));
+}
+
+/** Every standalone SSI submission across a whole campus — used by that campus's
+    Head, who oversees every college in it, not just their own one college
+    (unlike a Counsellor, who only ever sees their own college's submissions). */
+export async function listSsiCollegeResultsForCampus(campusId: string): Promise<SsiCollegeResult[]> {
+  const q = query(collection(db, COLLECTION), where("campusId", "==", campusId));
   const snap = await getDocs(q);
   return snap.docs.map((d) => toSsiCollegeResult(d.id, d.data()));
 }

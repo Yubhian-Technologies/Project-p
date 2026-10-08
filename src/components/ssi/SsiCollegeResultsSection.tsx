@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { SSI_SEVERITY_LABELS, type SsiSeverity } from "../../config/ssiForm";
-import { listSsiCollegeResultsForCollege, type SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
+import {
+  listSsiCollegeResultsForCollege,
+  listSsiCollegeResultsForCampus,
+  type SsiCollegeResult,
+} from "../../services/firebase/ssiCollegeResults";
 import { exportSsiResultsCsv } from "../../utils/exportSsiResultsCsv";
 import { toIsoDate } from "../../utils/dateFormat";
 import { Card } from "../common/Card";
@@ -19,12 +23,19 @@ export function SsiCollegeResultsSection() {
   const [detail, setDetail] = useState<SsiCollegeResult | null>(null);
   const [dateFilter, setDateFilter] = useState("");
 
+  // A Head oversees every college in their campus (same as everywhere else in
+  // this app), so they get the campus-wide query; a Counsellor only ever sees
+  // their own single college's submissions.
+  const isHead = profile?.role === "head";
+
   useEffect(() => {
-    if (!profile?.collegeId) {
+    const scopeId = isHead ? profile?.campusId : profile?.collegeId;
+    if (!scopeId) {
       setLoading(false);
       return;
     }
-    listSsiCollegeResultsForCollege(profile.collegeId)
+    const fetchResults = isHead ? listSsiCollegeResultsForCampus(scopeId) : listSsiCollegeResultsForCollege(scopeId);
+    fetchResults
       .then((list) => {
         const sorted = [...list].sort((a, b) => {
           const rankDiff = SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity];
@@ -33,7 +44,7 @@ export function SsiCollegeResultsSection() {
         setResults(sorted);
       })
       .finally(() => setLoading(false));
-  }, [profile?.collegeId]);
+  }, [isHead, profile?.campusId, profile?.collegeId]);
 
   // Distinct submission dates, newest first, each with how many check-ins
   // landed that day — lets a Head/Counsellor jump straight to a specific
@@ -55,10 +66,10 @@ export function SsiCollegeResultsSection() {
 
   if (loading) return null;
 
-  if (!profile?.collegeId) {
+  if (isHead ? !profile?.campusId : !profile?.collegeId) {
     return (
       <Card className="ssi-results__empty-card">
-        <p>Your account has no college assigned — contact an admin to set this up.</p>
+        <p>Your account has no {isHead ? "campus" : "college"} assigned — contact an admin to set this up.</p>
       </Card>
     );
   }
@@ -69,7 +80,8 @@ export function SsiCollegeResultsSection() {
         <div className="ssi-results__header-row">
           <div>
             <p className="ssi-results__subtitle">
-              Standalone SSI check-ins submitted by students at your college, sorted by severity.
+              Standalone SSI check-ins submitted by students at your {isHead ? "campus" : "college"}, sorted by
+              severity.
             </p>
           </div>
           <div className="ssi-results__header-actions">
@@ -113,7 +125,7 @@ export function SsiCollegeResultsSection() {
         <Card className="ssi-results__empty-card">
           <p>
             {results.length === 0
-              ? "No SSI check-ins have been submitted by students at your college yet."
+              ? `No SSI check-ins have been submitted by students at your ${isHead ? "campus" : "college"} yet.`
               : "No check-ins were submitted on this date."}
           </p>
         </Card>

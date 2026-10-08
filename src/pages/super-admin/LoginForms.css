@@ -1,14 +1,32 @@
 .campus-logins-detail {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
   width: 100%;
+  font-size: 13px;
+}
+
+.campus-logins-detail .md-select__control {
+  padding: 8px 14px;
+  font-size: 13px;
+  border-radius: 14px;
+}
+
+.campus-logins-detail .md-select__option {
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
+.campus-logins-detail .md-button {
+  padding: 7px 16px;
+  font-size: 13px;
+  border-radius: 10px;
 }
 
 .campus-logins-detail__heading {
   margin: 0;
   font-family: var(--md-sys-typescale-font-display);
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 800;
   color: var(--neu-text-primary, #2D3748);
 }
@@ -16,38 +34,44 @@
 .campus-logins-detail__add-form form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   background: var(--neu-bg, #E8ECF2);
-  border-radius: 24px;
+  border-radius: 20px;
   box-shadow: var(--neu-shadow-extruded-lg);
-  padding: 24px 28px;
+  padding: 18px 22px;
 }
 
 .campus-logins-detail__form-title {
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
   font-weight: 800;
-  font-size: 15px;
+  font-size: 14px;
   color: var(--neu-text-primary, #2D3748);
 }
 
 .campus-logins-detail__field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .campus-logins-detail__field label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
+  color: var(--neu-text-muted, #718096);
+}
+
+.campus-logins-detail__hint {
+  margin: 0;
+  font-size: 11px;
   color: var(--neu-text-muted, #718096);
 }
 
 .campus-logins-detail__field input,
 .campus-logins-detail__field select {
   font-family: inherit;
-  font-size: 14px;
-  padding: 12px 18px;
-  border-radius: 16px;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 14px;
   border: none;
   background: var(--neu-bg, #E8ECF2);
   box-shadow: var(--neu-shadow-sunken);
@@ -62,7 +86,7 @@
 
 .campus-logins-detail__error {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: #e53e3e;
 }
@@ -71,33 +95,33 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: 14px;
   flex-wrap: wrap;
   background: var(--neu-bg, #E8ECF2);
   border: none;
-  border-radius: 20px;
-  padding: 18px 24px;
+  border-radius: 16px;
+  padding: 12px 18px;
   box-shadow: var(--neu-shadow-extruded);
 }
 
 .campus-logins-detail__name {
   margin: 0;
-  font-family: var(--md-sys-typescale-font-display);
+  font-family: var(--md-sys-typescale-font-body);
   font-weight: 700;
-  font-size: 16px;
+  font-size: 14px;
   color: var(--neu-text-primary, #2D3748);
 }
 
 .campus-logins-detail__role {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--neu-text-muted, #718096);
 }
 
 .campus-logins-detail__college {
-  margin: 4px 0 0 0;
-  font-size: 13px;
+  margin: 2px 0 0 0;
+  font-size: 12px;
   font-weight: 600;
   color: var(--neu-accent-primary, #2065F6);
 }
@@ -105,13 +129,13 @@
 .campus-logins-detail__edit-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .campus-logins-detail__row-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 

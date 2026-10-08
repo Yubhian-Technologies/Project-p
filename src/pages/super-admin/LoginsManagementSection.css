@@ -1,15 +1,38 @@
 .logins-management {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
   width: 100%;
+  font-size: 13px;
+}
+
+/* The shared Select/MultiSelect components default to a size tuned for
+   spacious forms — this whole area (Users/Logins/Admins tabs) packs a lot
+   more controls and rows onto one screen, so everything here runs smaller. */
+.logins-management .md-select__control,
+.logins-management .md-multiselect__control {
+  padding: 8px 14px;
+  font-size: 13px;
+  border-radius: 14px;
+}
+
+.logins-management .md-select__option,
+.logins-management .md-multiselect__option {
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
+.logins-management .md-button {
+  padding: 7px 16px;
+  font-size: 13px;
+  border-radius: 10px;
 }
 
 .logins-management__header {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -29,28 +52,32 @@
 
 .logins-management__filters {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .logins-management__field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-width: 220px;
+  gap: 4px;
+  min-width: 180px;
+}
+
+.logins-management__field--search {
+  max-width: 320px;
 }
 
 .logins-management__field label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--neu-text-muted, #718096);
 }
 
 .logins-management__field input {
   font-family: inherit;
-  font-size: 14px;
-  padding: 12px 18px;
-  border-radius: 16px;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 14px;
   border: none;
   background: var(--neu-bg, #E8ECF2);
   box-shadow: var(--neu-shadow-sunken);
@@ -64,9 +91,9 @@
 .logins-management__fixed-value {
   margin: 0;
   font-family: inherit;
-  font-size: 14px;
-  padding: 12px 18px;
-  border-radius: 16px;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 14px;
   background: var(--neu-bg, #E8ECF2);
   color: var(--neu-text-primary, #2D3748);
 }
@@ -78,12 +105,12 @@
 .logins-management__form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .logins-management__error {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: #e53e3e;
 }
@@ -92,12 +119,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: 14px;
   flex-wrap: wrap;
   background: var(--neu-bg, #E8ECF2);
   border: none;
-  border-radius: 20px;
-  padding: 18px 24px;
+  border-radius: 16px;
+  padding: 12px 18px;
   box-shadow: var(--neu-shadow-extruded);
 }
 
@@ -105,20 +132,33 @@
   margin: 0;
   font-family: var(--md-sys-typescale-font-body);
   font-weight: 700;
-  font-size: 16px;
+  font-size: 14px;
   color: var(--neu-text-primary, #2D3748);
 }
 
 .logins-management__role {
-  margin: 4px 0 0;
-  font-size: 13px;
+  margin: 2px 0 0;
+  font-size: 12px;
   font-weight: 600;
   color: var(--neu-text-muted, #718096);
 }
 
+.logins-management__status-badge {
+  margin-left: 10px;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #FEE2E2;
+  color: #B91C1C;
+  vertical-align: middle;
+}
+
 .logins-management__college {
-  margin: 4px 0 0;
-  font-size: 13px;
+  margin: 2px 0 0;
+  font-size: 12px;
   font-weight: 600;
   color: var(--neu-accent-primary, #2065F6);
 }
@@ -126,6 +166,6 @@
 .logins-management__row-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }

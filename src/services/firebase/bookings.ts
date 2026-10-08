@@ -105,7 +105,9 @@ export async function createEmergencySosBooking(
     listBookingsForUser(user.uid),
     listBookableProfiles(),
   ]);
-  const campusStaff = allBookableProfiles.filter((p) => p.campusId === profile.campusId);
+  // Inactive logins (disabled Firebase Auth accounts) are excluded — a
+  // crisis request must never land on someone who can no longer sign in.
+  const campusStaff = allBookableProfiles.filter((p) => p.campusId === profile.campusId && p.active !== false);
   if (campusStaff.length === 0) {
     throw new Error("No head or counsellor is set up on your campus yet to receive an emergency request.");
   }

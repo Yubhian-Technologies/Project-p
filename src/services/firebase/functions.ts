@@ -28,6 +28,7 @@ export interface UpdateCampusLoginInput {
   password?: string;
   role: "counsellor" | "head";
   collegeId: string;
+  active?: boolean;
 }
 
 export async function updateCampusLogin(input: UpdateCampusLoginInput): Promise<void> {

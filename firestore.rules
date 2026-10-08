@@ -554,13 +554,20 @@ service cloud.firestore {
     // ---------- ssi_college_results ----------
     // The standalone SSI check-in (no booking involved) — a student can take
     // it anytime, as often as they like, so doc ids are auto-generated rather
-    // than keyed off a booking. Isolated by collegeId: only that college's own
-    // counsellors/head (not other colleges, even in the same campus) can read
-    // its students' results, alongside the student reading their own history.
+    // than keyed off a booking. A Counsellor only reads their own college's
+    // submissions (isolated by collegeId — not other colleges, even in the
+    // same campus); a Head oversees every college in their campus, same as
+    // everywhere else in this file, so they're scoped by campusId instead.
+    // Bug fix: this used to require myProfile().collegeId == resource.data.collegeId
+    // for BOTH roles, meaning a Head's own single collegeId had to coincidentally
+    // match — querying any OTHER college in their own campus (as
+    // HeadCommandCentre.tsx's home dashboard does, across every college) was
+    // rejected outright with permission-denied.
     match /ssi_college_results/{resultId} {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
-        (myRole() in ['counsellor', 'head'] && myProfile().collegeId == resource.data.collegeId)
+        (isRole('counsellor') && myProfile().collegeId == resource.data.collegeId) ||
+        (isRole('head') && myProfile().campusId == resource.data.campusId)
       );
 
       allow create: if isSignedIn()

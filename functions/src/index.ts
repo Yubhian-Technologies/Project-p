@@ -313,6 +313,7 @@ interface UpdateCampusLoginRequest {
   password?: string;
   role: "counsellor" | "head";
   collegeId: string;
+  active?: boolean; // defaults true; false disables the Firebase Auth account (can't sign in)
 }
 
 export const updateCampusLogin = onCall<UpdateCampusLoginRequest>(async (request) => {
@@ -326,10 +327,11 @@ export const updateCampusLogin = onCall<UpdateCampusLoginRequest>(async (request
     throw new HttpsError("permission-denied", "Only an Admin or Super Admin can edit a campus login.");
   }
 
-  const { uid, displayName, email, password, role, collegeId } = request.data;
+  const { uid, displayName, email, password, role, collegeId, active } = request.data;
   if (!uid || typeof uid !== "string") {
     throw new HttpsError("invalid-argument", "A target uid is required.");
   }
+  const isActive = active !== false;
 
   const targetDoc = await db.collection("users").doc(uid).get();
   const campusId = targetDoc.data()?.campusId;
@@ -349,10 +351,11 @@ export const updateCampusLogin = onCall<UpdateCampusLoginRequest>(async (request
   await auth.updateUser(uid, {
     email,
     displayName,
+    disabled: !isActive,
     ...(password ? { password } : {}),
   });
 
-  await db.collection("users").doc(uid).update({ displayName, email, role, collegeId });
+  await db.collection("users").doc(uid).update({ displayName, email, role, collegeId, active: isActive });
 
   return { success: true };
 });
@@ -838,7 +841,8 @@ export const createBooking = onCall<{
     !counsellorProfile ||
     !["counsellor", "head"].includes(counsellorProfile.role) ||
     !counsellorProfile.campusId ||
-    counsellorProfile.campusId !== caller.campusId
+    counsellorProfile.campusId !== caller.campusId ||
+    counsellorProfile.active === false
   ) {
     throw new HttpsError("invalid-argument", "That counsellor isn't available on your campus.");
   }

@@ -22,6 +22,7 @@ export function EditLoginModal({ login, colleges, hasOtherHead, onClose, onSaved
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"counsellor" | "head">(login.role === "head" ? "head" : "counsellor");
   const [collegeId, setCollegeId] = useState(login.collegeId ?? "");
+  const [active, setActive] = useState(login.active !== false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,6 +38,7 @@ export function EditLoginModal({ login, colleges, hasOtherHead, onClose, onSaved
         password: password || undefined,
         role,
         collegeId,
+        active,
       });
       await onSaved();
       onClose();
@@ -95,6 +97,18 @@ export function EditLoginModal({ login, colleges, hasOtherHead, onClose, onSaved
               </option>
             ))}
           </Select>
+        </div>
+        <div className="campus-logins-detail__field">
+          <label htmlFor="edit-status">Status</label>
+          <Select id="edit-status" value={active ? "active" : "inactive"} onChange={(v) => setActive(v === "active")}>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </Select>
+          {!active && (
+            <p className="campus-logins-detail__hint">
+              Inactive accounts can no longer sign in, but keep all their existing bookings and records.
+            </p>
+          )}
         </div>
         {error && <p className="campus-logins-detail__error">{error}</p>}
         <Button type="submit" disabled={saving || !collegeId}>

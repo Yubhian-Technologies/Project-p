@@ -33,6 +33,12 @@ export interface UserProfile {
   photoURL?: string;
   bio?: string;
   available?: boolean;
+  // Counsellor/Head accounts only, set via updateCampusLogin. Absent = active
+  // (same "missing field = default" convention used elsewhere in this app).
+  // false also disables the underlying Firebase Auth account server-side, so
+  // they can no longer sign in at all — not just a booking-availability
+  // toggle (that's what `available` above already covers).
+  active?: boolean;
   studentOrProfessional?: "student" | "professional";
   yearOrBatch?: string; // e.g. "2nd Year" or "2022-2026" — student-only, free text
   branch?: string; // e.g. "CSE" — student-only, free text

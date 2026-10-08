@@ -16,12 +16,41 @@ import "./LoginsManagementSection.css";
 const UNASSIGNED = "unassigned";
 const ALL = "all";
 
+// Two branches ended up saved under two different spellings by mistake
+// (import/creation inconsistency) — these are the same branch, just typed
+// differently. Merged ONLY for these two specific pairs in the Branch
+// filter below (never touches the raw `branch` value stored on a student,
+// and no other branch is affected). The first entry in each group is the
+// one shown as the filter option.
+const BRANCH_ALIAS_GROUPS = [
+  ["AI&ML", "CSE(AI&ML)"],
+  ["AI&DS", "CSE(AI&DS)"],
+];
+
+// Matched loosely — case-insensitive and ignoring ALL whitespace — so
+// "CSE(AI&ML)", "CSE (AI&ML)", "cse( ai & ml )" etc. all still land on the
+// same canonical branch, not just the one exact spelling.
+function branchMatchKey(value: string): string {
+  return value.replace(/\s+/g, "").toUpperCase();
+}
+
+const BRANCH_ALIAS_LOOKUP = new Map<string, string>(
+  BRANCH_ALIAS_GROUPS.flatMap((group) => group.map((alias) => [branchMatchKey(alias), group[0]] as const)),
+);
+
+function canonicalBranch(branch: string): string {
+  return BRANCH_ALIAS_LOOKUP.get(branchMatchKey(branch)) ?? branch;
+}
+
 export function UsersManagementSection() {
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [allColleges, setAllColleges] = useState<College[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [campusFilter, setCampusFilter] = useState(ALL);
   const [collegeFilter, setCollegeFilter] = useState(ALL);
+  const [branchFilter, setBranchFilter] = useState(ALL);
+  const [yearFilter, setYearFilter] = useState(ALL);
+  const [emailSearch, setEmailSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [showAddUser, setShowAddUser] = useState(false);
@@ -49,12 +78,20 @@ export function UsersManagementSection() {
     setCollegeFilter(ALL);
   }, [campusFilter]);
 
+  // Branch/Year options depend on which campus+college is selected, so a
+  // stale choice (e.g. a branch that only exists elsewhere) can't linger
+  // when that selection narrows.
+  useEffect(() => {
+    setBranchFilter(ALL);
+    setYearFilter(ALL);
+  }, [campusFilter, collegeFilter]);
+
   const campusName = (id?: string) => campuses.find((c) => c.id === id)?.name;
   const collegeName = (id?: string) => allColleges.find((c) => c.id === id)?.name;
   const collegesForFilter =
     campusFilter !== ALL && campusFilter !== UNASSIGNED ? allColleges.filter((c) => c.campusId === campusFilter) : [];
 
-  const filteredUsers = users.filter((u) => {
+  const usersAfterCampusCollege = users.filter((u) => {
     if (campusFilter === ALL) return true;
     if (campusFilter === UNASSIGNED) return !u.campusId;
     if (u.campusId !== campusFilter) return false;
@@ -63,23 +100,61 @@ export function UsersManagementSection() {
     return u.collegeId === collegeFilter;
   });
 
+  const branchesForFilter = Array.from(
+    new Set(
+      usersAfterCampusCollege
+        .map((u) => u.branch)
+        .filter((b): b is string => !!b)
+        .map(canonicalBranch),
+    ),
+  ).sort((a, b) => a.localeCompare(b));
+  const yearsForFilter = Array.from(
+    new Set(usersAfterCampusCollege.map((u) => u.yearOrBatch).filter((y): y is string => !!y)),
+  ).sort((a, b) => a.localeCompare(b));
+
+  const emailQuery = emailSearch.trim().toLowerCase();
+
+  const filteredUsers = usersAfterCampusCollege.filter((u) => {
+    if (
+      branchFilter === UNASSIGNED
+        ? !!u.branch
+        : branchFilter !== ALL && (!u.branch || canonicalBranch(u.branch) !== branchFilter)
+    )
+      return false;
+    if (yearFilter === UNASSIGNED ? !!u.yearOrBatch : yearFilter !== ALL && u.yearOrBatch !== yearFilter) return false;
+    if (emailQuery && !u.email.toLowerCase().includes(emailQuery)) return false;
+    return true;
+  });
+
+  // Natural sort by email — plain string sort puts "...a10" before "...a2"
+  // since it compares character-by-character; `numeric: true` compares the
+  // embedded numbers as numbers instead, matching the actual roll-number order.
+  const sortedUsers = [...filteredUsers].sort((a, b) =>
+    a.email.localeCompare(b.email, undefined, { numeric: true, sensitivity: "base" }),
+  );
+
   if (loading) return null;
 
   // Breadcrumb for the list below, so it's always clear exactly which slice
-  // of Campus → College → logins is being shown.
-  const breadcrumb =
+  // of Campus → College → Branch → Year is being shown. Branch/Year only
+  // appear once narrowed past "All", to keep the common case short.
+  const breadcrumbParts =
     campusFilter === ALL
-      ? "All campuses"
+      ? ["All campuses"]
       : campusFilter === UNASSIGNED
-        ? "Unassigned campus"
+        ? ["Unassigned"]
         : [
             campusName(campusFilter) ?? "Unknown campus",
             collegeFilter === ALL
               ? "All colleges"
               : collegeFilter === UNASSIGNED
-                ? "Unassigned college"
+                ? "Unassigned"
                 : collegeName(collegeFilter) ?? "Unknown college",
-          ].join(" → ");
+          ];
+  if (branchFilter !== ALL) breadcrumbParts.push(branchFilter === UNASSIGNED ? "Unassigned" : branchFilter);
+  if (yearFilter !== ALL) breadcrumbParts.push(yearFilter === UNASSIGNED ? "Unassigned" : yearFilter);
+  if (emailQuery) breadcrumbParts.push(`Email contains "${emailSearch.trim()}"`);
+  const breadcrumb = breadcrumbParts.join(" → ");
 
   return (
     <div className="logins-management">
@@ -97,12 +172,23 @@ export function UsersManagementSection() {
         </p>
       )}
 
+      <div className="logins-management__field logins-management__field--search">
+        <label htmlFor="users-email-search">Search by email</label>
+        <input
+          id="users-email-search"
+          type="search"
+          placeholder="e.g. 23pa1a12n3@vishnu.edu.in"
+          value={emailSearch}
+          onChange={(e) => setEmailSearch(e.target.value)}
+        />
+      </div>
+
       <div className="logins-management__filters">
         <div className="logins-management__field">
           <label htmlFor="users-campus">1. Campus</label>
           <Select id="users-campus" value={campusFilter} onChange={setCampusFilter}>
             <option value={ALL}>All campuses</option>
-            <option value={UNASSIGNED}>Unassigned (no campus)</option>
+            <option value={UNASSIGNED}>Unassigned</option>
             {campuses.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -115,7 +201,7 @@ export function UsersManagementSection() {
             <label htmlFor="users-college">2. College</label>
             <Select id="users-college" value={collegeFilter} onChange={setCollegeFilter}>
               <option value={ALL}>All colleges</option>
-              <option value={UNASSIGNED}>Unassigned (no college)</option>
+              <option value={UNASSIGNED}>Unassigned</option>
               {collegesForFilter.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -124,17 +210,41 @@ export function UsersManagementSection() {
             </Select>
           </div>
         )}
+        <div className="logins-management__field">
+          <label htmlFor="users-branch">3. Branch</label>
+          <Select id="users-branch" value={branchFilter} onChange={setBranchFilter}>
+            <option value={ALL}>All branches</option>
+            <option value={UNASSIGNED}>Unassigned</option>
+            {branchesForFilter.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="logins-management__field">
+          <label htmlFor="users-year">4. Year / Batch</label>
+          <Select id="users-year" value={yearFilter} onChange={setYearFilter}>
+            <option value={ALL}>All years / batches</option>
+            <option value={UNASSIGNED}>Unassigned</option>
+            {yearsForFilter.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       <p className="logins-management__hint">{breadcrumb}</p>
 
       {filteredUsers.length === 0 && <p>No users match this filter.</p>}
 
-      {filteredUsers.map((user) => (
+      {sortedUsers.map((user) => (
         <Card key={user.uid} className="logins-management__row">
           <div>
             <p className="logins-management__name">{user.displayName || user.email}</p>
-            <p className="logins-management__role">{user.email}</p>
+            {user.displayName && <p className="logins-management__role">{user.email}</p>}
             <p className="logins-management__college">
               {user.campusId ? campusName(user.campusId) ?? "Unknown campus" : "Unassigned campus"}
               {" • "}
