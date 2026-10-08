@@ -20,7 +20,7 @@ interface CampusCounsellorsSectionProps {
 }
 
 export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellorsSectionProps) {
-  const { currentUser } = useAuth();
+  const { currentUser, profile } = useAuth();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
@@ -59,7 +59,12 @@ export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellors
     (b) => ACTIVE_STATUSES.includes(b.status) && !(b.status === "scheduled" && isSessionEndedPending(b)),
   );
 
-  const counsellorsAndHeads = profiles.filter((p) => p.role === "counsellor" || p.role === "head");
+  // Bug fix: this was only filtering by role, with no campus check at all —
+  // listBookableProfiles() returns counsellors/heads platform-wide, so every
+  // student on every campus was seeing every other campus's staff here.
+  const counsellorsAndHeads = profiles.filter(
+    (p) => (p.role === "counsellor" || p.role === "head") && p.campusId === profile?.campusId,
+  );
 
   return (
     <div className="booking-section">

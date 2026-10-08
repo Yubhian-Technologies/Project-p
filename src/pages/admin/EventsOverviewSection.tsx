@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
 import { listCampuses } from "../../services/firebase/campuses";
 import { listColleges } from "../../services/firebase/colleges";
 import { listEventsForCollege } from "../../services/firebase/events";
@@ -16,6 +17,7 @@ import { EventDetailModal } from "../head/EventDetailModal";
 import "./EventsOverviewSection.css";
 
 export function EventsOverviewSection() {
+  const { profile } = useAuth();
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [campusId, setCampusId] = useState("");
   const [colleges, setColleges] = useState<College[]>([]);
@@ -26,8 +28,15 @@ export function EventsOverviewSection() {
   const [events, setEvents] = useState<EventProgram[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<EventProgram | null>(null);
 
+  // A campus-restricted Admin only ever sees their own assigned campuses here.
+  const scopedCampusIds =
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses"
+      ? profile.adminAccess.campusIds ?? []
+      : null;
+
   useEffect(() => {
-    listCampuses().then(setCampuses);
+    listCampuses().then((c) => setCampuses(scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

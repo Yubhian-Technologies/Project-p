@@ -49,11 +49,11 @@ const EMERGENCY_LINES: EmergencyLine[] = [
   {
     id: "campus-counseling",
     icon: <MapPinIcon />,
-    name: "Vishnu Health & Counseling Center",
+    name: "Vishnu Wellness Center",
     description: "Walk-in confidential counseling on-campus (A-Block Ground Floor)",
     actionLabel: "CAMPUS",
     href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      "Vishnu Institute of Technology Health and Counseling Center A-Block",
+      "Vishnu Institute of Technology Wellness Center A-Block",
     )}`,
     accent: "purple",
   },

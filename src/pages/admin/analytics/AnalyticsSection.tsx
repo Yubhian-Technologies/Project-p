@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../../services/firebase/config";
+import { useAuth } from "../../../hooks/useAuth";
 import { listCampuses } from "../../../services/firebase/campuses";
 import { listColleges } from "../../../services/firebase/colleges";
 import type { Campus } from "../../../types/campus";
@@ -16,6 +17,7 @@ import { StaffAnalyticsInline } from "./StaffAnalyticsInline";
 import "./AnalyticsSection.css";
 
 export function AnalyticsSection() {
+  const { profile } = useAuth();
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [campusId, setCampusId] = useState("");
 
@@ -24,8 +26,15 @@ export function AnalyticsSection() {
   const [loadingStaff, setLoadingStaff] = useState(false);
   const [selectedStaffForModal, setSelectedStaffForModal] = useState<UserProfile | null>(null);
 
+  // A campus-restricted Admin only ever sees their own assigned campuses here.
+  const scopedCampusIds =
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses"
+      ? profile.adminAccess.campusIds ?? []
+      : null;
+
   useEffect(() => {
-    listCampuses().then(setCampuses);
+    listCampuses().then((c) => setCampuses(scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

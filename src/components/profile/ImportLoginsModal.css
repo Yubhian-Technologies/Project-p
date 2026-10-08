@@ -24,6 +24,19 @@
   text-decoration: underline;
 }
 
+.import-logins-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 260px;
+}
+
+.import-logins-modal__field label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neu-text-muted, #718096);
+}
+
 .import-logins-modal__error {
   margin: 0;
   font-size: 13px;

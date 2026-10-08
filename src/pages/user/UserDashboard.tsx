@@ -40,7 +40,7 @@ const SECTIONS = [
   },
   {
     id: "booking",
-    label: "Book Session",
+    label: "Book a Session",
     icon: (
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><polyline points="9 16 11 18 15 14" /></svg>
     ),
@@ -68,7 +68,7 @@ const SECTIONS = [
   },
   {
     id: "journal",
-    label: "Counselling Journal",
+    label: "My Diary",
     icon: (
       <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
     ),
@@ -121,11 +121,11 @@ export function UserDashboard() {
   const titleBySection: Record<string, string> = {
     profile: "Profile",
     "campus-counsellors": "Campus Counsellors",
-    booking: "Book Session",
+    booking: "Book a Session",
     "ssi-test": "SSI Assessment Test",
     events: "Events & Programs",
     games: "Wellness Exercise",
-    journal: "Counselling Journal",
+    journal: "My Diary",
     community: "Wellness Community",
     "crisis-sos": "Crisis SOS",
   };

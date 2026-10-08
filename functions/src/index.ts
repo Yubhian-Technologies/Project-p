@@ -37,8 +37,139 @@ export const deleteCampusLogin = onCall<DeleteCampusLoginRequest>(async (request
     throw new HttpsError("invalid-argument", "A target uid is required.");
   }
 
+  // Deleting an Admin or Super Admin account is Super-Admin-only — previously
+  // this had no check on the *target's* role at all, so any admin could
+  // delete any other admin (or even a super-admin) they knew the uid of.
+  const targetDoc = await db.collection("users").doc(targetUid).get();
+  const targetRole = targetDoc.data()?.role;
+  if ((targetRole === "admin" || targetRole === "super-admin") && callerDoc.data()?.role !== "super-admin") {
+    throw new HttpsError("permission-denied", "Only a Super Admin can delete an Admin or Super Admin login.");
+  }
+
   await auth.deleteUser(targetUid);
   await db.collection("users").doc(targetUid).delete();
+
+  return { success: true };
+});
+
+// ── Admin logins (Super Admin only) ────────────────────────────────────────
+// Unlike createCampusLogin (counsellor/head, any campus manager), an Admin
+// login can itself manage campuses/colleges/other logins, so only a Super
+// Admin may create or edit one — never another Admin.
+
+const ADMIN_SECTION_IDS = ["campuses", "logins", "events", "analytics", "counsellor-worksheet", "monthly-reports"];
+
+interface AdminAccessInput {
+  scope: "global" | "campuses";
+  campusIds?: string[];
+  sections: string[];
+}
+
+async function validateAdminAccess(adminAccess: AdminAccessInput): Promise<void> {
+  if (adminAccess.scope !== "global" && adminAccess.scope !== "campuses") {
+    throw new HttpsError("invalid-argument", "Scope must be 'global' or 'campuses'.");
+  }
+  if (!Array.isArray(adminAccess.sections) || adminAccess.sections.some((s) => !ADMIN_SECTION_IDS.includes(s))) {
+    throw new HttpsError("invalid-argument", "Invalid section list.");
+  }
+  if (adminAccess.scope === "campuses") {
+    if (adminAccess.sections.includes("campuses")) {
+      throw new HttpsError("invalid-argument", "A campus-restricted admin cannot be granted Campus Management.");
+    }
+    if (!Array.isArray(adminAccess.campusIds) || adminAccess.campusIds.length === 0) {
+      throw new HttpsError("invalid-argument", "At least one campus is required for a restricted admin.");
+    }
+    const campusDocs = await Promise.all(
+      adminAccess.campusIds.map((id) => db.collection("campuses").doc(id).get()),
+    );
+    if (campusDocs.some((d) => !d.exists)) {
+      throw new HttpsError("invalid-argument", "One or more campuses do not exist.");
+    }
+  }
+}
+
+interface CreateAdminLoginRequest {
+  email: string;
+  password: string;
+  displayName: string;
+  adminAccess: AdminAccessInput;
+}
+
+export const createAdminLogin = onCall<CreateAdminLoginRequest>(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+
+  const callerDoc = await db.collection("users").doc(callerUid).get();
+  if (callerDoc.data()?.role !== "super-admin") {
+    throw new HttpsError("permission-denied", "Only a Super Admin can create an Admin login.");
+  }
+
+  const { email, password, displayName, adminAccess } = request.data;
+  if (!email || !password || !displayName || !adminAccess) {
+    throw new HttpsError("invalid-argument", "Email, password, display name, and access settings are required.");
+  }
+  await validateAdminAccess(adminAccess);
+
+  const userRecord = await auth.createUser({ email, password, displayName });
+  try {
+    await db.collection("users").doc(userRecord.uid).set({
+      uid: userRecord.uid,
+      email,
+      displayName,
+      role: "admin",
+      adminAccess,
+      createdAt: Date.now(),
+    });
+  } catch (err) {
+    await auth.deleteUser(userRecord.uid);
+    throw err;
+  }
+
+  return { success: true, uid: userRecord.uid };
+});
+
+interface UpdateAdminLoginRequest {
+  uid: string;
+  displayName: string;
+  email: string;
+  password?: string;
+  adminAccess: AdminAccessInput;
+}
+
+export const updateAdminLogin = onCall<UpdateAdminLoginRequest>(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+
+  const callerDoc = await db.collection("users").doc(callerUid).get();
+  if (callerDoc.data()?.role !== "super-admin") {
+    throw new HttpsError("permission-denied", "Only a Super Admin can edit an Admin login.");
+  }
+
+  const { uid, displayName, email, password, adminAccess } = request.data;
+  if (!uid || typeof uid !== "string") {
+    throw new HttpsError("invalid-argument", "A target uid is required.");
+  }
+  if (!adminAccess) {
+    throw new HttpsError("invalid-argument", "Access settings are required.");
+  }
+  await validateAdminAccess(adminAccess);
+
+  const targetDoc = await db.collection("users").doc(uid).get();
+  if (targetDoc.data()?.role !== "admin") {
+    throw new HttpsError("invalid-argument", "That login is not an Admin account.");
+  }
+
+  await auth.updateUser(uid, {
+    email,
+    displayName,
+    ...(password ? { password } : {}),
+  });
+
+  await db.collection("users").doc(uid).update({ displayName, email, adminAccess });
 
   return { success: true };
 });
@@ -104,10 +235,18 @@ export const createCampusLogin = onCall<CreateCampusLoginRequest>(async (request
 interface CreateStudentLoginRequest {
   email: string;
   collegeId: string;
+  password?: string; // omitted on a bulk import row — defaults to the shared STUDENT_DEFAULT_PASSWORD
+  studentOrProfessional: "student" | "professional";
+  yearOrBatch?: string;
+  branch?: string;
+  gender?: string;
 }
 
 const STUDENT_DEFAULT_PASSWORD = "123456";
 
+// A Head can only ever create students on their own campus; a Super Admin can
+// create one on any campus, resolved from the college they picked (colleges
+// carry their own campusId, so there's nothing else to trust the caller on).
 export const createStudentLogin = onCall<CreateStudentLoginRequest>(async (request) => {
   const callerUid = request.auth?.uid;
   if (!callerUid) {
@@ -116,22 +255,36 @@ export const createStudentLogin = onCall<CreateStudentLoginRequest>(async (reque
 
   const callerDoc = await db.collection("users").doc(callerUid).get();
   const callerData = callerDoc.data();
-  if (callerData?.role !== "head" || !callerData?.campusId) {
-    throw new HttpsError("permission-denied", "Only a Head with a campus can import student logins.");
+  const callerRole = callerData?.role;
+  if (callerRole !== "head" && callerRole !== "super-admin") {
+    throw new HttpsError("permission-denied", "Only a Head or Super Admin can create a student login.");
   }
-  const campusId = callerData.campusId as string;
+  if (callerRole === "head" && !callerData?.campusId) {
+    throw new HttpsError("permission-denied", "Only a Head with a campus can create student logins.");
+  }
 
-  const { email, collegeId } = request.data;
+  const { email, collegeId, password, studentOrProfessional, yearOrBatch, branch, gender } = request.data;
   if (!email || !collegeId) {
     throw new HttpsError("invalid-argument", "Email and college are required.");
   }
-
-  const collegeDoc = await db.collection("colleges").doc(collegeId).get();
-  if (!collegeDoc.exists || collegeDoc.data()?.campusId !== campusId) {
-    throw new HttpsError("invalid-argument", "That college does not belong to your campus.");
+  if (studentOrProfessional !== "student" && studentOrProfessional !== "professional") {
+    throw new HttpsError("invalid-argument", "Student / Professional must be set.");
   }
 
-  const userRecord = await auth.createUser({ email, password: STUDENT_DEFAULT_PASSWORD });
+  const collegeDoc = await db.collection("colleges").doc(collegeId).get();
+  if (!collegeDoc.exists) {
+    throw new HttpsError("invalid-argument", "That college does not exist.");
+  }
+  const collegeCampusId = collegeDoc.data()?.campusId as string | undefined;
+  if (callerRole === "head" && collegeCampusId !== callerData?.campusId) {
+    throw new HttpsError("invalid-argument", "That college does not belong to your campus.");
+  }
+  if (!collegeCampusId) {
+    throw new HttpsError("invalid-argument", "That college has no campus set.");
+  }
+  const campusId = collegeCampusId;
+
+  const userRecord = await auth.createUser({ email, password: password || STUDENT_DEFAULT_PASSWORD });
   try {
     await db.collection("users").doc(userRecord.uid).set({
       uid: userRecord.uid,
@@ -139,6 +292,10 @@ export const createStudentLogin = onCall<CreateStudentLoginRequest>(async (reque
       role: "user",
       campusId,
       collegeId,
+      studentOrProfessional,
+      ...(yearOrBatch ? { yearOrBatch } : {}),
+      ...(branch ? { branch } : {}),
+      ...(gender ? { gender } : {}),
       createdAt: Date.now(),
     });
   } catch (err) {
@@ -670,6 +827,23 @@ export const createBooking = onCall<{
   }
   const callerEmail = (caller.email as string) || "";
 
+  // The counsellor must actually be on the student's own campus — this was
+  // previously only a UI-level filter (easy to bypass, and buggy: the UI
+  // wasn't even filtering), so a student could book any counsellor on any
+  // campus. campusId is also derived here, server-side, rather than trusted
+  // from the client's own data.campusId.
+  const counsellorSnap = await db.collection("users").doc(data.counsellorId).get();
+  const counsellorProfile = counsellorSnap.data();
+  if (
+    !counsellorProfile ||
+    !["counsellor", "head"].includes(counsellorProfile.role) ||
+    !counsellorProfile.campusId ||
+    counsellorProfile.campusId !== caller.campusId
+  ) {
+    throw new HttpsError("invalid-argument", "That counsellor isn't available on your campus.");
+  }
+  const campusId = counsellorProfile.campusId as string;
+
   // One active booking per student, same rule the UI already tried to show —
   // now actually guaranteed. A "scheduled" session whose time has already
   // passed doesn't block a new one (mirrors isSessionEndedPending()
@@ -708,7 +882,7 @@ export const createBooking = onCall<{
       status: "pending",
       durationMinutes: SESSION_DURATION_MINUTES,
       proposedSlots: data.proposedSlots,
-      ...(data.campusId ? { campusId: data.campusId } : {}),
+      campusId,
       ...(data.concernCategories?.length ? { concernCategories: data.concernCategories } : {}),
       createdAt: now,
       updatedAt: now,

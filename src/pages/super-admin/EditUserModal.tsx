@@ -23,6 +23,9 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
     user.studentOrProfessional ?? "student",
   );
   const [whatsappNumber, setWhatsappNumber] = useState(user.whatsappNumber ?? "");
+  const [yearOrBatch, setYearOrBatch] = useState(user.yearOrBatch ?? "");
+  const [branch, setBranch] = useState(user.branch ?? "");
+  const [gender, setGender] = useState(user.gender ?? "");
   const [campusId, setCampusId] = useState(user.campusId ?? "");
   const [collegeId, setCollegeId] = useState(user.collegeId ?? "");
   const [colleges, setColleges] = useState<College[]>([]);
@@ -51,6 +54,9 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
         displayName: displayName.trim(),
         studentOrProfessional,
         whatsappNumber: whatsappNumber.trim(),
+        yearOrBatch: yearOrBatch.trim(),
+        branch: branch.trim(),
+        gender,
         campusId,
         collegeId,
       });
@@ -97,6 +103,36 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
             value={whatsappNumber}
             onChange={(e) => setWhatsappNumber(e.target.value)}
           />
+        </div>
+        <div className="campus-logins-detail__field">
+          <label htmlFor="edit-user-year">Year / Batch</label>
+          <input
+            id="edit-user-year"
+            type="text"
+            placeholder="e.g. 2nd Year"
+            value={yearOrBatch}
+            onChange={(e) => setYearOrBatch(e.target.value)}
+          />
+        </div>
+        <div className="campus-logins-detail__field">
+          <label htmlFor="edit-user-branch">Branch</label>
+          <input
+            id="edit-user-branch"
+            type="text"
+            placeholder="e.g. CSE"
+            value={branch}
+            onChange={(e) => setBranch(e.target.value)}
+          />
+        </div>
+        <div className="campus-logins-detail__field">
+          <label htmlFor="edit-user-gender">Gender</label>
+          <Select id="edit-user-gender" value={gender} onChange={setGender}>
+            <option value="">—</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+            <option value="Prefer not to say">Prefer not to say</option>
+          </Select>
         </div>
         <div className="campus-logins-detail__field">
           <label htmlFor="edit-user-campus">Campus</label>

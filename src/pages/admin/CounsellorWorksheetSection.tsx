@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
 import { listCampuses } from "../../services/firebase/campuses";
 import {
   listWorksheetAcademicYears,
@@ -20,6 +21,7 @@ const STATUS_LABELS: Record<WorksheetRowStatus, string> = {
 };
 
 export function CounsellorWorksheetSection() {
+  const { profile } = useAuth();
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [selectedCampusId, setSelectedCampusId] = useState("");
   const [years, setYears] = useState<WorksheetAcademicYear[]>([]);
@@ -29,11 +31,18 @@ export function CounsellorWorksheetSection() {
   const [rows, setRows] = useState<WorksheetRow[]>([]);
   const [error, setError] = useState("");
 
+  // A campus-restricted Admin only ever sees their own assigned campuses here.
+  const scopedCampusIds =
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses"
+      ? profile.adminAccess.campusIds ?? []
+      : null;
+
   useEffect(() => {
     let cancelled = false;
     listCampuses()
-      .then((list) => {
+      .then((all) => {
         if (cancelled) return;
+        const list = scopedCampusIds ? all.filter((campus) => scopedCampusIds.includes(campus.id)) : all;
         setCampuses(list);
         if (list.length > 0 && !selectedCampusId) {
           setSelectedCampusId(list[0].id);

@@ -1219,9 +1219,9 @@ export function LandingPage() {
                 <li>
                   <MorphingPopover>
                     <MorphingPopoverTrigger className="landing-footer__morph-trigger">
-                      Refer a Student
+                      Refer to Counsellor
                     </MorphingPopoverTrigger>
-                    <MorphingPopoverContent title="Refer a Student" className="landing-parents-modal">
+                    <MorphingPopoverContent title="Refer to Counsellor" className="landing-parents-modal">
                       <ReferStudentForm />
                     </MorphingPopoverContent>
                   </MorphingPopover>

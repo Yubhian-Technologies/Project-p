@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
 import { listCampuses } from "../../services/firebase/campuses";
 import { listColleges } from "../../services/firebase/colleges";
 import { listCampusLogins } from "../../services/firebase/firestore";
@@ -16,6 +17,7 @@ import { EditLoginModal } from "./EditLoginModal";
 import "./LoginsManagementSection.css";
 
 export function LoginsManagementSection() {
+  const { profile } = useAuth();
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
   const [logins, setLogins] = useState<UserProfile[]>([]);
@@ -26,11 +28,20 @@ export function LoginsManagementSection() {
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // A campus-restricted Admin login only ever sees/picks their own assigned
+  // campuses here — Super Admin and a global-scope Admin see every campus,
+  // unchanged.
+  const scopedCampusIds =
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses"
+      ? profile.adminAccess.campusIds ?? []
+      : null;
+
   useEffect(() => {
     listCampuses().then((c) => {
-      setCampuses(c);
+      setCampuses(scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c);
       setLoadingCampuses(false);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadForCampus(id: string) {

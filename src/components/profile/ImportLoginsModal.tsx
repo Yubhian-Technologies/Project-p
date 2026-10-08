@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Modal } from "../common/Modal";
 import { Button } from "../common/Button";
+import { Select } from "../common/Select";
 import { listCampuses } from "../../services/firebase/campuses";
 import { listColleges } from "../../services/firebase/colleges";
 import { createStudentLogin } from "../../services/firebase/managedAccounts";
@@ -45,6 +46,7 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
   const [campusName, setCampusName] = useState("");
   const [colleges, setColleges] = useState<College[]>([]);
   const [loadingContext, setLoadingContext] = useState(true);
+  const [studentOrProfessional, setStudentOrProfessional] = useState<"student" | "professional">("student");
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [result, setResult] = useState<ImportResult | null>(null);
 
@@ -92,7 +94,16 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
     for (let i = 0; i < validRows.length; i += CHUNK_SIZE) {
       const chunk = validRows.slice(i, i + CHUNK_SIZE);
       const outcomes = await Promise.allSettled(
-        chunk.map((r) => createStudentLogin({ email: r.row!.email, collegeId: r.row!.collegeId })),
+        chunk.map((r) =>
+          createStudentLogin({
+            email: r.row!.email,
+            collegeId: r.row!.collegeId,
+            studentOrProfessional,
+            yearOrBatch: r.row!.yearOrBatch,
+            branch: r.row!.branch,
+            gender: r.row!.gender,
+          }),
+        ),
       );
       outcomes.forEach((outcome, offset) => {
         if (outcome.status === "fulfilled") {
@@ -117,10 +128,11 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
       {step === "upload" && (
         <div className="import-logins-modal__step">
           <p>
-            Upload a spreadsheet of students to create logins for, on your campus
-            {campusName ? ` (${campusName})` : ""}. It needs two columns: <strong>Email</strong> and{" "}
-            <strong>College</strong>. Every account created here gets the default password{" "}
-            <strong>123456</strong> — students can change it later from their own Profile page.
+            Upload a spreadsheet of students or working professionals to create logins for, on your campus
+            {campusName ? ` (${campusName})` : ""}. It needs these columns: <strong>Email</strong>,{" "}
+            <strong>Year / Batch</strong>, <strong>Branch</strong>, <strong>Gender</strong>, and{" "}
+            <strong>College</strong> (only Email and College are required). Every account created here gets the
+            default password <strong>123456</strong> — students can change it later from their own Profile page.
           </p>
 
           <button
@@ -130,6 +142,18 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
           >
             Download a sample template (.xlsx) →
           </button>
+
+          <div className="import-logins-modal__field">
+            <label htmlFor="import-logins-occupation">Importing as</label>
+            <Select
+              id="import-logins-occupation"
+              value={studentOrProfessional}
+              onChange={(v) => setStudentOrProfessional(v as "student" | "professional")}
+            >
+              <option value="student">Student</option>
+              <option value="professional">Working professional</option>
+            </Select>
+          </div>
 
           <input
             type="file"
@@ -164,6 +188,9 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
                 <tr>
                   <th>Row</th>
                   <th>Email</th>
+                  <th>Year / Batch</th>
+                  <th>Branch</th>
+                  <th>Gender</th>
                   <th>College</th>
                   <th>Status</th>
                 </tr>
@@ -173,6 +200,9 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
                   <tr key={r.index} className={r.row ? "" : "import-logins-modal__row--invalid"}>
                     <td>{r.index + 2}</td>
                     <td>{r.row?.email ?? "—"}</td>
+                    <td>{r.row?.yearOrBatch ?? "—"}</td>
+                    <td>{r.row?.branch ?? "—"}</td>
+                    <td>{r.row?.gender ?? "—"}</td>
                     <td>{r.row?.collegeName ?? "—"}</td>
                     <td>{r.invalidReason ?? "Ready"}</td>
                   </tr>

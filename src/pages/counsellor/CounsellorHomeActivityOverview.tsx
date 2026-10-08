@@ -113,7 +113,7 @@ export function CounsellorHomeActivityOverview({ onSelectSection }: CounsellorHo
   <SparklesIcon /> Events & Programs
 </button>
 <button type="button" onClick={() => onSelectSection("journal")}>
-  <BookOpenIcon /> Counselling Journal
+  <BookOpenIcon /> My Diary
 </button>
 <button type="button" onClick={() => onSelectSection("community")}>
   <MessageCircleIcon /> Wellness Community

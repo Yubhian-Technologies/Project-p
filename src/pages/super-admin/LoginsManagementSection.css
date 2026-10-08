@@ -13,6 +13,12 @@
   flex-wrap: wrap;
 }
 
+.logins-management__hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
+}
+
 .logins-management__heading {
   margin: 0;
   font-family: var(--md-sys-typescale-font-display);
@@ -97,7 +103,7 @@
 
 .logins-management__name {
   margin: 0;
-  font-family: var(--md-sys-typescale-font-display);
+  font-family: var(--md-sys-typescale-font-body);
   font-weight: 700;
   font-size: 16px;
   color: var(--neu-text-primary, #2D3748);

@@ -4,6 +4,7 @@ import {
   verifyMonthlyReport,
   type MonthlyReport,
 } from "../../services/firebase/monthlyReports";
+import { useAuth } from "../../hooks/useAuth";
 import { listCampuses } from "../../services/firebase/campuses";
 import type { Campus } from "../../types/campus";
 import { useViewMore } from "../../hooks/useViewMore";
@@ -45,6 +46,8 @@ function formatDate(iso: string) {
 }
 
 export function MonthlyReportsViewSection() {
+  const { profile } = useAuth();
+
   // ── Campus state ─────────────────────────────────────────────────
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [selectedCampusId, setSelectedCampusId] = useState("");
@@ -57,12 +60,19 @@ export function MonthlyReportsViewSection() {
   const [filterYear, setFilterYear] = useState(0);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
+  // A campus-restricted Admin only ever sees their own assigned campuses here.
+  const scopedCampusIds =
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses"
+      ? profile.adminAccess.campusIds ?? []
+      : null;
+
   // ── Load campuses once on mount ──────────────────────────────────
   useEffect(() => {
     setLoadingMeta(true);
     listCampuses()
-      .then(setCampuses)
+      .then((c) => setCampuses(scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c))
       .finally(() => setLoadingMeta(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── When campus changes, fetch that campus's consolidated report(s) ──

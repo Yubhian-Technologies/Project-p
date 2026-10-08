@@ -4,6 +4,9 @@ export interface StudentLoginRow {
   email: string;
   collegeId: string;
   collegeName: string;
+  yearOrBatch?: string;
+  branch?: string;
+  gender?: string;
 }
 
 export interface BuildStudentLoginRowResult {
@@ -40,8 +43,8 @@ export async function parseLoginsSpreadsheet(file: File): Promise<{ headers: str
 
 export async function downloadLoginImportTemplate(): Promise<void> {
   const XLSX = await import("xlsx");
-  const headers = ["Email", "College"];
-  const exampleRow = ["student@example.com", "Example College"];
+  const headers = ["Email", "Year / Batch", "Branch", "Gender", "College"];
+  const exampleRow = ["student@example.com", "2nd Year", "CSE", "Female", "Example College"];
   const sheet = XLSX.utils.aoa_to_sheet([headers, exampleRow]);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, sheet, "Logins");
@@ -60,8 +63,11 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /**
  * Builds and validates one row. `campusName` is only used to flag a
  * mismatched optional "Campus" column — the campus itself always comes from
- * the signed-in Head, never from the file. `seenEmails` lets the caller
- * dedupe repeated emails across the whole sheet (passed in, mutated here).
+ * the signed-in Head/Super Admin's own selection, never from the file.
+ * `seenEmails` lets the caller dedupe repeated emails across the whole sheet
+ * (passed in, mutated here). Year/Batch, Branch, and Gender are free text —
+ * whatever's in the cell is stored as-is, no fixed set of values to validate
+ * against (this varies too much across colleges to enforce here).
  */
 export function buildStudentLoginRow(
   headers: string[],
@@ -74,6 +80,9 @@ export function buildStudentLoginRow(
   const emailIndex = findColumn(headers, ["email"]);
   const collegeIndex = findColumn(headers, ["college"]);
   const campusIndex = findColumn(headers, ["campus"]);
+  const yearIndex = findColumn(headers, ["year", "batch"]);
+  const branchIndex = findColumn(headers, ["branch"]);
+  const genderIndex = findColumn(headers, ["gender"]);
 
   const email = cellToString(emailIndex !== undefined ? rawRow[emailIndex] : undefined).toLowerCase();
   if (!email) {
@@ -102,6 +111,20 @@ export function buildStudentLoginRow(
     return { row: null, warnings, invalidReason: `College "${collegeCell}" not found on your campus` };
   }
 
+  const yearOrBatch = cellToString(yearIndex !== undefined ? rawRow[yearIndex] : undefined);
+  const branch = cellToString(branchIndex !== undefined ? rawRow[branchIndex] : undefined);
+  const gender = cellToString(genderIndex !== undefined ? rawRow[genderIndex] : undefined);
+
   seenEmails.add(email);
-  return { row: { email, collegeId: college.id, collegeName: college.name }, warnings };
+  return {
+    row: {
+      email,
+      collegeId: college.id,
+      collegeName: college.name,
+      ...(yearOrBatch ? { yearOrBatch } : {}),
+      ...(branch ? { branch } : {}),
+      ...(gender ? { gender } : {}),
+    },
+    warnings,
+  };
 }

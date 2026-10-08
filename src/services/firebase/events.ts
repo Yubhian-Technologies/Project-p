@@ -32,9 +32,18 @@ export async function createEvent(
   const now = Date.now();
   const docRef = await addDoc(eventsCollection, { ...input, createdAt: now, updatedAt: now });
 
-  // Platform-level alert for admins whenever a campus schedules a new event.
+  // Platform-level alert for admins whenever a campus schedules a new event —
+  // skip a campus-restricted admin whose adminAccess doesn't cover this
+  // campus; a legacy/global admin (no adminAccess, or scope "global") always
+  // gets it, same as before this restriction existed.
   const campusName = await getCampusName(input.campusId);
-  const admins = await listUsersByRole("admin");
+  const allAdmins = await listUsersByRole("admin");
+  const admins = allAdmins.filter(
+    (admin) =>
+      !admin.adminAccess ||
+      admin.adminAccess.scope === "global" ||
+      (admin.adminAccess.campusIds ?? []).includes(input.campusId),
+  );
   const campusLabel = campusName ? `${campusName} campus` : "A campus";
   await Promise.all(
     admins.map((admin) =>

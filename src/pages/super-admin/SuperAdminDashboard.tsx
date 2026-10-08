@@ -6,6 +6,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { CampusManagementSection } from "./CampusManagementSection";
 import { LoginsManagementSection } from "./LoginsManagementSection";
 import { UsersManagementSection } from "./UsersManagementSection";
+import { AdminsManagementSection } from "./AdminsManagementSection";
 import "../../styles/bento-grid.css";
 
 const SECTIONS = [
@@ -37,6 +38,13 @@ const SECTIONS = [
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 1 0-16 0" /></svg>
     ),
   },
+  {
+    id: "admins",
+    label: "Admins",
+    icon: (
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 1 0-16 0" /><path d="M16 3.5a4 4 0 0 1 0 7.5" /></svg>
+    ),
+  },
 ];
 
 const TITLES: Record<string, string> = {
@@ -44,6 +52,7 @@ const TITLES: Record<string, string> = {
   campuses: "Campuses",
   logins: "Logins",
   users: "Users",
+  admins: "Admins",
 };
 
 export function SuperAdminDashboard() {
@@ -65,6 +74,8 @@ export function SuperAdminDashboard() {
         <LoginsManagementSection />
       ) : activeSection === "users" ? (
         <UsersManagementSection />
+      ) : activeSection === "admins" ? (
+        <AdminsManagementSection />
       ) : (
         <div className="bento-grid">
           <BentoCard

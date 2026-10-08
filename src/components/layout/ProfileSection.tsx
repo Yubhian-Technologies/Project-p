@@ -13,6 +13,7 @@ import {
 import { getSignatureURL, saveSignatureURL } from "../../services/firebase/signature";
 import { AttendanceCheckCard } from "../attendance/AttendanceCheckCard";
 import { ImportLoginsModal } from "../profile/ImportLoginsModal";
+import { AddStudentModal } from "../profile/AddStudentModal";
 import { authErrorMessage, changeOwnPassword } from "../../services/firebase/auth";
 import { defaultAvailabilitySchedule } from "../../types/availability";
 import type { DayAvailability } from "../../types/availability";
@@ -52,6 +53,9 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     profile?.studentOrProfessional ?? "student",
   );
   const [whatsappDraft, setWhatsappDraft] = useState(profile?.whatsappNumber ?? "");
+  const [yearOrBatchDraft, setYearOrBatchDraft] = useState(profile?.yearOrBatch ?? "");
+  const [branchDraft, setBranchDraft] = useState(profile?.branch ?? "");
+  const [genderDraft, setGenderDraft] = useState(profile?.gender ?? "");
   const [savingIntake, setSavingIntake] = useState(false);
 
   const [counsellorNameDraft, setCounsellorNameDraft] = useState(profile?.displayName ?? "");
@@ -97,6 +101,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const [signatureError, setSignatureError] = useState<string | null>(null);
 
   const [showImportLogins, setShowImportLogins] = useState(false);
+  const [showAddStudent, setShowAddStudent] = useState(false);
 
   useEffect(() => {
     // Only Admin/Super Admin ever see the signature block (see canHaveSignature
@@ -195,6 +200,9 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
         displayName: nameDraft.trim(),
         studentOrProfessional: occupationDraft,
         whatsappNumber: whatsappDraft.trim(),
+        yearOrBatch: yearOrBatchDraft.trim(),
+        branch: branchDraft.trim(),
+        gender: genderDraft,
       });
       await refreshProfile();
     } finally {
@@ -259,7 +267,10 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const intakeUnchanged =
     nameDraft === (profile.displayName ?? "") &&
     occupationDraft === (profile.studentOrProfessional ?? "student") &&
-    whatsappDraft === (profile.whatsappNumber ?? "");
+    whatsappDraft === (profile.whatsappNumber ?? "") &&
+    yearOrBatchDraft === (profile.yearOrBatch ?? "") &&
+    branchDraft === (profile.branch ?? "") &&
+    genderDraft === (profile.gender ?? "");
 
   const counsellorProfileUnchanged =
     counsellorNameDraft === (profile.displayName ?? "") &&
@@ -334,6 +345,30 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
               <dd>{profile.email}</dd>
               <dt>ROLE</dt>
               <dd>{ROLE_LABELS[profile.role]}</dd>
+              {isUser && profile.studentOrProfessional && (
+                <>
+                  <dt>I AM A</dt>
+                  <dd>{profile.studentOrProfessional === "student" ? "Student" : "Working professional"}</dd>
+                </>
+              )}
+              {isUser && profile.yearOrBatch && (
+                <>
+                  <dt>YEAR / BATCH</dt>
+                  <dd>{profile.yearOrBatch}</dd>
+                </>
+              )}
+              {isUser && profile.branch && (
+                <>
+                  <dt>BRANCH</dt>
+                  <dd>{profile.branch}</dd>
+                </>
+              )}
+              {isUser && profile.gender && (
+                <>
+                  <dt>GENDER</dt>
+                  <dd>{profile.gender}</dd>
+                </>
+              )}
             </dl>
           </div>
 
@@ -609,6 +644,36 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                     onChange={(e) => setWhatsappDraft(e.target.value)}
                   />
                 </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-year">Year / Batch</label>
+                  <input
+                    id="intake-year"
+                    type="text"
+                    placeholder="e.g. 2nd Year"
+                    value={yearOrBatchDraft}
+                    onChange={(e) => setYearOrBatchDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-branch">Branch</label>
+                  <input
+                    id="intake-branch"
+                    type="text"
+                    placeholder="e.g. CSE"
+                    value={branchDraft}
+                    onChange={(e) => setBranchDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-gender">Gender</label>
+                  <Select id="intake-gender" value={genderDraft} onChange={setGenderDraft}>
+                    <option value="">—</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                  </Select>
+                </div>
                 <div className="profile-section__edit-actions">
                   <Button
                     type="button"
@@ -753,6 +818,9 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
         {isHead && !!profile.campusId && (
           <div className="profile-section__password">
             <p className="profile-section__subheading">TEAM</p>
+            <Button type="button" variant="outlined" onClick={() => setShowAddStudent(true)}>
+              + Add User
+            </Button>
             <Button type="button" variant="outlined" onClick={() => setShowImportLogins(true)}>
               Import Login Mails
             </Button>
@@ -763,6 +831,9 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     </Card>
     {showImportLogins && profile.campusId && (
       <ImportLoginsModal campusId={profile.campusId} onClose={() => setShowImportLogins(false)} />
+    )}
+    {showAddStudent && profile.campusId && (
+      <AddStudentModal campusId={profile.campusId} onClose={() => setShowAddStudent(false)} onCreated={async () => {}} />
     )}
   </div>
   );

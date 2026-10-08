@@ -32,7 +32,17 @@ export async function listUsersByRole(role: Role): Promise<UserProfile[]> {
 export async function updateUserAccount(
   uid: string,
   updates: Partial<
-    Pick<UserProfile, "displayName" | "campusId" | "collegeId" | "studentOrProfessional" | "whatsappNumber">
+    Pick<
+      UserProfile,
+      | "displayName"
+      | "campusId"
+      | "collegeId"
+      | "studentOrProfessional"
+      | "whatsappNumber"
+      | "yearOrBatch"
+      | "branch"
+      | "gender"
+    >
   >,
 ): Promise<void> {
   await updateDoc(doc(db, "users", uid), updates);
@@ -52,7 +62,14 @@ export async function setAvailability(uid: string, available: boolean): Promise<
 
 export async function updateUserIntakeInfo(
   uid: string,
-  data: { displayName: string; studentOrProfessional: "student" | "professional"; whatsappNumber: string },
+  data: {
+    displayName: string;
+    studentOrProfessional: "student" | "professional";
+    whatsappNumber: string;
+    yearOrBatch: string;
+    branch: string;
+    gender: string;
+  },
 ): Promise<void> {
   await updateDoc(doc(db, "users", uid), data);
 }

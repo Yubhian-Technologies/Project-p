@@ -78,16 +78,31 @@ export function AdminDashboard() {
   const { profile } = useAuth();
   const [activeSection, setActiveSection] = useState("overview");
 
+  // A missing adminAccess means a legacy/global admin — every section stays
+  // visible, same as before per-admin scoping existed. "overview" (Home) is
+  // always available regardless, same as it always was. Campus Management is
+  // hard-excluded for a campus-restricted admin no matter what — a
+  // restricted admin can never create/edit/delete a campus or college, so
+  // this isn't just the usual "sections" checklist, it's enforced here
+  // unconditionally (also matches firestore.rules' isGlobalCampusManager()).
+  const isCampusRestricted = profile?.role === "admin" && profile.adminAccess?.scope === "campuses";
+  const allowedSections = profile?.adminAccess?.sections;
+  const visibleSections = (
+    allowedSections
+      ? SECTIONS.filter((s) => s.id === "overview" || allowedSections.includes(s.id as (typeof allowedSections)[number]))
+      : SECTIONS
+  ).filter((s) => !(isCampusRestricted && s.id === "campuses"));
+
   return (
     <AppShell
       title={activeSection === "overview" ? "" : (TITLES[activeSection] ?? "")}
-      sections={SECTIONS}
+      sections={visibleSections}
       activeSection={activeSection}
       onSelectSection={setActiveSection}
     >
       {activeSection === "profile" ? (
         <ProfileSection />
-      ) : activeSection === "campuses" ? (
+      ) : activeSection === "campuses" && !isCampusRestricted ? (
         <CampusManagementSection />
       ) : activeSection === "logins" ? (
         <LoginsManagementSection />

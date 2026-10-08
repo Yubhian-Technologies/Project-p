@@ -32,15 +32,36 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/bookings/$(bookingId)).data;
     }
 
-    // Admin and Super Admin both manage campuses/colleges/logins.
-    function isCampusManager() {
-      return isSignedIn() && myRole() in ['admin', 'super-admin'];
+    // True for super-admin and a "global"-scope admin (unrestricted, same
+    // access every admin account had before per-admin scoping existed); for a
+    // campus-restricted admin, true only when campusId is one of theirs.
+    // Absence of adminAccess entirely = legacy/global admin, unchanged.
+    function adminCanAccessCampus(campusId) {
+      return isSignedIn() && (
+        myRole() == 'super-admin' ||
+        (myRole() == 'admin' && (
+          !('adminAccess' in myProfile()) ||
+          myProfile().adminAccess.scope == 'global' ||
+          campusId in myProfile().adminAccess.campusIds
+        ))
+      );
     }
 
-    // Head, Admin, Super Admin, and Counsellor can all view the Events & Programs
-    // calendar.
-    function canViewEventsCalendar() {
-      return isStaff() || isRole('counsellor');
+    // Only a "global"-scope admin (or super-admin) may create/edit/delete a
+    // Campus or College record at all — a campus-restricted admin never can,
+    // regardless of which campuses they're otherwise scoped to.
+    function isGlobalCampusManager() {
+      return isSignedIn() && (
+        myRole() == 'super-admin' ||
+        (myRole() == 'admin' && (!('adminAccess' in myProfile()) || myProfile().adminAccess.scope == 'global'))
+      );
+    }
+
+    // Head and Counsellor can view any campus's Events & Programs calendar
+    // (unchanged, pre-existing broad behavior); Admin/Super Admin only the
+    // campus(es) they're scoped to.
+    function canViewEventsCalendar(campusId) {
+      return isRole('head') || isRole('counsellor') || adminCanAccessCampus(campusId);
     }
 
     // Head and Counsellor jointly manage a campus's Events & Programs calendar —
@@ -102,7 +123,7 @@ service cloud.firestore {
           request.resource.data.uid == resource.data.uid &&
           request.resource.data.email == resource.data.email &&
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['campusId', 'collegeId', 'displayName', 'studentOrProfessional', 'whatsappNumber'])
+            .hasOnly(['campusId', 'collegeId', 'displayName', 'studentOrProfessional', 'whatsappNumber', 'yearOrBatch', 'branch', 'gender'])
         )
       );
 
@@ -131,13 +152,15 @@ service cloud.firestore {
     match /campuses/{campusId} {
       // Public Signup page reads this list before the visitor has an account.
       allow read: if true;
-      allow write: if isCampusManager();
+      // A campus-restricted admin can never create/edit/delete a campus —
+      // only a global admin or super-admin can.
+      allow write: if isGlobalCampusManager();
     }
 
     // ---------- colleges ----------
     match /colleges/{collegeId} {
       allow read: if true;
-      allow write: if isCampusManager();
+      allow write: if isGlobalCampusManager();
     }
 
     // ---------- events ----------
@@ -149,7 +172,7 @@ service cloud.firestore {
       // here rather than trusted to the client query alone. campusId is also
       // the exact field listEventsForCampus() queries on, so Firestore can
       // validate that list query against this check.
-      allow read: if canViewEventsCalendar() || (isRole('user') && resource.data.campusId == myProfile().campusId);
+      allow read: if canViewEventsCalendar(resource.data.campusId) || (isRole('user') && resource.data.campusId == myProfile().campusId);
 
       // Head or Counsellor can create an event, only for their own campus + a
       // college that actually belongs to that campus.
@@ -176,7 +199,7 @@ service cloud.firestore {
     match /calendarYears/{yearId} {
       // Head, Admin, Super Admin, and Counsellor can all view the academic years
       // written for a college; Head or Counsellor on that campus can create one.
-      allow read: if canViewEventsCalendar();
+      allow read: if canViewEventsCalendar(resource.data.campusId);
       allow create: if canEditEventsCalendar()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId
@@ -195,7 +218,7 @@ service cloud.firestore {
     // ---------- calendarMonths ----------
     match /calendarMonths/{monthId} {
       // Same shape as calendarYears — Head or Counsellor adds months one at a time.
-      allow read: if canViewEventsCalendar();
+      allow read: if canViewEventsCalendar(resource.data.campusId);
       allow create: if canEditEventsCalendar()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId
@@ -217,7 +240,7 @@ service cloud.firestore {
     // Campus-wide (not college-scoped) — a Head or Counsellor manages the
     // L&D/training schedule for every college in their campus.
     match /worksheetAcademicYears/{yearId} {
-      allow read: if isSignedIn() && (resource.data.campusId == myProfile().campusId || isCampusManager());
+      allow read: if isSignedIn() && (resource.data.campusId == myProfile().campusId || adminCanAccessCampus(resource.data.campusId));
       allow create: if canEditWorksheets()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId;
@@ -230,7 +253,7 @@ service cloud.firestore {
 
     // ---------- worksheets ----------
     match /worksheets/{worksheetId} {
-      allow read: if isSignedIn() && (resource.data.campusId == myProfile().campusId || isCampusManager());
+      allow read: if isSignedIn() && (resource.data.campusId == myProfile().campusId || adminCanAccessCampus(resource.data.campusId));
       allow create: if canEditWorksheets()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId;
@@ -246,7 +269,7 @@ service cloud.firestore {
       // their campus — either can add, edit, delete, or flip the status
       // of any session row.
       match /rows/{rowId} {
-        allow read: if isSignedIn() && (resource.data.campusId == myProfile().campusId || isCampusManager());
+        allow read: if isSignedIn() && (resource.data.campusId == myProfile().campusId || adminCanAccessCampus(resource.data.campusId));
 
         allow create: if canEditWorksheets() && request.resource.data.campusId == myProfile().campusId;
 
@@ -271,7 +294,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         recordId.split('_')[0] == request.auth.uid ||
         (isStaff() && resource.data.campusId == myProfile().campusId) ||
-        isCampusManager()
+        adminCanAccessCampus(resource.data.campusId)
       );
 
       // Check-in: the owner only, counsellor or head only, on their own campus,
@@ -315,7 +338,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         ownerUid == request.auth.uid ||
         (isRole('head') && resource.data.campusId == myProfile().campusId) ||
-        isCampusManager()
+        adminCanAccessCampus(resource.data.campusId)
       );
       allow create: if canEditWorksheets()
                     && (ownerUid == request.auth.uid || isRole('head'))
@@ -336,7 +359,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.counsellorId == request.auth.uid ||
-        isStaff() ||
+        isRole('head') || adminCanAccessCampus(resource.data.campusId) ||
         // listScheduledBookings() is queried platform-wide by every signed-in user
         // (BookingSection.tsx) purely to compute a counsellor's live "in session"
         // badge. Only "scheduled" bookings are exposed this way; the sensitive
@@ -465,7 +488,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.counsellorId == request.auth.uid ||
-        isStaff()
+        isRole('head') || adminCanAccessCampus(resource.data.campusId)
       );
 
       // The sender must be the student of the matching booking; the booking
@@ -502,7 +525,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.counsellorId == request.auth.uid ||
-        isStaff()
+        isRole('head') || adminCanAccessCampus(bookingOf(bookingId).campusId)
       );
 
       allow create: if isSignedIn()
@@ -570,7 +593,7 @@ service cloud.firestore {
     // read for oversight but never write into a private conversation.
     match /chat_messages/{messageId} {
       allow read: if isSignedIn() && (
-        isStaff() ||
+        isRole('head') || adminCanAccessCampus(bookingOf(resource.data.chatRoomId).campusId) ||
         bookingOf(resource.data.chatRoomId).userId == request.auth.uid ||
         bookingOf(resource.data.chatRoomId).counsellorId == request.auth.uid
       );
@@ -891,7 +914,7 @@ service cloud.firestore {
     // own campus's reports — never another campus's. Counsellors have no
     // access here at all (their own reports live in counsellorMonthlyReports).
     match /monthlyReports/{reportId} {
-      allow read: if myRole() in ['admin', 'super-admin']
+      allow read: if adminCanAccessCampus(resource.data.campusId)
                   || (isRole('head') && resource.data.campusId == myProfile().campusId);
       allow create: if isRole('head')
                     && request.resource.data.uploadedByUid == request.auth.uid
@@ -900,7 +923,7 @@ service cloud.firestore {
                     && request.resource.data.status == 'pending';
       // Only Admin/Super Admin can verify (update status → verified); the
       // report's identity/ownership fields must stay untouched.
-      allow update: if myRole() in ['admin', 'super-admin']
+      allow update: if adminCanAccessCampus(resource.data.campusId)
                     && request.resource.data.status == 'verified'
                     && request.resource.data.uploadedByUid == resource.data.uploadedByUid
                     && request.resource.data.campusId == resource.data.campusId
@@ -947,12 +970,12 @@ service cloud.firestore {
     match /flash_qa/{qaId} {
       allow read: if isSignedIn() && (
         resource.data.campusId == myProfile().campusId ||
-        isRole('head') || isRole('admin') || isRole('super-admin')
+        isRole('head') || adminCanAccessCampus(resource.data.campusId)
       );
 
       allow write: if isSignedIn() && (
         (isRole('head') && request.resource.data.campusId == myProfile().campusId) ||
-        isRole('admin') || isRole('super-admin')
+        adminCanAccessCampus(request.resource.data.campusId)
       );
     }
 
@@ -975,7 +998,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         bookingOf(resource.data.bookingId).userId == request.auth.uid ||
         bookingOf(resource.data.bookingId).counsellorId == request.auth.uid ||
-        isStaff()
+        isRole('head') || adminCanAccessCampus(bookingOf(resource.data.bookingId).campusId)
       );
 
       // Only the counsellor currently holding the booking can add resources —

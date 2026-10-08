@@ -36,7 +36,7 @@ export const DAILY_CHALLENGES: Omit<Challenge, "completed">[] = [
   {
     id: "journal",
     title: "Journal Your Thoughts",
-    description: "Write down your thoughts in your Counselling Journal today.",
+    description: "Write down your thoughts in your My Diary today.",
     points: 50,
     icon: <ClipboardListIcon />,
   },

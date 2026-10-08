@@ -144,7 +144,7 @@ export function UserHomeActivityOverview({ onSelectSection }: UserHomeActivityOv
               <GamepadIcon /> 4-7-8 & Box Breathing Exercises
             </button>
             <button type="button" onClick={() => onSelectSection("journal")}>
-              <BookOpenIcon /> Counselling Journal
+              <BookOpenIcon /> My Diary
             </button>
             <button type="button" onClick={() => onSelectSection("community")}>
               <MessageCircleIcon /> Wellness Community
