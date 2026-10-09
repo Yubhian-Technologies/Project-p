@@ -11,27 +11,31 @@ import { Select } from "../../components/common/Select";
 import { EditUserModal } from "./EditUserModal";
 import { AddStudentModal } from "../../components/profile/AddStudentModal";
 import { ImportLoginsModal } from "../../components/profile/ImportLoginsModal";
+import { ImportBioDataModal } from "./ImportBioDataModal";
 import "./LoginsManagementSection.css";
 
 const UNASSIGNED = "unassigned";
 const ALL = "all";
 
-// Two branches ended up saved under two different spellings by mistake
-// (import/creation inconsistency) — these are the same branch, just typed
-// differently. Merged ONLY for these two specific pairs in the Branch
-// filter below (never touches the raw `branch` value stored on a student,
-// and no other branch is affected). The first entry in each group is the
-// one shown as the filter option.
+// Several branches ended up saved under multiple spellings by mistake
+// (import/creation inconsistency) — each group below is the same branch,
+// just typed differently. Merged ONLY for these specific groups in the
+// Branch filter below (never touches the raw `branch` value stored on a
+// student, and no other branch is affected). The first entry in each group
+// is the one shown as the filter option.
 const BRANCH_ALIAS_GROUPS = [
   ["AI&ML", "CSE(AI&ML)"],
   ["AI&DS", "CSE(AI&DS)"],
+  ["Mechanical", "ME", "MEC", "MECH"],
+  ["CIVIL", "CE"],
+  ["CS&BS", "CSBS"],
 ];
 
-// Matched loosely — case-insensitive and ignoring ALL whitespace — so
-// "CSE(AI&ML)", "CSE (AI&ML)", "cse( ai & ml )" etc. all still land on the
-// same canonical branch, not just the one exact spelling.
+// Matched loosely — case-insensitive and ignoring whitespace/punctuation —
+// so "CSE(AI&ML)", "CSE (AI&ML)", "cse ai ml", "CS&BS", "CSBS", etc. all
+// still land on the same canonical branch, not just one exact spelling.
 function branchMatchKey(value: string): string {
-  return value.replace(/\s+/g, "").toUpperCase();
+  return value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
 }
 
 const BRANCH_ALIAS_LOOKUP = new Map<string, string>(
@@ -50,11 +54,13 @@ export function UsersManagementSection() {
   const [collegeFilter, setCollegeFilter] = useState(ALL);
   const [branchFilter, setBranchFilter] = useState(ALL);
   const [yearFilter, setYearFilter] = useState(ALL);
+  const [admissionTypeFilter, setAdmissionTypeFilter] = useState(ALL);
   const [emailSearch, setEmailSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [showAddUser, setShowAddUser] = useState(false);
   const [showImportUsers, setShowImportUsers] = useState(false);
+  const [showImportBioData, setShowImportBioData] = useState(false);
 
   // Both creation paths need one specific campus picked first (every account
   // belongs to exactly one) — not available from "All campuses" or
@@ -84,6 +90,7 @@ export function UsersManagementSection() {
   useEffect(() => {
     setBranchFilter(ALL);
     setYearFilter(ALL);
+    setAdmissionTypeFilter(ALL);
   }, [campusFilter, collegeFilter]);
 
   const campusName = (id?: string) => campuses.find((c) => c.id === id)?.name;
@@ -122,7 +129,18 @@ export function UsersManagementSection() {
     )
       return false;
     if (yearFilter === UNASSIGNED ? !!u.yearOrBatch : yearFilter !== ALL && u.yearOrBatch !== yearFilter) return false;
-    if (emailQuery && !u.email.toLowerCase().includes(emailQuery)) return false;
+    if (
+      admissionTypeFilter === UNASSIGNED
+        ? !!u.admissionType
+        : admissionTypeFilter !== ALL && u.admissionType !== admissionTypeFilter
+    )
+      return false;
+    if (
+      emailQuery &&
+      !u.email.toLowerCase().includes(emailQuery) &&
+      !u.registerNumber?.toLowerCase().includes(emailQuery)
+    )
+      return false;
     return true;
   });
 
@@ -153,6 +171,14 @@ export function UsersManagementSection() {
           ];
   if (branchFilter !== ALL) breadcrumbParts.push(branchFilter === UNASSIGNED ? "Unassigned" : branchFilter);
   if (yearFilter !== ALL) breadcrumbParts.push(yearFilter === UNASSIGNED ? "Unassigned" : yearFilter);
+  if (admissionTypeFilter !== ALL)
+    breadcrumbParts.push(
+      admissionTypeFilter === UNASSIGNED
+        ? "Unassigned"
+        : admissionTypeFilter === "regular"
+          ? "Regular"
+          : "Lateral",
+    );
   if (emailQuery) breadcrumbParts.push(`Email contains "${emailSearch.trim()}"`);
   const breadcrumb = breadcrumbParts.join(" → ");
 
@@ -162,25 +188,46 @@ export function UsersManagementSection() {
         <Button type="button" disabled={!canCreateUsers} onClick={() => setShowAddUser(true)}>
           + Add User
         </Button>
-        <Button type="button" variant="outlined" disabled={!canCreateUsers} onClick={() => setShowImportUsers(true)}>
+        <Button type="button" variant="outlined" onClick={() => setShowImportUsers(true)}>
           Import Users
+        </Button>
+        <Button type="button" variant="outlined" onClick={() => setShowImportBioData(true)}>
+          Import Bio Data
         </Button>
       </div>
       {!canCreateUsers && (
         <p className="logins-management__hint">
-          Select one specific campus below to add or import students and working professionals.
+          Select one specific campus below to add a single user. Import works either way — scoped to one campus
+          selected above, or across every campus at once if you leave it on "All campuses" (the spreadsheet's own
+          Campus column then decides where each row goes).
         </p>
       )}
 
       <div className="logins-management__field logins-management__field--search">
-        <label htmlFor="users-email-search">Search by email</label>
-        <input
-          id="users-email-search"
-          type="search"
-          placeholder="e.g. 23pa1a12n3@vishnu.edu.in"
-          value={emailSearch}
-          onChange={(e) => setEmailSearch(e.target.value)}
-        />
+        <label htmlFor="users-email-search">Search by email or register number</label>
+        <div className="logins-management__search-input-wrap">
+          {/* Plain text, not type="search" — the native OS search-field
+              decorations (clear button, etc.) fought with this pill styling
+              and felt slow/awkward to click, so this uses its own simple
+              clear button instead, fully within our own control. */}
+          <input
+            id="users-email-search"
+            type="text"
+            placeholder="e.g. 23pa1a12n3@vishnu.edu.in"
+            value={emailSearch}
+            onChange={(e) => setEmailSearch(e.target.value)}
+          />
+          {emailSearch && (
+            <button
+              type="button"
+              className="logins-management__search-clear"
+              aria-label="Clear search"
+              onClick={() => setEmailSearch("")}
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="logins-management__filters">
@@ -223,15 +270,24 @@ export function UsersManagementSection() {
           </Select>
         </div>
         <div className="logins-management__field">
-          <label htmlFor="users-year">4. Year / Batch</label>
+          <label htmlFor="users-year">4. Batch</label>
           <Select id="users-year" value={yearFilter} onChange={setYearFilter}>
-            <option value={ALL}>All years / batches</option>
+            <option value={ALL}>All batches</option>
             <option value={UNASSIGNED}>Unassigned</option>
             {yearsForFilter.map((y) => (
               <option key={y} value={y}>
                 {y}
               </option>
             ))}
+          </Select>
+        </div>
+        <div className="logins-management__field">
+          <label htmlFor="users-admission-type">5. Regular / Lateral</label>
+          <Select id="users-admission-type" value={admissionTypeFilter} onChange={setAdmissionTypeFilter}>
+            <option value={ALL}>All</option>
+            <option value={UNASSIGNED}>Unassigned</option>
+            <option value="regular">Regular</option>
+            <option value="lateral">Lateral</option>
           </Select>
         </div>
       </div>
@@ -252,7 +308,9 @@ export function UsersManagementSection() {
             </p>
             <p className="logins-management__college">
               {user.studentOrProfessional === "professional" ? "Working professional" : "Student"}
+              {user.registerNumber ? ` • ${user.registerNumber}` : ""}
               {user.yearOrBatch ? ` • ${user.yearOrBatch}` : ""}
+              {user.admissionType ? ` • ${user.admissionType === "regular" ? "Regular" : "Lateral"}` : ""}
               {user.branch ? ` • ${user.branch}` : ""}
               {user.gender ? ` • ${user.gender}` : ""}
             </p>
@@ -273,11 +331,20 @@ export function UsersManagementSection() {
         <AddStudentModal campusId={campusFilter} onClose={() => setShowAddUser(false)} onCreated={load} />
       )}
 
-      {showImportUsers && canCreateUsers && (
+      {showImportUsers && (
         <ImportLoginsModal
-          campusId={campusFilter}
+          campusId={canCreateUsers ? campusFilter : undefined}
           onClose={() => {
             setShowImportUsers(false);
+            load();
+          }}
+        />
+      )}
+
+      {showImportBioData && (
+        <ImportBioDataModal
+          onClose={() => {
+            setShowImportBioData(false);
             load();
           }}
         />

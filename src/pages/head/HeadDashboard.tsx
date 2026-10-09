@@ -21,6 +21,8 @@ import type { GamesSectionHandle } from "../user/games/GamesSection";
 import { JournalSection } from "../user/journal/JournalSection";
 import { HeadCommandCentre } from "./HeadCommandCentre";
 import { SessionReportsSection } from "./SessionReportsSection";
+import { MonthlyReportDownload } from "../../components/reports/MonthlyReportDownload";
+import { ConsolidatedReportDownloadSection } from "./ConsolidatedReportDownloadSection";
 import type { Notification } from "../../types/notification";
 import "../../styles/bento-grid.css";
 
@@ -79,6 +81,20 @@ const SECTIONS = [
     label: "Session Reports",
     icon: (
       <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
+    ),
+  },
+  {
+    id: "my-monthly-report",
+    label: "My Monthly Report",
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+    ),
+  },
+  {
+    id: "consolidated-report-download",
+    label: "Consolidated Report",
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
     ),
   },
   {
@@ -190,6 +206,8 @@ export function HeadDashboard() {
     "ssi-results": "SSI Test Results",
     "team-management": "Team Management",
     "session-reports": "Session Reports",
+    "my-monthly-report": "My Monthly Report",
+    "consolidated-report-download": "Consolidated Report",
     events: "Events & Programs",
     "transfer-requests": "Transfer Requests",
     "counsellor-monthly-reports": "Monthly Reports",
@@ -251,6 +269,8 @@ export function HeadDashboard() {
         <TeamManagementSection onOpenTransferRequests={() => setActiveSection("transfer-requests")} />
       )}
       {activeSection === "session-reports" && <SessionReportsSection />}
+      {activeSection === "my-monthly-report" && <MonthlyReportDownload />}
+      {activeSection === "consolidated-report-download" && <ConsolidatedReportDownloadSection />}
       {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "transfer-requests" && <TransferRequestsSection />}
       {activeSection === "counsellor-monthly-reports" && <TeamMonthlyReportsSection />}

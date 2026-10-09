@@ -32,6 +32,13 @@ export function AnalyticsSection() {
       ? profile.adminAccess.campusIds ?? []
       : null;
 
+  // When also narrowed to specific colleges, the staff list below is further
+  // narrowed to just head/counsellors assigned to one of those colleges.
+  const scopedCollegeIds =
+    scopedCampusIds && profile?.role === "admin" && profile.adminAccess?.collegeIds?.length
+      ? profile.adminAccess.collegeIds
+      : null;
+
   useEffect(() => {
     listCampuses().then((c) => setCampuses(scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -47,12 +54,14 @@ export function AnalyticsSection() {
       setStaff(
         snapshot.docs
           .map((d) => d.data() as UserProfile)
-          .filter((p) => p.role === "counsellor" || p.role === "head"),
+          .filter((p) => p.role === "counsellor" || p.role === "head")
+          .filter((p) => !scopedCollegeIds || (p.collegeId && scopedCollegeIds.includes(p.collegeId))),
       );
       setColleges(collegeList);
       setLoadingStaff(false);
     }
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campusId]);
 
   const { visible: visibleStaff, hiddenCount, showMore } = useViewMore(staff, 7);

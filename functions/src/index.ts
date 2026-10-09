@@ -17,6 +17,38 @@ function isCampusManagerRole(role: unknown): boolean {
   return role === "admin" || role === "super-admin";
 }
 
+interface CallerAdminAccess {
+  scope?: "global" | "campuses";
+  campusIds?: string[];
+  collegeIds?: string[];
+}
+
+// True if `callerRole` (+ their own adminAccess, when role === "admin") may
+// create/edit/delete a counsellor/head login belonging to the given
+// campus/college. Super Admin and a global-scope admin can always manage any
+// campus/college; a campus-restricted admin only within their own
+// campusIds, narrowed further to collegeIds when that's also set. Previously
+// this check didn't exist at all here — only the UI's campus picker limited
+// what a scoped admin could reach, which isn't real enforcement.
+function canManageCampusLogin(
+  callerRole: unknown,
+  callerAdminAccess: CallerAdminAccess | undefined,
+  targetCampusId: string | undefined,
+  targetCollegeId: string | undefined,
+): boolean {
+  if (callerRole === "super-admin") return true;
+  if (callerRole !== "admin") return false;
+  if (!callerAdminAccess || callerAdminAccess.scope === "global") return true;
+  if (!targetCampusId || !callerAdminAccess.campusIds?.includes(targetCampusId)) return false;
+  if (
+    callerAdminAccess.collegeIds?.length &&
+    (!targetCollegeId || !callerAdminAccess.collegeIds.includes(targetCollegeId))
+  ) {
+    return false;
+  }
+  return true;
+}
+
 interface DeleteCampusLoginRequest {
   uid: string;
 }
@@ -28,7 +60,8 @@ export const deleteCampusLogin = onCall<DeleteCampusLoginRequest>(async (request
   }
 
   const callerDoc = await db.collection("users").doc(callerUid).get();
-  if (!isCampusManagerRole(callerDoc.data()?.role)) {
+  const callerData = callerDoc.data();
+  if (!isCampusManagerRole(callerData?.role)) {
     throw new HttpsError("permission-denied", "Only an Admin or Super Admin can delete a campus login.");
   }
 
@@ -41,9 +74,16 @@ export const deleteCampusLogin = onCall<DeleteCampusLoginRequest>(async (request
   // this had no check on the *target's* role at all, so any admin could
   // delete any other admin (or even a super-admin) they knew the uid of.
   const targetDoc = await db.collection("users").doc(targetUid).get();
-  const targetRole = targetDoc.data()?.role;
-  if ((targetRole === "admin" || targetRole === "super-admin") && callerDoc.data()?.role !== "super-admin") {
+  const targetData = targetDoc.data();
+  const targetRole = targetData?.role;
+  if ((targetRole === "admin" || targetRole === "super-admin") && callerData?.role !== "super-admin") {
     throw new HttpsError("permission-denied", "Only a Super Admin can delete an Admin or Super Admin login.");
+  }
+  if (
+    (targetRole === "counsellor" || targetRole === "head") &&
+    !canManageCampusLogin(callerData?.role, callerData?.adminAccess, targetData?.campusId, targetData?.collegeId)
+  ) {
+    throw new HttpsError("permission-denied", "You don't have access to delete this login.");
   }
 
   await auth.deleteUser(targetUid);
@@ -62,6 +102,7 @@ const ADMIN_SECTION_IDS = ["campuses", "logins", "events", "analytics", "counsel
 interface AdminAccessInput {
   scope: "global" | "campuses";
   campusIds?: string[];
+  collegeIds?: string[]; // optional further narrowing within campusIds — only meaningful when scope === "campuses"
   sections: string[];
 }
 
@@ -85,6 +126,20 @@ async function validateAdminAccess(adminAccess: AdminAccessInput): Promise<void>
     if (campusDocs.some((d) => !d.exists)) {
       throw new HttpsError("invalid-argument", "One or more campuses do not exist.");
     }
+    if (adminAccess.collegeIds && adminAccess.collegeIds.length > 0) {
+      const collegeDocs = await Promise.all(
+        adminAccess.collegeIds.map((id) => db.collection("colleges").doc(id).get()),
+      );
+      if (collegeDocs.some((d) => !d.exists)) {
+        throw new HttpsError("invalid-argument", "One or more colleges do not exist.");
+      }
+      const outOfScope = collegeDocs.some((d) => !adminAccess.campusIds!.includes(d.data()?.campusId));
+      if (outOfScope) {
+        throw new HttpsError("invalid-argument", "Every assigned college must belong to one of the assigned campuses.");
+      }
+    }
+  } else if (adminAccess.collegeIds && adminAccess.collegeIds.length > 0) {
+    throw new HttpsError("invalid-argument", "Colleges can only be assigned to a campus-restricted admin.");
   }
 }
 
@@ -190,7 +245,8 @@ export const createCampusLogin = onCall<CreateCampusLoginRequest>(async (request
   }
 
   const callerDoc = await db.collection("users").doc(callerUid).get();
-  if (!isCampusManagerRole(callerDoc.data()?.role)) {
+  const callerData = callerDoc.data();
+  if (!isCampusManagerRole(callerData?.role)) {
     throw new HttpsError("permission-denied", "Only an Admin or Super Admin can create a campus login.");
   }
 
@@ -200,6 +256,14 @@ export const createCampusLogin = onCall<CreateCampusLoginRequest>(async (request
   }
   if (role !== "counsellor" && role !== "head") {
     throw new HttpsError("invalid-argument", "Role must be counsellor or head.");
+  }
+
+  const collegeDoc = await db.collection("colleges").doc(collegeId).get();
+  if (!collegeDoc.exists || collegeDoc.data()?.campusId !== campusId) {
+    throw new HttpsError("invalid-argument", "That college does not belong to the selected campus.");
+  }
+  if (!canManageCampusLogin(callerData?.role, callerData?.adminAccess, campusId, collegeId)) {
+    throw new HttpsError("permission-denied", "You don't have access to create a login for that campus/college.");
   }
 
   if (role === "head") {
@@ -237,7 +301,9 @@ interface CreateStudentLoginRequest {
   collegeId: string;
   password?: string; // omitted on a bulk import row — defaults to the shared STUDENT_DEFAULT_PASSWORD
   studentOrProfessional: "student" | "professional";
+  registerNumber?: string; // client always derives this from the email; re-derived here too as a fallback
   yearOrBatch?: string;
+  admissionType?: "regular" | "lateral";
   branch?: string;
   gender?: string;
 }
@@ -263,13 +329,18 @@ export const createStudentLogin = onCall<CreateStudentLoginRequest>(async (reque
     throw new HttpsError("permission-denied", "Only a Head with a campus can create student logins.");
   }
 
-  const { email, collegeId, password, studentOrProfessional, yearOrBatch, branch, gender } = request.data;
+  const { email, collegeId, password, studentOrProfessional, registerNumber, yearOrBatch, admissionType, branch, gender } =
+    request.data;
   if (!email || !collegeId) {
     throw new HttpsError("invalid-argument", "Email and college are required.");
   }
   if (studentOrProfessional !== "student" && studentOrProfessional !== "professional") {
     throw new HttpsError("invalid-argument", "Student / Professional must be set.");
   }
+  if (admissionType !== undefined && admissionType !== "regular" && admissionType !== "lateral") {
+    throw new HttpsError("invalid-argument", "Regular / Lateral must be either \"regular\" or \"lateral\".");
+  }
+  const resolvedRegisterNumber = registerNumber || email.split("@")[0]?.toUpperCase() || "";
 
   const collegeDoc = await db.collection("colleges").doc(collegeId).get();
   if (!collegeDoc.exists) {
@@ -293,7 +364,9 @@ export const createStudentLogin = onCall<CreateStudentLoginRequest>(async (reque
       campusId,
       collegeId,
       studentOrProfessional,
+      ...(resolvedRegisterNumber ? { registerNumber: resolvedRegisterNumber } : {}),
       ...(yearOrBatch ? { yearOrBatch } : {}),
+      ...(admissionType ? { admissionType } : {}),
       ...(branch ? { branch } : {}),
       ...(gender ? { gender } : {}),
       createdAt: Date.now(),
@@ -323,7 +396,8 @@ export const updateCampusLogin = onCall<UpdateCampusLoginRequest>(async (request
   }
 
   const callerDoc = await db.collection("users").doc(callerUid).get();
-  if (!isCampusManagerRole(callerDoc.data()?.role)) {
+  const callerData = callerDoc.data();
+  if (!isCampusManagerRole(callerData?.role)) {
     throw new HttpsError("permission-denied", "Only an Admin or Super Admin can edit a campus login.");
   }
 
@@ -334,7 +408,17 @@ export const updateCampusLogin = onCall<UpdateCampusLoginRequest>(async (request
   const isActive = active !== false;
 
   const targetDoc = await db.collection("users").doc(uid).get();
-  const campusId = targetDoc.data()?.campusId;
+  const targetData = targetDoc.data();
+  const campusId = targetData?.campusId;
+
+  // Must be allowed to manage this login both where it currently is AND
+  // where it's being moved to (collegeId can change on edit; campus cannot).
+  if (
+    !canManageCampusLogin(callerData?.role, callerData?.adminAccess, campusId, targetData?.collegeId) ||
+    !canManageCampusLogin(callerData?.role, callerData?.adminAccess, campusId, collegeId)
+  ) {
+    throw new HttpsError("permission-denied", "You don't have access to manage this login.");
+  }
 
   if (role === "head" && campusId) {
     const headSnapshot = await db

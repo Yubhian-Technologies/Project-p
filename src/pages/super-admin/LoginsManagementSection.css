@@ -1,7 +1,7 @@
 .logins-management {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   width: 100%;
   font-size: 13px;
 }
@@ -78,11 +78,44 @@
   font-size: 13px;
   padding: 8px 14px;
   border-radius: 14px;
-  border: none;
-  background: var(--neu-bg, #E8ECF2);
-  box-shadow: var(--neu-shadow-sunken);
+  border: 1px solid rgba(46, 43, 39, 0.1);
+  background: #FFFFFF;
   color: var(--neu-text-primary, #2D3748);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.logins-management__search-input-wrap {
+  position: relative;
+  display: flex;
+}
+
+.logins-management__search-input-wrap input {
+  padding-right: 32px;
+}
+
+.logins-management__search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--neu-text-muted, #718096);
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.logins-management__search-clear:hover {
+  background: rgba(46, 43, 39, 0.08);
+  color: var(--neu-text-primary, #2D3748);
 }
 
 /* Campus shown as fixed context (not a dropdown) when Add Login is opened
@@ -99,7 +132,8 @@
 }
 
 .logins-management__field input:focus {
-  box-shadow: var(--neu-shadow-sunken-focus);
+  outline: none;
+  border-color: #EA580C;
 }
 
 .logins-management__form {

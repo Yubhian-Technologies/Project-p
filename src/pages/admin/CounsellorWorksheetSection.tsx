@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { listCampuses } from "../../services/firebase/campuses";
+import { listCampusLogins } from "../../services/firebase/firestore";
 import {
   listWorksheetAcademicYears,
   listWorksheets,
@@ -29,12 +30,22 @@ export function CounsellorWorksheetSection() {
   const [worksheetsList, setWorksheetsList] = useState<Worksheet[]>([]);
   const [selectedWorksheetId, setSelectedWorksheetId] = useState("");
   const [rows, setRows] = useState<WorksheetRow[]>([]);
+  const [collegeIdByCounsellorId, setCollegeIdByCounsellorId] = useState<Map<string, string>>(new Map());
   const [error, setError] = useState("");
 
   // A campus-restricted Admin only ever sees their own assigned campuses here.
   const scopedCampusIds =
     profile?.role === "admin" && profile.adminAccess?.scope === "campuses"
       ? profile.adminAccess.campusIds ?? []
+      : null;
+
+  // When also narrowed to specific colleges, worksheet rows below are
+  // narrowed to just the counsellors assigned to one of those colleges.
+  // WorksheetRow itself only carries counsellorId/counsellorName, not
+  // collegeId, so this cross-references each counsellor's own profile.
+  const scopedCollegeIds =
+    scopedCampusIds && profile?.role === "admin" && profile.adminAccess?.collegeIds?.length
+      ? profile.adminAccess.collegeIds
       : null;
 
   useEffect(() => {
@@ -61,15 +72,27 @@ export function CounsellorWorksheetSection() {
     setWorksheetsList([]);
     setSelectedWorksheetId("");
     setRows([]);
+    setCollegeIdByCounsellorId(new Map());
     if (!selectedCampusId) return;
     listWorksheetAcademicYears(selectedCampusId)
       .then((list) => {
         if (!cancelled) setYears(list);
       })
       .catch(() => setError("Couldn't load academic years for this campus."));
+    if (scopedCollegeIds) {
+      listCampusLogins(selectedCampusId)
+        .then((logins) => {
+          if (cancelled) return;
+          setCollegeIdByCounsellorId(
+            new Map(logins.filter((l) => l.collegeId).map((l) => [l.uid, l.collegeId as string])),
+          );
+        })
+        .catch(() => setError("Couldn't load counsellor assignments for this campus."));
+    }
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCampusId]);
 
   useEffect(() => {
@@ -94,13 +117,22 @@ export function CounsellorWorksheetSection() {
     if (!selectedCampusId || !selectedWorksheetId) return;
     listWorksheetRows(selectedWorksheetId, selectedCampusId)
       .then((list) => {
-        if (!cancelled) setRows(list);
+        if (cancelled) return;
+        setRows(
+          scopedCollegeIds
+            ? list.filter((row) => {
+                const collegeId = collegeIdByCounsellorId.get(row.counsellorId);
+                return !!collegeId && scopedCollegeIds.includes(collegeId);
+              })
+            : list,
+        );
       })
       .catch(() => setError("Couldn't load worksheet rows."));
     return () => {
       cancelled = true;
     };
-  }, [selectedCampusId, selectedWorksheetId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCampusId, selectedWorksheetId, collegeIdByCounsellorId]);
 
   const selectedYear = years.find((y) => y.id === selectedYearId);
   const selectedWorksheet = worksheetsList.find((w) => w.id === selectedWorksheetId);

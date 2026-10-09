@@ -11,11 +11,16 @@ import {
   parseLoginsSpreadsheet,
 } from "../../utils/studentLoginImport";
 import type { StudentLoginRow } from "../../utils/studentLoginImport";
+import type { Campus } from "../../types/campus";
 import type { College } from "../../types/college";
 import "./ImportLoginsModal.css";
 
 interface ImportLoginsModalProps {
-  campusId: string;
+  // A Head always passes their own fixed campusId (single-campus import,
+  // unchanged behavior). A Super Admin omits it entirely — every campus is
+  // then fair game, and each row routes to its own Campus + College based
+  // on what's actually in the spreadsheet, so one file can mix campuses.
+  campusId?: string;
   onClose: () => void;
 }
 
@@ -43,17 +48,27 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
   const [step, setStep] = useState<Step>("upload");
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [sheet, setSheet] = useState<ParsedSheet | null>(null);
-  const [campusName, setCampusName] = useState("");
+  const [allowedCampuses, setAllowedCampuses] = useState<Campus[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
   const [loadingContext, setLoadingContext] = useState(true);
   const [studentOrProfessional, setStudentOrProfessional] = useState<"student" | "professional">("student");
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [result, setResult] = useState<ImportResult | null>(null);
 
+  const routedMode = !campusId;
+
   useEffect(() => {
-    Promise.all([listCampuses(), listColleges(campusId)]).then(([campuses, campusColleges]) => {
-      setCampusName(campuses.find((c) => c.id === campusId)?.name ?? "");
-      setColleges(campusColleges);
+    listCampuses().then(async (allCampuses) => {
+      if (campusId) {
+        const campus = allCampuses.find((c) => c.id === campusId);
+        const campusColleges = await listColleges(campusId);
+        setAllowedCampuses(campus ? [campus] : []);
+        setColleges(campusColleges);
+      } else {
+        const collegeLists = await Promise.all(allCampuses.map((c) => listColleges(c.id)));
+        setAllowedCampuses(allCampuses);
+        setColleges(collegeLists.flat());
+      }
       setLoadingContext(false);
     });
   }, [campusId]);
@@ -77,10 +92,10 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
     if (!sheet) return [];
     const seenEmails = new Set<string>();
     return sheet.rows.map((rawRow, index) => {
-      const { row, invalidReason } = buildStudentLoginRow(sheet.headers, rawRow, colleges, campusName, seenEmails);
+      const { row, invalidReason } = buildStudentLoginRow(sheet.headers, rawRow, allowedCampuses, colleges, seenEmails);
       return { index, row, invalidReason };
     });
-  }, [sheet, colleges, campusName]);
+  }, [sheet, allowedCampuses, colleges]);
 
   const validRows = previewRows.filter((r) => r.row !== null);
   const invalidRows = previewRows.filter((r) => r.row === null);
@@ -97,9 +112,11 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
         chunk.map((r) =>
           createStudentLogin({
             email: r.row!.email,
+            registerNumber: r.row!.registerNumber,
             collegeId: r.row!.collegeId,
             studentOrProfessional,
             yearOrBatch: r.row!.yearOrBatch,
+            admissionType: r.row!.admissionType,
             branch: r.row!.branch,
             gender: r.row!.gender,
           }),
@@ -123,16 +140,28 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
     setStep("done");
   }
 
+  const campusLabel = !routedMode && allowedCampuses[0] ? ` (${allowedCampuses[0].name})` : "";
+
   return (
     <Modal title="Import Login Mails" onClose={onClose} className="import-logins-modal">
       {step === "upload" && (
         <div className="import-logins-modal__step">
           <p>
-            Upload a spreadsheet of students or working professionals to create logins for, on your campus
-            {campusName ? ` (${campusName})` : ""}. It needs these columns: <strong>Email</strong>,{" "}
-            <strong>Year / Batch</strong>, <strong>Branch</strong>, <strong>Gender</strong>, and{" "}
-            <strong>College</strong> (only Email and College are required). Every account created here gets the
-            default password <strong>123456</strong> — students can change it later from their own Profile page.
+            Upload a spreadsheet of students or working professionals to create logins for{campusLabel}. It needs
+            these columns: <strong>Email</strong>, <strong>Register Number</strong>, <strong>Batch</strong>,{" "}
+            <strong>Regular / Lateral</strong>, <strong>Branch</strong>, <strong>Gender</strong>,{" "}
+            <strong>Campus</strong>, and <strong>College</strong> (only Email and College are required
+            {routedMode ? " — Campus is also required, since this isn't scoped to one campus" : ""}).
+            {routedMode && (
+              <>
+                {" "}
+                One file can include students for <strong>different campuses</strong> — each row is routed to its
+                own Campus and College.
+              </>
+            )}{" "}
+            Leave Register Number blank to have it filled in automatically from each student's Email instead. Every
+            account created here gets the default password <strong>123456</strong> — students can change it later
+            from their own Profile page.
           </p>
 
           <button
@@ -164,7 +193,7 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
               if (file) handleFileSelected(file);
             }}
           />
-          {loadingContext && <p className="import-logins-modal__hint">Loading your campus's colleges…</p>}
+          {loadingContext && <p className="import-logins-modal__hint">Loading campuses &amp; colleges…</p>}
           {uploadError && <p className="import-logins-modal__error">{uploadError}</p>}
         </div>
       )}
@@ -188,9 +217,12 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
                 <tr>
                   <th>Row</th>
                   <th>Email</th>
-                  <th>Year / Batch</th>
+                  <th>Reg. No.</th>
+                  <th>Batch</th>
+                  <th>Regular / Lateral</th>
                   <th>Branch</th>
                   <th>Gender</th>
+                  <th>Campus</th>
                   <th>College</th>
                   <th>Status</th>
                 </tr>
@@ -200,9 +232,12 @@ export function ImportLoginsModal({ campusId, onClose }: ImportLoginsModalProps)
                   <tr key={r.index} className={r.row ? "" : "import-logins-modal__row--invalid"}>
                     <td>{r.index + 2}</td>
                     <td>{r.row?.email ?? "—"}</td>
+                    <td>{r.row?.registerNumber ?? "—"}</td>
                     <td>{r.row?.yearOrBatch ?? "—"}</td>
+                    <td>{r.row?.admissionType === "regular" ? "Regular" : r.row?.admissionType === "lateral" ? "Lateral" : "—"}</td>
                     <td>{r.row?.branch ?? "—"}</td>
                     <td>{r.row?.gender ?? "—"}</td>
+                    <td>{r.row?.campusName ?? "—"}</td>
                     <td>{r.row?.collegeName ?? "—"}</td>
                     <td>{r.invalidReason ?? "Ready"}</td>
                   </tr>

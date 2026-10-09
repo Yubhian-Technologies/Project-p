@@ -7,8 +7,10 @@ import { MultiSelect } from "../../components/common/MultiSelect";
 import { createAdminLogin } from "../../services/firebase/managedAccounts";
 import { functionsErrorMessage } from "../../services/firebase/functions";
 import { listCampuses } from "../../services/firebase/campuses";
+import { listColleges } from "../../services/firebase/colleges";
 import { ADMIN_SECTIONS } from "../../config/roles";
 import type { Campus } from "../../types/campus";
+import type { College } from "../../types/college";
 import type { AdminSectionId } from "../../types/user";
 import "./LoginsManagementSection.css";
 import "./AdminsManagementSection.css";
@@ -20,11 +22,13 @@ interface AddAdminModalProps {
 
 export function AddAdminModal({ onClose, onCreated }: AddAdminModalProps) {
   const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [colleges, setColleges] = useState<College[]>([]);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [scope, setScope] = useState<"global" | "campuses">("global");
   const [campusIds, setCampusIds] = useState<string[]>([]);
+  const [collegeIds, setCollegeIds] = useState<string[]>([]);
   const [sections, setSections] = useState<AdminSectionId[]>(ADMIN_SECTIONS.map((s) => s.id));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +37,21 @@ export function AddAdminModal({ onClose, onCreated }: AddAdminModalProps) {
     listCampuses().then(setCampuses);
   }, []);
 
+  // Colleges offered are only those under the currently-selected campus(es);
+  // dropping a campus also drops any of its colleges that were picked.
+  useEffect(() => {
+    if (campusIds.length === 0) {
+      setColleges([]);
+      setCollegeIds([]);
+      return;
+    }
+    Promise.all(campusIds.map((id) => listColleges(id))).then((lists) => {
+      const flat = lists.flat();
+      setColleges(flat);
+      setCollegeIds((prev) => prev.filter((id) => flat.some((c) => c.id === id)));
+    });
+  }, [campusIds]);
+
   // Campus Management can only ever be granted to a global-scope admin —
   // switching to "Specific campuses" drops it from whatever was checked.
   function handleScopeChange(value: string) {
@@ -40,6 +59,9 @@ export function AddAdminModal({ onClose, onCreated }: AddAdminModalProps) {
     setScope(next);
     if (next === "campuses") {
       setSections((prev) => prev.filter((s) => s !== "campuses"));
+    } else {
+      setCampusIds([]);
+      setCollegeIds([]);
     }
   }
 
@@ -58,7 +80,7 @@ export function AddAdminModal({ onClose, onCreated }: AddAdminModalProps) {
         displayName: displayName.trim(),
         adminAccess: {
           scope,
-          ...(scope === "campuses" ? { campusIds } : {}),
+          ...(scope === "campuses" ? { campusIds, ...(collegeIds.length > 0 ? { collegeIds } : {}) } : {}),
           sections,
         },
       });
@@ -71,6 +93,11 @@ export function AddAdminModal({ onClose, onCreated }: AddAdminModalProps) {
   }
 
   const campusOptions = campuses.map((c) => ({ value: c.id, label: c.name }));
+  const campusNameById = new Map(campuses.map((c) => [c.id, c.name]));
+  const collegeOptions = colleges.map((c) => ({
+    value: c.id,
+    label: campusIds.length > 1 ? `${c.name} (${campusNameById.get(c.campusId) ?? "?"})` : c.name,
+  }));
   const canSubmit = !saving && (scope === "global" || campusIds.length > 0) && sections.length > 0;
 
   return (
@@ -127,6 +154,25 @@ export function AddAdminModal({ onClose, onCreated }: AddAdminModalProps) {
               onChange={setCampusIds}
               placeholder="Select campus(es)…"
             />
+          </div>
+        )}
+        {scope === "campuses" && campusIds.length > 0 && (
+          <div className="logins-management__field">
+            <label htmlFor="add-admin-colleges">Colleges (optional)</label>
+            <MultiSelect
+              id="add-admin-colleges"
+              options={collegeOptions}
+              selected={collegeIds}
+              onChange={setCollegeIds}
+              placeholder="Leave blank for every college on these campuses…"
+            />
+            {collegeIds.length > 0 && (
+              <p className="logins-management__hint">
+                Can only manage (create/edit/delete) counsellor &amp; head logins for these colleges; Analytics,
+                Events, and Counsellor Worksheet are also narrowed to just these colleges. Logins for other
+                colleges on the same campus stay visible, just not editable.
+              </p>
+            )}
           </div>
         )}
         <div className="logins-management__field">

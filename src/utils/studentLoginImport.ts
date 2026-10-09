@@ -1,10 +1,15 @@
+import type { Campus } from "../types/campus";
 import type { College } from "../types/college";
 
 export interface StudentLoginRow {
   email: string;
+  registerNumber: string;
+  campusId: string;
+  campusName: string;
   collegeId: string;
   collegeName: string;
   yearOrBatch?: string;
+  admissionType?: "regular" | "lateral";
   branch?: string;
   gender?: string;
 }
@@ -29,6 +34,14 @@ function findColumn(headers: string[], keywords: string[]): number | undefined {
   return undefined;
 }
 
+/** Never typed separately — always derived from the email's own local-part
+    (the part before @), uppercased. Used for both bulk import and the
+    one-at-a-time "Add User" flow; editable afterward via Edit User if a
+    particular email doesn't actually follow this pattern. */
+export function deriveRegisterNumber(email: string): string {
+  return email.split("@")[0]?.toUpperCase() ?? "";
+}
+
 export async function parseLoginsSpreadsheet(file: File): Promise<{ headers: string[]; rows: unknown[][] }> {
   const XLSX = await import("xlsx");
   const buffer = await file.arrayBuffer();
@@ -43,9 +56,16 @@ export async function parseLoginsSpreadsheet(file: File): Promise<{ headers: str
 
 export async function downloadLoginImportTemplate(): Promise<void> {
   const XLSX = await import("xlsx");
-  const headers = ["Email", "Year / Batch", "Branch", "Gender", "College"];
-  const exampleRow = ["student@example.com", "2nd Year", "CSE", "Female", "Example College"];
-  const sheet = XLSX.utils.aoa_to_sheet([headers, exampleRow]);
+  const headers = ["Email", "Register Number", "Batch", "Regular / Lateral", "Branch", "Gender", "Campus", "College"];
+  // Two example rows across two different campuses, to make it obvious one
+  // file can mix campuses — each row is routed to its own Campus + College
+  // independently. Register Number is optional — leave it blank and it's
+  // derived automatically from Email, same as before.
+  const exampleRows = [
+    ["student1@example.com", "23PA1A0501", "2nd Year", "Regular", "CSE", "Female", "Example Campus", "Example College"],
+    ["student2@example.com", "", "1st Year", "Lateral", "ECE", "Male", "Another Campus", "Another College"],
+  ];
+  const sheet = XLSX.utils.aoa_to_sheet([headers, ...exampleRows]);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, sheet, "Logins");
   const buffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
@@ -61,26 +81,37 @@ export async function downloadLoginImportTemplate(): Promise<void> {
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Builds and validates one row. `campusName` is only used to flag a
- * mismatched optional "Campus" column — the campus itself always comes from
- * the signed-in Head/Super Admin's own selection, never from the file.
+ * Builds and validates one row. `allowedCampuses` is the set of campuses this
+ * row is permitted to resolve against — a Head passes just their own one
+ * campus (so any other name in the sheet is rejected, same as before), a
+ * Super Admin passes every campus (so one file can mix campuses — each row
+ * routes to its own Campus + College independently). `colleges` is every
+ * college across all of `allowedCampuses`; a row's College is matched only
+ * within its own row's resolved campus, never across campuses.
+ *
  * `seenEmails` lets the caller dedupe repeated emails across the whole sheet
- * (passed in, mutated here). Year/Batch, Branch, and Gender are free text —
- * whatever's in the cell is stored as-is, no fixed set of values to validate
- * against (this varies too much across colleges to enforce here).
+ * (passed in, mutated here). Register Number, Batch, Branch, and Gender are
+ * free text — whatever's in the cell is stored as-is, no fixed set of values
+ * to validate against (this varies too much across colleges to enforce
+ * here). Regular/Lateral is the one exception — it must read "Regular" or
+ * "Lateral" (case-insensitive) or it's left blank with a warning, since it
+ * drives a fixed dropdown in the UI. Register Number is optional — a blank
+ * cell still falls back to being derived from Email, same as before.
  */
 export function buildStudentLoginRow(
   headers: string[],
   rawRow: unknown[],
+  allowedCampuses: Campus[],
   colleges: College[],
-  campusName: string,
   seenEmails: Set<string>,
 ): BuildStudentLoginRowResult {
   const warnings: string[] = [];
   const emailIndex = findColumn(headers, ["email"]);
+  const registerNumberIndex = findColumn(headers, ["register", "reg no", "regno"]);
   const collegeIndex = findColumn(headers, ["college"]);
   const campusIndex = findColumn(headers, ["campus"]);
   const yearIndex = findColumn(headers, ["year", "batch"]);
+  const admissionTypeIndex = findColumn(headers, ["lateral", "admission"]);
   const branchIndex = findColumn(headers, ["branch"]);
   const genderIndex = findColumn(headers, ["gender"]);
 
@@ -95,33 +126,67 @@ export function buildStudentLoginRow(
     return { row: null, warnings, invalidReason: "Duplicate email in this file" };
   }
 
-  if (campusIndex !== undefined) {
-    const campusCell = cellToString(rawRow[campusIndex]);
-    if (campusCell && campusCell.toLowerCase() !== campusName.toLowerCase()) {
-      return { row: null, warnings, invalidReason: `Campus "${campusCell}" does not match your campus` };
+  const campusCell = cellToString(campusIndex !== undefined ? rawRow[campusIndex] : undefined);
+  let campus: Campus | undefined;
+  if (campusCell) {
+    campus = allowedCampuses.find((c) => c.name.toLowerCase() === campusCell.toLowerCase());
+    if (!campus) {
+      const reason =
+        allowedCampuses.length === 1
+          ? `Campus "${campusCell}" does not match your campus`
+          : `Campus "${campusCell}" not found`;
+      return { row: null, warnings, invalidReason: reason };
     }
+  } else if (allowedCampuses.length === 1) {
+    // Blank Campus cell defaults to the one campus available (Head's own, or
+    // a Super Admin importing into a single pre-picked campus) — keeps older
+    // sheets without a Campus column working unchanged.
+    campus = allowedCampuses[0];
+  } else {
+    return { row: null, warnings, invalidReason: "Missing campus" };
   }
 
   const collegeCell = cellToString(collegeIndex !== undefined ? rawRow[collegeIndex] : undefined);
   if (!collegeCell) {
     return { row: null, warnings, invalidReason: "Missing college" };
   }
-  const college = colleges.find((c) => c.name.toLowerCase() === collegeCell.toLowerCase());
+  const college = colleges.find(
+    (c) => c.campusId === campus!.id && c.name.toLowerCase() === collegeCell.toLowerCase(),
+  );
   if (!college) {
-    return { row: null, warnings, invalidReason: `College "${collegeCell}" not found on your campus` };
+    return { row: null, warnings, invalidReason: `College "${collegeCell}" not found on campus "${campus.name}"` };
   }
 
   const yearOrBatch = cellToString(yearIndex !== undefined ? rawRow[yearIndex] : undefined);
   const branch = cellToString(branchIndex !== undefined ? rawRow[branchIndex] : undefined);
   const gender = cellToString(genderIndex !== undefined ? rawRow[genderIndex] : undefined);
 
+  // Unlike Year/Batch, Branch, and Gender, this one's a controlled value (it
+  // drives a dropdown in the UI) — an unrecognized cell is left blank with a
+  // warning rather than stored as free text.
+  const admissionTypeCell = cellToString(
+    admissionTypeIndex !== undefined ? rawRow[admissionTypeIndex] : undefined,
+  ).toLowerCase();
+  let admissionType: "regular" | "lateral" | undefined;
+  if (admissionTypeCell === "regular" || admissionTypeCell === "lateral") {
+    admissionType = admissionTypeCell;
+  } else if (admissionTypeCell) {
+    warnings.push(`Unrecognized Regular/Lateral value "${admissionTypeCell}" — left blank`);
+  }
+
+  const registerNumberCell = cellToString(registerNumberIndex !== undefined ? rawRow[registerNumberIndex] : undefined);
+
   seenEmails.add(email);
   return {
     row: {
       email,
+      registerNumber: registerNumberCell || deriveRegisterNumber(email),
+      campusId: campus.id,
+      campusName: campus.name,
       collegeId: college.id,
       collegeName: college.name,
       ...(yearOrBatch ? { yearOrBatch } : {}),
+      ...(admissionType ? { admissionType } : {}),
       ...(branch ? { branch } : {}),
       ...(gender ? { gender } : {}),
     },

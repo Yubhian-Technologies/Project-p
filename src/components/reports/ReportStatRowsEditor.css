@@ -1,0 +1,52 @@
+.report-stat-rows-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-stat-rows-editor__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-stat-rows-editor__label {
+  flex: 1;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(46, 43, 39, 0.1);
+}
+
+.report-stat-rows-editor__value {
+  flex: 0 0 100px;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(46, 43, 39, 0.1);
+}
+
+.report-stat-rows-editor__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15, 23, 42, 0.08);
+  color: #2E2B27;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.report-stat-rows-editor__remove:hover {
+  background: rgba(15, 23, 42, 0.16);
+}
+
+.report-stat-rows-editor__remove svg {
+  width: 13px;
+  height: 13px;
+}

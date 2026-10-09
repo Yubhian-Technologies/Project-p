@@ -15,11 +15,22 @@ import "./LoginsManagementSection.css";
 interface AddLoginModalProps {
   defaultCampusId?: string;
   defaultCollegeId?: string;
+  // When set, this login can only be created in one of these colleges — the
+  // College dropdown below is narrowed to just them. Used for a college-scoped
+  // Admin; Super Admin and a campus-only (not college-narrowed) Admin pass
+  // nothing here and see every college on the campus, unchanged.
+  allowedCollegeIds?: string[];
   onClose: () => void;
   onCreated: () => Promise<void>;
 }
 
-export function AddLoginModal({ defaultCampusId, defaultCollegeId, onClose, onCreated }: AddLoginModalProps) {
+export function AddLoginModal({
+  defaultCampusId,
+  defaultCollegeId,
+  allowedCollegeIds,
+  onClose,
+  onCreated,
+}: AddLoginModalProps) {
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
   const [campusId, setCampusId] = useState(defaultCampusId ?? "");
@@ -67,6 +78,10 @@ export function AddLoginModal({ defaultCampusId, defaultCollegeId, onClose, onCr
     }
   }
 
+  const collegeOptions = allowedCollegeIds
+    ? colleges.filter((c) => allowedCollegeIds.includes(c.id))
+    : colleges;
+
   return (
     <Modal title="Add Login" onClose={onClose}>
       <form onSubmit={handleSubmit} className="logins-management__form">
@@ -98,11 +113,11 @@ export function AddLoginModal({ defaultCampusId, defaultCollegeId, onClose, onCr
         </div>
         <div className="logins-management__field">
           <label htmlFor="add-login-college">College</label>
-          <Select id="add-login-college" value={collegeId} onChange={setCollegeId} disabled={!campusId || colleges.length === 0}>
+          <Select id="add-login-college" value={collegeId} onChange={setCollegeId} disabled={!campusId || collegeOptions.length === 0}>
             <option value="" disabled>
-              {!campusId ? "Select a campus first" : colleges.length === 0 ? "Add a college first" : "Select a college…"}
+              {!campusId ? "Select a campus first" : collegeOptions.length === 0 ? "Add a college first" : "Select a college…"}
             </option>
-            {colleges.map((c) => (
+            {collegeOptions.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>

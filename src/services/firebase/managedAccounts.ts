@@ -18,10 +18,12 @@ export async function createCampusLogin(input: CreateCampusLoginInput): Promise<
 
 interface CreateStudentLoginInput {
   email: string;
+  registerNumber?: string;
   collegeId: string;
   password?: string;
   studentOrProfessional: "student" | "professional";
   yearOrBatch?: string;
+  admissionType?: "regular" | "lateral";
   branch?: string;
   gender?: string;
 }

@@ -7,6 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { BookingRequestsSection } from "./BookingRequestsSection";
 import { EventsProgramsSection } from "./EventsProgramsSection";
 import { CounsellorMonthlyReportsSection } from "./CounsellorMonthlyReportsSection";
+import { MonthlyReportDownload } from "../../components/reports/MonthlyReportDownload";
 import { CounsellorFeedbackSection } from "./CounsellorFeedbackSection";
 import { SsiCollegeResultsSection } from "../../components/ssi/SsiCollegeResultsSection";
 import { EmergencyAlertsSection } from "../../components/emergency/EmergencyAlertsSection";
@@ -74,6 +75,13 @@ const SECTIONS = [
     label: "Monthly Reports",
     icon: (
       <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
+    ),
+  },
+  {
+    id: "my-monthly-report",
+    label: "My Monthly Report",
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
     ),
   },
   {
@@ -156,6 +164,7 @@ export function CounsellorDashboard() {
     "team-workload": "Team Workload",
     "ssi-results": "SSI Test Results",
     "monthly-reports": "Monthly Reports",
+    "my-monthly-report": "My Monthly Report",
     events: "Events & Programs",
     games: "Wellness Exercise",
     journal: "My Diary",
@@ -210,6 +219,7 @@ export function CounsellorDashboard() {
       {activeSection === "team-workload" && <TeamWorkloadSection />}
       {activeSection === "ssi-results" && <SsiCollegeResultsSection />}
       {activeSection === "monthly-reports" && <CounsellorMonthlyReportsSection />}
+      {activeSection === "my-monthly-report" && <MonthlyReportDownload />}
       {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "games" && <GamesSection ref={gamesRef} onActiveChange={setGameOpen} />}
       {activeSection === "journal" && <JournalSection />}

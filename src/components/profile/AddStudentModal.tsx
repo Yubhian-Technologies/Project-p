@@ -6,6 +6,7 @@ import { Select } from "../common/Select";
 import { createStudentLogin } from "../../services/firebase/managedAccounts";
 import { functionsErrorMessage } from "../../services/firebase/functions";
 import { listColleges } from "../../services/firebase/colleges";
+import { deriveRegisterNumber } from "../../utils/studentLoginImport";
 import type { College } from "../../types/college";
 import "./ImportLoginsModal.css";
 
@@ -26,7 +27,10 @@ export function AddStudentModal({ campusId, onClose, onCreated }: AddStudentModa
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [studentOrProfessional, setStudentOrProfessional] = useState<"student" | "professional">("student");
+  const [registerNumber, setRegisterNumber] = useState("");
+  const [registerNumberTouched, setRegisterNumberTouched] = useState(false);
   const [yearOrBatch, setYearOrBatch] = useState("");
+  const [admissionType, setAdmissionType] = useState<"" | "regular" | "lateral">("");
   const [branch, setBranch] = useState("");
   const [gender, setGender] = useState("");
   const [saving, setSaving] = useState(false);
@@ -36,6 +40,14 @@ export function AddStudentModal({ campusId, onClose, onCreated }: AddStudentModa
     listColleges(campusId).then(setColleges);
   }, [campusId]);
 
+  // Register Number auto-fills from the email as it's typed — e.g.
+  // "23pa1a04a0@vishnu.edu.in" -> "23PA1A04A0" — until the creator manually
+  // edits it themselves, at which point it stops auto-syncing.
+  function handleEmailChange(value: string) {
+    setEmail(value);
+    if (!registerNumberTouched) setRegisterNumber(deriveRegisterNumber(value));
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
@@ -43,10 +55,12 @@ export function AddStudentModal({ campusId, onClose, onCreated }: AddStudentModa
     try {
       await createStudentLogin({
         email: email.trim(),
+        registerNumber: registerNumber.trim() || undefined,
         password: password.trim() || undefined,
         collegeId,
         studentOrProfessional,
         yearOrBatch: yearOrBatch.trim() || undefined,
+        admissionType: admissionType || undefined,
         branch: branch.trim() || undefined,
         gender: gender || undefined,
       });
@@ -69,7 +83,7 @@ export function AddStudentModal({ campusId, onClose, onCreated }: AddStudentModa
             autoComplete="off"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => handleEmailChange(e.target.value)}
           />
         </div>
         <div className="import-logins-modal__field">
@@ -112,8 +126,23 @@ export function AddStudentModal({ campusId, onClose, onCreated }: AddStudentModa
             <option value="professional">Working professional</option>
           </Select>
         </div>
+        {studentOrProfessional === "student" && (
+          <div className="import-logins-modal__field">
+            <label htmlFor="add-student-register-number">Register number</label>
+            <input
+              id="add-student-register-number"
+              type="text"
+              placeholder="Auto-filled from email"
+              value={registerNumber}
+              onChange={(e) => {
+                setRegisterNumberTouched(true);
+                setRegisterNumber(e.target.value);
+              }}
+            />
+          </div>
+        )}
         <div className="import-logins-modal__field">
-          <label htmlFor="add-student-year">Year / Batch (optional)</label>
+          <label htmlFor="add-student-year">Batch (optional)</label>
           <input
             id="add-student-year"
             type="text"
@@ -121,6 +150,18 @@ export function AddStudentModal({ campusId, onClose, onCreated }: AddStudentModa
             value={yearOrBatch}
             onChange={(e) => setYearOrBatch(e.target.value)}
           />
+        </div>
+        <div className="import-logins-modal__field">
+          <label htmlFor="add-student-admission-type">Regular / Lateral (optional)</label>
+          <Select
+            id="add-student-admission-type"
+            value={admissionType}
+            onChange={(v) => setAdmissionType(v as "" | "regular" | "lateral")}
+          >
+            <option value="">—</option>
+            <option value="regular">Regular</option>
+            <option value="lateral">Lateral</option>
+          </Select>
         </div>
         <div className="import-logins-modal__field">
           <label htmlFor="add-student-branch">Branch (optional)</label>

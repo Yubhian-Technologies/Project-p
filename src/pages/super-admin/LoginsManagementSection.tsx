@@ -36,6 +36,19 @@ export function LoginsManagementSection() {
       ? profile.adminAccess.campusIds ?? []
       : null;
 
+  // When also narrowed to specific colleges, this admin can still SEE every
+  // login on the campus (unchanged) but can only edit/delete — or add a new
+  // login into — one of these colleges.
+  const restrictedCollegeIds =
+    scopedCampusIds && profile?.role === "admin" && profile.adminAccess?.collegeIds?.length
+      ? profile.adminAccess.collegeIds
+      : null;
+
+  function canManageLogin(login: UserProfile): boolean {
+    if (!restrictedCollegeIds) return true;
+    return !!login.collegeId && restrictedCollegeIds.includes(login.collegeId);
+  }
+
   useEffect(() => {
     listCampuses().then((c) => {
       setCampuses(scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c);
@@ -119,13 +132,20 @@ export function LoginsManagementSection() {
               </p>
             </div>
             <div className="logins-management__row-actions">
-              <Button type="button" variant="outlined" onClick={() => setEditingLogin(login)}>
+              <Button
+                type="button"
+                variant="outlined"
+                disabled={!canManageLogin(login)}
+                title={canManageLogin(login) ? undefined : "Outside your assigned college(s) — view only"}
+                onClick={() => setEditingLogin(login)}
+              >
                 Edit
               </Button>
               <Button
                 type="button"
                 variant="outlined"
-                disabled={deletingUid === login.uid}
+                disabled={deletingUid === login.uid || !canManageLogin(login)}
+                title={canManageLogin(login) ? undefined : "Outside your assigned college(s) — view only"}
                 onClick={() => handleDelete(login.uid)}
               >
                 {deletingUid === login.uid ? "Deleting…" : "Delete login"}
@@ -143,6 +163,7 @@ export function LoginsManagementSection() {
       {addOpen && (
         <AddLoginModal
           defaultCampusId={campusId || undefined}
+          allowedCollegeIds={restrictedCollegeIds ?? undefined}
           onClose={() => setAddOpen(false)}
           onCreated={async () => {
             if (campusId) await loadForCampus(campusId);

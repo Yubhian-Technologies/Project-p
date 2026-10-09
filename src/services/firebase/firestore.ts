@@ -1,6 +1,6 @@
 import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { db } from "./config";
-import type { Role, UserProfile } from "../../types/user";
+import type { Role, StudentBioData, UserProfile } from "../../types/user";
 import type { DayAvailability } from "../../types/availability";
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -39,11 +39,12 @@ export async function updateUserAccount(
       | "collegeId"
       | "studentOrProfessional"
       | "whatsappNumber"
+      | "registerNumber"
       | "yearOrBatch"
       | "branch"
       | "gender"
     >
-  >,
+  > & { admissionType?: "regular" | "lateral" | "" },
 ): Promise<void> {
   await updateDoc(doc(db, "users", uid), updates);
 }
@@ -72,6 +73,10 @@ export async function updateUserIntakeInfo(
   },
 ): Promise<void> {
   await updateDoc(doc(db, "users", uid), data);
+}
+
+export async function updateUserBioData(uid: string, bioData: StudentBioData): Promise<void> {
+  await updateDoc(doc(db, "users", uid), { bioData });
 }
 
 export async function updateCounsellorProfile(

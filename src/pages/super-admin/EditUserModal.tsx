@@ -23,7 +23,9 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
     user.studentOrProfessional ?? "student",
   );
   const [whatsappNumber, setWhatsappNumber] = useState(user.whatsappNumber ?? "");
+  const [registerNumber, setRegisterNumber] = useState(user.registerNumber ?? "");
   const [yearOrBatch, setYearOrBatch] = useState(user.yearOrBatch ?? "");
+  const [admissionType, setAdmissionType] = useState<"" | "regular" | "lateral">(user.admissionType ?? "");
   const [branch, setBranch] = useState(user.branch ?? "");
   const [gender, setGender] = useState(user.gender ?? "");
   const [campusId, setCampusId] = useState(user.campusId ?? "");
@@ -54,7 +56,9 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
         displayName: displayName.trim(),
         studentOrProfessional,
         whatsappNumber: whatsappNumber.trim(),
+        registerNumber: registerNumber.trim(),
         yearOrBatch: yearOrBatch.trim(),
+        admissionType: admissionType,
         branch: branch.trim(),
         gender,
         campusId,
@@ -95,6 +99,17 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
             <option value="professional">Professional</option>
           </Select>
         </div>
+        {studentOrProfessional === "student" && (
+          <div className="campus-logins-detail__field">
+            <label htmlFor="edit-user-register-number">Register number</label>
+            <input
+              id="edit-user-register-number"
+              type="text"
+              value={registerNumber}
+              onChange={(e) => setRegisterNumber(e.target.value)}
+            />
+          </div>
+        )}
         <div className="campus-logins-detail__field">
           <label htmlFor="edit-user-whatsapp">WhatsApp number</label>
           <input
@@ -105,7 +120,7 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
           />
         </div>
         <div className="campus-logins-detail__field">
-          <label htmlFor="edit-user-year">Year / Batch</label>
+          <label htmlFor="edit-user-year">Batch</label>
           <input
             id="edit-user-year"
             type="text"
@@ -113,6 +128,18 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
             value={yearOrBatch}
             onChange={(e) => setYearOrBatch(e.target.value)}
           />
+        </div>
+        <div className="campus-logins-detail__field">
+          <label htmlFor="edit-user-admission-type">Regular / Lateral</label>
+          <Select
+            id="edit-user-admission-type"
+            value={admissionType}
+            onChange={(v) => setAdmissionType(v as "" | "regular" | "lateral")}
+          >
+            <option value="">—</option>
+            <option value="regular">Regular</option>
+            <option value="lateral">Lateral</option>
+          </Select>
         </div>
         <div className="campus-logins-detail__field">
           <label htmlFor="edit-user-branch">Branch</label>

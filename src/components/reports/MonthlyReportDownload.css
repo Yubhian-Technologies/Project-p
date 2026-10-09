@@ -1,0 +1,114 @@
+.monthly-report-download {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.monthly-report-download__card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 640px;
+}
+
+.monthly-report-download__intro {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.monthly-report-download__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.monthly-report-download__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.monthly-report-download__field label {
+  font-size: 12px;
+  color: #4b5563;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.monthly-report-download__field input[type="text"] {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+}
+
+.monthly-report-download__section-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #2E2B27;
+}
+
+.monthly-report-download__goals {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.monthly-report-download__goal-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.monthly-report-download__goal-row input {
+  flex: 1;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(46, 43, 39, 0.1);
+}
+
+.monthly-report-download__goal-row button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15, 23, 42, 0.08);
+  color: #2E2B27;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.monthly-report-download__goal-row button:hover {
+  background: rgba(15, 23, 42, 0.16);
+}
+
+.monthly-report-download__goal-row button svg {
+  width: 13px;
+  height: 13px;
+}
+
+.monthly-report-download__error {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #C53030;
+}
+
+@media (max-width: 520px) {
+  .monthly-report-download__row {
+    grid-template-columns: 1fr;
+  }
+}

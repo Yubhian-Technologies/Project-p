@@ -123,7 +123,7 @@ service cloud.firestore {
           request.resource.data.uid == resource.data.uid &&
           request.resource.data.email == resource.data.email &&
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['campusId', 'collegeId', 'displayName', 'studentOrProfessional', 'whatsappNumber', 'yearOrBatch', 'branch', 'gender'])
+            .hasOnly(['campusId', 'collegeId', 'displayName', 'studentOrProfessional', 'whatsappNumber', 'registerNumber', 'yearOrBatch', 'admissionType', 'branch', 'gender', 'bioData'])
         )
       );
 

@@ -8,6 +8,7 @@ import {
   updateUserBio,
   setAvailability,
   updateUserIntakeInfo,
+  updateUserBioData,
   updateCounsellorProfile,
 } from "../../services/firebase/firestore";
 import { getSignatureURL, saveSignatureURL } from "../../services/firebase/signature";
@@ -56,6 +57,22 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const [yearOrBatchDraft, setYearOrBatchDraft] = useState(profile?.yearOrBatch ?? "");
   const [branchDraft, setBranchDraft] = useState(profile?.branch ?? "");
   const [genderDraft, setGenderDraft] = useState(profile?.gender ?? "");
+  const [courseDraft, setCourseDraft] = useState(profile?.bioData?.course ?? "");
+  const [dateOfBirthDraft, setDateOfBirthDraft] = useState(profile?.bioData?.dateOfBirth ?? "");
+  const [mobileNumberDraft, setMobileNumberDraft] = useState(profile?.bioData?.mobileNumber ?? "");
+  const [personalEmailDraft, setPersonalEmailDraft] = useState(profile?.bioData?.personalEmail ?? "");
+  const [fatherNameDraft, setFatherNameDraft] = useState(profile?.bioData?.fatherName ?? "");
+  const [motherNameDraft, setMotherNameDraft] = useState(profile?.bioData?.motherName ?? "");
+  const [fatherOccupationDraft, setFatherOccupationDraft] = useState(profile?.bioData?.fatherOccupation ?? "");
+  const [motherOccupationDraft, setMotherOccupationDraft] = useState(profile?.bioData?.motherOccupation ?? "");
+  const [fatherPhoneDraft, setFatherPhoneDraft] = useState(profile?.bioData?.fatherPhone ?? "");
+  const [motherPhoneDraft, setMotherPhoneDraft] = useState(profile?.bioData?.motherPhone ?? "");
+  const [fatherEmailDraft, setFatherEmailDraft] = useState(profile?.bioData?.fatherEmail ?? "");
+  const [motherEmailDraft, setMotherEmailDraft] = useState(profile?.bioData?.motherEmail ?? "");
+  const [correspondenceAddressDraft, setCorrespondenceAddressDraft] = useState(
+    profile?.bioData?.correspondenceAddress ?? "",
+  );
+  const [permanentAddressDraft, setPermanentAddressDraft] = useState(profile?.bioData?.permanentAddress ?? "");
   const [savingIntake, setSavingIntake] = useState(false);
 
   const [counsellorNameDraft, setCounsellorNameDraft] = useState(profile?.displayName ?? "");
@@ -204,6 +221,22 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
         branch: branchDraft.trim(),
         gender: genderDraft,
       });
+      await updateUserBioData(currentUser.uid, {
+        course: courseDraft.trim(),
+        dateOfBirth: dateOfBirthDraft.trim(),
+        mobileNumber: mobileNumberDraft.trim(),
+        personalEmail: personalEmailDraft.trim(),
+        fatherName: fatherNameDraft.trim(),
+        motherName: motherNameDraft.trim(),
+        fatherOccupation: fatherOccupationDraft.trim(),
+        motherOccupation: motherOccupationDraft.trim(),
+        fatherPhone: fatherPhoneDraft.trim(),
+        motherPhone: motherPhoneDraft.trim(),
+        fatherEmail: fatherEmailDraft.trim(),
+        motherEmail: motherEmailDraft.trim(),
+        correspondenceAddress: correspondenceAddressDraft.trim(),
+        permanentAddress: permanentAddressDraft.trim(),
+      });
       await refreshProfile();
     } finally {
       setSavingIntake(false);
@@ -270,7 +303,21 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     whatsappDraft === (profile.whatsappNumber ?? "") &&
     yearOrBatchDraft === (profile.yearOrBatch ?? "") &&
     branchDraft === (profile.branch ?? "") &&
-    genderDraft === (profile.gender ?? "");
+    genderDraft === (profile.gender ?? "") &&
+    courseDraft === (profile.bioData?.course ?? "") &&
+    dateOfBirthDraft === (profile.bioData?.dateOfBirth ?? "") &&
+    mobileNumberDraft === (profile.bioData?.mobileNumber ?? "") &&
+    personalEmailDraft === (profile.bioData?.personalEmail ?? "") &&
+    fatherNameDraft === (profile.bioData?.fatherName ?? "") &&
+    motherNameDraft === (profile.bioData?.motherName ?? "") &&
+    fatherOccupationDraft === (profile.bioData?.fatherOccupation ?? "") &&
+    motherOccupationDraft === (profile.bioData?.motherOccupation ?? "") &&
+    fatherPhoneDraft === (profile.bioData?.fatherPhone ?? "") &&
+    motherPhoneDraft === (profile.bioData?.motherPhone ?? "") &&
+    fatherEmailDraft === (profile.bioData?.fatherEmail ?? "") &&
+    motherEmailDraft === (profile.bioData?.motherEmail ?? "") &&
+    correspondenceAddressDraft === (profile.bioData?.correspondenceAddress ?? "") &&
+    permanentAddressDraft === (profile.bioData?.permanentAddress ?? "");
 
   const counsellorProfileUnchanged =
     counsellorNameDraft === (profile.displayName ?? "") &&
@@ -673,6 +720,135 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                     <option value="Other">Other</option>
                     <option value="Prefer not to say">Prefer not to say</option>
                   </Select>
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-course">Course</label>
+                  <input
+                    id="intake-course"
+                    type="text"
+                    placeholder="e.g. B.Tech"
+                    value={courseDraft}
+                    onChange={(e) => setCourseDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-dob">Date of birth</label>
+                  <input
+                    id="intake-dob"
+                    type="date"
+                    value={dateOfBirthDraft}
+                    onChange={(e) => setDateOfBirthDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-mobile">Mobile number</label>
+                  <input
+                    id="intake-mobile"
+                    type="tel"
+                    value={mobileNumberDraft}
+                    onChange={(e) => setMobileNumberDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-personal-email">Email ID (personal)</label>
+                  <input
+                    id="intake-personal-email"
+                    type="email"
+                    value={personalEmailDraft}
+                    onChange={(e) => setPersonalEmailDraft(e.target.value)}
+                  />
+                </div>
+
+                <p className="profile-section__subheading">Parent / Guardian details</p>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-father-name">Father's name</label>
+                  <input
+                    id="intake-father-name"
+                    type="text"
+                    value={fatherNameDraft}
+                    onChange={(e) => setFatherNameDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-mother-name">Mother's name</label>
+                  <input
+                    id="intake-mother-name"
+                    type="text"
+                    value={motherNameDraft}
+                    onChange={(e) => setMotherNameDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-father-occupation">Father's occupation</label>
+                  <input
+                    id="intake-father-occupation"
+                    type="text"
+                    value={fatherOccupationDraft}
+                    onChange={(e) => setFatherOccupationDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-mother-occupation">Mother's occupation</label>
+                  <input
+                    id="intake-mother-occupation"
+                    type="text"
+                    value={motherOccupationDraft}
+                    onChange={(e) => setMotherOccupationDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-father-phone">Father's phone number</label>
+                  <input
+                    id="intake-father-phone"
+                    type="tel"
+                    value={fatherPhoneDraft}
+                    onChange={(e) => setFatherPhoneDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-mother-phone">Mother's phone number</label>
+                  <input
+                    id="intake-mother-phone"
+                    type="tel"
+                    value={motherPhoneDraft}
+                    onChange={(e) => setMotherPhoneDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-father-email">Father's email ID</label>
+                  <input
+                    id="intake-father-email"
+                    type="email"
+                    value={fatherEmailDraft}
+                    onChange={(e) => setFatherEmailDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field">
+                  <label htmlFor="intake-mother-email">Mother's email ID</label>
+                  <input
+                    id="intake-mother-email"
+                    type="email"
+                    value={motherEmailDraft}
+                    onChange={(e) => setMotherEmailDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field profile-section__field--full">
+                  <label htmlFor="intake-correspondence-address">Correspondence address</label>
+                  <textarea
+                    id="intake-correspondence-address"
+                    rows={2}
+                    value={correspondenceAddressDraft}
+                    onChange={(e) => setCorrespondenceAddressDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-section__field profile-section__field--full">
+                  <label htmlFor="intake-permanent-address">Permanent address</label>
+                  <textarea
+                    id="intake-permanent-address"
+                    rows={2}
+                    value={permanentAddressDraft}
+                    onChange={(e) => setPermanentAddressDraft(e.target.value)}
+                  />
                 </div>
                 <div className="profile-section__edit-actions">
                   <Button

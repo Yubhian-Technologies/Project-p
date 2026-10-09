@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { listCampuses } from "../../services/firebase/campuses";
+import { listColleges } from "../../services/firebase/colleges";
 import { listUsersByRole } from "../../services/firebase/firestore";
 import { deleteCampusLogin, functionsErrorMessage } from "../../services/firebase/functions";
 import { ADMIN_SECTION_LABELS } from "../../config/roles";
 import type { Campus } from "../../types/campus";
+import type { College } from "../../types/college";
 import type { UserProfile } from "../../types/user";
 import { useViewMore } from "../../hooks/useViewMore";
 import { Card } from "../../components/common/Card";
@@ -16,6 +18,7 @@ import "./AdminsManagementSection.css";
 export function AdminsManagementSection() {
   const [admins, setAdmins] = useState<UserProfile[]>([]);
   const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [allColleges, setAllColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<UserProfile | null>(null);
@@ -26,6 +29,8 @@ export function AdminsManagementSection() {
     const [adminList, campusList] = await Promise.all([listUsersByRole("admin"), listCampuses()]);
     setAdmins(adminList);
     setCampuses(campusList);
+    const collegeLists = await Promise.all(campusList.map((c) => listColleges(c.id)));
+    setAllColleges(collegeLists.flat());
     setLoading(false);
   }
 
@@ -54,7 +59,10 @@ export function AdminsManagementSection() {
     const access = admin.adminAccess;
     if (!access || access.scope === "global") return "Global — all campuses";
     const names = (access.campusIds ?? []).map((id) => campuses.find((c) => c.id === id)?.name ?? "Unknown campus");
-    return names.length > 0 ? names.join(", ") : "No campuses assigned";
+    const campusLabel = names.length > 0 ? names.join(", ") : "No campuses assigned";
+    if (!access.collegeIds?.length) return campusLabel;
+    const collegeNames = access.collegeIds.map((id) => allColleges.find((c) => c.id === id)?.name ?? "Unknown college");
+    return `${campusLabel} — ${collegeNames.join(", ")} only`;
   }
 
   return (

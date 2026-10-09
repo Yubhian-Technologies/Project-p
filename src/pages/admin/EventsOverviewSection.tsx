@@ -34,6 +34,13 @@ export function EventsOverviewSection() {
       ? profile.adminAccess.campusIds ?? []
       : null;
 
+  // When also narrowed to specific colleges, the college picker (and
+  // everything downstream of it) is further narrowed to just those.
+  const scopedCollegeIds =
+    scopedCampusIds && profile?.role === "admin" && profile.adminAccess?.collegeIds?.length
+      ? profile.adminAccess.collegeIds
+      : null;
+
   useEffect(() => {
     listCampuses().then((c) => setCampuses(scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -43,7 +50,10 @@ export function EventsOverviewSection() {
     setCollegeId("");
     setColleges([]);
     if (!campusId) return;
-    listColleges(campusId).then(setColleges);
+    listColleges(campusId).then((c) =>
+      setColleges(scopedCollegeIds ? c.filter((college) => scopedCollegeIds.includes(college.id)) : c),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campusId]);
 
   useEffect(() => {
