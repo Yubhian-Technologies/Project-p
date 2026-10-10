@@ -13,7 +13,7 @@ export function computeLiveStatus(profile: UserProfile, scheduledBookings: Booki
       now < b.scheduledAt + b.durationMinutes * 60000,
   );
   if (inSession) return "in-session";
-  return profile.available ? "available" : "unavailable";
+  return profile.available === false ? "unavailable" : "available";
 }
 
 export function liveStatusLabel(status: LiveStatus): string {
