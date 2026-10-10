@@ -610,15 +610,54 @@
   margin-bottom: 14px;
 }
 
+/* Same red/amber/green triad used by SsiCollegeResultsSection.css, reused
+   here for consistency across every place SSI severity shows up. */
+.request-card__ssi-severity-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+
+.request-card__ssi-severity-badge--severe {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.request-card__ssi-severity-badge--medium {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.request-card__ssi-severity-badge--normal {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
 .request-card__ssi-score {
   display: flex;
   align-items: baseline;
   gap: 12px;
   background: #FFFFFF;
   border: 1px solid rgba(46, 43, 39, 0.08);
+  border-left: 4px solid transparent;
   box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
   padding: 14px 18px;
   margin-bottom: 18px;
+}
+
+.request-card__ssi-score--severe {
+  border-left-color: #DC2626;
+}
+
+.request-card__ssi-score--medium {
+  border-left-color: #D97706;
+}
+
+.request-card__ssi-score--normal {
+  border-left-color: #16A34A;
 }
 
 .request-card__ssi-score-val {
@@ -651,10 +690,23 @@
   align-items: center;
   gap: 8px;
   border: 1px solid rgba(46, 43, 39, 0.08);
+  border-left: 4px solid transparent;
   background: #FFFFFF;
   padding: 8px 12px;
   flex: 1;
   min-width: 130px;
+}
+
+.request-card__ssi-subscale--severe {
+  border-left-color: #DC2626;
+}
+
+.request-card__ssi-subscale--medium {
+  border-left-color: #D97706;
+}
+
+.request-card__ssi-subscale--normal {
+  border-left-color: #16A34A;
 }
 
 .request-card__ssi-subscale-key {
@@ -667,6 +719,18 @@
   color: #fff;
   font-size: 12px;
   font-weight: 900;
+}
+
+.request-card__ssi-subscale-key--severe {
+  background: #DC2626;
+}
+
+.request-card__ssi-subscale-key--medium {
+  background: #D97706;
+}
+
+.request-card__ssi-subscale-key--normal {
+  background: #16A34A;
 }
 
 .request-card__ssi-subscale-name {

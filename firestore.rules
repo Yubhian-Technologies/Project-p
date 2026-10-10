@@ -721,6 +721,14 @@ service cloud.firestore {
             isSignedIn() && myRole() in ['head', 'counsellor', 'admin', 'super-admin'] &&
             get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role == 'admin'
           ) || (
+            // Immediate "event today" alert when a Head/Counsellor creates an
+            // event already dated for today — every student, counsellor, and
+            // head on that same campus. No booking link involved.
+            request.resource.data.type == 'event_today' &&
+            isSignedIn() && myRole() in ['head', 'counsellor'] &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role in ['user', 'counsellor', 'head'] &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
+          ) || (
             // A student sharing a journal entry with a same-campus counsellor
             // or Head — also has no booking link, and the recipient here isn't
             // necessarily an Admin, so this needs its own branch rather than

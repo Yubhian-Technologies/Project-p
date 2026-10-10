@@ -6,6 +6,7 @@ import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { Modal } from "../../components/common/Modal";
 import { StarRating } from "../../components/common/StarRating";
+import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./CounsellorFeedbackSection.css";
 
 export function CounsellorFeedbackSection() {
@@ -59,7 +60,7 @@ export function CounsellorFeedbackSection() {
                   {feedback.userEmail || "Student"}
                 </p>
                 <p className="counsellor-feedback__date">
-                  {new Date(feedback.submittedAt).toLocaleString()}
+                  {formatDateTimeDMY(feedback.submittedAt)}
                 </p>
               </div>
               <StarRating value={feedback.rating} size="large" />
@@ -91,7 +92,7 @@ export function CounsellorFeedbackSection() {
                   {selectedFeedback.userEmail || "Student"}
                 </h4>
                 <p className="counsellor-feedback__detail-date">
-                  {new Date(selectedFeedback.submittedAt).toLocaleString()}
+                  {formatDateTimeDMY(selectedFeedback.submittedAt)}
                 </p>
               </div>
               <div className="counsellor-feedback__detail-rating">

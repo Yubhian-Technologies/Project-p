@@ -8,6 +8,8 @@ import { MicIcon } from "../common/icons";
 import { useSpeechToText } from "../../hooks/useSpeechToText";
 import { getBookingIntake, SESSION_DURATION_LABEL } from "../../services/firebase/bookings";
 import { getSsiResult, type SsiResult } from "../../services/firebase/ssiTest";
+import { SSI_SEVERITY_LABELS, SSI_SUBSCALE_MAX } from "../../config/ssiForm";
+import type { SsiSeverity } from "../../config/ssiForm";
 import type { Booking, BookingIntake } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
 import { useAuth } from "../../hooks/useAuth";
@@ -27,6 +29,15 @@ function isPastOrEmpty(value: string): boolean {
 
 function isPastChoice(value: string): boolean {
   return !!value && new Date(value).getTime() <= Date.now();
+}
+
+// Same per-subscale cutoffs computeSsiSeverity() uses internally, applied to
+// just one subscale at a time so each of the D/A/S badges can be colored
+// independently rather than only the overall result.
+function subscaleSeverity(key: "D" | "A" | "S", value: number): SsiSeverity {
+  if (key === "D") return value >= 11 ? "severe" : value >= 7 ? "medium" : "normal";
+  if (key === "A") return value >= 8 ? "severe" : value >= 6 ? "medium" : "normal";
+  return value >= 13 ? "severe" : value >= 10 ? "medium" : "normal";
 }
 
 interface RequestDetailModalProps {
@@ -422,12 +433,17 @@ export function RequestDetailModal({
 
   if (ssiResult && showSsiResult) {
     const likertPct = ssiResult.likertMax > 0 ? Math.round((ssiResult.likertScore / ssiResult.likertMax) * 100) : 0;
-    const subscales = [
+    const subscales: { key: "D" | "A" | "S"; label: string; value: number }[] = [
       { key: "D", label: "Depression", value: ssiResult.depressionScore },
       { key: "A", label: "Anxiety", value: ssiResult.anxietyScore },
       { key: "S", label: "Stress", value: ssiResult.stressScore },
     ];
-    const subscaleMax = Math.round((ssiResult.likertMax / 3));
+    // The overall score's own color is a plain equal three-way split of the
+    // total (0-63 -> thirds of 21) — green/amber/red by which third the
+    // total score falls in, independent of the per-subscale severity below.
+    const scoreThird = ssiResult.likertMax / 3;
+    const overallSeverity: SsiSeverity =
+      ssiResult.likertScore > scoreThird * 2 ? "severe" : ssiResult.likertScore > scoreThird ? "medium" : "normal";
     return (
       <Modal title={`SSI Test Result — ${booking.userEmail}`} onClose={onClose} className="request-detail-modal">
         <div className="request-card__ssi-back">
@@ -436,7 +452,11 @@ export function RequestDetailModal({
           </Button>
         </div>
 
-        <div className="request-card__ssi-score">
+        <span className={`request-card__ssi-severity-badge request-card__ssi-severity-badge--${overallSeverity}`}>
+          {SSI_SEVERITY_LABELS[overallSeverity]}
+        </span>
+
+        <div className={`request-card__ssi-score request-card__ssi-score--${overallSeverity}`}>
           <span className="request-card__ssi-score-val">
             {ssiResult.likertScore}
             <small> / {ssiResult.likertMax}</small>
@@ -445,16 +465,25 @@ export function RequestDetailModal({
         </div>
 
         <div className="request-card__ssi-subscales">
-          {subscales.map((s) => (
-            <div key={s.key} className="request-card__ssi-subscale" title={`${s.label} (subscale of the assessment)`}>
-              <span className="request-card__ssi-subscale-key">{s.key}</span>
-              <span className="request-card__ssi-subscale-name">{s.label}</span>
-              <span className="request-card__ssi-subscale-val">
-                {s.value}
-                <small> / {subscaleMax}</small>
-              </span>
-            </div>
-          ))}
+          {subscales.map((s) => {
+            const severity = subscaleSeverity(s.key, s.value);
+            return (
+              <div
+                key={s.key}
+                className={`request-card__ssi-subscale request-card__ssi-subscale--${severity}`}
+                title={`${s.label} (subscale of the assessment)`}
+              >
+                <span className={`request-card__ssi-subscale-key request-card__ssi-subscale-key--${severity}`}>
+                  {s.key}
+                </span>
+                <span className="request-card__ssi-subscale-name">{s.label}</span>
+                <span className="request-card__ssi-subscale-val">
+                  {s.value}
+                  <small> / {SSI_SUBSCALE_MAX}</small>
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         <div className="request-card__ssi-section">

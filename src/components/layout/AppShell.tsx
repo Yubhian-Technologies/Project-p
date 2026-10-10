@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { ROLE_LABELS } from "../../config/roles";
 import { Button } from "../common/Button";
 import { NotificationBell } from "../common/NotificationBell";
+import { TodayEventsPopup } from "./TodayEventsPopup";
 import { DynamicIsland } from "../common/DynamicIsland";
 import { DynamicIslandProvider } from "../../context/DynamicIslandContext";
 import { Sidebar } from "./Sidebar";
@@ -52,6 +53,7 @@ export function AppShell({
     <DynamicIslandProvider>
     <div className="app-shell">
       {showDynamicIsland && <DynamicIsland />}
+      {showDynamicIsland && <TodayEventsPopup onViewEvents={() => onSelectSection("events")} />}
       {/* Organic Amber Header Bar */}
       <header className="app-shell__topbar">
         <div className="app-shell__topbar-inner">

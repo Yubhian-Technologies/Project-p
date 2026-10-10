@@ -6,6 +6,17 @@ import { BentoCard } from "../../components/common/BentoCard";
 import { CalendarIcon } from "../../components/common/icons";
 import { EventPreviewModal } from "./EventPreviewModal";
 
+function istDateKey(ms: number): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(ms));
+  const p = (t: string) => parts.find((x) => x.type === t)?.value ?? "";
+  return `${p("year")}-${p("month")}-${p("day")}`;
+}
+
 interface UpcomingEventsCardProps {
   onViewEvents: () => void;
 }
@@ -29,8 +40,13 @@ export function UpcomingEventsCard({ onViewEvents }: UpcomingEventsCardProps) {
       .finally(() => setLoading(false));
   }, [profile?.campusId]);
 
-  const now = Date.now();
-  const upcoming = events.filter((e) => e.eventDate >= now).sort((a, b) => a.eventDate - b.eventDate);
+  // Compared by IST calendar day, not exact timestamp — a today's-event with
+  // a morning time slot would otherwise vanish the moment that time passed,
+  // even though it's still today.
+  const todayKey = istDateKey(Date.now());
+  const upcoming = events
+    .filter((e) => istDateKey(e.eventDate) >= todayKey)
+    .sort((a, b) => a.eventDate - b.eventDate);
   const preview = upcoming.slice(0, 3);
 
   return (

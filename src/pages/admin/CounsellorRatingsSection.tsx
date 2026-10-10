@@ -5,6 +5,7 @@ import type { CounsellorFeedbackAggregate } from "../../services/firebase/feedba
 import { listCampuses } from "../../services/firebase/campuses";
 import type { Campus } from "../../types/campus";
 import type { UserProfile } from "../../types/user";
+import { formatDateDMY } from "../../utils/formatDate";
 import { useViewMore } from "../../hooks/useViewMore";
 import { Card } from "../../components/common/Card";
 import { Select } from "../../components/common/Select";
@@ -189,7 +190,7 @@ function CounsellorRatingRow({ profile, aggregate, expanded, onToggle }: Counsel
                     {feedback.userEmail || "Student"}
                   </span>
                   <span className="counsellor-ratings__review-date">
-                    {new Date(feedback.submittedAt).toLocaleDateString()}
+                    {formatDateDMY(feedback.submittedAt)}
                   </span>
                 </div>
                 {feedback.answers && feedback.answers.length > 0 ? (

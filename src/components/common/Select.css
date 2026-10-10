@@ -61,10 +61,12 @@
 
 .md-select__menu {
   position: absolute;
-  z-index: 40;
+  z-index: 1000;
   top: calc(100% + 8px);
   left: 0;
   right: 0;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0;
   padding: 6px;
   list-style: none;
@@ -74,8 +76,13 @@
   background: #FFFFFF;
   border-radius: 16px;
   border: 1px solid rgba(46, 43, 39, 0.08);
-  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09);
+  box-shadow: 0 14px 36px rgba(46, 43, 39, 0.12);
   -webkit-overflow-scrolling: touch;
+}
+
+.md-select__menu--up {
+  top: auto;
+  bottom: calc(100% + 8px);
 }
 
 .md-select__option {

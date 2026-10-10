@@ -22,6 +22,7 @@ import {
   BuildingIcon,
   HourglassIcon,
 } from "../../components/common/icons";
+import { formatDateDMY } from "../../utils/formatDate";
 import "./MonthlyReportsViewSection.css";
 
 const MONTHS = [
@@ -35,11 +36,7 @@ function monthLabel(m: number) {
 
 function formatDate(iso: string) {
   try {
-    return new Date(iso).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    return formatDateDMY(new Date(iso).getTime());
   } catch {
     return iso;
   }

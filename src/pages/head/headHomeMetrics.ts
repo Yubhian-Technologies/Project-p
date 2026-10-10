@@ -35,6 +35,17 @@ function bookingTime(b: Booking): number {
   return b.scheduledAt ?? b.createdAt;
 }
 
+function istDateKey(ms: number): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(ms));
+  const p = (t: string) => parts.find((x) => x.type === t)?.value ?? "";
+  return `${p("year")}-${p("month")}-${p("day")}`;
+}
+
 function isSession(b: Booking): boolean {
   return SESSION_STATUSES.includes(b.status);
 }
@@ -341,8 +352,12 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
   const reportsMissingThisMonth = reportRows.filter((r) => !r.submitted).length;
 
   // ── Programs ─────────────────────────────────────────────────────────
+  // Compared by IST calendar day, not exact timestamp — otherwise a today's
+  // event with a morning time slot would drop off this list the moment that
+  // time passed, even though it's still today.
+  const todayKey = istDateKey(nowMs);
   const programs = events
-    .filter((e) => e.phase === "scheduled" && e.eventDate >= nowMs)
+    .filter((e) => e.phase === "scheduled" && istDateKey(e.eventDate) >= todayKey)
     .sort((a, b) => a.eventDate - b.eventDate)
     .slice(0, 4)
     .map((e) => ({ title: e.title, collegeName: collegeName.get(e.collegeId) ?? "Unassigned", eventDate: e.eventDate }));

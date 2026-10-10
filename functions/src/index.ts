@@ -1187,12 +1187,16 @@ export const flagMissedSessions = onSchedule("every 15 minutes", async () => {
   for (const b of batches) await b.commit();
 });
 
-// Runs once a day and notifies every student on a campus that has an event
-// scheduled for today. "Today" is computed in IST (UTC+5:30) since that's
-// this app's own timezone convention everywhere else (see attendance.ts's
-// istDateKey on the client). The `todayNotifSentOn` flag on the event doc
-// guards against double-notifying if this ever runs more than once on the
-// same calendar day.
+// Runs once a day and notifies every student, counsellor, and head on a
+// campus that has an event scheduled for today. "Today" is computed in IST
+// (UTC+5:30) since that's this app's own timezone convention everywhere else
+// (see attendance.ts's istDateKey on the client). The `todayNotifSentOn`
+// flag on the event doc guards against double-notifying if this ever runs
+// more than once on the same calendar day. A same-day event created after
+// this already ran (7 AM IST) won't be caught by tomorrow's run either,
+// since by then "today" no longer covers that event's date — createEvent
+// in src/services/firebase/events.ts covers that gap by notifying
+// immediately at creation time when the event is already for today.
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
 export const sendEventTodayReminders = onSchedule(
@@ -1213,17 +1217,17 @@ export const sendEventTodayReminders = onSchedule(
 
     const eventUpdates: FirebaseFirestore.DocumentReference[] = [];
     const notifications: Record<string, unknown>[] = [];
-    const studentsByCampus = new Map<string, string[]>();
+    const recipientsByCampus = new Map<string, string[]>();
 
-    async function studentsOnCampus(campusId: string): Promise<string[]> {
-      if (studentsByCampus.has(campusId)) return studentsByCampus.get(campusId) ?? [];
-      const snap = await db
-        .collection("users")
-        .where("role", "==", "user")
-        .where("campusId", "==", campusId)
-        .get();
-      const uids = snap.docs.map((d) => d.id);
-      studentsByCampus.set(campusId, uids);
+    async function recipientsOnCampus(campusId: string): Promise<string[]> {
+      if (recipientsByCampus.has(campusId)) return recipientsByCampus.get(campusId) ?? [];
+      const [studentsSnap, counsellorsSnap, headsSnap] = await Promise.all([
+        db.collection("users").where("role", "==", "user").where("campusId", "==", campusId).get(),
+        db.collection("users").where("role", "==", "counsellor").where("campusId", "==", campusId).get(),
+        db.collection("users").where("role", "==", "head").where("campusId", "==", campusId).get(),
+      ]);
+      const uids = [...studentsSnap.docs, ...counsellorsSnap.docs, ...headsSnap.docs].map((d) => d.id);
+      recipientsByCampus.set(campusId, uids);
       return uids;
     }
 
@@ -1233,11 +1237,11 @@ export const sendEventTodayReminders = onSchedule(
       const campusId = e.campusId as string | undefined;
       if (!campusId) continue;
 
-      const studentUids = await studentsOnCampus(campusId);
-      if (studentUids.length === 0) continue;
+      const recipientUids = await recipientsOnCampus(campusId);
+      if (recipientUids.length === 0) continue;
 
       eventUpdates.push(docRef.ref);
-      for (const uid of studentUids) {
+      for (const uid of recipientUids) {
         notifications.push({
           recipientId: uid,
           type: "event_today",

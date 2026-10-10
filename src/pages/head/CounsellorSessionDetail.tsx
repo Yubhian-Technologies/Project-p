@@ -8,6 +8,7 @@ import {
 } from "../../services/firebase/bookings";
 import type { Booking } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
+import { formatDateTimeDMY } from "../../utils/formatDate";
 import type { SessionFeedback } from "../../types/feedback";
 import { listFeedbackForCounsellor } from "../../services/firebase/feedback";
 import { Card } from "../../components/common/Card";
@@ -159,7 +160,7 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
                     )}
                     {b.scheduledAt && (
                       <span className="counsellor-session-detail__date">
-                        {new Date(b.scheduledAt).toLocaleString()} ({SESSION_DURATION_LABEL})
+                        {formatDateTimeDMY(b.scheduledAt)} ({SESSION_DURATION_LABEL})
                       </span>
                     )}
                     <span className="counsellor-session-detail__hint">
@@ -189,7 +190,7 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
                           <div className="counsellor-session-detail__feedback-row">
                             <StarRating value={feedback.rating} />
                             <span className="counsellor-session-detail__feedback-date">
-                              {new Date(feedback.submittedAt).toLocaleString()}
+                              {formatDateTimeDMY(feedback.submittedAt)}
                             </span>
                           </div>
                           <Button
@@ -291,7 +292,7 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
                   {selectedFeedback.userEmail || "Student"}
                 </h4>
                 <p className="counsellor-feedback__detail-date">
-                  {new Date(selectedFeedback.submittedAt).toLocaleString()}
+                  {formatDateTimeDMY(selectedFeedback.submittedAt)}
                 </p>
               </div>
               <div className="counsellor-feedback__detail-rating">

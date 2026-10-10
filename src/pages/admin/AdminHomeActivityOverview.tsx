@@ -5,6 +5,7 @@ import {
 } from "../../services/firebase/monthlyReports";
 import { listCampuses } from "../../services/firebase/campuses";
 import type { Campus } from "../../types/campus";
+import { formatDateDMY } from "../../utils/formatDate";
 import { useViewMore } from "../../hooks/useViewMore";
 import { Button } from "../../components/common/Button";
 import {
@@ -198,9 +199,7 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
                           </td>
                           <td>{reportCount}</td>
                           <td>
-                            {lastUpload > 0
-                              ? new Date(lastUpload).toLocaleDateString("en-IN")
-                              : "—"}
+                            {lastUpload > 0 ? formatDateDMY(lastUpload) : "—"}
                           </td>
                         </tr>
                       ))}

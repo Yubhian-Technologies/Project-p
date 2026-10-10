@@ -10,6 +10,7 @@ import { AttendanceCheckCard } from "../../components/attendance/AttendanceCheck
 import { TeamAttendanceTodayCard } from "./TeamAttendanceTodayCard";
 import { listSsiCollegeResultsForCampus, type SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
 import { getAllFeedback } from "../../services/firebase/feedback";
+import { formatDateDMY } from "../../utils/formatDate";
 import type { Booking } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
 import {
@@ -494,7 +495,7 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
               <li key={`${p.title}-${p.eventDate}`}>
                 <p className="hch-program__title">{p.title}</p>
                 <p className="hch-small hch-muted">
-                  {new Date(p.eventDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  {formatDateDMY(p.eventDate)}
                   {" · "}
                   {p.collegeName}
                 </p>

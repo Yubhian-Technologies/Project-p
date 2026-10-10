@@ -3,6 +3,8 @@ import type { FormEvent } from "react";
 import type { EventCategory, EventProgram } from "../../types/event";
 import type { UserProfile } from "../../types/user";
 import { useAuth } from "../../hooks/useAuth";
+import { formatDateTimeDMY } from "../../utils/formatDate";
+import { useToast } from "../../context/ToastContext";
 import { createEvent, deleteEvent, updateEvent } from "../../services/firebase/events";
 import { uploadEventReport, uploadEventPoster } from "../../services/firebase/storage";
 import { Modal } from "../../components/common/Modal";
@@ -64,6 +66,7 @@ export function EventDetailModal({
   calendarMonthId,
 }: EventDetailModalProps) {
   const { profile } = useAuth();
+  const { showToast } = useToast();
   const [title, setTitle] = useState(event?.title ?? "");
   const [description, setDescription] = useState(event?.description ?? "");
   // Fixed at creation by which category (Main Programs / Group Session) the
@@ -150,6 +153,11 @@ export function EventDetailModal({
           ...posterFields,
         });
       }
+      showToast({
+        title: mode === "create" ? "Event created" : "Event updated",
+        message: `"${title.trim()}" has been ${mode === "create" ? "scheduled" : "saved"}.`,
+        variant: "success",
+      });
       onSaved();
       onClose();
     } catch {
@@ -314,14 +322,14 @@ export function EventDetailModal({
             )}
             <div className="event-detail-modal__view-row">
               <span className="event-detail-modal__view-label">Date &amp; time</span>
-              <span>{new Date(event.eventDate).toLocaleString()}</span>
+              <span>{formatDateTimeDMY(event.eventDate)}</span>
             </div>
           </div>
 
           {event.reschedule && (
             <p className="event-detail-modal__note">
               {event.reschedule.type === "postponed" ? "Postponed" : "Preponed"} from{" "}
-              {new Date(event.reschedule.previousDate).toLocaleString()}
+              {formatDateTimeDMY(event.reschedule.previousDate)}
               {event.reschedule.note ? ` — ${event.reschedule.note}` : ""}
             </p>
           )}
@@ -451,7 +459,7 @@ export function EventDetailModal({
           {event?.reschedule && (
             <p className="event-detail-modal__note">
               {event.reschedule.type === "postponed" ? "Postponed" : "Preponed"} from{" "}
-              {new Date(event.reschedule.previousDate).toLocaleString()}
+              {formatDateTimeDMY(event.reschedule.previousDate)}
               {event.reschedule.note ? ` — ${event.reschedule.note}` : ""}
             </p>
           )}

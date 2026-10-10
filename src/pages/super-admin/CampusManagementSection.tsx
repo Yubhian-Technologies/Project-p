@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { listCampuses, deleteCampus } from "../../services/firebase/campuses";
 import type { Campus } from "../../types/campus";
+import { formatDateDMY } from "../../utils/formatDate";
 import { useViewMore } from "../../hooks/useViewMore";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
@@ -60,7 +61,7 @@ export function CampusManagementSection() {
         <Card key={campus.id} className="campus-management__row" onClick={() => setSelectedCampus(campus)}>
           <div>
             <p className="campus-management__name">{campus.name}</p>
-            <p className="campus-management__date">Created {new Date(campus.createdAt).toLocaleDateString()}</p>
+            <p className="campus-management__date">Created {formatDateDMY(campus.createdAt)}</p>
           </div>
 
           <div className="campus-management__actions" onClick={(e) => e.stopPropagation()}>

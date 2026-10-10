@@ -19,6 +19,7 @@ import { listFeedbackForUser, createSessionFeedback } from "../../services/fireb
 import { subscribeToNotifications } from "../../services/firebase/notifications";
 import { listSsiResultsForUser, submitSsiResult } from "../../services/firebase/ssiTest";
 import { sanitizePhoneInput, isValidWhatsappNumber } from "../../utils/phone";
+import { formatDateTimeDMY, formatWeekdayDateDMY } from "../../utils/formatDate";
 import { FEEDBACK_FORM } from "../../config/feedbackForm";
 import type { UserProfile } from "../../types/user";
 import type { Booking, BookingIntake, ConcernCategory } from "../../types/booking";
@@ -54,7 +55,7 @@ function statusLabel(booking: Booking): string {
     case "accepted":
       return booking.isEmergency ? "Accepted — being handled directly, no session time needed" : "Accepted — time coming soon";
     case "scheduled":
-      return `Scheduled for ${booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleString() : "—"} (${SESSION_DURATION_LABEL})`;
+      return `Scheduled for ${booking.scheduledAt ? formatDateTimeDMY(booking.scheduledAt) : "—"} (${SESSION_DURATION_LABEL})`;
     case "rejected":
       return "Rejected";
     case "cancelled":
@@ -108,12 +109,7 @@ function dateKey(timestamp: number): string {
 }
 
 function formatDay(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return formatWeekdayDateDMY(timestamp);
 }
 
 export function BookingSection({
@@ -627,8 +623,8 @@ export function BookingSection({
 
             {detailTarget.status === "pending" && detailTarget.proposedSlots && (
               <div className="booking-section__extra">
-                Proposed times: {new Date(detailTarget.proposedSlots[0]).toLocaleString()} or{" "}
-                {new Date(detailTarget.proposedSlots[1]).toLocaleString()}
+                Proposed times: {formatDateTimeDMY(detailTarget.proposedSlots[0])} or{" "}
+                {formatDateTimeDMY(detailTarget.proposedSlots[1])}
               </div>
             )}
 

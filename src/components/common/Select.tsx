@@ -1,5 +1,5 @@
 import { Children, isValidElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import "./Select.css";
 
 interface OptionElementProps {
@@ -37,7 +37,7 @@ function parseOptions(children: ReactNode): ParsedOption[] {
 
 export function Select({ id, value, onChange, disabled, children }: SelectProps) {
   const [open, setOpen] = useState(false);
-  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+  const [openUp, setOpenUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const options = useMemo(() => parseOptions(children), [children]);
   const selected = options.find((o) => o.value === value);
@@ -52,59 +52,14 @@ export function Select({ id, value, onChange, disabled, children }: SelectProps)
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Recompute position on scroll/resize (not just at open), and update on
-  // window visual viewport changes; also only close when the *window*
-  // (page) scrolls/resizes — not when scrolling inside the dropdown.
   useLayoutEffect(() => {
     if (!open || !containerRef.current) return;
-    function updatePosition() {
-      const rect = containerRef.current!.getBoundingClientRect();
-      const estimatedMenuHeight = Math.min(220, Math.max(50, options.length * 34 + 12));
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const spaceAbove = rect.top;
-      const openUp = spaceBelow < estimatedMenuHeight && spaceAbove > spaceBelow;
-      const availableSpace = openUp ? spaceAbove - 16 : spaceBelow - 16;
-      const maxHeight = Math.max(60, Math.min(estimatedMenuHeight, availableSpace));
-      setMenuStyle({
-        position: "fixed",
-        ...(openUp
-          ? { bottom: Math.max(8, window.innerHeight - rect.top + 8), top: "auto" }
-          : { top: Math.min(window.innerHeight - 8, rect.bottom + 8), bottom: "auto" }),
-        left: Math.max(8, Math.min(rect.left, window.innerWidth - Math.min(rect.width, 320) - 8)),
-        width: rect.width,
-        right: "auto",
-        maxHeight,
-      });
-    }
-    updatePosition();
-    const onResize = () => updatePosition();
-    const onScroll = () => updatePosition();
-    window.addEventListener("resize", onResize);
-    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
-    window.visualViewport?.addEventListener("resize", onResize);
-    window.visualViewport?.addEventListener("scroll", onResize);
-    return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onScroll, { capture: true });
-      window.visualViewport?.removeEventListener("resize", onResize);
-      window.visualViewport?.removeEventListener("scroll", onResize);
-    };
+    const rect = containerRef.current.getBoundingClientRect();
+    const estimatedMenuHeight = Math.min(220, options.length * 36 + 14);
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    setOpenUp(spaceBelow < estimatedMenuHeight && spaceAbove > spaceBelow);
   }, [open, options.length]);
-
-  // Only close on *page* scroll/resize (not when scrolling inside the menu).
-  // Also don't close on scroll events that originate from inside the menu.
-  useEffect(() => {
-    if (!open) return;
-    function handleWindowResize() {
-      setOpen(false);
-    }
-    window.addEventListener("resize", handleWindowResize);
-    window.visualViewport?.addEventListener("resize", handleWindowResize);
-    return () => {
-      window.removeEventListener("resize", handleWindowResize);
-      window.visualViewport?.removeEventListener("resize", handleWindowResize);
-    };
-  }, [open]);
 
   return (
     <div className="md-select" ref={containerRef}>
@@ -125,7 +80,10 @@ export function Select({ id, value, onChange, disabled, children }: SelectProps)
         </span>
       </button>
       {open && (
-        <ul className="md-select__menu" style={menuStyle} role="listbox">
+        <ul
+          className={`md-select__menu ${openUp ? "md-select__menu--up" : ""}`}
+          role="listbox"
+        >
           {options.map((opt) => (
             <li
               key={opt.value}
