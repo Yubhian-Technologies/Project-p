@@ -3,6 +3,11 @@ import { Button } from "../../../components/common/Button";
 import { completeExercise } from "../../../services/wellnessScore";
 import "./MeditationGame.css";
 
+// Beep sound played when meditation timer ends
+const beepSound = new Audio(
+  "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABnvlczZ4UGcGZGF0YSAxOQABAcAAACxGQmRmCGVIb2dvIHByb3ZlIGhpZ2ggc3luYy5lCg=="
+);
+
 type DurationOption = 30 | 40 | 60;
 
 const DURATIONS: DurationOption[] = [30, 40, 60];
@@ -24,6 +29,11 @@ export function MeditationGame() {
           setRunning(false);
           setCompleted(true);
           completeExercise();
+          // Play beep sound when timer ends
+          beepSound.currentTime = 0;
+          beepSound.play().catch(() => {
+            // Autoplay blocked on mobile - user needs to interact first
+          });
           return 0;
         }
         return prev - 1;
