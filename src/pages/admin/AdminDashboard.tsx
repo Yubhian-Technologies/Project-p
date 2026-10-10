@@ -5,6 +5,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { CampusManagementSection } from "../super-admin/CampusManagementSection";
 import { LoginsManagementSection } from "../super-admin/LoginsManagementSection";
 import { AnalyticsSection } from "./analytics/AnalyticsSection";
+import { SsiAnalyticsSection } from "./analytics/SsiAnalyticsSection";
 import { EventsOverviewSection } from "./EventsOverviewSection";
 import { MonthlyReportsViewSection } from "./MonthlyReportsViewSection";
 import { CounsellorWorksheetSection } from "./CounsellorWorksheetSection";
@@ -49,6 +50,13 @@ const SECTIONS = [
     ),
   },
   {
+    id: "ssi-analytics",
+    label: "SSI Analytics",
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
+    ),
+  },
+  {
     id: "counsellor-worksheet",
     label: "Counsellor Worksheet",
     icon: (
@@ -70,6 +78,7 @@ const TITLES: Record<string, string> = {
   logins: "Logins",
   events: "Events & Programs",
   analytics: "Analytics",
+  "ssi-analytics": "SSI Analytics",
   "counsellor-worksheet": "Counsellor Worksheet",
   "monthly-reports": "Consolidated Reports",
 };
@@ -110,6 +119,8 @@ export function AdminDashboard() {
         <EventsOverviewSection />
       ) : activeSection === "analytics" ? (
         <AnalyticsSection />
+      ) : activeSection === "ssi-analytics" ? (
+        <SsiAnalyticsSection />
       ) : activeSection === "counsellor-worksheet" ? (
         <CounsellorWorksheetSection />
       ) : activeSection === "monthly-reports" ? (

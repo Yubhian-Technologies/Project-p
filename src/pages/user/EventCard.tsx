@@ -1,7 +1,7 @@
 import type { EventProgram } from "../../types/event";
 import { MorphingPopover, MorphingPopoverTrigger, MorphingPopoverContent } from "../../components/common/MorphingPopover";
 import { CalendarIcon } from "../../components/common/icons";
-import { formatSessionYears } from "../../utils/academicCalendar";
+import { formatSessionYears, formatResidenceTargets } from "../../utils/academicCalendar";
 import { formatDateTimeDMY, formatWeekdayDateDMY } from "../../utils/formatDate";
 import "./EventCard.css";
 import "./EventPreviewModal.css";
@@ -55,6 +55,12 @@ export function EventCard({ event }: EventCardProps) {
                   <div className="event-preview-modal__row">
                     <span className="event-preview-modal__label">Conducted by</span>
                     <span>{event.organizerNames.join(", ")}</span>
+                  </div>
+                )}
+                {event.residenceTarget && event.residenceTarget.length > 0 && (
+                  <div className="event-preview-modal__row">
+                    <span className="event-preview-modal__label">Who's this for</span>
+                    <span>{formatResidenceTargets(event.residenceTarget)}</span>
                   </div>
                 )}
                 {event.targetGroup && (

@@ -10,6 +10,7 @@ export type AdminSectionId =
   | "logins"
   | "events"
   | "analytics"
+  | "ssi-analytics"
   | "counsellor-worksheet"
   | "monthly-reports";
 
@@ -38,6 +39,7 @@ export interface AdminAccess {
 export interface StudentBioData {
   course?: string; // e.g. "B.Tech" — distinct from `branch` (e.g. "CSE")
   dateOfBirth?: string; // free text as entered (no fixed format enforced)
+  hostelOrDayScholar?: "" | "Hostel" | "Day Scholar";
   mobileNumber?: string; // distinct from `whatsappNumber`, which drives booking/crisis contact flows
   personalEmail?: string;
   fatherName?: string;

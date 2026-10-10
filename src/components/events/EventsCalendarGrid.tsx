@@ -3,7 +3,14 @@ import type { FormEvent } from "react";
 import type { CalendarMonth } from "../../types/calendarMonth";
 import type { CalendarYear } from "../../types/calendarYear";
 import type { EventCategory, EventProgram } from "../../types/event";
-import { EVENT_CATEGORIES, MONTH_LABELS, PHASE_BADGE, formatSessionYears, monthRowLabel } from "../../utils/academicCalendar";
+import {
+  EVENT_CATEGORIES,
+  MONTH_LABELS,
+  PHASE_BADGE,
+  formatSessionYears,
+  formatResidenceTargets,
+  monthRowLabel,
+} from "../../utils/academicCalendar";
 import { downloadXlsx } from "../../utils/excelExport";
 import { formatDateDMY } from "../../utils/formatDate";
 import { Select } from "../common/Select";
@@ -486,6 +493,11 @@ export function EventsCalendarGrid({
                     {event.sessionYears && event.sessionYears.length > 0 && (
                       <span className="bento-badge bento-badge--neutral events-calendar__chip-badge">
                         {formatSessionYears(event.sessionYears)}
+                      </span>
+                    )}
+                    {event.residenceTarget && event.residenceTarget.length > 0 && (
+                      <span className="bento-badge bento-badge--neutral events-calendar__chip-badge">
+                        {formatResidenceTargets(event.residenceTarget)}
                       </span>
                     )}
                   </span>

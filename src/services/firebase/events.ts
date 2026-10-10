@@ -114,6 +114,7 @@ export async function updateEvent(
       | "category"
       | "sessionYears"
       | "targetGroup"
+      | "residenceTarget"
       | "importantDay"
       | "organizerIds"
       | "organizerNames"

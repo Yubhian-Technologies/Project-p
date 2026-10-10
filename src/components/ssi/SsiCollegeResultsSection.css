@@ -33,6 +33,90 @@
   min-width: 180px;
 }
 
+.ssi-results__period-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ssi-results__chip {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(46, 43, 39, 0.14);
+  background: #FFFFFF;
+  color: #4A453E;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.ssi-results__chip:hover:not(.ssi-results__chip--active) {
+  border-color: #0B193C;
+  color: #0B193C;
+}
+
+.ssi-results__chip--active {
+  background: #0B193C;
+  border-color: #0B193C;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(11, 25, 60, 0.18);
+}
+
+.ssi-results__summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0 4px;
+}
+
+.ssi-results__summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #F8FAFC;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+}
+
+.ssi-results__summary-card--normal {
+  background: #D1FAE5;
+}
+
+.ssi-results__summary-card--medium {
+  background: #FEF3C7;
+}
+
+.ssi-results__summary-card--severe {
+  background: #FEE2E2;
+}
+
+.ssi-results__summary-card--action {
+  background: #DBEAFE;
+}
+
+.ssi-results__summary-val {
+  font-size: 22px;
+  font-weight: 900;
+  color: #2E2B27;
+}
+
+.ssi-results__summary-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4A5568;
+}
+
+@media (max-width: 900px) {
+  .ssi-results__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .ssi-results__title {
   margin: 0 0 8px;
   font-family: var(--md-sys-typescale-font-display);
@@ -134,6 +218,37 @@
 .ssi-results__badge--normal {
   background: #D1FAE5;
   color: #065F46;
+}
+
+.ssi-results__row-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.ssi-results__action-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.ssi-results__action-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+
+.ssi-results__action-note {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #6B7280;
 }
 
 .ssi-results__detail-modal {

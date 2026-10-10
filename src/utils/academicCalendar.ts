@@ -38,6 +38,18 @@ export function formatSessionYears(values: string[]): string {
   return yearsText || (hasFaculty ? "Faculty" : "");
 }
 
+export const RESIDENCE_TARGET_OPTIONS: { value: "hostel" | "dayscholar"; label: string }[] = [
+  { value: "hostel", label: "Hostellers" },
+  { value: "dayscholar", label: "Day Scholars" },
+];
+
+/** ["hostel"] -> "Hostellers"; ["hostel","dayscholar"] -> "Hostellers, Day Scholars" */
+export function formatResidenceTargets(values: string[]): string {
+  return RESIDENCE_TARGET_OPTIONS.filter((o) => values.includes(o.value))
+    .map((o) => o.label)
+    .join(", ");
+}
+
 export const MONTH_LABELS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",

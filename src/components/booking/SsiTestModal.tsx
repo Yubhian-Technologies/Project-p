@@ -10,7 +10,7 @@ interface SsiTestModalProps {
     whatsappNumber?: string;
     branch?: string;
     yearOrBatch?: string;
-    bioData?: { dateOfBirth?: string };
+    bioData?: { dateOfBirth?: string; hostelOrDayScholar?: string };
   };
   /** Pre-filled WhatsApp number fetched from the booking intake if the profile has none. */
   initialWhatsappNumber?: string;

@@ -21,6 +21,7 @@ export const ADMIN_SECTIONS: { id: AdminSectionId; label: string }[] = [
   { id: "logins", label: "Logins" },
   { id: "events", label: "Events & Programs" },
   { id: "analytics", label: "Analytics" },
+  { id: "ssi-analytics", label: "SSI Analytics" },
   { id: "counsellor-worksheet", label: "Counsellor Worksheet" },
   { id: "monthly-reports", label: "Consolidated Reports" },
 ];

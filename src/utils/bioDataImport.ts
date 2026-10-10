@@ -21,6 +21,16 @@ function cellToString(value: unknown): string {
   return String(value).trim();
 }
 
+// The field only accepts these two exact values — a free-typed sheet cell
+// ("H", "Day Scholor", "DS", etc.) needs normalizing instead of a straight
+// store-as-is like the other bio-data columns.
+function normalizeHostelOrDayScholar(raw: string): "Hostel" | "Day Scholar" | undefined {
+  const key = raw.toLowerCase().replace(/[^a-z]/g, "");
+  if (key === "hostel" || key === "hosteller" || key === "h") return "Hostel";
+  if (key === "dayscholar" || key === "dayscholor" || key === "ds") return "Day Scholar";
+  return undefined;
+}
+
 // Unlike the simple "first keyword that matches" lookup used for student
 // logins, bio-data columns often share a word (e.g. "Name" appears in
 // "Name", "Father's Name", "Mother's Name") — this requires every keyword
@@ -43,6 +53,7 @@ export async function downloadBioDataImportTemplate(): Promise<void> {
     "Batch",
     "Course",
     "Date of Birth",
+    "Hostel / Day Scholar",
     "Gender",
     "Mobile Number",
     "Email ID (Personal)",
@@ -68,6 +79,7 @@ export async function downloadBioDataImportTemplate(): Promise<void> {
     "2023-27",
     "B.Tech",
     "2005-06-15",
+    "Hostel",
     "Female",
     "9876543210",
     "student.personal@example.com",
@@ -118,6 +130,7 @@ export function buildBioDataRow(
   const batchIndex = findColumn(headers, ["batch"]);
   const courseIndex = findColumn(headers, ["course"]);
   const dobIndex = findColumn(headers, ["birth"]);
+  const hostelOrDayScholarIndex = findColumn(headers, ["hostel"]);
   const genderIndex = findColumn(headers, ["gender"]);
   const mobileIndex = findColumn(headers, ["mobile"]);
   const personalEmailIndex = findColumn(headers, ["email"], ["father", "mother"]);
@@ -172,9 +185,18 @@ export function buildBioDataRow(
     return value || undefined;
   }
 
+  const hostelOrDayScholarCell = cell(hostelOrDayScholarIndex);
+  const hostelOrDayScholar = hostelOrDayScholarCell
+    ? normalizeHostelOrDayScholar(hostelOrDayScholarCell)
+    : undefined;
+  if (hostelOrDayScholarCell && !hostelOrDayScholar) {
+    warnings.push(`Hostel / Day Scholar value "${hostelOrDayScholarCell}" wasn't recognized and was left unset`);
+  }
+
   const fromSheet: StudentBioData = {
     course: cell(courseIndex),
     dateOfBirth: cell(dobIndex),
+    hostelOrDayScholar,
     mobileNumber: cell(mobileIndex),
     personalEmail: cell(personalEmailIndex),
     fatherName: cell(fatherNameIndex),

@@ -501,8 +501,6 @@ export function RequestDetailModal({
             <dd>{ssiResult.level1.department || "—"}</dd>
             <dt>Year</dt>
             <dd>{ssiResult.level1.year || "—"}</dd>
-            <dt>Section</dt>
-            <dd>{ssiResult.level1.section || "—"}</dd>
             <dt>Hostel / Day Scholar</dt>
             <dd>{ssiResult.level1.hostelOrDayScholar || "—"}</dd>
             <dt>Age</dt>
@@ -759,6 +757,8 @@ export function RequestDetailModal({
             <dd>{studentProfile.bioData?.course || "—"}</dd>
             <dt>Date of birth</dt>
             <dd>{studentProfile.bioData?.dateOfBirth || "—"}</dd>
+            <dt>Hostel / Day Scholar</dt>
+            <dd>{studentProfile.bioData?.hostelOrDayScholar || "—"}</dd>
             <dt>Mobile number</dt>
             <dd>{studentProfile.bioData?.mobileNumber || "—"}</dd>
             <dt>Personal email</dt>

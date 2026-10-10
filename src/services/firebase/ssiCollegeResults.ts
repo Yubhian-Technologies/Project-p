@@ -1,4 +1,4 @@
-import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { db } from "./config";
 import type { SsiSeverity } from "../../config/ssiForm";
 import type { SsiAnswerItem } from "./ssiTest";
@@ -28,6 +28,12 @@ export interface SsiCollegeResultInput {
 export interface SsiCollegeResult extends SsiCollegeResultInput {
   id: string;
   submittedAt: number;
+  // Set later by a Head/Counsellor on their own campus/college, never by the
+  // student at submission time — tracks whether follow-up has happened on a
+  // medium/severe check-in.
+  actionTaken?: boolean;
+  actionTakenBy?: string;
+  actionTakenAt?: number;
 }
 
 function toSsiCollegeResult(id: string, data: Record<string, unknown>): SsiCollegeResult {
@@ -54,6 +60,9 @@ function toSsiCollegeResult(id: string, data: Record<string, unknown>): SsiColle
       (data.submittedAt as { toMillis?: () => number })?.toMillis?.() ??
       (data.submittedAt as number) ??
       Date.now(),
+    actionTaken: data.actionTaken as boolean | undefined,
+    actionTakenBy: data.actionTakenBy as string | undefined,
+    actionTakenAt: data.actionTakenAt as number | undefined,
   };
 }
 
@@ -87,4 +96,18 @@ export async function listSsiCollegeResultsForCampus(campusId: string): Promise<
   const q = query(collection(db, COLLECTION), where("campusId", "==", campusId));
   const snap = await getDocs(q);
   return snap.docs.map((d) => toSsiCollegeResult(d.id, d.data()));
+}
+
+/** A Head/Counsellor marking (or unmarking) that they've followed up on a
+    check-in — e.g. a medium/severe result that needed immediate attention. */
+export async function setSsiResultActionTaken(
+  resultId: string,
+  actionTaken: boolean,
+  actorEmail: string,
+): Promise<void> {
+  await updateDoc(doc(db, COLLECTION, resultId), {
+    actionTaken,
+    actionTakenBy: actorEmail,
+    actionTakenAt: Date.now(),
+  });
 }

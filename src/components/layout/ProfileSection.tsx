@@ -59,6 +59,9 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const [genderDraft, setGenderDraft] = useState(profile?.gender ?? "");
   const [courseDraft, setCourseDraft] = useState(profile?.bioData?.course ?? "");
   const [dateOfBirthDraft, setDateOfBirthDraft] = useState(profile?.bioData?.dateOfBirth ?? "");
+  const [hostelOrDayScholarDraft, setHostelOrDayScholarDraft] = useState(
+    profile?.bioData?.hostelOrDayScholar ?? "",
+  );
   const [mobileNumberDraft, setMobileNumberDraft] = useState(profile?.bioData?.mobileNumber ?? "");
   const [personalEmailDraft, setPersonalEmailDraft] = useState(profile?.bioData?.personalEmail ?? "");
   const [fatherNameDraft, setFatherNameDraft] = useState(profile?.bioData?.fatherName ?? "");
@@ -223,6 +226,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
       await updateUserBioData(currentUser.uid, {
         course: courseDraft.trim(),
         dateOfBirth: dateOfBirthDraft.trim(),
+        hostelOrDayScholar: hostelOrDayScholarDraft,
         mobileNumber: mobileNumberDraft.trim(),
         personalEmail: personalEmailDraft.trim(),
         fatherName: fatherNameDraft.trim(),
@@ -304,6 +308,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     genderDraft === (profile.gender ?? "") &&
     courseDraft === (profile.bioData?.course ?? "") &&
     dateOfBirthDraft === (profile.bioData?.dateOfBirth ?? "") &&
+    hostelOrDayScholarDraft === (profile.bioData?.hostelOrDayScholar ?? "") &&
     mobileNumberDraft === (profile.bioData?.mobileNumber ?? "") &&
     personalEmailDraft === (profile.bioData?.personalEmail ?? "") &&
     fatherNameDraft === (profile.bioData?.fatherName ?? "") &&
@@ -719,16 +724,30 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                   </Select>
                 </div>
                 {isStudent && (
-                  <div className="profile-section__field">
-                    <label htmlFor="intake-course">Course</label>
-                    <input
-                      id="intake-course"
-                      type="text"
-                      placeholder="e.g. B.Tech"
-                      value={courseDraft}
-                      onChange={(e) => setCourseDraft(e.target.value)}
-                    />
-                  </div>
+                  <>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-course">Course</label>
+                      <input
+                        id="intake-course"
+                        type="text"
+                        placeholder="e.g. B.Tech"
+                        value={courseDraft}
+                        onChange={(e) => setCourseDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-hostel-or-day-scholar">Hostel / Day Scholar</label>
+                      <Select
+                        id="intake-hostel-or-day-scholar"
+                        value={hostelOrDayScholarDraft}
+                        onChange={(v) => setHostelOrDayScholarDraft(v as "" | "Hostel" | "Day Scholar")}
+                      >
+                        <option value="">—</option>
+                        <option value="Hostel">Hostel</option>
+                        <option value="Day Scholar">Day Scholar</option>
+                      </Select>
+                    </div>
+                  </>
                 )}
                 <div className="profile-section__field">
                   <label htmlFor="intake-dob">Date of birth</label>

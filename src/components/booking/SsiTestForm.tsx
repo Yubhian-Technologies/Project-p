@@ -19,8 +19,8 @@ import { sanitizePhoneInput, isValidWhatsappNumber } from "../../utils/phone";
 import "./SsiTestModal.css";
 
 // Profile's date of birth is a native <input type="date"> value (YYYY-MM-DD),
-// so this is reliable for any profile that has one set — unparseable/missing
-// values just leave the Age field blank for the student to fill in manually.
+// so this is reliable for any profile that has one set. Age is always derived
+// from this — never typed — so an unparseable/missing DOB just leaves it blank.
 function ageFromDob(dob?: string): string {
   if (!dob) return "";
   const parsed = new Date(dob);
@@ -61,7 +61,7 @@ export interface SsiTestFormProps {
     whatsappNumber?: string;
     branch?: string;
     yearOrBatch?: string;
-    bioData?: { dateOfBirth?: string };
+    bioData?: { dateOfBirth?: string; hostelOrDayScholar?: string };
   };
   /** Pre-filled WhatsApp number fetched from the booking intake if the profile has none. */
   initialWhatsappNumber?: string;
@@ -85,10 +85,12 @@ export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, o
     const prefilled: Record<string, string> = {};
     if (profile.branch?.trim()) prefilled.department = profile.branch.trim();
     if (profile.yearOrBatch?.trim()) prefilled.year = profile.yearOrBatch.trim();
-    const age = ageFromDob(profile.bioData?.dateOfBirth);
-    if (age) prefilled.age = age;
+    if (profile.bioData?.hostelOrDayScholar?.trim())
+      prefilled.hostelOrDayScholar = profile.bioData.hostelOrDayScholar.trim();
     return prefilled;
   });
+  // Never a form field — always computed from the profile's Date of Birth.
+  const computedAge = ageFromDob(profile.bioData?.dateOfBirth);
   const [likert, setLikert] = useState<Record<string, number>>({});
   const [lvl3, setLvl3] = useState<Record<string, string>>({});
   const [whatsapp, setWhatsapp] = useState(
@@ -135,7 +137,7 @@ export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, o
     try {
       const likertResult = buildLikertResult(likert);
       await onSubmit({
-        level1,
+        level1: computedAge ? { ...level1, age: computedAge } : level1,
         likertAnswers: likertResult.items,
         level3Answers: SSI_LEVEL3_QUESTIONS.map((q) => ({
           id: q.id,
@@ -242,6 +244,12 @@ export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, o
               )}
             </div>
           ))}
+          <div className="ssi-modal__field">
+            <label className="ssi-modal__label">Age</label>
+            <p className="ssi-modal__static-value">
+              {computedAge || "Set your Date of Birth in Profile → Bio Data to fill this in automatically."}
+            </p>
+          </div>
           <p className="ssi-modal__note">{SSI_PAGE1_NOTE}</p>
         </div>
       )}

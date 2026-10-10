@@ -12,7 +12,14 @@ import { Button } from "../../components/common/Button";
 import { FileInput } from "../../components/common/FileInput";
 import { MultiSelect } from "../../components/common/MultiSelect";
 import { DateTimePicker } from "../../components/common/DateTimePicker";
-import { EVENT_CATEGORIES, PHASE_BADGE, SESSION_YEAR_OPTIONS, formatSessionYears } from "../../utils/academicCalendar";
+import {
+  EVENT_CATEGORIES,
+  PHASE_BADGE,
+  SESSION_YEAR_OPTIONS,
+  formatSessionYears,
+  RESIDENCE_TARGET_OPTIONS,
+  formatResidenceTargets,
+} from "../../utils/academicCalendar";
 import "./EventDetailModal.css";
 
 type Mode = "create" | "manage" | "view";
@@ -74,6 +81,7 @@ export function EventDetailModal({
   // rather than state.
   const category: EventCategory = event?.category ?? defaultCategory ?? "main-program";
   const [sessionYears, setSessionYears] = useState<string[]>(event?.sessionYears ?? []);
+  const [residenceTarget, setResidenceTarget] = useState<string[]>(event?.residenceTarget ?? []);
   const [targetGroup, setTargetGroup] = useState(event?.targetGroup ?? "");
   const [importantDay, setImportantDay] = useState(event?.importantDay ?? "");
   const [selectedOrganizerIds, setSelectedOrganizerIds] = useState<string[]>(event?.organizerIds ?? []);
@@ -120,6 +128,7 @@ export function EventDetailModal({
           calendarMonthId,
           category,
           sessionYears,
+          residenceTarget: residenceTarget as ("hostel" | "dayscholar")[],
           title: title.trim(),
           description: description.trim(),
           ...optionalFields,
@@ -145,6 +154,7 @@ export function EventDetailModal({
           description: description.trim(),
           category,
           sessionYears,
+          residenceTarget: residenceTarget as ("hostel" | "dayscholar")[],
           ...optionalFields,
           organizerIds: selectedOrganizers.map((o) => o.uid),
           organizerNames: selectedOrganizers.map((o) => o.displayName || o.email),
@@ -308,6 +318,12 @@ export function EventDetailModal({
                 <span>{event.organizerNames.join(", ")}</span>
               </div>
             )}
+            {event.residenceTarget && event.residenceTarget.length > 0 && (
+              <div className="event-detail-modal__view-row">
+                <span className="event-detail-modal__view-label">Who's this for</span>
+                <span>{formatResidenceTargets(event.residenceTarget)}</span>
+              </div>
+            )}
             {event.targetGroup && (
               <div className="event-detail-modal__view-row">
                 <span className="event-detail-modal__view-label">Target group</span>
@@ -392,6 +408,17 @@ export function EventDetailModal({
               onChange={setSelectedOrganizerIds}
               placeholder="Select counsellor(s) or head(s)…"
               emptyMessage="No team members on this campus"
+            />
+          </div>
+
+          <div className="event-detail-modal__field">
+            <label htmlFor="ed-residence-target">Who's this for? (Hostel / Day Scholar)</label>
+            <MultiSelect
+              id="ed-residence-target"
+              options={RESIDENCE_TARGET_OPTIONS}
+              selected={residenceTarget}
+              onChange={setResidenceTarget}
+              placeholder="Everyone (leave blank for no restriction)"
             />
           </div>
 

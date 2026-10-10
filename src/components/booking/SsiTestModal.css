@@ -163,6 +163,19 @@
   background: #fff;
 }
 
+.ssi-modal__static-value {
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(15, 23, 42, 0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  background: #f3f4f6;
+  color: #334155;
+}
+
 .ssi-modal__textarea {
   resize: vertical;
 }

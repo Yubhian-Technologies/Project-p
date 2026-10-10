@@ -570,7 +570,8 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         (isRole('counsellor') && myProfile().collegeId == resource.data.collegeId) ||
-        (isRole('head') && myProfile().campusId == resource.data.campusId)
+        (isRole('head') && myProfile().campusId == resource.data.campusId) ||
+        adminCanAccessCampus(resource.data.campusId)
       );
 
       allow create: if isSignedIn()
@@ -591,7 +592,14 @@ service cloud.firestore {
                     && request.resource.data.stressScore is number
                     && request.resource.data.consentGiven == true;
 
-      allow update: if false;
+      // A Head/Counsellor on their own scope can mark (or unmark) that they've
+      // followed up on a check-in — never anything else about it, and never
+      // Admin/Super Admin, who only ever sees aggregate analytics.
+      allow update: if isSignedIn() &&
+                    ((isRole('counsellor') && myProfile().collegeId == resource.data.collegeId) ||
+                     (isRole('head') && myProfile().campusId == resource.data.campusId)) &&
+                    request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['actionTaken', 'actionTakenBy', 'actionTakenAt']);
       allow delete: if false;
     }
 

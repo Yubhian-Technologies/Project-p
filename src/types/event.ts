@@ -19,6 +19,7 @@ export interface EventProgram {
   title: string;
   description: string;
   targetGroup?: string;
+  residenceTarget?: ("hostel" | "dayscholar")[]; // who this is for by residence — both allowed, empty/unset means everyone
   importantDay?: string;
   organizerIds: string[];
   organizerNames: string[];

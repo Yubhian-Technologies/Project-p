@@ -67,13 +67,11 @@ export interface SsiLevel1Field {
 export const SSI_LEVEL1_FIELDS: SsiLevel1Field[] = [
   { id: "department", label: "Department", kind: "text", required: true },
   { id: "year", label: "Year", kind: "text", required: true },
-  { id: "section", label: "Section", kind: "text", required: true },
   { id: "hostelOrDayScholar", label: "Hostel / Day Scholar", kind: "select", options: ["Hostel", "Day Scholar"], required: true },
-  { id: "age", label: "Age", kind: "text", required: true },
 ];
 
 export const SSI_PAGE1_NOTE =
-  "Your Institution and campus details will automatically be shared with the counsellor, as they were set at the time of sign-up. Department, Year and Age are pre-filled from your profile — please correct them here if anything has changed.";
+  "Your Institution and campus details will automatically be shared with the counsellor, as they were set at the time of sign-up. Department, Year and Hostel/Day Scholar are pre-filled from your profile where available — please correct them here if anything has changed. Age is calculated automatically from your Date of Birth in your Profile's bio data.";
 
 // ── Page 2: DASS-21 rating scale + statements ─────────────────────────────────
 export interface SsiLikertOption {
