@@ -287,8 +287,13 @@ export async function listBookingsForCounsellor(counsellorId: string): Promise<B
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
-export async function listAllBookingsForStats(): Promise<Booking[]> {
-  const snapshot = await getDocs(bookingsCollection);
+// Scoped to one campus — this is only ever used for a Head's own Team
+// Management stats, so there's no reason to pull every booking ever made
+// platform-wide (this collection only grows, and was making every Head
+// dashboard load slower every month).
+export async function listAllBookingsForStats(campusId: string): Promise<Booking[]> {
+  const q = query(bookingsCollection, where("campusId", "==", campusId));
+  const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => toBooking(d.id, d.data()));
 }
 

@@ -73,7 +73,7 @@ export const SSI_LEVEL1_FIELDS: SsiLevel1Field[] = [
 ];
 
 export const SSI_PAGE1_NOTE =
-  "Your Institution and campus details will automatically be shared with the counsellor, as they were set at the time of sign-up.";
+  "Your Institution and campus details will automatically be shared with the counsellor, as they were set at the time of sign-up. Department, Year and Age are pre-filled from your profile — please correct them here if anything has changed.";
 
 // ── Page 2: DASS-21 rating scale + statements ─────────────────────────────────
 export interface SsiLikertOption {

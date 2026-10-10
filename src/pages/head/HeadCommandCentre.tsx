@@ -14,7 +14,7 @@ import { formatDateDMY } from "../../utils/formatDate";
 import type { Booking } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
 import {
-  PERIOD_LABELS,
+  periodLabel,
   computeHomeMetrics,
   type HomeInput,
   type HomePeriod,
@@ -178,12 +178,12 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
                 aria-pressed={period === p}
                 onClick={() => setPeriod(p)}
               >
-                {PERIOD_LABELS[p]}
+                {periodLabel(p, now)}
               </button>
             ))}
           </div>
         </div>
-        <p className="hch-muted hch-small">The period filter applies to the first four cards.</p>
+        <p className="hch-muted hch-small">The period filter applies to the first four cards and Team Pulse below.</p>
         <div className="hch-kpis">
           <Kpi label="Students Supported" value={m.kpis.students} note="Students who accessed wellness services" />
           <Kpi label="Sessions" value={m.kpis.sessions} note="Counselling sessions booked or completed" />
@@ -294,8 +294,8 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
                   </header>
                   <dl className="hch-counsellor__stats">
                     <div>
-                      <dt title="All-time accepted, scheduled, or completed bookings — not limited to this period">
-                        Sessions (all-time)
+                      <dt title={`Accepted, scheduled, or completed bookings for ${periodLabel(period, now)}`}>
+                        Sessions ({periodLabel(period, now)})
                       </dt>
                       <dd>{c.total}</dd>
                     </div>

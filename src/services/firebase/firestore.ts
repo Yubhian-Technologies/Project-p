@@ -65,7 +65,6 @@ export async function updateUserIntakeInfo(
   uid: string,
   data: {
     displayName: string;
-    studentOrProfessional: "student" | "professional";
     whatsappNumber: string;
     yearOrBatch: string;
     branch: string;

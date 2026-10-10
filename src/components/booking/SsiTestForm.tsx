@@ -18,6 +18,22 @@ import { buildLikertResult, type SsiAnswerItem } from "../../services/firebase/s
 import { sanitizePhoneInput, isValidWhatsappNumber } from "../../utils/phone";
 import "./SsiTestModal.css";
 
+// Profile's date of birth is a native <input type="date"> value (YYYY-MM-DD),
+// so this is reliable for any profile that has one set — unparseable/missing
+// values just leave the Age field blank for the student to fill in manually.
+function ageFromDob(dob?: string): string {
+  if (!dob) return "";
+  const parsed = new Date(dob);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const now = new Date();
+  let age = now.getFullYear() - parsed.getFullYear();
+  const beforeBirthdayThisYear =
+    now.getMonth() < parsed.getMonth() ||
+    (now.getMonth() === parsed.getMonth() && now.getDate() < parsed.getDate());
+  if (beforeBirthdayThisYear) age -= 1;
+  return age > 0 ? String(age) : "";
+}
+
 /** The collected answers/scores, independent of who they get attached to (a
     specific booking's counsellor, or a student's college). */
 export interface SsiAnswersPayload {
@@ -43,6 +59,9 @@ export interface SsiTestFormProps {
     displayName?: string;
     studentOrProfessional?: "student" | "professional";
     whatsappNumber?: string;
+    branch?: string;
+    yearOrBatch?: string;
+    bioData?: { dateOfBirth?: string };
   };
   /** Pre-filled WhatsApp number fetched from the booking intake if the profile has none. */
   initialWhatsappNumber?: string;
@@ -62,7 +81,14 @@ export interface SsiTestFormProps {
  */
 export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, onSubmit, onClose, chrome = "modal" }: SsiTestFormProps) {
   const [step, setStep] = useState(1);
-  const [level1, setLevel1] = useState<Record<string, string>>({});
+  const [level1, setLevel1] = useState<Record<string, string>>(() => {
+    const prefilled: Record<string, string> = {};
+    if (profile.branch?.trim()) prefilled.department = profile.branch.trim();
+    if (profile.yearOrBatch?.trim()) prefilled.year = profile.yearOrBatch.trim();
+    const age = ageFromDob(profile.bioData?.dateOfBirth);
+    if (age) prefilled.age = age;
+    return prefilled;
+  });
   const [likert, setLikert] = useState<Record<string, number>>({});
   const [lvl3, setLvl3] = useState<Record<string, string>>({});
   const [whatsapp, setWhatsapp] = useState(

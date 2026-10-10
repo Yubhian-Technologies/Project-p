@@ -69,7 +69,7 @@ export async function createEvent(
         type: "event_added",
         title: "New event scheduled",
         message: `${campusLabel} has a new event: ${input.title} (${
-          input.category === "group-session" ? "Group Session" : "Main Program"
+          input.category === "group-session" ? "Group Session" : "Events & Programs"
         }).`,
       }),
     ),

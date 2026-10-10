@@ -1,7 +1,7 @@
 import type { EventCategory, EventPhase } from "../types/event";
 
 export const EVENT_CATEGORIES: { id: EventCategory; label: string }[] = [
-  { id: "main-program", label: "Main Programs" },
+  { id: "main-program", label: "Events & Programs" },
   { id: "group-session", label: "Group Session" },
 ];
 

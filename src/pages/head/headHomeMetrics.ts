@@ -10,19 +10,46 @@ import { FEEDBACK_FORM } from "../../config/feedbackForm";
 
 export type HomePeriod = "week" | "month" | "semester" | "year";
 
-export const PERIOD_LABELS: Record<HomePeriod, string> = {
-  week: "This Week",
-  month: "This Month",
-  semester: "This Semester",
-  year: "Academic Year",
-};
-
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+const ORDINAL_SUFFIX: Record<number, string> = { 1: "st", 2: "nd", 3: "rd" };
+
+/** Which fixed calendar week of the month `now` falls in (1-7, 8-14, 15-21,
+    22-28, 29-end) — the same week-of-month bucketing already used by
+    SessionReportsSection.tsx and the Monthly Report's weekly breakdown, so
+    "week" means the same thing everywhere in this app. */
+function weekOfMonth(now: Date): number {
+  const day = now.getDate();
+  if (day <= 7) return 1;
+  if (day <= 14) return 2;
+  if (day <= 21) return 3;
+  if (day <= 28) return 4;
+  return 5;
+}
+
+/** Concrete, calendar-grounded label for a period — "1st Week Oct" / "October"
+    / "May – Oct" / "Academic Year 2026-27" — rather than a relative label like
+    "This Week" that doesn't say which week it actually is. */
+export function periodLabel(period: HomePeriod, now: Date): string {
+  if (period === "week") {
+    const n = weekOfMonth(now);
+    return `${n}${ORDINAL_SUFFIX[n] ?? "th"} Week ${now.toLocaleString("en-US", { month: "short" })}`;
+  }
+  if (period === "month") return now.toLocaleString("en-US", { month: "long" });
+  if (period === "semester") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    return `${start.toLocaleString("en-US", { month: "short" })} – ${now.toLocaleString("en-US", { month: "short" })}`;
+  }
+  const academicYearStartYear = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+  return `Academic Year ${academicYearStartYear}-${String(academicYearStartYear + 1).slice(2)}`;
+}
+
+const WEEK_START_DAY: Record<number, number> = { 1: 1, 2: 8, 3: 15, 4: 22, 5: 29 };
 
 /** Semester is approximated as the last six months, and the academic year as
     running from 1 June — the app has no semester calendar yet. */
 export function periodStart(period: HomePeriod, now: Date): number {
-  if (period === "week") return now.getTime() - 7 * DAY_MS;
+  if (period === "week") return new Date(now.getFullYear(), now.getMonth(), WEEK_START_DAY[weekOfMonth(now)]).getTime();
   if (period === "month") return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
   if (period === "semester") return new Date(now.getFullYear(), now.getMonth() - 5, 1).getTime();
   const academicYearStartYear = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
@@ -67,11 +94,11 @@ export interface CounsellorWorkloadRow {
   uid: string;
   name: string;
   collegeName: string;
-  /** All-time accepted/scheduled/completed bookings for this person — not
-      scoped to any period, and not meant to equal completed + upcoming +
-      pending + missed on its own: it also includes past accepted/scheduled
-      bookings that were never closed out (not yet marked completed or
-      missed), which don't show up as a single bucket elsewhere. */
+  /** Accepted/scheduled/completed bookings for this person within the
+      selected period — not meant to equal completed + upcoming + pending +
+      missed on its own: it also includes accepted/scheduled bookings that
+      were never closed out (not yet marked completed or missed), which
+      don't show up as a single bucket elsewhere. */
   total: number;
   /** Status "completed" with outcome NOT "missed" — a missed booking still
       has status "completed" in the data model, so this explicitly excludes
@@ -80,7 +107,8 @@ export interface CounsellorWorkloadRow {
   missed: number;
   upcoming: number;
   pending: number;
-  /** All-time bookings for this person flagged isEmergency (Crisis SOS). */
+  /** Bookings for this person flagged isEmergency (Crisis SOS), within the
+      selected period. */
   crisisSos: number;
   workload: "Light" | "Balanced" | "High";
   role?: "counsellor" | "head";
@@ -219,10 +247,13 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
   const returning = [...studentCounts.values()].filter((n) => n > 1).length;
 
   // ── Team pulse ──────────────────────────────────────────────────────
+  // Scoped to the same selected period as the KPI cards above (This
+  // Week/This Month/etc.) — every stat on a counsellor's card moves
+  // together when the period toggle changes.
   const counsellorRows = counsellors
     .filter((p) => p.role === "counsellor" || p.role === "head")
     .map((p): CounsellorWorkloadRow => {
-      const mine = bookings.filter((b) => b.counsellorId === p.uid);
+      const mine = bookings.filter((b) => b.counsellorId === p.uid && bookingTime(b) >= startMs);
       const upcoming = mine.filter((b) => ["accepted", "scheduled"].includes(b.status) && (b.scheduledAt ?? 0) >= nowMs).length;
       const pending = mine.filter((b) => b.status === "pending").length;
       const load = upcoming + pending;

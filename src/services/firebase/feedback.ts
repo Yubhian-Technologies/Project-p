@@ -105,10 +105,16 @@ export async function listFeedbackForCounsellor(counsellorId: string): Promise<S
 }
 
 export async function getAllFeedback(campusId?: string): Promise<SessionFeedback[]> {
-  const snapshot = await getDocs(feedbackCollection);
+  // Scoped to one campus server-side whenever possible — this collection
+  // only grows (one doc per rated session), so fetching every campus's
+  // feedback just to filter it client-side got slower every month. The
+  // unfiltered path stays for callers that genuinely need every campus
+  // (e.g. Admin's "All campuses" view).
+  const snapshot = await getDocs(
+    campusId === undefined ? feedbackCollection : query(feedbackCollection, where("campusId", "==", campusId)),
+  );
   return snapshot.docs
     .map((d) => toSessionFeedback(d.id, d.data()))
-    .filter((f) => campusId === undefined || f.campusId === campusId)
     .sort((a, b) => b.submittedAt - a.submittedAt);
 }
 

@@ -113,6 +113,12 @@
   font-weight: 800;
 }
 
+.auth-field__hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--neu-text-muted, #718096);
+}
+
 .auth-field input,
 .auth-field select {
   font-family: inherit;

@@ -56,7 +56,7 @@ export function UpcomingEventsCard({ onViewEvents }: UpcomingEventsCardProps) {
       icon={<CalendarIcon />}
       title="Upcoming Events"
       subtitle="Programs and events happening on your campus."
-      badge={upcoming.length > 0 ? { text: `${upcoming.length} upcoming`, variant: "primary" } : undefined}
+      badge={upcoming.length > 0 ? { text: `${upcoming.length}`, variant: "primary" } : undefined}
       action={{ label: "View All Events →", onClick: onViewEvents }}
     >
       {loading ? (

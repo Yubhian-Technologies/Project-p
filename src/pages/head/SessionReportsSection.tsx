@@ -71,16 +71,19 @@ export function SessionReportsSection() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // listBookableProfiles() returns staff platform-wide — attendance reads
+    // are campus-scoped by Firestore rules, so pulling in another campus's
+    // counsellor/head here would make the whole report fail to load with a
+    // permission error instead of just skipping that one person.
+    if (!headProfile?.campusId) return;
     listBookableProfiles().then(list => {
       setProfiles(list.filter(p =>
-        (p.role === "counsellor" || p.role === "head") && !!p.campusId
+        (p.role === "counsellor" || p.role === "head") && p.campusId === headProfile.campusId
       ));
     });
-    if (headProfile?.campusId) {
-      listColleges(headProfile.campusId).then(list => {
-        setCollegeMap(new Map(list.map(c => [c.id, c.name])));
-      });
-    }
+    listColleges(headProfile.campusId).then(list => {
+      setCollegeMap(new Map(list.map(c => [c.id, c.name])));
+    });
   }, [headProfile?.campusId]);
 
   const availableMonths = useMemo(() => {
@@ -181,12 +184,6 @@ export function SessionReportsSection() {
     if (month) loadReport(month);
   }
 
-  function getInitials(name: string): string {
-    if (!name) return "ST";
-    const parts = name.trim().split(/\s+/);
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
 
   function formatCell(report: PersonReport, weekIdx: number): string {
     const w = report.weeks[weekIdx];
@@ -256,23 +253,13 @@ export function SessionReportsSection() {
 
   return (
     <div className="session-reports">
-      {/* ── Control Bar ─────────────────────────────── */}
-      <div className="session-reports__toolbar">
-        <div className="session-reports__month-select-wrap">
-          <div className="session-reports__select-label-row">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-            <label className="session-reports__month-label" htmlFor="report-month">
-              Select Month
-            </label>
-          </div>
+      {/* ── Worksheet Filters Bar ─────────────────────────────── */}
+      <div className="session-reports__filters">
+        <div className="session-reports__filter-field">
+          <label htmlFor="report-month">Select Month</label>
           <Select id="report-month" value={selectedMonth} onChange={handleMonthChange}>
             <option value="" disabled>Select a month…</option>
-            {availableMonths.map(m => {
+            {availableMonths.map((m) => {
               const [y, mo] = m.split("-");
               return <option key={m} value={m}>{MONTHS[Number(mo) - 1]} {y}</option>;
             })}
@@ -287,20 +274,15 @@ export function SessionReportsSection() {
             onClick={downloadCSV}
             disabled={loading || reports.length === 0}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            <span>Download CSV</span>
+            Download CSV
           </Button>
         )}
       </div>
 
       {!selectedMonth && (
-        <div className="session-reports__empty-prompt">
-          <p className="session-reports__hint">Select a month above to view and analyze campus session activity.</p>
-        </div>
+        <p className="session-reports__intro">
+          Select a month above to view and analyze campus session activity.
+        </p>
       )}
 
       {error && <p className="session-reports__error">{error}</p>}
@@ -308,85 +290,51 @@ export function SessionReportsSection() {
 
       {!loading && !error && selectedMonth && reports.length > 0 && (
         <>
-          {/* ── Executive KPI Summary Tiles ─────────────── */}
+          {/* ── KPI Summary Cards ─────────────── */}
           <div className="session-reports__kpi-grid">
-            <div className="session-kpi-card session-kpi-card--primary">
-              <div className="session-kpi-card__icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
-              </div>
-              <div className="session-kpi-card__info">
-                <span className="session-kpi-card__value">{grandTotal()}</span>
-                <span className="session-kpi-card__label">Total Campus Sessions</span>
-              </div>
+            <div className="session-kpi-card">
+              <span className="session-kpi-card__label">Total Campus Sessions</span>
+              <span className="session-kpi-card__value">{grandTotal()}</span>
             </div>
 
-            <div className="session-kpi-card session-kpi-card--counsellors">
-              <div className="session-kpi-card__icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-              </div>
-              <div className="session-kpi-card__info">
-                <span className="session-kpi-card__value">{reports.length}</span>
-                <span className="session-kpi-card__label">Active Staff</span>
-              </div>
+            <div className="session-kpi-card">
+              <span className="session-kpi-card__label">Active Staff</span>
+              <span className="session-kpi-card__value">{reports.length}</span>
             </div>
 
-            <div className="session-kpi-card session-kpi-card--avg">
-              <div className="session-kpi-card__icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="20" x2="18" y2="10" />
-                  <line x1="12" y1="20" x2="12" y2="4" />
-                  <line x1="6" y1="20" x2="6" y2="14" />
-                </svg>
-              </div>
-              <div className="session-kpi-card__info">
-                <span className="session-kpi-card__value">
-                  {reports.length > 0 ? (grandTotal() / reports.length).toFixed(1) : "0"}
-                </span>
-                <span className="session-kpi-card__label">Avg / Staff</span>
-              </div>
+            <div className="session-kpi-card">
+              <span className="session-kpi-card__label">Avg / Staff</span>
+              <span className="session-kpi-card__value">
+                {reports.length > 0 ? (grandTotal() / reports.length).toFixed(1) : "0"}
+              </span>
             </div>
           </div>
 
-          {/* ── Main Reports Table ─────────────────────── */}
+          {/* ── Excel-style Worksheet Table ─────────────── */}
           <div className="session-reports__table-wrap">
             <table className="session-reports__table">
               <thead>
                 <tr>
-                  <th className="session-reports__th--sticky">
-                    <span className="session-reports__th-title">Timeline</span>
-                    <span className="session-reports__th-sub">Weekly Intervals</span>
+                  <th colSpan={reports.length + 2} className="session-reports__title-bar">
+                    Campus Session Report — {MONTHS[reportMonthIdx]} {reportYear}
                   </th>
+                </tr>
+                <tr>
+                  <th className="session-reports__th--timeline">Timeline (Weekly)</th>
                   {reports.map((r) => {
                     const collegeName = r.profile.collegeId ? collegeMap.get(r.profile.collegeId) : null;
                     const staffName = r.profile.displayName || r.profile.email;
-                    const isHead = r.profile.role === "head";
                     return (
-                      <th key={r.profile.uid} className="session-reports__th">
+                      <th key={r.profile.uid} className="session-reports__th--staff">
                         <div className="session-staff-header">
-                          <div className={`session-staff-avatar ${isHead ? "session-staff-avatar--head" : "session-staff-avatar--counsellor"}`}>
-                            {getInitials(staffName)}
-                          </div>
-                          <span className="session-reports__name">{staffName}</span>
-                          {collegeName && <span className="session-reports__college">{collegeName}</span>}
-                          <span className={`session-reports__role-pill ${isHead ? "session-reports__role-pill--head" : "session-reports__role-pill--counsellor"}`}>
-                            {ROLE_LABELS[r.profile.role]}
-                          </span>
+                          <span className="session-staff-name">{staffName}</span>
+                          {collegeName && <span className="session-staff-sub">{collegeName}</span>}
+                          <span className="session-staff-role">{ROLE_LABELS[r.profile.role]}</span>
                         </div>
                       </th>
                     );
                   })}
-                  <th className="session-reports__th--total">
-                    <span className="session-reports__th-title">Weekly Total</span>
-                    <span className="session-reports__th-sub">All Staff</span>
-                  </th>
+                  <th className="session-reports__th--total">Weekly Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -394,40 +342,35 @@ export function SessionReportsSection() {
                   const { start, end } = getWeekDateRange(w, reportYear, reportMonthIdx);
                   const mName = MONTHS[reportMonthIdx];
                   return (
-                    <tr key={w} className="session-reports__row">
-                      <td className="session-reports__week-label">
-                        <div className="session-week-header">
-                          <span className="session-week-title">Week {w + 1}</span>
-                          <span className="session-week-sub">{mName} {start}–{end}</span>
-                        </div>
+                    <tr key={w}>
+                      <td className="session-timeline-cell">
+                        <span className="session-week-title">Week {w + 1}</span>
+                        <span className="session-week-sub">({mName} {start}–{end})</span>
                       </td>
                       {reports.map((r) => (
-                        <td key={r.profile.uid} className="session-reports__cell">
+                        <td key={r.profile.uid} className="session-data-cell">
                           {renderCellContent(r, w)}
                         </td>
                       ))}
-                      <td className="session-reports__total-cell">
-                        <span className="session-cell-weekly-total">{weekTotal(w)}</span>
+                      <td className="session-week-total-cell">
+                        {weekTotal(w)}
                       </td>
                     </tr>
                   );
                 })}
 
                 {/* Monthly Total Summary Row */}
-                <tr className="session-reports__month-total-row">
-                  <td className="session-reports__week-label session-reports__week-label--total">
-                    <div className="session-week-header">
-                      <span className="session-week-title">Monthly Total</span>
-                      <span className="session-week-sub">Complete month</span>
-                    </div>
+                <tr className="session-total-row">
+                  <td className="session-timeline-cell">
+                    <strong>Monthly Total</strong>
                   </td>
                   {reports.map((r) => (
-                    <td key={r.profile.uid} className="session-reports__cell session-reports__cell--staff-total">
-                      <span className="session-cell-staff-total-badge">{r.monthTotal}</span>
+                    <td key={r.profile.uid} className="session-data-cell">
+                      <strong>{r.monthTotal}</strong>
                     </td>
                   ))}
-                  <td className="session-reports__total-cell session-reports__total-cell--grand">
-                    <span className="session-grand-badge">{grandTotal()}</span>
+                  <td className="session-grand-total-cell">
+                    <strong>{grandTotal()}</strong>
                   </td>
                 </tr>
               </tbody>

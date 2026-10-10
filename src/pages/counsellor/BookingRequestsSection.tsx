@@ -104,6 +104,8 @@ export function BookingRequestsSection({
   const { currentUser, profile } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [userNames, setUserNames] = useState<Map<string, string>>(new Map());
+  const [userPhotos, setUserPhotos] = useState<Map<string, string>>(new Map());
+  const [userProfiles, setUserProfiles] = useState<Map<string, UserProfile>>(new Map());
   const [transferCandidates, setTransferCandidates] = useState<UserProfile[]>([]);
   const [compensationCandidates, setCompensationCandidates] = useState<UserProfile[]>([]);
   const [campusHead, setCampusHead] = useState<UserProfile | null>(null);
@@ -151,11 +153,19 @@ export function BookingRequestsSection({
       );
       const profiles = await Promise.all(uniqueUserIds.map((id) => getUserProfile(id)));
       const nameMap = new Map<string, string>();
+      const photoMap = new Map<string, string>();
+      const profileMap = new Map<string, UserProfile>();
       uniqueUserIds.forEach((id, i) => {
         const name = profiles[i]?.displayName?.trim();
         if (name) nameMap.set(id, name);
+        const photoURL = profiles[i]?.photoURL;
+        if (photoURL) photoMap.set(id, photoURL);
+        const studentProfile = profiles[i];
+        if (studentProfile) profileMap.set(id, studentProfile);
       });
       setUserNames(nameMap);
+      setUserPhotos(photoMap);
+      setUserProfiles(profileMap);
 
       setTransferCandidates(allBookable.filter((p) => p.uid !== currentUser.uid));
       setCompensationCandidates(
@@ -297,7 +307,7 @@ export function BookingRequestsSection({
         (newRequests.length === 0 ? (
           <p>No new requests.</p>
         ) : (
-          newRequests.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
+          newRequests.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} photoURL={userPhotos.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
         ))}
 
       {activeTab === "upcoming" && (
@@ -308,7 +318,7 @@ export function BookingRequestsSection({
               <p>No follow-up sessions.</p>
             ) : (
               upcomingFollowUps.map((b) => (
-                <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />
+                <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} photoURL={userPhotos.get(b.userId)} onClick={() => setSelectedId(b.id)} />
               ))
             )}
           </div>
@@ -318,7 +328,7 @@ export function BookingRequestsSection({
               <p>No new sessions.</p>
             ) : (
               upcomingNewSessions.map((b) => (
-                <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />
+                <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} photoURL={userPhotos.get(b.userId)} onClick={() => setSelectedId(b.id)} />
               ))
             )}
           </div>
@@ -376,7 +386,7 @@ export function BookingRequestsSection({
           {filteredCompleted.length === 0 ? (
             <p>{completed.length === 0 ? "No completed sessions yet." : "No sessions match the selected filters."}</p>
           ) : (
-            filteredCompleted.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
+            filteredCompleted.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} photoURL={userPhotos.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
           )}
         </>
       )}
@@ -432,7 +442,7 @@ export function BookingRequestsSection({
           {filteredCancelled.length === 0 ? (
             <p>{cancelled.length === 0 ? "No cancelled or rejected requests yet." : "No sessions match the selected filters."}</p>
           ) : (
-            filteredCancelled.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
+            filteredCancelled.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} photoURL={userPhotos.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
           )}
         </>
       )}
@@ -488,7 +498,7 @@ export function BookingRequestsSection({
           {filteredMissed.length === 0 ? (
             <p>{missed.length === 0 ? "No missed sessions." : "No sessions match the selected filters."}</p>
           ) : (
-            filteredMissed.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
+            filteredMissed.map((b) => <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} photoURL={userPhotos.get(b.userId)} onClick={() => setSelectedId(b.id)} />)
           )}
         </>
       )}
@@ -497,6 +507,7 @@ export function BookingRequestsSection({
         <RequestDetailModal
           key={selectedBooking.id}
           booking={selectedBooking}
+          studentProfile={userProfiles.get(selectedBooking.userId) ?? null}
           transferCandidates={transferCandidates}
           compensationCandidates={compensationCandidates}
           campusHead={campusHead}

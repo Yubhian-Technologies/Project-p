@@ -101,11 +101,14 @@ service cloud.firestore {
       allow update: if isSignedIn() && (
         (
           // Self-service profile edits: never touch role/campus/college/email.
+          // studentOrProfessional is set once at signup and locked here too —
+          // only a Super Admin (see the branch below) can correct it afterward.
           isSelf(uid) &&
           request.resource.data.role == resource.data.role &&
           request.resource.data.campusId == resource.data.campusId &&
           request.resource.data.collegeId == resource.data.collegeId &&
-          request.resource.data.email == resource.data.email
+          request.resource.data.email == resource.data.email &&
+          request.resource.data.studentOrProfessional == resource.data.studentOrProfessional
         ) || (
           // Head/Admin/Super Admin toggling a counsellor's/head's availability badge.
           isStaff() &&

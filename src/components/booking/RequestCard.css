@@ -179,6 +179,13 @@
   box-shadow: 0 14px 36px rgba(46, 43, 39, 0.09) !important;
 }
 
+.request-card__identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
 .request-card__name {
   margin: 0;
   font-family: var(--md-sys-typescale-font-display);

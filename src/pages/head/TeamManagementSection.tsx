@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
 import { listBookableProfiles, listAllBookingsForStats, listScheduledBookings } from "../../services/firebase/bookings";
 import { getAllFeedback, aggregateAllCounsellorFeedback } from "../../services/firebase/feedback";
 import type { CounsellorFeedbackAggregate } from "../../services/firebase/feedback";
@@ -56,6 +57,8 @@ interface TeamManagementSectionProps {
 export function TeamManagementSection({
   onOpenTransferRequests,
 }: TeamManagementSectionProps) {
+  const { profile: headProfile } = useAuth();
+  const campusId = headProfile?.campusId;
   const [stats, setStats] = useState<CounsellorStats[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
   const [feedbackAggregates, setFeedbackAggregates] = useState<Map<string, CounsellorFeedbackAggregate>>(
@@ -66,13 +69,17 @@ export function TeamManagementSection({
   const [selectedCounsellor, setSelectedCounsellor] = useState<UserProfile | null>(null);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
 
-  async function load() {
-    const [profiles, bookings, liveBookings, feedback] = await Promise.all([
+  async function load(id: string) {
+    const [allProfiles, bookings, liveBookings, feedback] = await Promise.all([
       listBookableProfiles(),
-      listAllBookingsForStats(),
+      listAllBookingsForStats(id),
       listScheduledBookings(),
-      getAllFeedback().catch(() => []),
+      getAllFeedback(id).catch(() => []),
     ]);
+    // listBookableProfiles() is platform-wide — narrow to this Head's own
+    // campus, otherwise every other campus's counsellors/heads show up here
+    // too, not just reads but genuinely wrong data on screen.
+    const profiles = allProfiles.filter((p) => p.campusId === id);
     setStats(computeStats(profiles, bookings));
     setFeedbackAggregates(
       new Map(aggregateAllCounsellorFeedback(feedback).map((a) => [a.counsellorId, a])),
@@ -82,15 +89,16 @@ export function TeamManagementSection({
   }
 
   useEffect(() => {
+    if (!campusId) return;
     // eslint-disable-next-line react/set-state-in-effect -- initial data fetch, not resetting state from a prop change
-    load();
-  }, []);
+    load(campusId);
+  }, [campusId]);
 
   async function handleToggleAvailability(target: UserProfile) {
     setTogglingId(target.uid);
     try {
       await setAvailability(target.uid, !target.available);
-      await load();
+      if (campusId) await load(campusId);
     } finally {
       setTogglingId(null);
     }
@@ -104,6 +112,7 @@ export function TeamManagementSection({
     return <TeamAttendanceSection onBack={() => setAttendanceOpen(false)} />;
   }
 
+  if (!campusId) return <p>Your profile isn't linked to a campus yet.</p>;
   if (loading) return null;
 
   return (

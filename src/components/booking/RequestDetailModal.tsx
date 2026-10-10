@@ -43,6 +43,9 @@ function subscaleSeverity(key: "D" | "A" | "S", value: number): SsiSeverity {
 
 interface RequestDetailModalProps {
   booking: Booking;
+  /** The student's own profile (incl. bioData) — null for offline-imported
+   *  "clients" with no real account, or if it hasn't loaded yet. */
+  studentProfile?: UserProfile | null;
   transferCandidates: UserProfile[];
   /** Same-campus counsellors only — narrower than transferCandidates on
    *  purpose, so a Head can't accidentally schedule a compensation session
@@ -78,6 +81,7 @@ interface RequestDetailModalProps {
 
 export function RequestDetailModal({
   booking,
+  studentProfile,
   transferCandidates,
   compensationCandidates,
   campusHead,
@@ -112,6 +116,7 @@ export function RequestDetailModal({
     booking.scheduledAt ? toDateTimeLocalValue(booking.scheduledAt) : "",
   );
   const [intake, setIntake] = useState<BookingIntake | null>(null);
+  const [showBioData, setShowBioData] = useState(false);
   const [showReschedulePropose, setShowReschedulePropose] = useState(false);
   const [rescheduleTimeValue, setRescheduleTimeValue] = useState("");
   const [rescheduleReasonValue, setRescheduleReasonValue] = useState("");
@@ -723,6 +728,63 @@ export function RequestDetailModal({
           <dt>Issue</dt>
           <dd>{intake.issue}</dd>
         </dl>
+      )}
+
+      {studentProfile && (
+        <Button type="button" variant="outlined" onClick={() => setShowBioData(true)}>
+          Show Bio Data
+        </Button>
+      )}
+
+      {showBioData && studentProfile && (
+        <Modal title="Student Bio Data" onClose={() => setShowBioData(false)}>
+          <dl className="request-card__ssi-dl">
+            <dt>Register No.</dt>
+            <dd>{studentProfile.registerNumber || "—"}</dd>
+            <dt>Batch</dt>
+            <dd>{studentProfile.yearOrBatch || "—"}</dd>
+            <dt>Branch</dt>
+            <dd>{studentProfile.branch || "—"}</dd>
+            <dt>Regular / Lateral</dt>
+            <dd>
+              {studentProfile.admissionType === "regular"
+                ? "Regular"
+                : studentProfile.admissionType === "lateral"
+                  ? "Lateral"
+                  : "—"}
+            </dd>
+            <dt>Gender</dt>
+            <dd>{studentProfile.gender || "—"}</dd>
+            <dt>Course</dt>
+            <dd>{studentProfile.bioData?.course || "—"}</dd>
+            <dt>Date of birth</dt>
+            <dd>{studentProfile.bioData?.dateOfBirth || "—"}</dd>
+            <dt>Mobile number</dt>
+            <dd>{studentProfile.bioData?.mobileNumber || "—"}</dd>
+            <dt>Personal email</dt>
+            <dd>{studentProfile.bioData?.personalEmail || "—"}</dd>
+            <dt>Father's name</dt>
+            <dd>{studentProfile.bioData?.fatherName || "—"}</dd>
+            <dt>Father's occupation</dt>
+            <dd>{studentProfile.bioData?.fatherOccupation || "—"}</dd>
+            <dt>Father's phone</dt>
+            <dd>{studentProfile.bioData?.fatherPhone || "—"}</dd>
+            <dt>Father's email</dt>
+            <dd>{studentProfile.bioData?.fatherEmail || "—"}</dd>
+            <dt>Mother's name</dt>
+            <dd>{studentProfile.bioData?.motherName || "—"}</dd>
+            <dt>Mother's occupation</dt>
+            <dd>{studentProfile.bioData?.motherOccupation || "—"}</dd>
+            <dt>Mother's phone</dt>
+            <dd>{studentProfile.bioData?.motherPhone || "—"}</dd>
+            <dt>Mother's email</dt>
+            <dd>{studentProfile.bioData?.motherEmail || "—"}</dd>
+            <dt>Correspondence address</dt>
+            <dd>{studentProfile.bioData?.correspondenceAddress || "—"}</dd>
+            <dt>Permanent address</dt>
+            <dd>{studentProfile.bioData?.permanentAddress || "—"}</dd>
+          </dl>
+        </Modal>
       )}
 
       {showResources && currentUser && (

@@ -6,7 +6,7 @@ import { listFeedbackForCounsellor } from "../../services/firebase/feedback";
 import type { Booking } from "../../types/booking";
 import type { SessionFeedback } from "../../types/feedback";
 import {
-  PERIOD_LABELS,
+  periodLabel,
   computeHomeMetrics,
   type HomeMetrics,
   type HomePeriod,
@@ -91,7 +91,7 @@ export function CounsellorTrends() {
                 aria-pressed={period === p}
                 onClick={() => setPeriod(p)}
               >
-                {PERIOD_LABELS[p]}
+                {periodLabel(p, now)}
               </button>
             ))}
           </div>

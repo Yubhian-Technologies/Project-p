@@ -1,530 +1,289 @@
 /* ==========================================================================
-   Session Reports Section — Vishnu Wellness Head Dashboard
+   Session Reports Section — Styled after Counsellor Worksheet
    ========================================================================== */
 
 .session-reports {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  width: 100%;
-  font-family: var(--bento-font-body, 'Work Sans', -apple-system, sans-serif);
-  color: #0F172A;
-  box-sizing: border-box;
-}
-
-/* ─── Control Bar / Toolbar ──────────────────────────────────────────────── */
-.session-reports__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 16px;
-  flex-wrap: wrap;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 16px 20px;
-  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04);
+  width: 100%;
 }
 
-.session-reports__month-select-wrap {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.session-reports__select-label-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.session-reports__month-label {
-  font-family: var(--bento-font-body, 'Work Sans', sans-serif);
-  font-size: 13px;
-  font-weight: 700;
-  color: #334155;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.session-reports .md-select,
-.session-reports select {
-  border-radius: 12px !important;
-  border: 1px solid #CBD5E1 !important;
-  background: #FFFFFF !important;
-  font-family: var(--bento-font-body, 'Work Sans', sans-serif) !important;
-  font-size: 13.5px !important;
-  font-weight: 600 !important;
-  color: #0F172A !important;
-  padding: 8px 14px !important;
-  min-width: 180px;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.session-reports select:focus {
-  outline: none;
-  border-color: #0D9488 !important;
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15) !important;
-}
-
-.session-reports__btn-export {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #FFFFFF !important;
-  border: 1.5px solid #E2E8F0 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
-  color: #0F172A !important;
-  font-family: var(--bento-font-body, 'Work Sans', sans-serif) !important;
-  font-weight: 700 !important;
-  font-size: 13px !important;
-  padding: 8px 18px !important;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.session-reports__btn-export:hover:not(:disabled) {
-  background: #F8FAFC !important;
-  border-color: #CBD5E1 !important;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08) !important;
-  color: #0D9488 !important;
-}
-
-/* ─── Empty & Loading States ─────────────────────────────────────────────── */
-.session-reports__empty-prompt {
-  background: #FFFFFF;
-  border: 1px dashed #CBD5E1;
-  border-radius: 18px;
-  padding: 48px 24px;
-  text-align: center;
-}
-
-.session-reports__hint {
+.session-reports__intro {
   margin: 0;
-  color: #64748B;
-  font-size: 14.5px;
-  font-weight: 500;
+  font-size: 13.5px;
+  color: var(--neu-text-muted, #718096);
+  line-height: 1.6;
 }
 
 .session-reports__error {
   margin: 0;
-  padding: 14px 18px;
-  background: #FFF1F2;
-  border: 1px solid #FECDD3;
-  border-radius: 14px;
-  color: #E11D48;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
+  color: #b91c1c;
+  background: #fee2e2;
+  border-radius: 12px;
+  padding: 8px 14px;
 }
 
 .session-reports__loading {
-  margin: 32px 0;
-  text-align: center;
-  color: #64748B;
-  font-size: 14px;
-  font-weight: 500;
+  margin: 16px 0;
+  font-size: 13px;
+  color: var(--neu-text-muted, #718096);
 }
 
-/* ─── Executive KPI Cards ────────────────────────────────────────────────── */
+/* ─── Worksheet Filter Bar ───────────────────────────────────────────────── */
+.session-reports__filters {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  background: #ffffff;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
+}
+
+.session-reports__filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 240px;
+}
+
+.session-reports__filter-field label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #2e2b27;
+}
+
+.session-reports__filter-field .md-select {
+  width: 100%;
+}
+
+.session-reports__btn-export {
+  align-self: flex-end;
+}
+
+/* ─── KPI Summary Cards (Worksheet Style) ────────────────────────────────── */
 .session-reports__kpi-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
   width: 100%;
 }
 
 .session-kpi-card {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  border-radius: 14px;
   padding: 16px 20px;
-  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.session-kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08);
-}
-
-.session-kpi-card__icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.session-kpi-card--primary {
-  background: linear-gradient(145deg, #FFFFFF 0%, #F0FDFA 100%);
-  border-color: #CCFBF1;
-}
-.session-kpi-card--primary .session-kpi-card__icon {
-  background: #CCFBF1;
-  color: #0D9488;
-}
-
-.session-kpi-card--counsellors {
-  background: linear-gradient(145deg, #FFFFFF 0%, #EEF2FF 100%);
-  border-color: #E0E7FF;
-}
-.session-kpi-card--counsellors .session-kpi-card__icon {
-  background: #E0E7FF;
-  color: #4F46E5;
-}
-
-.session-kpi-card--avg {
-  background: linear-gradient(145deg, #FFFFFF 0%, #FFFBEB 100%);
-  border-color: #FDE68A;
-}
-.session-kpi-card--avg .session-kpi-card__icon {
-  background: #FEF3C7;
-  color: #D97706;
-}
-
-.session-kpi-card__info {
+  box-shadow: 0 4px 14px rgba(46, 43, 39, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.session-kpi-card__value {
-  font-family: var(--bento-font-title, 'Playfair Display', Georgia, serif);
-  font-size: 26px;
-  font-weight: 800;
-  color: #0F172A;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  gap: 6px;
 }
 
 .session-kpi-card__label {
-  font-size: 11.5px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #64748B;
+  letter-spacing: 0.06em;
+  color: #64748b;
 }
 
-/* ─── Table Container & Structure ────────────────────────────────────────── */
+.session-kpi-card__value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+  font-family: inherit;
+}
+
+@media (max-width: 768px) {
+  .session-reports__kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Excel-style Worksheet Grid ─────────────────────────────────────────── */
 .session-reports__table-wrap {
-  width: 100%;
   overflow-x: auto;
-  border-radius: 20px;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.05);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(46, 43, 39, 0.08);
+  background: #ffffff;
 }
 
 .session-reports__table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 13.5px;
   min-width: 720px;
+  border-collapse: collapse;
+  background: #ffffff;
 }
 
-/* ─── Table Header ───────────────────────────────────────────────────────── */
-.session-reports__th {
-  padding: 16px 18px;
+.session-reports__title-bar {
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 800;
   text-align: center;
-  background: #EEF2FA;
-  border-bottom: 2px solid #CBD5E1;
-  border-right: 1px solid #E2E8F0;
+  padding: 12px 14px;
+  border: 1px solid #1d4ed8;
+}
+
+.session-reports__table th,
+.session-reports__table td {
+  border: 1px solid #cbd5e1;
+  padding: 10px 14px;
+  font-size: 13px;
+  text-align: center;
   vertical-align: middle;
 }
 
-.session-reports__th--sticky {
-  position: sticky;
-  left: 0;
-  background: #EEF2FA;
-  z-index: 3;
-  text-align: left;
-  padding-left: 24px;
-  min-width: 170px;
-  border-right: 2px solid #CBD5E1;
-}
-
-.session-reports__th--total {
-  background: #EEF2FA;
-  border-left: 2px solid #CBD5E1;
-  border-right: none;
-  min-width: 130px;
-}
-
-.session-reports__th-title {
-  display: block;
-  font-family: var(--bento-font-body, 'Work Sans', sans-serif);
-  font-size: 12px;
+.session-reports__table thead tr:nth-child(2) th {
+  background: #f1f5f9;
+  font-size: 11.5px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #0B193C;
+  letter-spacing: 0.04em;
+  color: #334155;
 }
 
-.session-reports__th-sub {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  color: #64748B;
-  margin-top: 2px;
+.session-reports__table thead tr:nth-child(2) th.session-reports__th--timeline {
+  text-align: left;
+  min-width: 160px;
 }
 
-/* Staff Column Header */
+.session-reports__table thead tr:nth-child(2) th.session-reports__th--staff {
+  min-width: 150px;
+}
+
+.session-reports__table thead tr:nth-child(2) th.session-reports__th--total {
+  min-width: 120px;
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
 .session-staff-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
-.session-staff-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--bento-font-body, 'Work Sans', sans-serif);
-  font-size: 11.5px;
+.session-staff-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.session-staff-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.session-staff-role {
+  display: inline-block;
+  background: #e0e7ff;
+  color: #4338ca;
+  font-size: 10px;
   font-weight: 800;
-  margin-bottom: 2px;
-}
-
-.session-staff-avatar--head {
-  background: #EEF2FF;
-  color: #4F46E5;
-  border: 1.5px solid #C7D2FE;
-}
-
-.session-staff-avatar--counsellor {
-  background: #F0FDFA;
-  color: #0D9488;
-  border: 1.5px solid #99F6E4;
-}
-
-.session-reports__name {
-  font-family: var(--bento-font-title, 'Playfair Display', Georgia, serif);
-  font-weight: 700;
-  font-size: 14px;
-  color: #0F172A;
-  white-space: nowrap;
-}
-
-.session-reports__college {
-  font-size: 11.5px;
-  color: #64748B;
-  font-weight: 500;
-}
-
-.session-reports__role-pill {
-  font-size: 9.5px;
-  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 3px 9px;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
   border-radius: 999px;
   margin-top: 2px;
 }
 
-.session-reports__role-pill--head {
-  background: #EEF2FF;
-  color: #4F46E5;
-  border: 1px solid #C7D2FE;
+.session-reports__table tbody td {
+  color: #0f172a;
+  font-weight: 600;
 }
 
-.session-reports__role-pill--counsellor {
-  background: #F0FDFA;
-  color: #0D9488;
-  border: 1px solid #99F6E4;
+.session-reports__table tbody tr:hover td {
+  background: #f8fafc;
 }
 
-/* ─── Table Body ─────────────────────────────────────────────────────────── */
-.session-reports__row {
-  transition: background 0.15s ease;
-}
-
-.session-reports__row:hover {
-  background: #F8FAFC;
-}
-
-.session-reports__week-label {
-  position: sticky;
-  left: 0;
-  background: #F8FAFC;
-  z-index: 2;
-  padding: 14px 24px;
-  border-bottom: 1px solid #E2E8F0;
-  border-right: 2px solid #CBD5E1;
-  transition: background 0.15s ease;
-}
-
-.session-reports__row:hover .session-reports__week-label {
-  background: #EEF2FA;
-}
-
-.session-week-header {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  border-left: 3px solid #0B193C;
-  padding-left: 10px;
+/* Timeline Column */
+.session-reports__table .session-timeline-cell {
+  text-align: left;
+  white-space: nowrap;
 }
 
 .session-week-title {
-  font-family: var(--bento-font-title, 'Playfair Display', Georgia, serif);
-  font-size: 14.5px;
+  display: block;
+  font-size: 13px;
   font-weight: 700;
-  color: #0B193C;
+  color: #0f172a;
 }
 
 .session-week-sub {
+  display: block;
   font-size: 11px;
-  font-weight: 600;
-  color: #64748B;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 1px;
 }
 
-/* Standard Cells */
-.session-reports__cell {
-  padding: 14px 18px;
+/* Data Cells & Badges */
+.session-reports__table .session-data-cell {
   text-align: center;
-  border-bottom: 1px solid #E2E8F0;
-  border-right: 1px solid #E2E8F0;
-  font-variant-numeric: tabular-nums;
 }
 
 .session-cell-num {
-  font-weight: 600;
-  color: #334155;
-  font-size: 14px;
-}
-
-.session-cell-num--active {
-  font-weight: 800;
-  color: #0F172A;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .session-cell-zero {
-  color: #94A3B8;
+  font-size: 13px;
   font-weight: 500;
+  color: #94a3b8;
 }
 
 .session-cell-composite {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-}
-
-.session-cell-pill {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 999px;
-  white-space: nowrap;
+  justify-content: center;
 }
 
 .session-cell-pill--leave {
-  background: #FFF1F2;
-  color: #E11D48;
-  border: 1px solid #FECDD3;
-}
-
-/* Total Column */
-.session-reports__total-cell {
-  padding: 14px 18px;
-  text-align: center;
-  border-bottom: 1px solid #E2E8F0;
-  border-left: 2px solid #CBD5E1;
-  background: #FAFAFA;
-}
-
-.session-cell-weekly-total {
-  font-weight: 800;
-  font-size: 14px;
-  color: #4F46E5;
   display: inline-block;
-  padding: 3px 10px;
-  background: #EEF2FF;
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 2px 8px;
   border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-/* ─── Monthly Total Summary Row ─────────────────────────────────────────── */
-.session-reports__month-total-row {
-  background: #F8FAFC !important;
-}
-
-.session-reports__week-label--total {
-  background: #F8FAFC !important;
-  border-top: 2px solid #E2E8F0;
-  border-bottom: none;
-}
-
-.session-reports__cell--staff-total {
-  border-top: 2px solid #E2E8F0;
-  border-bottom: none;
-  background: #F8FAFC;
-}
-
-.session-cell-staff-total-badge {
-  font-family: var(--bento-font-title, 'Playfair Display', Georgia, serif);
-  font-size: 15px;
+.session-reports__table .session-week-total-cell {
+  background: #f8fafc;
+  font-size: 13.5px;
   font-weight: 800;
-  color: #0F172A;
+  color: #0f172a;
 }
 
-.session-reports__total-cell--grand {
-  border-top: 2px solid #E2E8F0;
-  border-bottom: none;
-  background: #F0FDFA;
-}
-
-.session-grand-badge {
-  display: inline-block;
-  padding: 4px 14px;
-  background: #0D9488;
-  color: #FFFFFF;
-  font-family: var(--bento-font-title, 'Playfair Display', Georgia, serif);
-  font-size: 15px;
+/* Monthly Total Row */
+.session-reports__table .session-total-row td {
+  background: #f1f5f9;
   font-weight: 800;
-  border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+  border-top: 2px solid #94a3b8;
 }
 
-/* ─── Responsive Media Queries ───────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .session-reports__kpi-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .session-reports__toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .session-reports__btn-export {
-    justify-content: center;
-    width: 100%;
-  }
-
-  .session-reports__th,
-  .session-reports__cell,
-  .session-reports__total-cell {
-    padding: 12px 14px;
-  }
-
-  .session-reports__week-label {
-    padding: 12px 16px;
-  }
+.session-reports__table .session-grand-total-cell {
+  background: #e0e7ff !important;
+  color: #1e40af;
+  font-size: 14.5px;
+  font-weight: 800;
 }

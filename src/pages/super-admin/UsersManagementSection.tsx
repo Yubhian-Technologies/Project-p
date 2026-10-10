@@ -55,6 +55,7 @@ export function UsersManagementSection() {
   const [branchFilter, setBranchFilter] = useState(ALL);
   const [yearFilter, setYearFilter] = useState(ALL);
   const [admissionTypeFilter, setAdmissionTypeFilter] = useState(ALL);
+  const [occupationFilter, setOccupationFilter] = useState(ALL);
   const [emailSearch, setEmailSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
@@ -136,6 +137,12 @@ export function UsersManagementSection() {
     )
       return false;
     if (
+      occupationFilter === UNASSIGNED
+        ? !!u.studentOrProfessional
+        : occupationFilter !== ALL && u.studentOrProfessional !== occupationFilter
+    )
+      return false;
+    if (
       emailQuery &&
       !u.email.toLowerCase().includes(emailQuery) &&
       !u.registerNumber?.toLowerCase().includes(emailQuery)
@@ -178,6 +185,14 @@ export function UsersManagementSection() {
         : admissionTypeFilter === "regular"
           ? "Regular"
           : "Lateral",
+    );
+  if (occupationFilter !== ALL)
+    breadcrumbParts.push(
+      occupationFilter === UNASSIGNED
+        ? "Unassigned"
+        : occupationFilter === "student"
+          ? "Student"
+          : "Working professional",
     );
   if (emailQuery) breadcrumbParts.push(`Email contains "${emailSearch.trim()}"`);
   const breadcrumb = breadcrumbParts.join(" → ");
@@ -290,6 +305,15 @@ export function UsersManagementSection() {
             <option value="lateral">Lateral</option>
           </Select>
         </div>
+        <div className="logins-management__field">
+          <label htmlFor="users-occupation">6. Student / Professional</label>
+          <Select id="users-occupation" value={occupationFilter} onChange={setOccupationFilter}>
+            <option value={ALL}>All</option>
+            <option value={UNASSIGNED}>Unassigned (never set)</option>
+            <option value="student">Student</option>
+            <option value="professional">Working professional</option>
+          </Select>
+        </div>
       </div>
 
       <p className="logins-management__hint">{breadcrumb}</p>
@@ -307,7 +331,11 @@ export function UsersManagementSection() {
               {user.campusId ? (user.collegeId ? collegeName(user.collegeId) ?? "Unknown college" : "Unassigned college") : "—"}
             </p>
             <p className="logins-management__college">
-              {user.studentOrProfessional === "professional" ? "Working professional" : "Student"}
+              {user.studentOrProfessional === "professional"
+                ? "Working professional"
+                : user.studentOrProfessional === "student"
+                  ? "Student"
+                  : "Unassigned (set before this field existed)"}
               {user.registerNumber ? ` • ${user.registerNumber}` : ""}
               {user.yearOrBatch ? ` • ${user.yearOrBatch}` : ""}
               {user.admissionType ? ` • ${user.admissionType === "regular" ? "Regular" : "Lateral"}` : ""}

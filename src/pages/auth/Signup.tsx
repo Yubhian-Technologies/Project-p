@@ -21,6 +21,7 @@ export function Signup() {
   const [campusId, setCampusId] = useState("");
   const [colleges, setColleges] = useState<College[]>([]);
   const [collegeId, setCollegeId] = useState("");
+  const [studentOrProfessional, setStudentOrProfessional] = useState<"student" | "professional">("student");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -56,7 +57,7 @@ export function Signup() {
     }
     setSubmitting(true);
     try {
-      await signUp(email, password, campusId, collegeId);
+      await signUp(email, password, campusId, collegeId, studentOrProfessional);
     } catch {
       setError("Could not create an account. Try a different email.");
       setSubmitting(false);
@@ -152,6 +153,19 @@ export function Signup() {
                 </option>
               ))}
             </Select>
+          </div>
+
+          <div className="auth-field">
+            <label htmlFor="occupation">I am a <span className="auth-field__required">*</span></label>
+            <Select
+              id="occupation"
+              value={studentOrProfessional}
+              onChange={(v) => setStudentOrProfessional(v as "student" | "professional")}
+            >
+              <option value="student">Student</option>
+              <option value="professional">Working professional</option>
+            </Select>
+            <p className="auth-field__hint">This can't be changed later — choose carefully.</p>
           </div>
 
           <button className="auth-card__submit" type="submit" disabled={submitting || !campusId || !collegeId}>

@@ -3,11 +3,6 @@ import { Button } from "../../../components/common/Button";
 import { completeExercise } from "../../../services/wellnessScore";
 import "./MeditationGame.css";
 
-// Beep sound played when meditation timer ends
-const beepSound = new Audio(
-  "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABnvlczZ4UGcGZGF0YSAxOQABAcAAACxGQmRmCGVIb2dvIHByb3ZlIGhpZ2ggc3luYy5lCg=="
-);
-
 type DurationOption = 30 | 40 | 60;
 
 const DURATIONS: DurationOption[] = [30, 40, 60];
@@ -19,6 +14,42 @@ export function MeditationGame() {
   const [completed, setCompleted] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  // Created/resumed from inside the "Start Meditation" click (a real user
+  // gesture) so the browser's autoplay policy doesn't block it later when
+  // the beep needs to fire on its own, unattended, at timer completion.
+  function ensureAudioContext(): AudioContext | null {
+    const AudioContextCtor =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextCtor) return null;
+    if (!audioCtxRef.current) audioCtxRef.current = new AudioContextCtor();
+    if (audioCtxRef.current.state === "suspended") audioCtxRef.current.resume().catch(() => {});
+    return audioCtxRef.current;
+  }
+
+  function playBeep() {
+    const ctx = ensureAudioContext();
+    if (!ctx) return;
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.5);
+  }
+
+  useEffect(() => {
+    return () => {
+      audioCtxRef.current?.close().catch(() => {});
+    };
+  }, []);
 
   useEffect(() => {
     if (!running) return;
@@ -29,11 +60,7 @@ export function MeditationGame() {
           setRunning(false);
           setCompleted(true);
           completeExercise();
-          // Play beep sound when timer ends
-          beepSound.currentTime = 0;
-          beepSound.play().catch(() => {
-            // Autoplay blocked on mobile - user needs to interact first
-          });
+          playBeep();
           return 0;
         }
         return prev - 1;
@@ -57,6 +84,7 @@ export function MeditationGame() {
     setCompleted(false);
     setRunning(true);
     completeExercise();
+    ensureAudioContext();
   }
 
   function pause() {

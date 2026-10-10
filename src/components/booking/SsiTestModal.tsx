@@ -8,6 +8,9 @@ interface SsiTestModalProps {
     displayName?: string;
     studentOrProfessional?: "student" | "professional";
     whatsappNumber?: string;
+    branch?: string;
+    yearOrBatch?: string;
+    bioData?: { dateOfBirth?: string };
   };
   /** Pre-filled WhatsApp number fetched from the booking intake if the profile has none. */
   initialWhatsappNumber?: string;

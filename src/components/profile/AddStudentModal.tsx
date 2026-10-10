@@ -141,38 +141,42 @@ export function AddStudentModal({ campusId, onClose, onCreated }: AddStudentModa
             />
           </div>
         )}
-        <div className="import-logins-modal__field">
-          <label htmlFor="add-student-year">Batch (optional)</label>
-          <input
-            id="add-student-year"
-            type="text"
-            placeholder="e.g. 2nd Year"
-            value={yearOrBatch}
-            onChange={(e) => setYearOrBatch(e.target.value)}
-          />
-        </div>
-        <div className="import-logins-modal__field">
-          <label htmlFor="add-student-admission-type">Regular / Lateral (optional)</label>
-          <Select
-            id="add-student-admission-type"
-            value={admissionType}
-            onChange={(v) => setAdmissionType(v as "" | "regular" | "lateral")}
-          >
-            <option value="">—</option>
-            <option value="regular">Regular</option>
-            <option value="lateral">Lateral</option>
-          </Select>
-        </div>
-        <div className="import-logins-modal__field">
-          <label htmlFor="add-student-branch">Branch (optional)</label>
-          <input
-            id="add-student-branch"
-            type="text"
-            placeholder="e.g. CSE"
-            value={branch}
-            onChange={(e) => setBranch(e.target.value)}
-          />
-        </div>
+        {studentOrProfessional === "student" && (
+          <>
+            <div className="import-logins-modal__field">
+              <label htmlFor="add-student-year">Batch (optional)</label>
+              <input
+                id="add-student-year"
+                type="text"
+                placeholder="e.g. 2nd Year"
+                value={yearOrBatch}
+                onChange={(e) => setYearOrBatch(e.target.value)}
+              />
+            </div>
+            <div className="import-logins-modal__field">
+              <label htmlFor="add-student-admission-type">Regular / Lateral (optional)</label>
+              <Select
+                id="add-student-admission-type"
+                value={admissionType}
+                onChange={(v) => setAdmissionType(v as "" | "regular" | "lateral")}
+              >
+                <option value="">—</option>
+                <option value="regular">Regular</option>
+                <option value="lateral">Lateral</option>
+              </Select>
+            </div>
+            <div className="import-logins-modal__field">
+              <label htmlFor="add-student-branch">Branch (optional)</label>
+              <input
+                id="add-student-branch"
+                type="text"
+                placeholder="e.g. CSE"
+                value={branch}
+                onChange={(e) => setBranch(e.target.value)}
+              />
+            </div>
+          </>
+        )}
         <div className="import-logins-modal__field">
           <label htmlFor="add-student-gender">Gender (optional)</label>
           <Select id="add-student-gender" value={gender} onChange={setGender}>

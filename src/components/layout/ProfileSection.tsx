@@ -50,9 +50,9 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const [savingAvailability, setSavingAvailability] = useState(false);
 
   const [nameDraft, setNameDraft] = useState(profile?.displayName ?? "");
-  const [occupationDraft, setOccupationDraft] = useState<"student" | "professional">(
-    profile?.studentOrProfessional ?? "student",
-  );
+  // "I am a" is set once at signup and never editable here afterward — a
+  // Super Admin can still correct it via Edit User if someone picked wrong.
+  const isStudent = (profile?.studentOrProfessional ?? "student") === "student";
   const [whatsappDraft, setWhatsappDraft] = useState(profile?.whatsappNumber ?? "");
   const [yearOrBatchDraft, setYearOrBatchDraft] = useState(profile?.yearOrBatch ?? "");
   const [branchDraft, setBranchDraft] = useState(profile?.branch ?? "");
@@ -215,7 +215,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     try {
       await updateUserIntakeInfo(currentUser.uid, {
         displayName: nameDraft.trim(),
-        studentOrProfessional: occupationDraft,
         whatsappNumber: whatsappDraft.trim(),
         yearOrBatch: yearOrBatchDraft.trim(),
         branch: branchDraft.trim(),
@@ -299,7 +298,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
 
   const intakeUnchanged =
     nameDraft === (profile.displayName ?? "") &&
-    occupationDraft === (profile.studentOrProfessional ?? "student") &&
     whatsappDraft === (profile.whatsappNumber ?? "") &&
     yearOrBatchDraft === (profile.yearOrBatch ?? "") &&
     branchDraft === (profile.branch ?? "") &&
@@ -673,14 +671,9 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                 </div>
                 <div className="profile-section__field">
                   <label htmlFor="intake-occupation">I am a</label>
-                  <Select
-                    id="intake-occupation"
-                    value={occupationDraft}
-                    onChange={(v) => setOccupationDraft(v as "student" | "professional")}
-                  >
-                    <option value="student">Student</option>
-                    <option value="professional">Working professional</option>
-                  </Select>
+                  <p id="intake-occupation" className="profile-section__static-value">
+                    {isStudent ? "Student" : "Working professional"}
+                  </p>
                 </div>
                 <div className="profile-section__field">
                   <label htmlFor="intake-whatsapp">WhatsApp number</label>
@@ -691,26 +684,30 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                     onChange={(e) => setWhatsappDraft(e.target.value)}
                   />
                 </div>
-                <div className="profile-section__field">
-                  <label htmlFor="intake-year">Year / Batch</label>
-                  <input
-                    id="intake-year"
-                    type="text"
-                    placeholder="e.g. 2nd Year"
-                    value={yearOrBatchDraft}
-                    onChange={(e) => setYearOrBatchDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field">
-                  <label htmlFor="intake-branch">Branch</label>
-                  <input
-                    id="intake-branch"
-                    type="text"
-                    placeholder="e.g. CSE"
-                    value={branchDraft}
-                    onChange={(e) => setBranchDraft(e.target.value)}
-                  />
-                </div>
+                {isStudent && (
+                  <>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-year">Year / Batch</label>
+                      <input
+                        id="intake-year"
+                        type="text"
+                        placeholder="e.g. 2nd Year"
+                        value={yearOrBatchDraft}
+                        onChange={(e) => setYearOrBatchDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-branch">Branch</label>
+                      <input
+                        id="intake-branch"
+                        type="text"
+                        placeholder="e.g. CSE"
+                        value={branchDraft}
+                        onChange={(e) => setBranchDraft(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
                 <div className="profile-section__field">
                   <label htmlFor="intake-gender">Gender</label>
                   <Select id="intake-gender" value={genderDraft} onChange={setGenderDraft}>
@@ -721,16 +718,18 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                     <option value="Prefer not to say">Prefer not to say</option>
                   </Select>
                 </div>
-                <div className="profile-section__field">
-                  <label htmlFor="intake-course">Course</label>
-                  <input
-                    id="intake-course"
-                    type="text"
-                    placeholder="e.g. B.Tech"
-                    value={courseDraft}
-                    onChange={(e) => setCourseDraft(e.target.value)}
-                  />
-                </div>
+                {isStudent && (
+                  <div className="profile-section__field">
+                    <label htmlFor="intake-course">Course</label>
+                    <input
+                      id="intake-course"
+                      type="text"
+                      placeholder="e.g. B.Tech"
+                      value={courseDraft}
+                      onChange={(e) => setCourseDraft(e.target.value)}
+                    />
+                  </div>
+                )}
                 <div className="profile-section__field">
                   <label htmlFor="intake-dob">Date of birth</label>
                   <input
@@ -759,97 +758,101 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                   />
                 </div>
 
-                <p className="profile-section__subheading">Parent / Guardian details</p>
-                <div className="profile-section__field">
-                  <label htmlFor="intake-father-name">Father's name</label>
-                  <input
-                    id="intake-father-name"
-                    type="text"
-                    value={fatherNameDraft}
-                    onChange={(e) => setFatherNameDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field">
-                  <label htmlFor="intake-mother-name">Mother's name</label>
-                  <input
-                    id="intake-mother-name"
-                    type="text"
-                    value={motherNameDraft}
-                    onChange={(e) => setMotherNameDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field">
-                  <label htmlFor="intake-father-occupation">Father's occupation</label>
-                  <input
-                    id="intake-father-occupation"
-                    type="text"
-                    value={fatherOccupationDraft}
-                    onChange={(e) => setFatherOccupationDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field">
-                  <label htmlFor="intake-mother-occupation">Mother's occupation</label>
-                  <input
-                    id="intake-mother-occupation"
-                    type="text"
-                    value={motherOccupationDraft}
-                    onChange={(e) => setMotherOccupationDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field">
-                  <label htmlFor="intake-father-phone">Father's phone number</label>
-                  <input
-                    id="intake-father-phone"
-                    type="tel"
-                    value={fatherPhoneDraft}
-                    onChange={(e) => setFatherPhoneDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field">
-                  <label htmlFor="intake-mother-phone">Mother's phone number</label>
-                  <input
-                    id="intake-mother-phone"
-                    type="tel"
-                    value={motherPhoneDraft}
-                    onChange={(e) => setMotherPhoneDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field">
-                  <label htmlFor="intake-father-email">Father's email ID</label>
-                  <input
-                    id="intake-father-email"
-                    type="email"
-                    value={fatherEmailDraft}
-                    onChange={(e) => setFatherEmailDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field">
-                  <label htmlFor="intake-mother-email">Mother's email ID</label>
-                  <input
-                    id="intake-mother-email"
-                    type="email"
-                    value={motherEmailDraft}
-                    onChange={(e) => setMotherEmailDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field profile-section__field--full">
-                  <label htmlFor="intake-correspondence-address">Correspondence address</label>
-                  <textarea
-                    id="intake-correspondence-address"
-                    rows={2}
-                    value={correspondenceAddressDraft}
-                    onChange={(e) => setCorrespondenceAddressDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field profile-section__field--full">
-                  <label htmlFor="intake-permanent-address">Permanent address</label>
-                  <textarea
-                    id="intake-permanent-address"
-                    rows={2}
-                    value={permanentAddressDraft}
-                    onChange={(e) => setPermanentAddressDraft(e.target.value)}
-                  />
-                </div>
+                {isStudent && (
+                  <>
+                    <p className="profile-section__subheading">Parent / Guardian details</p>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-father-name">Father's name</label>
+                      <input
+                        id="intake-father-name"
+                        type="text"
+                        value={fatherNameDraft}
+                        onChange={(e) => setFatherNameDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-mother-name">Mother's name</label>
+                      <input
+                        id="intake-mother-name"
+                        type="text"
+                        value={motherNameDraft}
+                        onChange={(e) => setMotherNameDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-father-occupation">Father's occupation</label>
+                      <input
+                        id="intake-father-occupation"
+                        type="text"
+                        value={fatherOccupationDraft}
+                        onChange={(e) => setFatherOccupationDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-mother-occupation">Mother's occupation</label>
+                      <input
+                        id="intake-mother-occupation"
+                        type="text"
+                        value={motherOccupationDraft}
+                        onChange={(e) => setMotherOccupationDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-father-phone">Father's phone number</label>
+                      <input
+                        id="intake-father-phone"
+                        type="tel"
+                        value={fatherPhoneDraft}
+                        onChange={(e) => setFatherPhoneDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-mother-phone">Mother's phone number</label>
+                      <input
+                        id="intake-mother-phone"
+                        type="tel"
+                        value={motherPhoneDraft}
+                        onChange={(e) => setMotherPhoneDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-father-email">Father's email ID</label>
+                      <input
+                        id="intake-father-email"
+                        type="email"
+                        value={fatherEmailDraft}
+                        onChange={(e) => setFatherEmailDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-mother-email">Mother's email ID</label>
+                      <input
+                        id="intake-mother-email"
+                        type="email"
+                        value={motherEmailDraft}
+                        onChange={(e) => setMotherEmailDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field profile-section__field--full">
+                      <label htmlFor="intake-correspondence-address">Correspondence address</label>
+                      <textarea
+                        id="intake-correspondence-address"
+                        rows={2}
+                        value={correspondenceAddressDraft}
+                        onChange={(e) => setCorrespondenceAddressDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field profile-section__field--full">
+                      <label htmlFor="intake-permanent-address">Permanent address</label>
+                      <textarea
+                        id="intake-permanent-address"
+                        rows={2}
+                        value={permanentAddressDraft}
+                        onChange={(e) => setPermanentAddressDraft(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
                 <div className="profile-section__edit-actions">
                   <Button
                     type="button"

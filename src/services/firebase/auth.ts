@@ -16,7 +16,13 @@ export async function signIn(email: string, password: string) {
   return signInWithEmailAndPassword(auth, email, password);
 }
 
-export async function signUp(email: string, password: string, campusId: string, collegeId: string) {
+export async function signUp(
+  email: string,
+  password: string,
+  campusId: string,
+  collegeId: string,
+  studentOrProfessional: "student" | "professional",
+) {
   const credential = await createUserWithEmailAndPassword(auth, email, password);
   await createUserProfile({
     uid: credential.user.uid,
@@ -24,6 +30,7 @@ export async function signUp(email: string, password: string, campusId: string, 
     role: DEFAULT_ROLE,
     campusId,
     collegeId,
+    studentOrProfessional,
     createdAt: Date.now(),
   });
   return credential;

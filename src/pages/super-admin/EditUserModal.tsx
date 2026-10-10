@@ -119,38 +119,42 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
             onChange={(e) => setWhatsappNumber(e.target.value)}
           />
         </div>
-        <div className="campus-logins-detail__field">
-          <label htmlFor="edit-user-year">Batch</label>
-          <input
-            id="edit-user-year"
-            type="text"
-            placeholder="e.g. 2nd Year"
-            value={yearOrBatch}
-            onChange={(e) => setYearOrBatch(e.target.value)}
-          />
-        </div>
-        <div className="campus-logins-detail__field">
-          <label htmlFor="edit-user-admission-type">Regular / Lateral</label>
-          <Select
-            id="edit-user-admission-type"
-            value={admissionType}
-            onChange={(v) => setAdmissionType(v as "" | "regular" | "lateral")}
-          >
-            <option value="">—</option>
-            <option value="regular">Regular</option>
-            <option value="lateral">Lateral</option>
-          </Select>
-        </div>
-        <div className="campus-logins-detail__field">
-          <label htmlFor="edit-user-branch">Branch</label>
-          <input
-            id="edit-user-branch"
-            type="text"
-            placeholder="e.g. CSE"
-            value={branch}
-            onChange={(e) => setBranch(e.target.value)}
-          />
-        </div>
+        {studentOrProfessional === "student" && (
+          <>
+            <div className="campus-logins-detail__field">
+              <label htmlFor="edit-user-year">Batch</label>
+              <input
+                id="edit-user-year"
+                type="text"
+                placeholder="e.g. 2nd Year"
+                value={yearOrBatch}
+                onChange={(e) => setYearOrBatch(e.target.value)}
+              />
+            </div>
+            <div className="campus-logins-detail__field">
+              <label htmlFor="edit-user-admission-type">Regular / Lateral</label>
+              <Select
+                id="edit-user-admission-type"
+                value={admissionType}
+                onChange={(v) => setAdmissionType(v as "" | "regular" | "lateral")}
+              >
+                <option value="">—</option>
+                <option value="regular">Regular</option>
+                <option value="lateral">Lateral</option>
+              </Select>
+            </div>
+            <div className="campus-logins-detail__field">
+              <label htmlFor="edit-user-branch">Branch</label>
+              <input
+                id="edit-user-branch"
+                type="text"
+                placeholder="e.g. CSE"
+                value={branch}
+                onChange={(e) => setBranch(e.target.value)}
+              />
+            </div>
+          </>
+        )}
         <div className="campus-logins-detail__field">
           <label htmlFor="edit-user-gender">Gender</label>
           <Select id="edit-user-gender" value={gender} onChange={setGender}>
