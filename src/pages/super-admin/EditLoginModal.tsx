@@ -100,7 +100,7 @@ export function EditLoginModal({ login, colleges, hasOtherHead, onClose, onSaved
         </div>
         <div className="campus-logins-detail__field">
           <label htmlFor="edit-status">Status</label>
-          <Select id="edit-status" value={active ? "active" : "inactive"} onChange={(v) => setActive(v === "active")}>
+          <Select id="edit-status" value={active === false ? "inactive" : "active"} onChange={(v) => setActive(v === "active")}>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </Select>
