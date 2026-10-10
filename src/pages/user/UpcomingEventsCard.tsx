@@ -5,6 +5,7 @@ import type { EventProgram } from "../../types/event";
 import { BentoCard } from "../../components/common/BentoCard";
 import { CalendarIcon } from "../../components/common/icons";
 import { EventPreviewModal } from "./EventPreviewModal";
+import { formatWeekdayDateDMY } from "../../utils/formatDate";
 
 function istDateKey(ms: number): string {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -74,13 +75,7 @@ export function UpcomingEventsCard({ onViewEvents }: UpcomingEventsCardProps) {
               onClick={() => setSelected(event)}
             >
               <span className="bento-list-item__title">{event.title}</span>
-              <span>
-                {new Date(event.eventDate).toLocaleDateString(undefined, {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </span>
+              <span>{formatWeekdayDateDMY(event.eventDate)}</span>
             </div>
           ))}
         </div>

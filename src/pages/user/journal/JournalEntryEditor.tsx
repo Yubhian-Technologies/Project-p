@@ -4,6 +4,7 @@ import { Button } from "../../../components/common/Button";
 import { Select } from "../../../components/common/Select";
 import type { JournalEntry } from "../../../types/journalEntry";
 import type { UserProfile } from "../../../types/user";
+import { formatWeekdayDateDMY } from "../../../utils/formatDate";
 
 interface JournalEntryEditorProps {
   date: string; // "YYYY-MM-DD"
@@ -17,12 +18,7 @@ interface JournalEntryEditorProps {
 
 function formatDateHeading(date: string): string {
   const [year, month, day] = date.split("-").map(Number);
-  return new Date(year, month - 1, day).toLocaleDateString(undefined, {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  return formatWeekdayDateDMY(new Date(year, month - 1, day).getTime());
 }
 
 export function JournalEntryEditor({

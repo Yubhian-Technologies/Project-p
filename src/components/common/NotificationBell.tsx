@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNotifications } from "../../hooks/useNotifications";
 import type { Notification } from "../../types/notification";
+import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./NotificationBell.css";
 
 interface NotificationBellProps {
@@ -102,7 +103,7 @@ export function NotificationBell({ onNotificationClick }: NotificationBellProps)
                 </span>
                 <span className="notification-bell__item-message">{notification.message}</span>
                 <span className="notification-bell__item-time">
-                  {new Date(notification.createdAt).toLocaleString()}
+                  {formatDateTimeDMY(notification.createdAt)}
                 </span>
               </button>
             ))}

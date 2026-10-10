@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { computeSsiSeverity } from "../../config/ssiForm";
+import { formatDateTimeDMY } from "../../utils/formatDate";
 import {
   listSsiCollegeResultsForUser,
   submitSsiCollegeResult,
@@ -100,7 +101,7 @@ export function SsiTestSection() {
             {history.map((r) => (
               <div key={r.id} className="ssi-test-section__history-row">
                 <span className="ssi-test-section__history-date">
-                  {new Date(r.submittedAt).toLocaleString()}
+                  {formatDateTimeDMY(r.submittedAt)}
                 </span>
                 <span className="ssi-test-section__submitted-badge">✓ Submitted</span>
               </div>

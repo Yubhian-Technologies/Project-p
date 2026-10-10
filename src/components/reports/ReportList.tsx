@@ -10,6 +10,7 @@ import {
   CheckIcon,
   HourglassIcon,
 } from "../common/icons";
+import { formatDateDMY } from "../../utils/formatDate";
 import "./ReportList.css";
 
 const INITIAL_VISIBLE = 5;
@@ -25,7 +26,7 @@ function monthLabel(m: number) {
 
 function formatDate(iso: string) {
   try {
-    return new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    return formatDateDMY(new Date(iso).getTime());
   } catch {
     return iso;
   }

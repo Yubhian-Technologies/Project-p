@@ -1,4 +1,5 @@
 import { Modal } from "../common/Modal";
+import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./SessionHistoryModal.css";
 
 interface SessionHistoryEntry {
@@ -25,7 +26,7 @@ export function SessionHistoryModal({ clientEmail, history, loading, onClose }: 
           {history.map((entry, index) => (
             <div key={index} className="session-history__entry">
               <p className="session-history__date">
-                {entry.scheduledAt ? new Date(entry.scheduledAt).toLocaleString() : "Date not recorded"}
+                {entry.scheduledAt ? formatDateTimeDMY(entry.scheduledAt) : "Date not recorded"}
               </p>
               <p className="session-history__summary">{entry.summary || "No summary recorded"}</p>
             </div>

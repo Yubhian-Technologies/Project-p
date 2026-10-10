@@ -20,6 +20,7 @@ import type { WorksheetRowStatus } from "../../types/worksheet";
 import type { EventProgram } from "../../types/event";
 import { PHASE_BADGE } from "../../utils/academicCalendar";
 import { downloadXlsx } from "../../utils/excelExport";
+import { formatDateDMY } from "../../utils/formatDate";
 import { Button } from "../common/Button";
 import { Select } from "../common/Select";
 import "./TeamWorkloadSection.css";
@@ -258,7 +259,7 @@ export function TeamWorkloadSection() {
 
     allRows.push(
       ["Title", "Date", "Status"],
-      ...myGroupSessions.map((e) => [e.title, new Date(e.eventDate).toLocaleDateString(), PHASE_BADGE[e.phase].label]),
+      ...myGroupSessions.map((e) => [e.title, formatDateDMY(e.eventDate), PHASE_BADGE[e.phase].label]),
     );
 
     const safeName = ownerName.replace(/[^a-z0-9]+/gi, "-").toLowerCase();

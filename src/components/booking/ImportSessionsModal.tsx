@@ -11,6 +11,7 @@ import {
   parseSpreadsheet,
 } from "../../utils/offlineSessionImport";
 import type { ImportField, OfflineSessionRow } from "../../utils/offlineSessionImport";
+import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./ImportSessionsModal.css";
 
 interface ImportSessionsModalProps {
@@ -218,7 +219,7 @@ export function ImportSessionsModal({ counsellor, onClose, onImported }: ImportS
                   <tr key={r.index} className={r.row ? "" : "import-sessions-modal__row--invalid"}>
                     <td>{r.index + 2}</td>
                     <td>{r.row?.clientName ?? "—"}</td>
-                    <td>{r.row ? new Date(r.row.scheduledAt).toLocaleString() : "—"}</td>
+                    <td>{r.row ? formatDateTimeDMY(r.row.scheduledAt) : "—"}</td>
                     <td>{r.row ? `${r.row.durationMinutes}m` : "—"}</td>
                     <td>{r.row?.userRating ?? "—"}</td>
                     <td>

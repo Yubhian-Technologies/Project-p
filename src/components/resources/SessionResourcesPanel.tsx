@@ -10,6 +10,7 @@ import {
   type ResourceAuthor,
 } from "../../services/firebase/sessionResources";
 import { Button } from "../common/Button";
+import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./SessionResourcesPanel.css";
 
 interface SessionResourcesPanelProps {
@@ -312,7 +313,7 @@ export function SessionResourcesPanel({
 
                 <div className="sr-panel__item-meta">
                   <span>Added by {resource.addedBy.name || resource.addedBy.role}</span>
-                  <span>{new Date(resource.createdAt).toLocaleString()}</span>
+                  <span>{formatDateTimeDMY(resource.createdAt)}</span>
                   {canManage && (
                     <button
                       type="button"

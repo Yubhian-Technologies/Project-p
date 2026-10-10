@@ -5,6 +5,7 @@ import type { CalendarYear } from "../../types/calendarYear";
 import type { EventCategory, EventProgram } from "../../types/event";
 import { EVENT_CATEGORIES, MONTH_LABELS, PHASE_BADGE, formatSessionYears, monthRowLabel } from "../../utils/academicCalendar";
 import { downloadXlsx } from "../../utils/excelExport";
+import { formatDateDMY } from "../../utils/formatDate";
 import { Select } from "../common/Select";
 import { Button } from "../common/Button";
 import { PencilIcon, TrashIcon, DownloadIcon, EyeIcon } from "../common/icons";
@@ -491,7 +492,7 @@ export function EventsCalendarGrid({
                   {event.reschedule && (
                     <span className="events-calendar__chip-reschedule">
                       {event.reschedule.type === "postponed" ? "Postponed" : "Preponed"} from{" "}
-                      {new Date(event.reschedule.previousDate).toLocaleDateString()}
+                      {formatDateDMY(event.reschedule.previousDate)}
                     </span>
                   )}
                 </button>

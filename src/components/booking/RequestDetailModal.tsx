@@ -15,6 +15,7 @@ import type { UserProfile } from "../../types/user";
 import { useAuth } from "../../hooks/useAuth";
 import { ChatModal } from "../chat/ChatModal";
 import { SessionResourcesPanel } from "../resources/SessionResourcesPanel";
+import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./RequestCard.css";
 
 function toDateTimeLocalValue(epochMs: number): string {
@@ -504,7 +505,7 @@ export function RequestDetailModal({
             <dt>WhatsApp</dt>
             <dd>{ssiResult.whatsappNumber || "—"}</dd>
             <dt>Submitted</dt>
-            <dd>{new Date(ssiResult.submittedAt).toLocaleString()}</dd>
+            <dd>{formatDateTimeDMY(ssiResult.submittedAt)}</dd>
           </dl>
         </div>
 
@@ -600,7 +601,7 @@ export function RequestDetailModal({
           <div className="request-card__summary-share">
             {booking.sharedSummaryAt ? (
               <p className="request-card__summary-shared-note">
-                ✓ Shared with {booking.userEmail} on {new Date(booking.sharedSummaryAt).toLocaleString()}
+                ✓ Shared with {booking.userEmail} on {formatDateTimeDMY(booking.sharedSummaryAt)}
                 {booking.sharedSummary !== summaryDraft && " — edited since sharing, share again to update."}
               </p>
             ) : (
@@ -750,14 +751,14 @@ export function RequestDetailModal({
                   disabled={actionBusy || isPastChoice(toDateTimeLocalValue(booking.proposedSlots[0]))}
                   onClick={() => runAction(() => onAcceptSlot(booking.proposedSlots![0]), () => {})}
                 >
-                  Accept: {new Date(booking.proposedSlots[0]).toLocaleString()}
+                  Accept: {formatDateTimeDMY(booking.proposedSlots[0])}
                 </Button>
                 <Button
                   type="button"
                   disabled={actionBusy || isPastChoice(toDateTimeLocalValue(booking.proposedSlots[1]))}
                   onClick={() => runAction(() => onAcceptSlot(booking.proposedSlots![1]), () => {})}
                 >
-                  Accept: {new Date(booking.proposedSlots[1]).toLocaleString()}
+                  Accept: {formatDateTimeDMY(booking.proposedSlots[1])}
                 </Button>
               </div>
             </>
@@ -934,7 +935,7 @@ export function RequestDetailModal({
       {booking.status === "scheduled" && !showCancelReason && (
         <div className="request-card__schedule">
           <p className="request-card__scheduled-time">
-            Scheduled for {booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleString() : "—"} (
+            Scheduled for {booking.scheduledAt ? formatDateTimeDMY(booking.scheduledAt) : "—"} (
             {SESSION_DURATION_LABEL})
           </p>
 
@@ -945,7 +946,7 @@ export function RequestDetailModal({
           {booking.rescheduleProposal?.proposedBy === "user" && !showReschedulePropose && (
             <div className="request-card__reschedule-proposal">
               <p>
-                Student proposed a new time: {new Date(booking.rescheduleProposal.proposedAt).toLocaleString()}
+                Student proposed a new time: {formatDateTimeDMY(booking.rescheduleProposal.proposedAt)}
                 {booking.rescheduleProposal.reason ? ` — ${booking.rescheduleProposal.reason}` : ""}
               </p>
               <div className="request-card__actions">
@@ -1029,7 +1030,7 @@ export function RequestDetailModal({
                 {!sessionStarted && (
                   <p className="request-card__summary-hint">
                     Available once the session starts
-                    {booking.scheduledAt ? ` (${new Date(booking.scheduledAt).toLocaleString()})` : ""}.
+                    {booking.scheduledAt ? ` (${formatDateTimeDMY(booking.scheduledAt)})` : ""}.
                   </p>
                 )}
               </div>

@@ -2,6 +2,7 @@ import type { EventProgram } from "../../types/event";
 import { MorphingPopover, MorphingPopoverTrigger, MorphingPopoverContent } from "../../components/common/MorphingPopover";
 import { CalendarIcon } from "../../components/common/icons";
 import { formatSessionYears } from "../../utils/academicCalendar";
+import { formatDateTimeDMY, formatWeekdayDateDMY } from "../../utils/formatDate";
 import "./EventCard.css";
 import "./EventPreviewModal.css";
 
@@ -14,12 +15,7 @@ interface EventCardProps {
     dashboard. "View" morphs straight into the full event details, same
     effect as the landing page's footer popups (MorphingPopover). */
 export function EventCard({ event }: EventCardProps) {
-  const dateLabel = new Date(event.eventDate).toLocaleDateString(undefined, {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const dateLabel = formatWeekdayDateDMY(event.eventDate);
 
   return (
     <div className="event-card">
@@ -75,7 +71,7 @@ export function EventCard({ event }: EventCardProps) {
                 )}
                 <div className="event-preview-modal__row">
                   <span className="event-preview-modal__label">Date &amp; time</span>
-                  <span>{new Date(event.eventDate).toLocaleString()}</span>
+                  <span>{formatDateTimeDMY(event.eventDate)}</span>
                 </div>
               </div>
             </div>

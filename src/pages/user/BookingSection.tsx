@@ -636,7 +636,7 @@ export function BookingSection({
                     <>
                       <p className="booking-section__reschedule-note">
                         Counsellor proposed a new time:{" "}
-                        {new Date(detailTarget.rescheduleProposal.proposedAt).toLocaleString()}
+                        {formatDateTimeDMY(detailTarget.rescheduleProposal.proposedAt)}
                         {detailTarget.rescheduleProposal.reason ? ` — ${detailTarget.rescheduleProposal.reason}` : ""}
                       </p>
                       <div className="booking-section__row-right">
@@ -1221,7 +1221,7 @@ export function BookingSection({
             <p className="booking-section__shared-summary-body">{summaryModalTarget.sharedSummary}</p>
             {summaryModalTarget.sharedSummaryAt && (
               <span className="booking-section__shared-summary-date">
-                Shared on {new Date(summaryModalTarget.sharedSummaryAt).toLocaleString()}
+                Shared on {formatDateTimeDMY(summaryModalTarget.sharedSummaryAt)}
               </span>
             )}
           </div>

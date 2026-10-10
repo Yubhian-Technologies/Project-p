@@ -4,6 +4,7 @@ import { listEventsForCampus } from "../../services/firebase/events";
 import type { EventProgram } from "../../types/event";
 import { Modal } from "../common/Modal";
 import { Button } from "../common/Button";
+import { formatWeekdayDateDMY } from "../../utils/formatDate";
 import "./TodayEventsPopup.css";
 
 interface TodayEventsPopupProps {
@@ -83,13 +84,7 @@ export function TodayEventsPopup({ onViewEvents }: TodayEventsPopupProps) {
         {events.map((event) => (
           <div key={event.id} className="today-events-popup__item">
             <span className="today-events-popup__item-title">{event.title}</span>
-            <span className="today-events-popup__item-date">
-              {new Date(event.eventDate).toLocaleDateString(undefined, {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
+            <span className="today-events-popup__item-date">{formatWeekdayDateDMY(event.eventDate)}</span>
           </div>
         ))}
       </div>

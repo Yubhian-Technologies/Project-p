@@ -8,6 +8,7 @@ import {
 } from "../../services/firebase/ssiCollegeResults";
 import { exportSsiResultsCsv } from "../../utils/exportSsiResultsCsv";
 import { toIsoDate } from "../../utils/dateFormat";
+import { formatDateDMY, formatDateTimeDMY, formatWeekdayDateDMY } from "../../utils/formatDate";
 import { Card } from "../common/Card";
 import { Button } from "../common/Button";
 import { Modal } from "../common/Modal";
@@ -97,11 +98,7 @@ export function SsiCollegeResultsSection() {
                 // reads "YYYY-MM-DD" as UTC midnight, which can display as
                 // the previous day in timezones behind UTC.
                 const [y, m, day] = d.key.split("-").map(Number);
-                const label = new Date(y, m - 1, day).toLocaleDateString(undefined, {
-                  weekday: "short",
-                  day: "numeric",
-                  month: "short",
-                });
+                const label = formatWeekdayDateDMY(new Date(y, m - 1, day).getTime());
                 return (
                   <option key={d.key} value={d.key}>
                     {label} · {d.count}
@@ -141,7 +138,7 @@ export function SsiCollegeResultsSection() {
             <div className="ssi-results__row-main">
               <span className="ssi-results__row-name">{r.displayName || r.userEmail}</span>
               <span className="ssi-results__row-meta">
-                {r.level1.department || "—"} · {r.level1.year || "—"} · {new Date(r.submittedAt).toLocaleDateString()}
+                {r.level1.department || "—"} · {r.level1.year || "—"} · {formatDateDMY(r.submittedAt)}
               </span>
             </div>
             <span className={`ssi-results__badge ssi-results__badge--${r.severity}`}>
@@ -199,7 +196,7 @@ export function SsiCollegeResultsSection() {
               <dt>WhatsApp</dt>
               <dd>{detail.whatsappNumber || "—"}</dd>
               <dt>Submitted</dt>
-              <dd>{new Date(detail.submittedAt).toLocaleString()}</dd>
+              <dd>{formatDateTimeDMY(detail.submittedAt)}</dd>
             </dl>
           </div>
 

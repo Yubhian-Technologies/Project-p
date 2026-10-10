@@ -1,6 +1,7 @@
 import type { EventProgram } from "../../types/event";
 import { Modal } from "../../components/common/Modal";
 import { formatSessionYears } from "../../utils/academicCalendar";
+import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./EventPreviewModal.css";
 
 interface EventPreviewModalProps {
@@ -44,7 +45,7 @@ export function EventPreviewModal({ event, onClose }: EventPreviewModalProps) {
           )}
           <div className="event-preview-modal__row">
             <span className="event-preview-modal__label">Date &amp; time</span>
-            <span>{new Date(event.eventDate).toLocaleString()}</span>
+            <span>{formatDateTimeDMY(event.eventDate)}</span>
           </div>
         </div>
       </div>

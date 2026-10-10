@@ -9,6 +9,7 @@ import {
 import type { Booking, BookingIntake, BookingStatus } from "../../types/booking";
 import { Button } from "../common/Button";
 import { AlertTriangleIcon } from "../common/icons";
+import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./EmergencyAlertsSection.css";
 
 interface AlertRow {
@@ -135,7 +136,7 @@ function AlertCard({ booking, intake, accepting, onAccept }: AlertCardProps) {
       </div>
       <p className="emergency-alerts__name">{intake?.username || booking.userEmail}</p>
       <p className="emergency-alerts__meta">
-        {booking.userEmail} • {new Date(booking.createdAt).toLocaleString()}
+        {booking.userEmail} • {formatDateTimeDMY(booking.createdAt)}
       </p>
       {intake?.whatsappNumber && (
         <a className="emergency-alerts__call" href={`tel:${intake.whatsappNumber}`}>
