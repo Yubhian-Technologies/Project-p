@@ -1,18 +1,10 @@
 .counsellor-card {
   display: flex;
   flex-direction: column;
-  flex: 0 0 min(85vw, 280px);
-  width: min(85vw, 280px);
-  /* A fixed height (not just the bio's line-clamp below) is what actually
-     makes every card the same size regardless of how much a counsellor
-     wrote — line-clamp only stops a long bio overflowing, a short one still
-     leaves the card shorter unless the card's own height is fixed too. */
+  width: 100%;
   height: 380px;
-  /* Flex items default to a content-based minimum size that otherwise wins
-     over an explicit height — this is what makes that height actually stick. */
   min-height: 0;
   overflow: hidden;
-  scroll-snap-align: start;
   background: #FFFFFF;
   border: 1px solid rgba(46, 43, 39, 0.08);
   border-radius: 20px;
@@ -23,16 +15,13 @@
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
 }
 
-/* Below 640px (phones — not just very narrow ones), cards are all the same
-   compact size instead of scaled-down desktop cards. */
+/* Below 768px (phones), cards adjust height cleanly */
 @media (max-width: 768px) {
   .counsellor-card {
-    flex: 1 1 auto;
     width: 100%;
     max-width: 100%;
     height: auto;
     min-height: 320px;
-    scroll-snap-align: none;
   }
 
   .counsellor-card__photo-wrap {

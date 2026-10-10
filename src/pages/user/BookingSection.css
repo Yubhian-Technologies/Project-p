@@ -71,35 +71,21 @@
   }
 }
 
-/* Horizontal, swipeable carousel — on every screen size, not just mobile,
-   so the counsellor list scrolls sideways instead of stacking or wrapping. */
+/* Responsive grid for counsellors list */
 .booking-section__grid {
-  display: flex;
-  align-items: flex-start;
-  flex-wrap: nowrap;
-  gap: 20px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 4px 4px 14px 0;
-}
-
-.booking-section__grid::-webkit-scrollbar {
-  display: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 0 16px 0;
 }
 
 @media (max-width: 768px) {
   .booking-section__grid {
-    flex-direction: column;
-    flex-wrap: nowrap;
-    overflow-x: visible;
-    overflow-y: visible;
-    scroll-snap-type: none;
-    align-items: stretch;
-    width: 100%;
-    padding: 0 0 16px 0;
+    grid-template-columns: 1fr;
     gap: 16px;
+    padding: 0 0 16px 0;
   }
 }
 

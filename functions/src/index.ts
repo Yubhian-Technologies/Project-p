@@ -162,16 +162,17 @@ export const createAdminLogin = onCall<CreateAdminLoginRequest>(async (request) 
   }
 
   const { email, password, displayName, adminAccess } = request.data;
-  if (!email || !password || !displayName || !adminAccess) {
+  const normalizedEmail = email.toLowerCase();
+  if (!normalizedEmail || !password || !displayName || !adminAccess) {
     throw new HttpsError("invalid-argument", "Email, password, display name, and access settings are required.");
   }
   await validateAdminAccess(adminAccess);
 
-  const userRecord = await auth.createUser({ email, password, displayName });
+  const userRecord = await auth.createUser({ email: normalizedEmail, password, displayName });
   try {
     await db.collection("users").doc(userRecord.uid).set({
       uid: userRecord.uid,
-      email,
+      email: normalizedEmail,
       displayName,
       role: "admin",
       adminAccess,
@@ -211,6 +212,7 @@ export const updateAdminLogin = onCall<UpdateAdminLoginRequest>(async (request) 
   if (!adminAccess) {
     throw new HttpsError("invalid-argument", "Access settings are required.");
   }
+  const normalizedEmail = email.toLowerCase();
   await validateAdminAccess(adminAccess);
 
   const targetDoc = await db.collection("users").doc(uid).get();
@@ -219,12 +221,12 @@ export const updateAdminLogin = onCall<UpdateAdminLoginRequest>(async (request) 
   }
 
   await auth.updateUser(uid, {
-    email,
+    email: normalizedEmail,
     displayName,
     ...(password ? { password } : {}),
   });
 
-  await db.collection("users").doc(uid).update({ displayName, email, adminAccess });
+  await db.collection("users").doc(uid).update({ displayName, email: normalizedEmail, adminAccess });
 
   return { success: true };
 });
@@ -251,7 +253,8 @@ export const createCampusLogin = onCall<CreateCampusLoginRequest>(async (request
   }
 
   const { email, password, displayName, role, campusId, collegeId } = request.data;
-  if (!email || !password || !displayName || !campusId || !collegeId) {
+  const normalizedEmail = email.toLowerCase();
+  if (!normalizedEmail || !password || !displayName || !campusId || !collegeId) {
     throw new HttpsError("invalid-argument", "Email, password, display name, campus, and college are required.");
   }
   if (role !== "counsellor" && role !== "head") {
@@ -277,11 +280,11 @@ export const createCampusLogin = onCall<CreateCampusLoginRequest>(async (request
     }
   }
 
-  const userRecord = await auth.createUser({ email, password, displayName });
+  const userRecord = await auth.createUser({ email: normalizedEmail, password, displayName });
   try {
     await db.collection("users").doc(userRecord.uid).set({
       uid: userRecord.uid,
-      email,
+      email: normalizedEmail,
       displayName,
       role,
       campusId,
@@ -331,7 +334,8 @@ export const createStudentLogin = onCall<CreateStudentLoginRequest>(async (reque
 
   const { email, collegeId, password, studentOrProfessional, registerNumber, yearOrBatch, admissionType, branch, gender } =
     request.data;
-  if (!email || !collegeId) {
+  const normalizedEmail = email.toLowerCase();
+  if (!normalizedEmail || !collegeId) {
     throw new HttpsError("invalid-argument", "Email and college are required.");
   }
   if (studentOrProfessional !== "student" && studentOrProfessional !== "professional") {
@@ -340,7 +344,7 @@ export const createStudentLogin = onCall<CreateStudentLoginRequest>(async (reque
   if (admissionType !== undefined && admissionType !== "regular" && admissionType !== "lateral") {
     throw new HttpsError("invalid-argument", "Regular / Lateral must be either \"regular\" or \"lateral\".");
   }
-  const resolvedRegisterNumber = registerNumber || email.split("@")[0]?.toUpperCase() || "";
+  const resolvedRegisterNumber = registerNumber || normalizedEmail.split("@")[0]?.toUpperCase() || "";
 
   const collegeDoc = await db.collection("colleges").doc(collegeId).get();
   if (!collegeDoc.exists) {
@@ -355,11 +359,11 @@ export const createStudentLogin = onCall<CreateStudentLoginRequest>(async (reque
   }
   const campusId = collegeCampusId;
 
-  const userRecord = await auth.createUser({ email, password: password || STUDENT_DEFAULT_PASSWORD });
+  const userRecord = await auth.createUser({ email: normalizedEmail, password: password || STUDENT_DEFAULT_PASSWORD });
   try {
     await db.collection("users").doc(userRecord.uid).set({
       uid: userRecord.uid,
-      email,
+      email: normalizedEmail,
       role: "user",
       campusId,
       collegeId,
@@ -405,6 +409,7 @@ export const updateCampusLogin = onCall<UpdateCampusLoginRequest>(async (request
   if (!uid || typeof uid !== "string") {
     throw new HttpsError("invalid-argument", "A target uid is required.");
   }
+  const normalizedEmail = email.toLowerCase();
   const isActive = active !== false;
 
   const targetDoc = await db.collection("users").doc(uid).get();
@@ -433,13 +438,13 @@ export const updateCampusLogin = onCall<UpdateCampusLoginRequest>(async (request
   }
 
   await auth.updateUser(uid, {
-    email,
+    email: normalizedEmail,
     displayName,
     disabled: !isActive,
     ...(password ? { password } : {}),
   });
 
-  await db.collection("users").doc(uid).update({ displayName, email, role, collegeId, active: isActive });
+  await db.collection("users").doc(uid).update({ displayName, email: normalizedEmail, role, collegeId, active: isActive });
 
   return { success: true };
 });
