@@ -633,7 +633,7 @@ export function BookingRequestsSection({
       {importOpen && currentUser && (
         <Suspense fallback={null}>
           <ImportSessionsModal
-            counsellor={{ uid: currentUser.uid, email: profile?.email ?? "" }}
+            counsellor={{ uid: currentUser.uid, email: profile?.email ?? "", campusId: profile?.campusId }}
             onClose={() => onImportClose?.()}
             onImported={refresh}
           />

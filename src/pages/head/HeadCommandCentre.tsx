@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef, useCallback, type ReactNode } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "../../services/firebase/config";
 import { useAuth } from "../../hooks/useAuth";
-import { listBookableProfiles, listPendingTransferRequestsForCampus } from "../../services/firebase/bookings";
+import {
+  listBookableProfiles,
+  listPendingTransferRequestsForCampus,
+  listAllBookingsForStats,
+} from "../../services/firebase/bookings";
 import { listColleges } from "../../services/firebase/colleges";
 import { listEventsForCampus } from "../../services/firebase/events";
 import { listCounsellorMonthlyReportsForCampus } from "../../services/firebase/counsellorMonthlyReports";
@@ -11,7 +13,6 @@ import { TeamAttendanceTodayCard } from "./TeamAttendanceTodayCard";
 import { listSsiCollegeResultsForCampus, type SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
 import { getAllFeedback } from "../../services/firebase/feedback";
 import { formatDateDMY } from "../../utils/formatDate";
-import type { Booking } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
 import {
   periodLabel,
@@ -91,8 +92,7 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
 
     async function load(id: string) {
       try {
-        const [bookingSnap, allProfiles, colleges, events, reports, transfers, feedbackList] = await Promise.all([
-          labeled("bookings", getDocs(query(collection(db, "bookings"), where("campusId", "==", id)))),
+        const [allProfiles, colleges, events, reports, transfers, feedbackList] = await Promise.all([
           labeled("bookableProfiles", listBookableProfiles()),
           labeled("colleges", listColleges(id)),
           labeled("events", listEventsForCampus(id)),
@@ -100,10 +100,17 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
           labeled("pendingTransfers", listPendingTransferRequestsForCampus(id)),
           labeled("feedback", getAllFeedback(id)),
         ]);
+        const counsellors = allProfiles.filter((p: UserProfile) => p.campusId === id);
+        // Fetched after `counsellors` resolves — offline-imported sessions
+        // predate campusId being stamped on every booking, so this campus's
+        // staff uids are needed to still catch those (see
+        // listAllBookingsForStats's own comment for the full why).
+        const bookings = await labeled(
+          "bookings",
+          listAllBookingsForStats(id, counsellors.map((c) => c.uid)),
+        );
         const ssiResults: SsiCollegeResult[] = await labeled("ssiResults", listSsiCollegeResultsForCampus(id));
         if (!active) return;
-        const bookings = bookingSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Booking);
-        const counsellors = allProfiles.filter((p: UserProfile) => p.campusId === id);
         setData({
           bookings,
           counsellors,

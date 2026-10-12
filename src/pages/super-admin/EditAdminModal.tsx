@@ -8,10 +8,10 @@ import { updateAdminLogin } from "../../services/firebase/managedAccounts";
 import { functionsErrorMessage } from "../../services/firebase/functions";
 import { listCampuses } from "../../services/firebase/campuses";
 import { listColleges } from "../../services/firebase/colleges";
-import { ADMIN_SECTIONS } from "../../config/roles";
+import { ADMIN_SECTIONS, ADMIN_DESIGNATIONS } from "../../config/roles";
 import type { Campus } from "../../types/campus";
 import type { College } from "../../types/college";
-import type { AdminSectionId, UserProfile } from "../../types/user";
+import type { AdminDesignation, AdminSectionId, UserProfile } from "../../types/user";
 import "./LoginsManagementSection.css";
 import "./AdminsManagementSection.css";
 
@@ -28,6 +28,7 @@ export function EditAdminModal({ admin, onClose, onSaved }: EditAdminModalProps)
   const [email, setEmail] = useState(admin.email);
   const [password, setPassword] = useState("");
   const [scope, setScope] = useState<"global" | "campuses">(admin.adminAccess?.scope ?? "global");
+  const [designation, setDesignation] = useState<"" | AdminDesignation>(admin.adminAccess?.designation ?? "");
   const [campusIds, setCampusIds] = useState<string[]>(admin.adminAccess?.campusIds ?? []);
   const [collegeIds, setCollegeIds] = useState<string[]>(admin.adminAccess?.collegeIds ?? []);
   const [sections, setSections] = useState<AdminSectionId[]>(
@@ -82,6 +83,7 @@ export function EditAdminModal({ admin, onClose, onSaved }: EditAdminModalProps)
         password: password || undefined,
         adminAccess: {
           scope,
+          ...(designation ? { designation } : {}),
           ...(scope === "campuses" ? { campusIds, ...(collegeIds.length > 0 ? { collegeIds } : {}) } : {}),
           sections,
         },
@@ -135,6 +137,21 @@ export function EditAdminModal({ admin, onClose, onSaved }: EditAdminModalProps)
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+        </div>
+        <div className="logins-management__field">
+          <label htmlFor="edit-admin-designation">Designation (optional)</label>
+          <Select
+            id="edit-admin-designation"
+            value={designation}
+            onChange={(v) => setDesignation(v as "" | AdminDesignation)}
+          >
+            <option value="">—</option>
+            {ADMIN_DESIGNATIONS.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.label}
+              </option>
+            ))}
+          </Select>
         </div>
         <div className="logins-management__field">
           <label htmlFor="edit-admin-scope">Access</label>

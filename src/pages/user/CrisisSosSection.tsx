@@ -23,9 +23,9 @@ const EMERGENCY_LINES: EmergencyLine[] = [
     id: "campus-emergency",
     icon: <PhoneIcon />,
     name: "Vishnu Campus Emergency Response",
-    description: "24/7 on-duty Vishnu College security & emergency health desk (+91 91009 72237)",
+    description: "24/7 on-duty Vishnu College security & emergency health desk (+91 89855 02211)",
     actionLabel: "CALL",
-    href: "tel:+919100972237",
+    href: "tel:+918985502211",
     accent: "red",
   },
   {

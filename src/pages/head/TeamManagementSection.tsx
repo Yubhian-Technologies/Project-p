@@ -70,9 +70,8 @@ export function TeamManagementSection({
   const [attendanceOpen, setAttendanceOpen] = useState(false);
 
   async function load(id: string) {
-    const [allProfiles, bookings, liveBookings, feedback] = await Promise.all([
+    const [allProfiles, liveBookings, feedback] = await Promise.all([
       listBookableProfiles(),
-      listAllBookingsForStats(id),
       listScheduledBookings(),
       getAllFeedback(id).catch(() => []),
     ]);
@@ -80,6 +79,7 @@ export function TeamManagementSection({
     // campus, otherwise every other campus's counsellors/heads show up here
     // too, not just reads but genuinely wrong data on screen.
     const profiles = allProfiles.filter((p) => p.campusId === id);
+    const bookings = await listAllBookingsForStats(id, profiles.map((p) => p.uid));
     setStats(computeStats(profiles, bookings));
     setFeedbackAggregates(
       new Map(aggregateAllCounsellorFeedback(feedback).map((a) => [a.counsellorId, a])),

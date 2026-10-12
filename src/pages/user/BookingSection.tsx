@@ -166,7 +166,6 @@ export function BookingSection({
   const [actionError, setActionError] = useState("");
 
   const [nameField, setNameField] = useState("");
-  const [occupationField, setOccupationField] = useState<"student" | "professional">("student");
   const [whatsappField, setWhatsappField] = useState("");
   const [issueField, setIssueField] = useState("");
   const [concernCategoriesField, setConcernCategoriesField] = useState<ConcernCategory[]>([]);
@@ -208,7 +207,18 @@ export function BookingSection({
       listFeedbackForUser(currentUser.uid).catch(() => []),
       listSsiResultsForUser(currentUser.uid).catch(() => []),
     ]);
-    setAllProfiles(allBookableProfiles);
+    // listBookableProfiles() is platform-wide — narrow to staff the student
+    // can actually book. A Counsellor is scoped to one college, so match on
+    // collegeId; a Head oversees their whole campus (collegeId is just a
+    // mandatory-but-meaningless field on their account, never used as a real
+    // scope anywhere else in this app — see SsiCollegeResultsSection.tsx),
+    // so match on campusId instead. createBooking enforces this identical
+    // rule server-side too.
+    setAllProfiles(
+      allBookableProfiles.filter((p) =>
+        p.role === "head" ? p.campusId === profile?.campusId : p.collegeId === profile?.collegeId,
+      ),
+    );
     setBookings(userBookings);
     setScheduledBookings(liveBookings);
     setSubmittedFeedbackIds(new Set(feedback.map((f) => f.bookingId)));
@@ -313,7 +323,6 @@ export function BookingSection({
     setAgreed(false);
     setBookingStep("terms");
     setNameField(profile?.displayName ?? "");
-    setOccupationField(profile?.studentOrProfessional ?? "student");
     setWhatsappField(profile?.whatsappNumber ?? "");
     setIssueField("");
     setConcernCategoriesField([]);
@@ -344,7 +353,7 @@ export function BookingSection({
     try {
       const intake: BookingIntake = {
         username: nameField.trim(),
-        occupation: occupationField,
+        occupation: profile.studentOrProfessional ?? "student",
         whatsappNumber: whatsappField.trim(),
         issue: issueField.trim(),
       };
@@ -783,7 +792,7 @@ export function BookingSection({
       )}
 
       {showPicker && (
-        <Modal title="Choose a counsellor or Head" onClose={() => setShowPicker(false)}>
+        <Modal title="Select a counsellor" onClose={() => setShowPicker(false)}>
           {(() => {
             const counsellorsAndHeads = allProfiles.filter((p) => p.role === "counsellor" || p.role === "head");
             return counsellorsAndHeads.length === 0 ? (
@@ -951,17 +960,10 @@ export function BookingSection({
                 />
               </div>
               <div className="booking-section__field">
-                <label htmlFor="booking-occupation">
-                  I am a <span className="booking-section__required">*</span>
-                </label>
-                <Select
-                  id="booking-occupation"
-                  value={occupationField}
-                  onChange={(v) => setOccupationField(v as "student" | "professional")}
-                >
-                  <option value="student">Student</option>
-                  <option value="professional">Working professional</option>
-                </Select>
+                <label htmlFor="booking-occupation">I am a</label>
+                <p id="booking-occupation" className="booking-section__static-value">
+                  {profile?.studentOrProfessional === "professional" ? "Working professional" : "Student"}
+                </p>
               </div>
               <div className="booking-section__field">
                 <label htmlFor="booking-whatsapp">

@@ -455,9 +455,9 @@ export function LandingPage() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
         <Link to="/" className="landing-brand">
-          <img src="/favicon.png" alt="Vishnu Wellness Center logo" className="landing-brand__logo" />
+          <img src="/favicon.png" alt="Vishnu Wellness Centre logo" className="landing-brand__logo" />
           <span className="landing-brand__name">
-            Vishnu Wellness <span className="landing-brand__name-break">Center</span>
+            Vishnu Wellness <span className="landing-brand__name-break">Centre</span>
           </span>
         </Link>
 
@@ -636,7 +636,7 @@ export function LandingPage() {
         {/* Our Team */}
         <motion.section {...sectionReveal} className="landing-section" id="team">
           <div className="landing-section-container">
-            <h2 className="landing-section__title">The people behind Vishnu Wellness Center</h2>
+            <h2 className="landing-section__title">The people behind Vishnu Wellness Centre</h2>
             <p className="landing-section__body">
               Our counsellors are certified mental health professionals dedicated to providing compassionate,
               personalised support.
@@ -967,8 +967,8 @@ export function LandingPage() {
         <div className="landing-footer__main">
           <div className="landing-footer__brand">
             <span className="landing-footer__brand-line" />
-            <img src="/favicon.png" alt="Vishnu Wellness Center logo" className="landing-footer__brand-logo" />
-            <span className="landing-footer__brand-name">Vishnu Wellness Center</span>
+            <img src="/favicon.png" alt="Vishnu Wellness Centre logo" className="landing-footer__brand-logo" />
+            <span className="landing-footer__brand-name">Vishnu Wellness Centre</span>
             <span className="landing-footer__brand-line" />
           </div>
 
@@ -1002,7 +1002,7 @@ export function LandingPage() {
                   </svg>
                 </a>
                 <a
-                  href="https://wa.me/919100972237"
+                  href="https://wa.me/918985502211"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="social-icon-btn"
@@ -1199,7 +1199,7 @@ export function LandingPage() {
                 </li>
                 <li><a href="#faq">FAQs</a></li>
                 <li>
-                  <a href="https://wa.me/919100972237" target="_blank" rel="noopener noreferrer">
+                  <a href="https://wa.me/918985502211" target="_blank" rel="noopener noreferrer">
                     Contact Us
                   </a>
                 </li>
@@ -1340,7 +1340,7 @@ export function LandingPage() {
               <h4>Connect</h4>
               <ul>
                 <li>
-                  <a href="https://wa.me/919100972237" target="_blank" rel="noopener noreferrer">
+                  <a href="https://wa.me/918985502211" target="_blank" rel="noopener noreferrer">
                     WhatsApp
                   </a>
                 </li>
@@ -1356,7 +1356,7 @@ export function LandingPage() {
 
         <div className="landing-footer__bottom">
           <div className="landing-footer__bottom-left">
-            <span>&copy; 2018 Vishnu Wellness Center</span>
+            <span>&copy; 2018 Vishnu Wellness Centre</span>
             <span className="landing-footer__bottom-sub">A wellness initiative of Sri Vishnu Educational Society</span>
           </div>
           <span>

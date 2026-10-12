@@ -474,6 +474,16 @@ p.booking-section__emergency-tag {
   box-shadow: 0 8px 24px rgba(46, 43, 39, 0.06);
 }
 
+.booking-section__static-value {
+  margin: 0;
+  font-size: 14px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(46, 43, 39, 0.08);
+  background: #F3F4F6;
+  color: var(--neu-text-primary, #2D3748);
+}
+
 .booking-section__legal-note {
   font-size: 12px;
   color: var(--neu-text-muted, #718096);

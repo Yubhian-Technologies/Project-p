@@ -13,6 +13,34 @@ const auth = getAuth();
 const db = getFirestore();
 const storage = getStorage();
 
+// auth.createUser() throws a raw FirebaseAuthError on failure (e.g. a
+// duplicate email) — left uncaught, that propagates as an unhandled
+// rejection, which the client only ever sees as an opaque 500 with no
+// explanation. This translates the common cases into a clean HttpsError with
+// a message an admin can actually act on; anything else still propagates as
+// before.
+async function createAuthUser(params: {
+  email: string;
+  password: string;
+  displayName?: string;
+}): ReturnType<typeof auth.createUser> {
+  try {
+    return await auth.createUser(params);
+  } catch (err) {
+    const code = (err as { code?: string } | undefined)?.code;
+    if (code === "auth/email-already-exists") {
+      throw new HttpsError("already-exists", "An account with that email address already exists.");
+    }
+    if (code === "auth/invalid-email") {
+      throw new HttpsError("invalid-argument", "That email address isn't valid.");
+    }
+    if (code === "auth/invalid-password") {
+      throw new HttpsError("invalid-argument", "Password must be at least 6 characters.");
+    }
+    throw err;
+  }
+}
+
 function isCampusManagerRole(role: unknown): boolean {
   return role === "admin" || role === "super-admin";
 }
@@ -97,13 +125,24 @@ export const deleteCampusLogin = onCall<DeleteCampusLoginRequest>(async (request
 // login can itself manage campuses/colleges/other logins, so only a Super
 // Admin may create or edit one — never another Admin.
 
-const ADMIN_SECTION_IDS = ["campuses", "logins", "events", "analytics", "counsellor-worksheet", "monthly-reports"];
+const ADMIN_SECTION_IDS = [
+  "campuses",
+  "logins",
+  "events",
+  "analytics",
+  "ssi-analytics",
+  "counsellor-worksheet",
+  "monthly-reports",
+];
+
+const ADMIN_DESIGNATIONS = ["principal", "vice-principal", "administration", "management"];
 
 interface AdminAccessInput {
   scope: "global" | "campuses";
   campusIds?: string[];
   collegeIds?: string[]; // optional further narrowing within campusIds — only meaningful when scope === "campuses"
   sections: string[];
+  designation?: string; // purely descriptive — never affects access, see ADMIN_DESIGNATIONS
 }
 
 async function validateAdminAccess(adminAccess: AdminAccessInput): Promise<void> {
@@ -112,6 +151,9 @@ async function validateAdminAccess(adminAccess: AdminAccessInput): Promise<void>
   }
   if (!Array.isArray(adminAccess.sections) || adminAccess.sections.some((s) => !ADMIN_SECTION_IDS.includes(s))) {
     throw new HttpsError("invalid-argument", "Invalid section list.");
+  }
+  if (adminAccess.designation !== undefined && !ADMIN_DESIGNATIONS.includes(adminAccess.designation)) {
+    throw new HttpsError("invalid-argument", "Invalid designation.");
   }
   if (adminAccess.scope === "campuses") {
     if (adminAccess.sections.includes("campuses")) {
@@ -168,7 +210,7 @@ export const createAdminLogin = onCall<CreateAdminLoginRequest>(async (request) 
   }
   await validateAdminAccess(adminAccess);
 
-  const userRecord = await auth.createUser({ email: normalizedEmail, password, displayName });
+  const userRecord = await createAuthUser({ email: normalizedEmail, password, displayName });
   try {
     await db.collection("users").doc(userRecord.uid).set({
       uid: userRecord.uid,
@@ -280,7 +322,7 @@ export const createCampusLogin = onCall<CreateCampusLoginRequest>(async (request
     }
   }
 
-  const userRecord = await auth.createUser({ email: normalizedEmail, password, displayName });
+  const userRecord = await createAuthUser({ email: normalizedEmail, password, displayName });
   try {
     await db.collection("users").doc(userRecord.uid).set({
       uid: userRecord.uid,
@@ -359,7 +401,7 @@ export const createStudentLogin = onCall<CreateStudentLoginRequest>(async (reque
   }
   const campusId = collegeCampusId;
 
-  const userRecord = await auth.createUser({ email: normalizedEmail, password: password || STUDENT_DEFAULT_PASSWORD });
+  const userRecord = await createAuthUser({ email: normalizedEmail, password: password || STUDENT_DEFAULT_PASSWORD });
   try {
     await db.collection("users").doc(userRecord.uid).set({
       uid: userRecord.uid,
@@ -919,21 +961,27 @@ export const createBooking = onCall<{
   }
   const callerEmail = (caller.email as string) || "";
 
-  // The counsellor must actually be on the student's own campus — this was
-  // previously only a UI-level filter (easy to bypass, and buggy: the UI
-  // wasn't even filtering), so a student could book any counsellor on any
-  // campus. campusId is also derived here, server-side, rather than trusted
-  // from the client's own data.campusId.
+  // The target must actually be bookable by this student. A Counsellor is
+  // scoped to one college, so they're matched by collegeId; a Head oversees
+  // their whole campus (their own collegeId is a mandatory-but-meaningless
+  // field on their account — never used as a real scope anywhere else in
+  // this app), so they're matched by campusId instead. campusId is derived
+  // here, server-side, rather than trusted from the client's own data.campusId.
   const counsellorSnap = await db.collection("users").doc(data.counsellorId).get();
   const counsellorProfile = counsellorSnap.data();
+  const inScope = counsellorProfile
+    ? counsellorProfile.role === "head"
+      ? counsellorProfile.campusId === caller.campusId
+      : counsellorProfile.collegeId === caller.collegeId
+    : false;
   if (
     !counsellorProfile ||
     !["counsellor", "head"].includes(counsellorProfile.role) ||
     !counsellorProfile.campusId ||
-    counsellorProfile.campusId !== caller.campusId ||
+    !inScope ||
     counsellorProfile.active === false
   ) {
-    throw new HttpsError("invalid-argument", "That counsellor isn't available on your campus.");
+    throw new HttpsError("invalid-argument", "That counsellor isn't available to book.");
   }
   const campusId = counsellorProfile.campusId as string;
 

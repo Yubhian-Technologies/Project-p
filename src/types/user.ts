@@ -14,11 +14,17 @@ export type AdminSectionId =
   | "counsellor-worksheet"
   | "monthly-reports";
 
+export type AdminDesignation = "principal" | "vice-principal" | "administration" | "management";
+
 // Only ever set on role === "admin" accounts, by a Super Admin (via
 // createAdminLogin/updateAdminLogin). Absent entirely = legacy/global admin,
 // same full access every admin account had before this existed.
 export interface AdminAccess {
   scope: "global" | "campuses";
+  // Purely descriptive (e.g. shown in the Admins list) — does not affect
+  // `sections`/`scope`/`campusIds`, which independently control what this
+  // admin can actually access. Optional; left unset for legacy admins.
+  designation?: AdminDesignation;
   campusIds?: string[]; // only meaningful when scope === "campuses"
   // Optional further narrowing within campusIds — when set, this admin can
   // only manage (create/edit/delete) counsellor/head logins belonging to one

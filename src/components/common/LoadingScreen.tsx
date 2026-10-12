@@ -6,8 +6,8 @@ export function LoadingScreen() {
 
   return (
     <div className="loading-screen" role="status" aria-label="Loading">
-      <img src="/favicon.png" alt="Vishnu Wellness Center logo" className="loading-screen__logo" />
-      <p className="loading-screen__title">Vishnu Wellness Center</p>
+      <img src="/favicon.png" alt="Vishnu Wellness Centre logo" className="loading-screen__logo" />
+      <p className="loading-screen__title">Vishnu Wellness Centre</p>
     </div>
   );
 }

@@ -288,13 +288,43 @@ export async function listBookingsForCounsellor(counsellorId: string): Promise<B
 }
 
 // Scoped to one campus — this is only ever used for a Head's own Team
-// Management stats, so there's no reason to pull every booking ever made
+// Management/Home stats, so there's no reason to pull every booking ever made
 // platform-wide (this collection only grows, and was making every Head
 // dashboard load slower every month).
-export async function listAllBookingsForStats(campusId: string): Promise<Booking[]> {
+//
+// `staffUids` (this campus's own counsellors/heads) is used for a second,
+// supplemental query: offline-imported sessions predate campusId being
+// stamped on every booking (see importOfflineSession's own comment), so a
+// booking imported before that fix has no campusId at all and the primary
+// query above would silently never return it. Querying by counsellorId
+// instead catches those too, since that field is always set correctly;
+// results are deduped by booking id and only genuinely campusId-less docs
+// are merged in, so a counsellor who later transferred to a different
+// campus doesn't pull in sessions from their old one.
+export async function listAllBookingsForStats(campusId: string, staffUids: string[] = []): Promise<Booking[]> {
   const q = query(bookingsCollection, where("campusId", "==", campusId));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => toBooking(d.id, d.data()));
+  const bookings = snapshot.docs.map((d) => toBooking(d.id, d.data()));
+
+  if (staffUids.length === 0) return bookings;
+
+  const seen = new Set(bookings.map((b) => b.id));
+  const chunks: string[][] = [];
+  for (let i = 0; i < staffUids.length; i += 30) chunks.push(staffUids.slice(i, i + 30));
+  const supplementalSnaps = await Promise.all(
+    chunks.map((chunk) => getDocs(query(bookingsCollection, where("counsellorId", "in", chunk)))),
+  );
+  for (const snap of supplementalSnaps) {
+    for (const d of snap.docs) {
+      if (seen.has(d.id)) continue;
+      const b = toBooking(d.id, d.data());
+      if (!b.campusId) {
+        bookings.push(b);
+        seen.add(b.id);
+      }
+    }
+  }
+  return bookings;
 }
 
 export async function listScheduledBookings(): Promise<Booking[]> {
@@ -854,7 +884,7 @@ export async function scheduleCompensationSession(
  * guarantee and a batch does not.
  */
 export async function importOfflineSession(
-  counsellor: { uid: string; email: string },
+  counsellor: { uid: string; email: string; campusId?: string },
   row: OfflineSessionRow,
 ): Promise<string> {
   const userId = syntheticClientId(row.clientEmail, row.whatsappNumber);
@@ -865,6 +895,11 @@ export async function importOfflineSession(
     userEmail,
     counsellorId: counsellor.uid,
     counsellorEmail: counsellor.email,
+    // Every other booking gets this stamped server-side by the createBooking
+    // Cloud Function — this is the one write path that doesn't go through
+    // it, so it has to be set explicitly here, or campus-scoped analytics
+    // (Team Management, Head Home) silently drop these sessions.
+    ...(counsellor.campusId ? { campusId: counsellor.campusId } : {}),
     status: "completed",
     outcome: "completed",
     sessionMode: "offline",

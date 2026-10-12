@@ -59,15 +59,20 @@ export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellors
     (b) => ACTIVE_STATUSES.includes(b.status) && !(b.status === "scheduled" && isSessionEndedPending(b)),
   );
 
-  // Bug fix: this was only filtering by role, with no campus check at all —
-  // listBookableProfiles() returns counsellors/heads platform-wide, so every
-  // student on every campus was seeing every other campus's staff here.
-  // Inactive logins (Admin/Super Admin "Status: Inactive") are also hidden —
-  // that account can't sign in to handle a session anymore, so it shouldn't
-  // be bookable or even visible here at all.
-  const counsellorsAndHeads = profiles.filter(
-    (p) => (p.role === "counsellor" || p.role === "head") && p.campusId === profile?.campusId && p.active !== false,
-  );
+  // A Counsellor is scoped to one college, so they're matched by collegeId;
+  // a Head oversees their whole campus (their own collegeId is a
+  // mandatory-but-meaningless field on their account — never used as a real
+  // scope anywhere else in this app), so they're matched by campusId
+  // instead. Mirrors the identical rule in BookingSection.tsx and the
+  // server-side check in createBooking. Inactive logins (Admin/Super Admin
+  // "Status: Inactive") are also hidden — that account can't sign in to
+  // handle a session anymore, so it shouldn't be bookable or even visible
+  // here at all.
+  const counsellorsAndHeads = profiles.filter((p) => {
+    if (p.role !== "counsellor" && p.role !== "head") return false;
+    if (p.active === false) return false;
+    return p.role === "head" ? p.campusId === profile?.campusId : p.collegeId === profile?.collegeId;
+  });
 
   return (
     <div className="booking-section">

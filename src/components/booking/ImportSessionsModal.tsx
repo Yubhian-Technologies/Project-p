@@ -15,7 +15,7 @@ import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./ImportSessionsModal.css";
 
 interface ImportSessionsModalProps {
-  counsellor: { uid: string; email: string };
+  counsellor: { uid: string; email: string; campusId?: string };
   onClose: () => void;
   onImported: () => void;
 }
