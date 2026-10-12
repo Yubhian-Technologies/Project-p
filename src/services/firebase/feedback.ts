@@ -96,8 +96,13 @@ async function notifyFeedbackSubmitted(booking: Booking, rating: number): Promis
   }
 }
 
-export async function listFeedbackForCounsellor(counsellorId: string): Promise<SessionFeedback[]> {
-  const q = query(feedbackCollection, where("counsellorId", "==", counsellorId));
+// `campusId` is optional but required for a campus-scoped Admin: their read
+// rule depends on resource.data.campusId, which Firestore can only validate
+// for a list query when the query itself filters on it.
+export async function listFeedbackForCounsellor(counsellorId: string, campusId?: string): Promise<SessionFeedback[]> {
+  const q = campusId
+    ? query(feedbackCollection, where("counsellorId", "==", counsellorId), where("campusId", "==", campusId))
+    : query(feedbackCollection, where("counsellorId", "==", counsellorId));
   const snapshot = await getDocs(q);
   return snapshot.docs
     .map((d) => toSessionFeedback(d.id, d.data()))

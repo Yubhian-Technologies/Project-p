@@ -4,8 +4,13 @@ import type { CalendarMonth } from "../../types/calendarMonth";
 
 const calendarMonthsCollection = collection(db, "calendarMonths");
 
-export async function listCalendarMonths(yearId: string): Promise<CalendarMonth[]> {
-  const q = query(calendarMonthsCollection, where("yearId", "==", yearId));
+// `campusId` is optional but required for a campus-scoped Admin: their read
+// rule depends on resource.data.campusId, which Firestore can only validate
+// for a list query when the query itself filters on it.
+export async function listCalendarMonths(yearId: string, campusId?: string): Promise<CalendarMonth[]> {
+  const q = campusId
+    ? query(calendarMonthsCollection, where("yearId", "==", yearId), where("campusId", "==", campusId))
+    : query(calendarMonthsCollection, where("yearId", "==", yearId));
   const snapshot = await getDocs(q);
   return snapshot.docs
     .map((d) => ({ id: d.id, ...d.data() }) as CalendarMonth)

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { listBookingsForCounsellor } from "../../../services/firebase/bookings";
 import { listFeedbackForCounsellor } from "../../../services/firebase/feedback";
 import { listEventsForCampus } from "../../../services/firebase/events";
+import { useAuth } from "../../../hooks/useAuth";
 import type { UserProfile } from "../../../types/user";
 import "./AnalyticsSection.css";
 
@@ -60,13 +61,20 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
   const [totals, setTotals] = useState<Totals | null>(null);
   const [loading, setLoading] = useState(true);
   const [tooltip, setTooltip] = useState<{ idx: number } | null>(null);
+  const [failed, setFailed] = useState(false);
+  const { profile } = useAuth();
   const uid = `chart-${staff.uid.slice(0, 8)}`;
+  // A campus-scoped Admin (Principal / Vice-Principal) is only permitted to
+  // read bookings/feedback that are filtered by campus, so scope the queries.
+  const scopeCampusId =
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses" ? staff.campusId : undefined;
 
   useEffect(() => {
     setLoading(true);
+    setFailed(false);
     Promise.all([
-      listBookingsForCounsellor(staff.uid),
-      listFeedbackForCounsellor(staff.uid),
+      listBookingsForCounsellor(staff.uid, scopeCampusId),
+      listFeedbackForCounsellor(staff.uid, scopeCampusId),
       staff.campusId ? listEventsForCampus(staff.campusId) : Promise.resolve([]),
     ]).then(
       ([bookings, feedback, events]) => {
@@ -99,10 +107,14 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
         setTotals({ sessions: allTaken.length, missed: allMissed, avgRating, ratingCount: feedback.length, groupSessions });
         setLoading(false);
       },
-    );
-  }, [staff.uid, staff.campusId]);
+    ).catch(() => {
+      setFailed(true);
+      setLoading(false);
+    });
+  }, [staff.uid, staff.campusId, scopeCampusId]);
 
   if (loading) return <p className="analytics-inline__loading">Loading analytics…</p>;
+  if (failed) return <p className="analytics-inline__loading">Couldn't load analytics. Please try again.</p>;
   if (!totals) return null;
 
   // ── Chart math ─────────────────────────────────────────────────────────────

@@ -19,7 +19,10 @@ import "./EventsOverviewSection.css";
 export function EventsOverviewSection() {
   const { profile } = useAuth();
   const [campuses, setCampuses] = useState<Campus[]>([]);
-  const [campusId, setCampusId] = useState("");
+  const [campusId, setCampusId] = useState(() =>
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses" && profile.adminAccess.campusIds?.length === 1
+      ? profile.adminAccess.campusIds[0]
+      : "");
   const [colleges, setColleges] = useState<College[]>([]);
   const [collegeId, setCollegeId] = useState("");
   const [years, setYears] = useState<CalendarYear[]>([]);
@@ -42,7 +45,12 @@ export function EventsOverviewSection() {
       : null;
 
   useEffect(() => {
-    listCampuses().then((c) => setCampuses(scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c));
+    listCampuses().then((c) => {
+      const visible = scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c;
+      setCampuses(visible);
+      // Admin assigned to a single campus has nothing to choose — go straight in.
+      if (scopedCampusIds && visible.length === 1) setCampusId(visible[0].id);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -50,9 +58,12 @@ export function EventsOverviewSection() {
     setCollegeId("");
     setColleges([]);
     if (!campusId) return;
-    listColleges(campusId).then((c) =>
-      setColleges(scopedCollegeIds ? c.filter((college) => scopedCollegeIds.includes(college.id)) : c),
-    );
+    listColleges(campusId).then((c) => {
+      const visible = scopedCollegeIds ? c.filter((college) => scopedCollegeIds.includes(college.id)) : c;
+      setColleges(visible);
+      // Admin assigned to a single college has nothing to choose — go straight in.
+      if (scopedCollegeIds && visible.length === 1) setCollegeId(visible[0].id);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campusId]);
 
@@ -61,7 +72,7 @@ export function EventsOverviewSection() {
     setYears([]);
     setEvents([]);
     if (!collegeId) return;
-    Promise.all([listCalendarYears(collegeId), listEventsForCollege(collegeId)]).then(([yearList, eventList]) => {
+    Promise.all([listCalendarYears(collegeId, campusId), listEventsForCollege(collegeId, campusId)]).then(([yearList, eventList]) => {
       setYears(yearList);
       setEvents(eventList);
       setSelectedYearId(yearList[0]?.id || "");
@@ -71,12 +82,16 @@ export function EventsOverviewSection() {
   useEffect(() => {
     setMonths([]);
     if (!selectedYearId) return;
-    listCalendarMonths(selectedYearId).then(setMonths);
+    listCalendarMonths(selectedYearId, campusId).then(setMonths);
   }, [selectedYearId]);
+
+  const hideCampusPicker = scopedCampusIds?.length === 1;
+  const hideCollegePicker = scopedCollegeIds?.length === 1;
 
   return (
     <div className="events-overview">
       <div className="events-overview__filter-bar">
+        {!hideCampusPicker && (
         <div className="events-overview__field">
           <label htmlFor="events-overview-campus">Campus</label>
           <Select id="events-overview-campus" value={campusId} onChange={setCampusId}>
@@ -90,11 +105,14 @@ export function EventsOverviewSection() {
             ))}
           </Select>
         </div>
+        )}
 
-        {campusId && <CollegePicker colleges={colleges} selectedId={collegeId} onSelect={setCollegeId} />}
+        {campusId && !hideCollegePicker && (
+          <CollegePicker colleges={colleges} selectedId={collegeId} onSelect={setCollegeId} />
+        )}
       </div>
 
-      {!campusId && <p>Select a campus to view its colleges' events and programs.</p>}
+      {!campusId && scopedCampusIds?.length !== 1 && <p>Select a campus to view its colleges' events and programs.</p>}
 
       {collegeId && (
         <EventsCalendarGrid

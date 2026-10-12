@@ -8,12 +8,19 @@ interface NotificationBellProps {
   onNotificationClick?: (notification: Notification) => void;
 }
 
+// Crisis SOS and an escalated/newly-flagged serious case all get the same
+// red, highest-priority treatment — a ringing bell, red badge, red list item.
+const HIGH_PRIORITY_TYPES = ["emergency_sos", "serious_case_created", "serious_case_escalated"];
+function isHighPriority(n: Notification): boolean {
+  return HIGH_PRIORITY_TYPES.includes(n.type);
+}
+
 export function NotificationBell({ onNotificationClick }: NotificationBellProps) {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const hasUnreadEmergency = notifications.some((n) => n.type === "emergency_sos" && !n.read);
+  const hasUnreadEmergency = notifications.some((n) => isHighPriority(n) && !n.read);
 
   useEffect(() => {
     if (!open) return;
@@ -87,7 +94,7 @@ export function NotificationBell({ onNotificationClick }: NotificationBellProps)
                 className={[
                   "notification-bell__item",
                   notification.read ? "" : "notification-bell__item--unread",
-                  notification.type === "emergency_sos" ? "notification-bell__item--emergency" : "",
+                  isHighPriority(notification) ? "notification-bell__item--emergency" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
@@ -98,7 +105,7 @@ export function NotificationBell({ onNotificationClick }: NotificationBellProps)
                 }}
               >
                 <span className="notification-bell__item-title">
-                  {notification.type === "emergency_sos" && "🚨 "}
+                  {isHighPriority(notification) && "🚨 "}
                   {notification.title}
                 </span>
                 <span className="notification-bell__item-message">{notification.message}</span>

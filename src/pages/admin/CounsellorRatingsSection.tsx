@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { listBookableProfiles } from "../../services/firebase/bookings";
 import { getAllFeedback, aggregateAllCounsellorFeedback } from "../../services/firebase/feedback";
 import type { CounsellorFeedbackAggregate } from "../../services/firebase/feedback";
+import { useAuth } from "../../hooks/useAuth";
 import { listCampuses } from "../../services/firebase/campuses";
 import type { Campus } from "../../types/campus";
 import type { UserProfile } from "../../types/user";
@@ -16,15 +17,30 @@ import "./CounsellorRatingsSection.css";
 const STARS = [5, 4, 3, 2, 1];
 
 export function CounsellorRatingsSection() {
+  const { profile } = useAuth();
   const [campuses, setCampuses] = useState<Campus[]>([]);
-  const [campusId, setCampusId] = useState("");
+  const [campusId, setCampusId] = useState(() =>
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses" && profile.adminAccess.campusIds?.length === 1
+      ? profile.adminAccess.campusIds[0]
+      : "");
   const [counsellors, setCounsellors] = useState<UserProfile[]>([]);
   const [aggregates, setAggregates] = useState<CounsellorFeedbackAggregate[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedUid, setExpandedUid] = useState<string | null>(null);
 
   useEffect(() => {
-    listCampuses().then(setCampuses);
+    listCampuses().then((c) => {
+      // A campus-restricted Admin only ever sees their own assigned campuses here.
+      const scopedIds =
+        profile?.role === "admin" && profile.adminAccess?.scope === "campuses"
+          ? profile.adminAccess.campusIds ?? []
+          : null;
+      const visible = scopedIds ? c.filter((campus) => scopedIds.includes(campus.id)) : c;
+      setCampuses(visible);
+      // Admin assigned to a single campus has nothing to choose.
+      if (scopedIds && visible.length === 1) setCampusId(visible[0].id);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -68,10 +84,13 @@ export function CounsellorRatingsSection() {
       ? aggregates.reduce((sum, a) => sum + a.average * a.count, 0) / totalFeedback
       : 0;
 
+  const isCampusScoped = profile?.role === "admin" && profile.adminAccess?.scope === "campuses";
+
   if (loading) return <p className="counsellor-ratings__loading">Loading ratings…</p>;
 
   return (
     <div className="counsellor-ratings">
+      {!(isCampusScoped && profile?.adminAccess?.campusIds?.length === 1) && (
       <div className="counsellor-ratings__field">
         <label htmlFor="counsellor-ratings-campus">Campus</label>
         <Select id="counsellor-ratings-campus" value={campusId} onChange={setCampusId}>
@@ -83,6 +102,7 @@ export function CounsellorRatingsSection() {
           ))}
         </Select>
       </div>
+      )}
 
       <div className="counsellor-ratings__overview">
         <div className="counsellor-ratings__stat">

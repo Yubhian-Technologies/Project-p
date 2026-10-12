@@ -44,6 +44,35 @@ function dayKey(year: number, month: number, day: number): number {
   return year * 10000 + month * 100 + day;
 }
 
+// Keeps a value from ever landing before `min` or after `max` — not just at
+// the day level (the calendar grid already blocks picking an out-of-range
+// day), but down to the hour/minute too. Needed both to grey out individual
+// time options on the min/max day, and to auto-correct an already-selected
+// time that becomes invalid the moment the user switches to that day (e.g.
+// picking today after already having 9am dialed in from a future date).
+function clampToRange(v: ParsedValue, min: ParsedValue | null, max: ParsedValue | null): ParsedValue {
+  let result = v;
+  if (min) {
+    const vKey = dayKey(result.year, result.month, result.day);
+    const minKey = dayKey(min.year, min.month, min.day);
+    if (vKey < minKey) {
+      result = { ...min };
+    } else if (vKey === minKey && (result.hour < min.hour || (result.hour === min.hour && result.minute < min.minute))) {
+      result = { ...result, hour: min.hour, minute: min.minute };
+    }
+  }
+  if (max) {
+    const vKey = dayKey(result.year, result.month, result.day);
+    const maxKey = dayKey(max.year, max.month, max.day);
+    if (vKey > maxKey) {
+      result = { ...max };
+    } else if (vKey === maxKey && (result.hour > max.hour || (result.hour === max.hour && result.minute > max.minute))) {
+      result = { ...result, hour: max.hour, minute: max.minute };
+    }
+  }
+  return result;
+}
+
 function formatDisplay(value: string): string {
   const parsed = parseValue(value);
   if (!parsed) return "";
@@ -90,7 +119,7 @@ export function DateTimePicker({ id, value, onChange, min, max }: DateTimePicker
       hour: 12,
       minute: 0,
     };
-    onChange(formatValue({ ...base, ...next }));
+    onChange(formatValue(clampToRange({ ...base, ...next }, minParsed, maxParsed)));
   }
 
   function goToMonth(delta: number) {
@@ -127,6 +156,27 @@ export function DateTimePicker({ id, value, onChange, min, max }: DateTimePicker
   const nextDisabled = maxParsed !== null && monthKey >= maxParsed.year * 12 + maxParsed.month;
 
   const { hour12, ampm } = parsed ? to12Hour(parsed.hour) : { hour12: 12, ampm: "AM" as const };
+
+  // The calendar grid above only blocks picking an out-of-range *day* — these
+  // grey out the individual hour/minute/AM-PM options that would still put
+  // the full value before `min` or after `max` once that day is selected
+  // (e.g. "today" with min = right now: every hour before the current one).
+  const isMinDay = !!(parsed && minParsed && dayKey(parsed.year, parsed.month, parsed.day) === dayKey(minParsed.year, minParsed.month, minParsed.day));
+  const isMaxDay = !!(parsed && maxParsed && dayKey(parsed.year, parsed.month, parsed.day) === dayKey(maxParsed.year, maxParsed.month, maxParsed.day));
+
+  function hourDisabled(h12: number, ap: "AM" | "PM"): boolean {
+    const h24 = to24Hour(h12, ap);
+    if (isMinDay && minParsed && h24 < minParsed.hour) return true;
+    if (isMaxDay && maxParsed && h24 > maxParsed.hour) return true;
+    return false;
+  }
+
+  function minuteDisabled(m: number): boolean {
+    const h24 = to24Hour(hour12, ampm);
+    if (isMinDay && minParsed && h24 === minParsed.hour && m < minParsed.minute) return true;
+    if (isMaxDay && maxParsed && h24 === maxParsed.hour && m > maxParsed.minute) return true;
+    return false;
+  }
 
   return (
     <div className="md-datetime" ref={containerRef}>
@@ -215,7 +265,7 @@ export function DateTimePicker({ id, value, onChange, min, max }: DateTimePicker
                   onChange={(v) => commit({ hour: to24Hour(Number(v), ampm) })}
                 >
                   {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
-                    <option key={h} value={String(h)}>
+                    <option key={h} value={String(h)} disabled={hourDisabled(h, ampm)}>
                       {h}
                     </option>
                   ))}
@@ -225,7 +275,7 @@ export function DateTimePicker({ id, value, onChange, min, max }: DateTimePicker
                   onChange={(v) => commit({ minute: Number(v) })}
                 >
                   {Array.from({ length: 60 }, (_, i) => i).map((m) => (
-                    <option key={m} value={String(m)}>
+                    <option key={m} value={String(m)} disabled={minuteDisabled(m)}>
                       {pad(m)}
                     </option>
                   ))}
@@ -234,8 +284,12 @@ export function DateTimePicker({ id, value, onChange, min, max }: DateTimePicker
                   value={ampm}
                   onChange={(v) => commit({ hour: to24Hour(hour12, v as "AM" | "PM") })}
                 >
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
+                  <option value="AM" disabled={hourDisabled(hour12, "AM")}>
+                    AM
+                  </option>
+                  <option value="PM" disabled={hourDisabled(hour12, "PM")}>
+                    PM
+                  </option>
                 </Select>
               </div>
 

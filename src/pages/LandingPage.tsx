@@ -594,6 +594,8 @@ export function LandingPage() {
                   src="/about-campus-students.jpg"
                   alt="Vishnu Wellness Centre campus students talking together"
                   className="landing-about-image"
+                  width={1200}
+                  height={896}
                 />
               </div>
 

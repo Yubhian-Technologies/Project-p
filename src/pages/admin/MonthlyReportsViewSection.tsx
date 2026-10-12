@@ -47,7 +47,10 @@ export function MonthlyReportsViewSection() {
 
   // ── Campus state ─────────────────────────────────────────────────
   const [campuses, setCampuses] = useState<Campus[]>([]);
-  const [selectedCampusId, setSelectedCampusId] = useState("");
+  const [selectedCampusId, setSelectedCampusId] = useState(() =>
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses" && profile.adminAccess.campusIds?.length === 1
+      ? profile.adminAccess.campusIds[0]
+      : "");
   const [loadingMeta, setLoadingMeta] = useState(true);
 
   // ── Reports state ────────────────────────────────────────────────
@@ -67,7 +70,12 @@ export function MonthlyReportsViewSection() {
   useEffect(() => {
     setLoadingMeta(true);
     listCampuses()
-      .then((c) => setCampuses(scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c))
+      .then((c) => {
+        const visible = scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c;
+        setCampuses(visible);
+        // Admin assigned to a single campus has nothing to choose.
+        if (scopedCampusIds && visible.length === 1) setSelectedCampusId(visible[0].id);
+      })
       .finally(() => setLoadingMeta(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -114,6 +122,7 @@ export function MonthlyReportsViewSection() {
   const availableYears = Array.from(new Set(reports.map((r) => r.year))).sort((a, b) => b - a);
 
   const hasSelection = !!selectedCampusId;
+  const hideCampusPicker = scopedCampusIds?.length === 1;
 
   return (
     <div className="mrv-section">
@@ -135,6 +144,7 @@ export function MonthlyReportsViewSection() {
       </div>
 
       {/* ── Campus selector card ─────────────────────────────────────── */}
+      {!hideCampusPicker && (
       <div className="mrv-selector-card">
         <div className="mrv-selector-card__row">
           <div className="mrv-filters__field">
@@ -164,6 +174,7 @@ export function MonthlyReportsViewSection() {
           </p>
         )}
       </div>
+      )}
 
       {/* ── Month / Year filters — only shown once campus+college chosen ── */}
       {hasSelection && (

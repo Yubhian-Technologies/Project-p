@@ -603,6 +603,54 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ---------- seriousCases ----------
+    // A Counsellor/Head escalating a Crisis SOS case (or a normal session they
+    // judge serious) to Admin leadership — doc id === the bookingId it's filed
+    // against (one case per booking, same convention as ssi_results). Creation
+    // resolves which Admin(s) are responsible (Principal/Vice-Principal for
+    // that student's college, with a multi-tier fallback), which requires
+    // scanning/filtering the whole admin population — rules can only get() one
+    // known doc, never list/filter a collection, so that resolution can't be
+    // verified here at all and is done by the createSeriousCase Cloud Function
+    // (Admin SDK) instead.
+    match /seriousCases/{bookingId} {
+      allow create: if false;
+
+      allow get, list: if isSignedIn() && (
+        isRole('super-admin') ||
+        request.auth.uid in resource.data.targetAdminUids ||
+        resource.data.notifiedHeadUid == request.auth.uid ||
+        resource.data.authorUid == request.auth.uid ||
+        (myRole() == 'admin' && (
+          !('adminAccess' in myProfile()) ||
+          myProfile().adminAccess.scope == 'global' ||
+          myProfile().adminAccess.designation in ['management', 'administration']
+        ))
+      );
+
+      // Only the specifically-targeted admin can act — never Management/
+      // Administration/global admins viewing a case that isn't theirs, which
+      // keeps the 24h SLA's accountability on exactly the person it's on.
+      allow update: if isSignedIn() && resource.data.status == 'open' && (
+        (
+          // Resolving: write-once, flips status, only these three keys.
+          request.auth.uid in resource.data.targetAdminUids &&
+          !('actionTaken' in resource.data) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['actionTaken', 'status', 'updatedAt']) &&
+          request.resource.data.status == 'resolved' &&
+          request.resource.data.actionTaken.byUid == request.auth.uid
+        ) || (
+          // Logging why no action yet, during an overdue escalation — doesn't
+          // resolve the case, just appends one entry to the history.
+          request.auth.uid in resource.data.targetAdminUids &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['escalations', 'updatedAt']) &&
+          request.resource.data.escalations.size() == resource.data.escalations.size() + 1
+        )
+      );
+
+      allow delete: if false;
+    }
+
     // One private chat room per booking — each message stores chatRoomId = the
     // booking id. Access is limited to the two parties: the student (userId)
     // and the counsellor currently assigned to the booking. counsellorId is
@@ -771,6 +819,17 @@ service cloud.firestore {
             isSignedIn() && myRole() in ['head', 'counsellor'] &&
             get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.role in ['head', 'counsellor'] &&
             get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
+          ) || (
+            // The admin who just resolved a seriousCase tells the original
+            // counsellor/head their flagged case was reviewed — the admin
+            // isn't a party to the underlying booking, and seriousCases'
+            // own rules already gate who's allowed to write into it in the
+            // first place, so this only needs to confirm the recipient is
+            // really that case's author.
+            request.resource.data.type == 'serious_case_resolved' &&
+            isSignedIn() && myRole() == 'admin' &&
+            request.auth.uid in get(/databases/$(database)/documents/seriousCases/$(request.resource.data.bookingId)).data.targetAdminUids &&
+            get(/databases/$(database)/documents/seriousCases/$(request.resource.data.bookingId)).data.authorUid == request.resource.data.recipientId
           )
         );
 

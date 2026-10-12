@@ -17,6 +17,8 @@ const ERROR_TYPES: NotificationType[] = [
   "booking_missed",
   "transfer_declined",
   "compensation_declined",
+  "serious_case_created",
+  "serious_case_escalated",
 ];
 const EVENT_TYPES: NotificationType[] = ["event_today", "event_added"];
 const SUCCESS_TYPES: NotificationType[] = [

@@ -12,6 +12,7 @@ import { SSI_SEVERITY_LABELS, SSI_SUBSCALE_MAX } from "../../config/ssiForm";
 import type { SsiSeverity } from "../../config/ssiForm";
 import type { Booking, BookingIntake } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
+import type { SeriousCase } from "../../types/seriousCase";
 import { useAuth } from "../../hooks/useAuth";
 import { ChatModal } from "../chat/ChatModal";
 import { SessionResourcesPanel } from "../resources/SessionResourcesPanel";
@@ -39,6 +40,115 @@ function subscaleSeverity(key: "D" | "A" | "S", value: number): SsiSeverity {
   if (key === "D") return value >= 11 ? "severe" : value >= 7 ? "medium" : "normal";
   if (key === "A") return value >= 8 ? "severe" : value >= 6 ? "medium" : "normal";
   return value >= 13 ? "severe" : value >= 10 ? "medium" : "normal";
+}
+
+interface NotifyAdminBlockProps {
+  seriousCase?: SeriousCase | null;
+  // Only needed for the "not flagged yet" path — once a session is
+  // completed, a case can no longer be newly filed, so the completed-session
+  // view renders this status-only with these omitted.
+  buttonLabel?: string;
+  onNotify?: (note: string) => Promise<void>;
+}
+
+// Inline note-writing UI for escalating a case to admin — shared between the
+// Crisis SOS close-out block, the normal-session close-out block, and the
+// completed-session history view, since all three just display/trigger the
+// same createSeriousCase flow at a different moment. Collapses to a single
+// status chip (badge + "View" toggle for the admin's note) once a case
+// already exists for this booking.
+function NotifyAdminBlock({ seriousCase, buttonLabel, onNotify }: NotifyAdminBlockProps) {
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [showResolution, setShowResolution] = useState(false);
+
+  if (seriousCase) {
+    const resolved = seriousCase.status === "resolved";
+    return (
+      <div className="request-card__notify-status">
+        <div className="request-card__notify-status-row">
+          <span className={`request-card__notify-badge request-card__notify-badge--${resolved ? "resolved" : "open"}`}>
+            {resolved ? "✓ Admin action taken" : "🚩 Admin notified — awaiting action"}
+          </span>
+          {resolved && seriousCase.actionTaken && (
+            <Button
+              type="button"
+              variant="outlined"
+              className="request-card__notify-view-btn"
+              onClick={() => setShowResolution(true)}
+            >
+              View
+            </Button>
+          )}
+        </div>
+        {showResolution && seriousCase.actionTaken && (
+          <Modal title="Admin action taken" onClose={() => setShowResolution(false)}>
+            <div className="request-card__notify-detail">
+              <div className="request-card__notify-detail-block">
+                <span className="request-card__notify-detail-label">Your note to admin</span>
+                <p>{seriousCase.note}</p>
+              </div>
+              <div className="request-card__notify-detail-block">
+                <span className="request-card__notify-detail-label">
+                  Action taken by {seriousCase.actionTaken.byEmail} on{" "}
+                  {formatDateTimeDMY(seriousCase.actionTaken.at)}
+                </span>
+                <p>{seriousCase.actionTaken.text}</p>
+              </div>
+            </div>
+          </Modal>
+        )}
+      </div>
+    );
+  }
+
+  if (!onNotify) return null;
+
+  if (!open) {
+    return (
+      <Button type="button" variant="outlined" onClick={() => setOpen(true)}>
+        {buttonLabel}
+      </Button>
+    );
+  }
+
+  return (
+    <div className="request-card__notify-form">
+      <label htmlFor="notify-admin-note">What happened? This is sent to admin.</label>
+      <textarea
+        id="notify-admin-note"
+        rows={3}
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder="Describe the case…"
+      />
+      {error && <p className="request-card__time-warning">{error}</p>}
+      <div className="request-card__actions">
+        <Button
+          type="button"
+          disabled={!note.trim() || submitting}
+          onClick={async () => {
+            setSubmitting(true);
+            setError("");
+            try {
+              await onNotify(note.trim());
+            } catch {
+              setError("Couldn't send this. Please try again.");
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {submitting ? "Sending…" : "Send"}
+        </Button>
+        <Button type="button" variant="outlined" disabled={submitting} onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 interface RequestDetailModalProps {
@@ -77,6 +187,11 @@ interface RequestDetailModalProps {
    *  a "chat_message" notification, so they land directly in the thread
    *  instead of having to click "Chat with Student" themselves. */
   autoOpenChat?: boolean;
+  /** Existing escalation for this booking, if one was already filed. */
+  seriousCase?: SeriousCase | null;
+  /** Files a new escalation — the Cloud Function resolves which admin(s) (and,
+   *  for a Counsellor, the campus Head) actually get notified. */
+  onNotifySerious?: (note: string) => Promise<void>;
 }
 
 export function RequestDetailModal({
@@ -107,6 +222,8 @@ export function RequestDetailModal({
   onSuggestSsi,
   onClose,
   autoOpenChat,
+  seriousCase,
+  onNotifySerious,
 }: RequestDetailModalProps) {
   const { currentUser } = useAuth();
   const [showChatModal, setShowChatModal] = useState(!!autoOpenChat);
@@ -734,72 +851,95 @@ export function RequestDetailModal({
         </Button>
       )}
 
-      {showBioData && studentProfile && (
-        <Modal title="Student Bio Data" onClose={() => setShowBioData(false)}>
-          <dl className="request-card__ssi-dl">
-            <dt>Register No.</dt>
-            <dd>{studentProfile.registerNumber || "—"}</dd>
-            <dt>Batch</dt>
-            <dd>{studentProfile.yearOrBatch || "—"}</dd>
-            <dt>Branch</dt>
-            <dd>{studentProfile.branch || "—"}</dd>
-            <dt>Regular / Lateral</dt>
-            <dd>
-              {studentProfile.admissionType === "regular"
-                ? "Regular"
-                : studentProfile.admissionType === "lateral"
-                  ? "Lateral"
-                  : "—"}
-            </dd>
-            <dt>Gender</dt>
-            <dd>{studentProfile.gender || "—"}</dd>
-            <dt>Course</dt>
-            <dd>{studentProfile.bioData?.course || "—"}</dd>
-            <dt>Date of birth</dt>
-            <dd>{studentProfile.bioData?.dateOfBirth || "—"}</dd>
-            <dt>Hostel / Day Scholar</dt>
-            <dd>{studentProfile.bioData?.hostelOrDayScholar || "—"}</dd>
-            <dt>Employee ID</dt>
-            <dd>{studentProfile.bioData?.employeeId || "—"}</dd>
-            <dt>Institution</dt>
-            <dd>{studentProfile.bioData?.institution || "—"}</dd>
-            <dt>Designation</dt>
-            <dd>{studentProfile.bioData?.designation || "—"}</dd>
-            <dt>Age</dt>
-            <dd>{studentProfile.bioData?.age || "—"}</dd>
-            <dt>Preferred language</dt>
-            <dd>{studentProfile.bioData?.preferredLanguage || "—"}</dd>
-            <dt>Marital status</dt>
-            <dd>{studentProfile.bioData?.maritalStatus || "—"}</dd>
-            <dt>Mobile / Phone number</dt>
-            <dd>{studentProfile.bioData?.mobileNumber || "—"}</dd>
-            <dt>Email ID</dt>
-            <dd>{studentProfile.bioData?.personalEmail || "—"}</dd>
-            <dt>Address</dt>
-            <dd>{studentProfile.bioData?.address || "—"}</dd>
-            <dt>Father's name</dt>
-            <dd>{studentProfile.bioData?.fatherName || "—"}</dd>
-            <dt>Father's occupation</dt>
-            <dd>{studentProfile.bioData?.fatherOccupation || "—"}</dd>
-            <dt>Father's phone</dt>
-            <dd>{studentProfile.bioData?.fatherPhone || "—"}</dd>
-            <dt>Father's email</dt>
-            <dd>{studentProfile.bioData?.fatherEmail || "—"}</dd>
-            <dt>Mother's name</dt>
-            <dd>{studentProfile.bioData?.motherName || "—"}</dd>
-            <dt>Mother's occupation</dt>
-            <dd>{studentProfile.bioData?.motherOccupation || "—"}</dd>
-            <dt>Mother's phone</dt>
-            <dd>{studentProfile.bioData?.motherPhone || "—"}</dd>
-            <dt>Mother's email</dt>
-            <dd>{studentProfile.bioData?.motherEmail || "—"}</dd>
-            <dt>Correspondence address</dt>
-            <dd>{studentProfile.bioData?.correspondenceAddress || "—"}</dd>
-            <dt>Permanent address</dt>
-            <dd>{studentProfile.bioData?.permanentAddress || "—"}</dd>
-          </dl>
-        </Modal>
-      )}
+      {showBioData &&
+        studentProfile &&
+        (() => {
+          const isStudentBio = (studentProfile.studentOrProfessional ?? "student") === "student";
+          return (
+            <Modal
+              title={isStudentBio ? "Student Bio Data" : "Working Professional Bio Data"}
+              onClose={() => setShowBioData(false)}
+            >
+              <dl className="request-card__ssi-dl">
+                {isStudentBio ? (
+                  <>
+                    <dt>Register No.</dt>
+                    <dd>{studentProfile.registerNumber || "—"}</dd>
+                    <dt>Batch</dt>
+                    <dd>{studentProfile.yearOrBatch || "—"}</dd>
+                    <dt>Branch</dt>
+                    <dd>{studentProfile.branch || "—"}</dd>
+                    <dt>Regular / Lateral</dt>
+                    <dd>
+                      {studentProfile.admissionType === "regular"
+                        ? "Regular"
+                        : studentProfile.admissionType === "lateral"
+                          ? "Lateral"
+                          : "—"}
+                    </dd>
+                    <dt>Gender</dt>
+                    <dd>{studentProfile.gender || "—"}</dd>
+                    <dt>Course</dt>
+                    <dd>{studentProfile.bioData?.course || "—"}</dd>
+                    <dt>Date of birth</dt>
+                    <dd>{studentProfile.bioData?.dateOfBirth || "—"}</dd>
+                    <dt>Hostel / Day Scholar</dt>
+                    <dd>{studentProfile.bioData?.hostelOrDayScholar || "—"}</dd>
+                    <dt>Mobile number</dt>
+                    <dd>{studentProfile.bioData?.mobileNumber || "—"}</dd>
+                    <dt>Email ID (personal)</dt>
+                    <dd>{studentProfile.bioData?.personalEmail || "—"}</dd>
+                    <dt>Father's name</dt>
+                    <dd>{studentProfile.bioData?.fatherName || "—"}</dd>
+                    <dt>Father's occupation</dt>
+                    <dd>{studentProfile.bioData?.fatherOccupation || "—"}</dd>
+                    <dt>Father's phone</dt>
+                    <dd>{studentProfile.bioData?.fatherPhone || "—"}</dd>
+                    <dt>Father's email</dt>
+                    <dd>{studentProfile.bioData?.fatherEmail || "—"}</dd>
+                    <dt>Mother's name</dt>
+                    <dd>{studentProfile.bioData?.motherName || "—"}</dd>
+                    <dt>Mother's occupation</dt>
+                    <dd>{studentProfile.bioData?.motherOccupation || "—"}</dd>
+                    <dt>Mother's phone</dt>
+                    <dd>{studentProfile.bioData?.motherPhone || "—"}</dd>
+                    <dt>Mother's email</dt>
+                    <dd>{studentProfile.bioData?.motherEmail || "—"}</dd>
+                    <dt>Correspondence address</dt>
+                    <dd>{studentProfile.bioData?.correspondenceAddress || "—"}</dd>
+                    <dt>Permanent address</dt>
+                    <dd>{studentProfile.bioData?.permanentAddress || "—"}</dd>
+                  </>
+                ) : (
+                  <>
+                    <dt>Employee ID</dt>
+                    <dd>{studentProfile.bioData?.employeeId || "—"}</dd>
+                    <dt>Institution</dt>
+                    <dd>{studentProfile.bioData?.institution || "—"}</dd>
+                    <dt>Department</dt>
+                    <dd>{studentProfile.branch || "—"}</dd>
+                    <dt>Designation</dt>
+                    <dd>{studentProfile.bioData?.designation || "—"}</dd>
+                    <dt>Gender</dt>
+                    <dd>{studentProfile.gender || "—"}</dd>
+                    <dt>Age</dt>
+                    <dd>{studentProfile.bioData?.age || "—"}</dd>
+                    <dt>Preferred language</dt>
+                    <dd>{studentProfile.bioData?.preferredLanguage || "—"}</dd>
+                    <dt>Marital status</dt>
+                    <dd>{studentProfile.bioData?.maritalStatus || "—"}</dd>
+                    <dt>Phone Number</dt>
+                    <dd>{studentProfile.bioData?.mobileNumber || "—"}</dd>
+                    <dt>Email ID</dt>
+                    <dd>{studentProfile.bioData?.personalEmail || "—"}</dd>
+                    <dt>Address</dt>
+                    <dd>{studentProfile.bioData?.address || "—"}</dd>
+                  </>
+                )}
+              </dl>
+            </Modal>
+          );
+        })()}
 
       {showResources && currentUser && (
         <SessionResourcesPanel
@@ -1005,6 +1145,14 @@ export function RequestDetailModal({
               </Button>
             </div>
           )}
+
+          {onNotifySerious && (
+            <NotifyAdminBlock
+              seriousCase={seriousCase}
+              buttonLabel={viewerRole === "counsellor" ? "Notify Head & Admin" : "Notify Admin"}
+              onNotify={onNotifySerious}
+            />
+          )}
         </div>
       )}
 
@@ -1152,6 +1300,14 @@ export function RequestDetailModal({
                   </Button>
                 </div>
               )}
+
+              {onNotifySerious && (
+                <NotifyAdminBlock
+                  seriousCase={seriousCase}
+                  buttonLabel="Flag as Serious & Notify"
+                  onNotify={onNotifySerious}
+                />
+              )}
             </>
           )}
         </div>
@@ -1283,6 +1439,7 @@ export function RequestDetailModal({
       {booking.status === "completed" && booking.outcome !== "missed" && (
         <div className="request-card__completed">
           <p>{booking.outcome === "followup" ? "Follow-up session scheduled." : "Session complete."}</p>
+          {seriousCase && <NotifyAdminBlock seriousCase={seriousCase} />}
           {intake?.summary && (
             <Button type="button" variant="outlined" onClick={() => setSummaryFocusMode(true)}>
               View Summary

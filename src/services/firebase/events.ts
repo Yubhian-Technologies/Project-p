@@ -35,8 +35,13 @@ export async function listEventsForCampus(campusId: string): Promise<EventProgra
     .sort((a, b) => b.eventDate - a.eventDate);
 }
 
-export async function listEventsForCollege(collegeId: string): Promise<EventProgram[]> {
-  const q = query(eventsCollection, where("collegeId", "==", collegeId));
+// `campusId` is optional but required for a campus-scoped Admin: their read
+// rule depends on resource.data.campusId, which Firestore can only validate
+// for a list query when the query itself filters on it.
+export async function listEventsForCollege(collegeId: string, campusId?: string): Promise<EventProgram[]> {
+  const q = campusId
+    ? query(eventsCollection, where("collegeId", "==", collegeId), where("campusId", "==", campusId))
+    : query(eventsCollection, where("collegeId", "==", collegeId));
   const snapshot = await getDocs(q);
   return snapshot.docs
     .map((d) => toEvent(d.id, d.data()))

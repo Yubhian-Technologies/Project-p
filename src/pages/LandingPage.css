@@ -1917,6 +1917,11 @@ body {
 
 .landing-about-image-wrapper {
   width: 100%;
+  /* Reserves the photo's real space before it loads — its box used to
+     collapse to near-zero height (height: 100% of an undefined parent
+     height), so the whole section jumped down once the image arrived. */
+  aspect-ratio: 1200 / 896;
+  max-height: 480px;
   border-radius: 28px;
   overflow: hidden;
   box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.12),
@@ -2067,7 +2072,8 @@ body {
     margin-top: 4px;
   }
 
-  .landing-about-image {
+  .landing-about-image,
+  .landing-about-image-wrapper {
     max-height: 300px;
   }
 

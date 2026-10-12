@@ -19,7 +19,10 @@ import "./AnalyticsSection.css";
 export function AnalyticsSection() {
   const { profile } = useAuth();
   const [campuses, setCampuses] = useState<Campus[]>([]);
-  const [campusId, setCampusId] = useState("");
+  const [campusId, setCampusId] = useState(() =>
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses" && profile.adminAccess.campusIds?.length === 1
+      ? profile.adminAccess.campusIds[0]
+      : "");
 
   const [staff, setStaff] = useState<UserProfile[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
@@ -40,7 +43,12 @@ export function AnalyticsSection() {
       : null;
 
   useEffect(() => {
-    listCampuses().then((c) => setCampuses(scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c));
+    listCampuses().then((c) => {
+      const visible = scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c;
+      setCampuses(visible);
+      // Admin assigned to a single campus has nothing to choose.
+      if (scopedCampusIds && visible.length === 1) setCampusId(visible[0].id);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -66,8 +74,11 @@ export function AnalyticsSection() {
 
   const { visible: visibleStaff, hiddenCount, showMore } = useViewMore(staff, 7);
 
+  const hideCampusPicker = scopedCampusIds?.length === 1;
+
   return (
     <div className="analytics-section">
+      {!hideCampusPicker && (
       <div className="analytics-section__field">
         <label htmlFor="analytics-campus">Campus</label>
         <Select id="analytics-campus" value={campusId} onChange={setCampusId}>
@@ -81,8 +92,9 @@ export function AnalyticsSection() {
           ))}
         </Select>
       </div>
+      )}
 
-      {!campusId && <p>Select a campus to view analytics.</p>}
+      {!campusId && scopedCampusIds?.length !== 1 && <p>Select a campus to view analytics.</p>}
 
       {campusId && !loadingStaff && (
         <div className="analytics-section__list">

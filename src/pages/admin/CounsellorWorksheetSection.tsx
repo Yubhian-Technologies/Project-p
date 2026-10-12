@@ -24,7 +24,10 @@ const STATUS_LABELS: Record<WorksheetRowStatus, string> = {
 export function CounsellorWorksheetSection() {
   const { profile } = useAuth();
   const [campuses, setCampuses] = useState<Campus[]>([]);
-  const [selectedCampusId, setSelectedCampusId] = useState("");
+  const [selectedCampusId, setSelectedCampusId] = useState(() =>
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses" && profile.adminAccess.campusIds?.length === 1
+      ? profile.adminAccess.campusIds[0]
+      : "");
   const [years, setYears] = useState<WorksheetAcademicYear[]>([]);
   const [selectedYearId, setSelectedYearId] = useState("");
   const [worksheetsList, setWorksheetsList] = useState<Worksheet[]>([]);
@@ -140,11 +143,14 @@ export function CounsellorWorksheetSection() {
   const { visible: visibleWorksheets, hiddenCount: hiddenWorksheetCount, showMore: showMoreWorksheets } =
     useViewMore(worksheetsList, 7);
 
+  const hideCampusPicker = scopedCampusIds?.length === 1;
+
   if (!selectedCampusId || !selectedYear) {
     return (
       <div className="counsellor-worksheet">
         {error && <p className="counsellor-worksheet__error">{error}</p>}
         <div className="counsellor-worksheet__filters">
+          {!hideCampusPicker && (
           <div className="counsellor-worksheet__filter-field">
             <label htmlFor="worksheet-campus">Campus</label>
             <Select id="worksheet-campus" value={selectedCampusId} onChange={setSelectedCampusId}>
@@ -154,6 +160,7 @@ export function CounsellorWorksheetSection() {
               ))}
             </Select>
           </div>
+          )}
           <div className="counsellor-worksheet__filter-field">
             <label htmlFor="worksheet-year">Academic Year</label>
             <Select
@@ -176,7 +183,9 @@ export function CounsellorWorksheetSection() {
           </div>
         </div>
         <p className="counsellor-worksheet__intro">
-          Select a campus and academic year to view the counsellor worksheets.
+          {hideCampusPicker
+            ? "Select an academic year to view the counsellor worksheets."
+            : "Select a campus and academic year to view the counsellor worksheets."}
         </p>
       </div>
     );
@@ -193,7 +202,7 @@ export function CounsellorWorksheetSection() {
             <span>{selectedYear.label}</span>
           </div>
           <button type="button" className="counsellor-worksheet__back" onClick={() => setSelectedYearId("")}>
-            ← Change campus/year
+            {hideCampusPicker ? "← Change year" : "← Change campus/year"}
           </button>
         </div>
         <p className="counsellor-worksheet__intro">

@@ -358,6 +358,17 @@ export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, o
           </div>
 
           <p className="ssi-modal__label">I understand that: <span className="ssi-modal__required">*</span></p>
+          <label className="ssi-modal__consent-check ssi-modal__consent-check--all">
+            <input
+              type="checkbox"
+              checked={consentReady}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setConsentChecks(Object.fromEntries(SSI_CONSENT_ITEMS.map((_, i) => [i, checked])));
+              }}
+            />
+            <span>Select all</span>
+          </label>
           {SSI_CONSENT_ITEMS.map((item, i) => (
             <label key={i} className="ssi-modal__consent-check">
               <input

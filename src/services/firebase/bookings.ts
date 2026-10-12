@@ -279,8 +279,13 @@ export async function listBookingsForUser(userId: string): Promise<Booking[]> {
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
-export async function listBookingsForCounsellor(counsellorId: string): Promise<Booking[]> {
-  const q = query(bookingsCollection, where("counsellorId", "==", counsellorId));
+// `campusId` is optional but required for a campus-scoped Admin: their read
+// rule depends on resource.data.campusId, which Firestore can only validate
+// for a list query when the query itself filters on it.
+export async function listBookingsForCounsellor(counsellorId: string, campusId?: string): Promise<Booking[]> {
+  const q = campusId
+    ? query(bookingsCollection, where("counsellorId", "==", counsellorId), where("campusId", "==", campusId))
+    : query(bookingsCollection, where("counsellorId", "==", counsellorId));
   const snapshot = await getDocs(q);
   return snapshot.docs
     .map((d) => toBooking(d.id, d.data()))

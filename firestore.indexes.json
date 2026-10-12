@@ -40,6 +40,14 @@
         { "fieldPath": "uid", "order": "ASCENDING" },
         { "fieldPath": "campusId", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "seriousCases",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "targetAdminUids", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [

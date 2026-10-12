@@ -26,7 +26,10 @@ import "./AnalyticsSection.css";
 export function SsiAnalyticsSection() {
   const { profile } = useAuth();
   const [campuses, setCampuses] = useState<Campus[]>([]);
-  const [campusId, setCampusId] = useState("");
+  const [campusId, setCampusId] = useState(() =>
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses" && profile.adminAccess.campusIds?.length === 1
+      ? profile.adminAccess.campusIds[0]
+      : "");
   const [results, setResults] = useState<SsiCollegeResult[]>([]);
   const [loadingResults, setLoadingResults] = useState(false);
   const [period, setPeriod] = useState<SsiAnalyticsPeriod>("all");
@@ -38,7 +41,12 @@ export function SsiAnalyticsSection() {
       : null;
 
   useEffect(() => {
-    listCampuses().then((c) => setCampuses(scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c));
+    listCampuses().then((c) => {
+      const visible = scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c;
+      setCampuses(visible);
+      // Admin assigned to a single campus has nothing to choose.
+      if (scopedCampusIds && visible.length === 1) setCampusId(visible[0].id);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -53,8 +61,11 @@ export function SsiAnalyticsSection() {
   const filteredResults = useMemo(() => filterSsiResultsByPeriod(results, period, now), [results, period, now]);
   const summary = useMemo(() => computeSsiAnalyticsSummary(filteredResults), [filteredResults]);
 
+  const hideCampusPicker = scopedCampusIds?.length === 1;
+
   return (
     <div className="ssi-results">
+      {!hideCampusPicker && (
       <div className="analytics-section__field">
         <label htmlFor="ssi-analytics-campus">Campus</label>
         <Select id="ssi-analytics-campus" value={campusId} onChange={setCampusId}>
@@ -68,8 +79,9 @@ export function SsiAnalyticsSection() {
           ))}
         </Select>
       </div>
+      )}
 
-      {!campusId && <p>Select a campus to view SSI check-in analytics.</p>}
+      {!campusId && scopedCampusIds?.length !== 1 && <p>Select a campus to view SSI check-in analytics.</p>}
 
       {campusId && !loadingResults && (
         <Card className="ssi-results__header-card">

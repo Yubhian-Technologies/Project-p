@@ -29,8 +29,10 @@ import {
   notifyHeadTransferSessionCancelled,
   suggestSsiTest,
 } from "../../services/firebase/bookings";
+import { createSeriousCase, getSeriousCaseForBooking } from "../../services/firebase/seriousCases";
 import type { Booking } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
+import type { SeriousCase } from "../../types/seriousCase";
 import { Button } from "../../components/common/Button";
 import { Select } from "../../components/common/Select";
 import { RequestCard } from "../../components/booking/RequestCard";
@@ -112,6 +114,7 @@ export function BookingRequestsSection({
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("new");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [seriousCase, setSeriousCase] = useState<SeriousCase | null>(null);
   const [historyState, setHistoryState] = useState<HistoryState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [completedFilterMonth, setCompletedFilterMonth] = useState(0);
@@ -135,6 +138,20 @@ export function BookingRequestsSection({
       onChatAutoOpenConsumed?.();
     }
   }, [selectedId, autoOpenChatBookingId, onChatAutoOpenConsumed]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setSeriousCase(null);
+      return;
+    }
+    let active = true;
+    getSeriousCaseForBooking(selectedId).then((c) => {
+      if (active) setSeriousCase(c);
+    });
+    return () => {
+      active = false;
+    };
+  }, [selectedId]);
 
   async function refresh() {
     if (!currentUser) return;
@@ -513,6 +530,12 @@ export function BookingRequestsSection({
           campusHead={campusHead}
           viewerRole={profile?.role === "head" ? "head" : "counsellor"}
           autoOpenChat={!!autoOpenChatBookingId && selectedBooking.id === autoOpenChatBookingId}
+          seriousCase={seriousCase}
+          onNotifySerious={async (note) => {
+            await createSeriousCase(selectedBooking.id, note);
+            const updated = await getSeriousCaseForBooking(selectedBooking.id);
+            setSeriousCase(updated);
+          }}
           onClose={() => setSelectedId(null)}
           onViewSummary={showViewSummary ? () => handleViewSummary(selectedBooking) : undefined}
           onSuggestSsi={async () => {

@@ -131,6 +131,7 @@ const ADMIN_SECTION_IDS = [
   "events",
   "analytics",
   "ssi-analytics",
+  "serious-cases",
   "counsellor-worksheet",
   "monthly-reports",
 ];
@@ -1327,5 +1328,310 @@ export const sendEventTodayReminders = onSchedule(
     for (const b of batches) await b.commit();
   },
 );
+
+// ── Serious/SOS case escalation to Admin ────────────────────────────────────
+// A Counsellor/Head closing out a Crisis SOS case (or a normal session they
+// judge serious) can escalate it to the right Admin(s) for that student's
+// college. Resolving "the right admin(s)" means scanning/filtering the whole
+// admin population by designation + scope + collegeIds with a fallback
+// chain — structurally impossible to validate from firestore.rules (rules
+// can only get() one known doc, never list/filter a collection), so this
+// whole flow goes through Admin-SDK callables rather than client writes.
+
+const SERIOUS_CASE_ADMIN_DESIGNATIONS = {
+  principalVp: ["principal", "vice-principal"],
+  managementAdmin: ["management", "administration"],
+};
+
+function hasDesignation(admin: Record<string, unknown>, designations: string[]): boolean {
+  const access = admin.adminAccess as { designation?: string } | undefined;
+  return designations.includes(access?.designation ?? "");
+}
+
+interface CreateSeriousCaseRequest {
+  bookingId: string;
+  note: string;
+}
+
+export const createSeriousCase = onCall<CreateSeriousCaseRequest>(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+
+  const { bookingId, note } = request.data;
+  if (!bookingId || typeof bookingId !== "string" || typeof note !== "string" || !note.trim() || note.length > 5000) {
+    throw new HttpsError("invalid-argument", "A booking id and a non-empty note (max 5000 characters) are required.");
+  }
+
+  const [callerDoc, bookingDoc] = await Promise.all([
+    db.collection("users").doc(callerUid).get(),
+    db.collection("bookings").doc(bookingId).get(),
+  ]);
+  const caller = callerDoc.data();
+  const booking = bookingDoc.data();
+  if (!booking) {
+    throw new HttpsError("not-found", "That booking was not found.");
+  }
+
+  const callerRole = caller?.role as string | undefined;
+  if (callerRole !== "counsellor" && callerRole !== "head") {
+    throw new HttpsError("permission-denied", "Only a Counsellor or Head can notify admin about a case.");
+  }
+  const isOwningCounsellor = callerRole === "counsellor" && booking.counsellorId === callerUid;
+  const isCampusHead = callerRole === "head" && booking.campusId === caller?.campusId;
+  if (!isOwningCounsellor && !isCampusHead) {
+    throw new HttpsError("permission-denied", "You don't have access to this booking.");
+  }
+  if (!["accepted", "scheduled", "completed"].includes(booking.status as string)) {
+    throw new HttpsError("failed-precondition", "This booking isn't in a state that can be flagged yet.");
+  }
+
+  const caseRef = db.collection("seriousCases").doc(bookingId);
+  if ((await caseRef.get()).exists) {
+    throw new HttpsError("already-exists", "A case has already been filed for this booking.");
+  }
+
+  const campusId = booking.campusId as string;
+  const studentDoc = await db.collection("users").doc(booking.userId as string).get();
+  const collegeId = (studentDoc.data()?.collegeId as string | undefined) ?? null;
+
+  const adminsSnap = await db.collection("users").where("role", "==", "admin").get();
+  const admins = adminsSnap.docs.map((d) => ({ uid: d.id, ...d.data() }) as Record<string, unknown> & { uid: string });
+  console.log("createSeriousCase: resolving targets", {
+    bookingId,
+    campusId,
+    collegeId,
+    adminCount: admins.length,
+    admins: admins.map((a) => ({
+      uid: a.uid,
+      email: a.email,
+      adminAccess: a.adminAccess,
+    })),
+  });
+
+  function coversCollege(admin: Record<string, unknown>): boolean {
+    const access = admin.adminAccess as { scope?: string; campusIds?: string[]; collegeIds?: string[] } | undefined;
+    if (!access || access.scope === "global") return true;
+    const collegeIds = access.collegeIds ?? [];
+    if (collegeIds.length > 0) return collegeId !== null && collegeIds.includes(collegeId);
+    return (access.campusIds ?? []).includes(campusId);
+  }
+  function isGlobalScope(admin: Record<string, unknown>): boolean {
+    const access = admin.adminAccess as { scope?: string } | undefined;
+    return !access || access.scope === "global";
+  }
+
+  let targetTier: "principal-vp" | "management-fallback" | "global-fallback" = "principal-vp";
+  let targets = admins.filter((a) => coversCollege(a) && hasDesignation(a, SERIOUS_CASE_ADMIN_DESIGNATIONS.principalVp));
+  if (targets.length === 0) {
+    targetTier = "management-fallback";
+    targets = admins.filter((a) => coversCollege(a) && hasDesignation(a, SERIOUS_CASE_ADMIN_DESIGNATIONS.managementAdmin));
+  }
+  if (targets.length === 0) {
+    // Nobody for this specific college/campus — widen to any
+    // Management/Administration admin platform-wide before giving up.
+    targets = admins.filter((a) => hasDesignation(a, SERIOUS_CASE_ADMIN_DESIGNATIONS.managementAdmin));
+  }
+  if (targets.length === 0) {
+    targetTier = "global-fallback";
+    targets = admins.filter((a) => isGlobalScope(a));
+  }
+  if (targets.length === 0) {
+    console.log("createSeriousCase: no admin matched any tier", { bookingId, campusId, collegeId });
+    throw new HttpsError("failed-precondition", "No admin account is configured to receive this case.");
+  }
+  // Management/Administration admins always have standing oversight visibility
+  // into every case platform-wide (they can already see it in their dashboard
+  // regardless of scope) — but until now that was dashboard-only, with no
+  // actual notification unless they happened to also be the targeted tier.
+  // This notifies every one of them directly too, distinctly worded from the
+  // targeted tier's notification so it's clear this is an FYI, not something
+  // the 24h SLA applies to for them.
+  const oversightAdmins = admins.filter(
+    (a) => hasDesignation(a, SERIOUS_CASE_ADMIN_DESIGNATIONS.managementAdmin) && !targets.some((t) => t.uid === a.uid),
+  );
+  console.log("createSeriousCase: resolved targets", {
+    bookingId,
+    targetTier,
+    targetAdminUids: targets.map((a) => a.uid),
+    targetAdminEmails: targets.map((a) => a.email),
+    oversightAdminUids: oversightAdmins.map((a) => a.uid),
+    oversightAdminEmails: oversightAdmins.map((a) => a.email),
+  });
+
+  let notifiedHeadUid: string | undefined;
+  if (callerRole === "counsellor" && campusId) {
+    const headSnap = await db
+      .collection("users")
+      .where("role", "==", "head")
+      .where("campusId", "==", campusId)
+      .limit(1)
+      .get();
+    notifiedHeadUid = headSnap.docs[0]?.id;
+  }
+
+  const now = Date.now();
+  const caseData = {
+    bookingId,
+    studentId: booking.userId,
+    studentEmail: booking.userEmail,
+    campusId,
+    collegeId,
+    isEmergency: booking.isEmergency === true,
+    originRole: callerRole,
+    authorUid: callerUid,
+    authorEmail: caller?.email ?? "",
+    note: note.trim(),
+    ...(notifiedHeadUid ? { notifiedHeadUid } : {}),
+    targetAdminUids: targets.map((a) => a.uid),
+    targetTier,
+    status: "open",
+    escalations: [],
+    escalationCount: 0,
+    lastEscalatedAt: now,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const batch = db.batch();
+  batch.set(caseRef, caseData);
+  const caseTitle = booking.isEmergency ? "Crisis SOS case needs your review" : "Serious case flagged — needs your review";
+  const caseMessage = `${caller?.email ?? "A staff member"} flagged a ${
+    booking.isEmergency ? "Crisis SOS" : "session"
+  } case with ${booking.userEmail ?? "a student"} for review.`;
+  for (const admin of targets) {
+    batch.set(db.collection("notifications").doc(), {
+      recipientId: admin.uid,
+      type: "serious_case_created",
+      bookingId,
+      title: caseTitle,
+      message: caseMessage,
+      read: false,
+      createdAt: now,
+    });
+  }
+  // Oversight admins aren't on the hook for the 24h SLA — they're not in
+  // targetAdminUids and can't resolve the case — but they still get the same
+  // high-priority notification so "wide open visibility" actually means
+  // something instead of just being a passive dashboard query.
+  const oversightTitle = booking.isEmergency ? "Crisis SOS case filed (oversight)" : "Serious case filed (oversight)";
+  const oversightMessage = `${caseMessage} For your visibility — this case is assigned to ${
+    targets.map((a) => a.email ?? a.uid).join(", ") || "another admin"
+  }.`;
+  for (const admin of oversightAdmins) {
+    batch.set(db.collection("notifications").doc(), {
+      recipientId: admin.uid,
+      type: "serious_case_created",
+      bookingId,
+      title: oversightTitle,
+      message: oversightMessage,
+      read: false,
+      createdAt: now,
+    });
+  }
+  if (notifiedHeadUid) {
+    batch.set(db.collection("notifications").doc(), {
+      recipientId: notifiedHeadUid,
+      type: "serious_case_head_notice",
+      bookingId,
+      title: "Serious case notified to admin",
+      message: `${caller?.email ?? "A counsellor"}'s case for ${booking.userEmail ?? "a student"} has also been sent to admin for review.`,
+      read: false,
+      createdAt: now,
+    });
+  }
+  await batch.commit();
+  console.log("createSeriousCase: committed", {
+    bookingId,
+    targetTier,
+    notifiedHeadUid,
+    oversightNotified: oversightAdmins.length,
+  });
+
+  return { success: true, caseId: bookingId };
+});
+
+// Runs every 15 minutes; re-notifies the targeted admin(s) on any open case
+// that's gone 24h+ without an "action taken" response, and keeps doing so
+// every 24h until one is finally recorded. Structurally mirrors
+// flagMissedSessions above (elapsed-time check via a timestamp field,
+// batched writes in chunks of 400).
+const SERIOUS_CASE_ESCALATION_MS = 24 * 60 * 60 * 1000;
+
+export const escalateSeriousCases = onSchedule("every 15 minutes", async () => {
+  const now = Date.now();
+  const openSnap = await db.collection("seriousCases").where("status", "==", "open").get();
+
+  const overdue = openSnap.docs.filter((d) => now - (d.data().lastEscalatedAt as number) >= SERIOUS_CASE_ESCALATION_MS);
+  if (overdue.length === 0) return;
+
+  // Same oversight treatment as createSeriousCase: Management/Administration
+  // admins aren't on the SLA hook, but they still get told a case has gone
+  // overdue so their "wide open visibility" stays meaningful on every
+  // escalation cycle, not just at case creation.
+  const adminsSnap = await db.collection("users").where("role", "==", "admin").get();
+  const oversightAdminUids = adminsSnap.docs
+    .map((d) => ({ uid: d.id, ...d.data() }) as Record<string, unknown> & { uid: string })
+    .filter((a) => hasDesignation(a, SERIOUS_CASE_ADMIN_DESIGNATIONS.managementAdmin))
+    .map((a) => a.uid);
+
+  let batch = db.batch();
+  let opsInBatch = 0;
+  const batches: FirebaseFirestore.WriteBatch[] = [];
+  function queue(op: () => void) {
+    op();
+    opsInBatch++;
+    if (opsInBatch === 400) {
+      batches.push(batch);
+      batch = db.batch();
+      opsInBatch = 0;
+    }
+  }
+
+  for (const docRef of overdue) {
+    const c = docRef.data();
+    const targetAdminUids = (c.targetAdminUids as string[] | undefined) ?? [];
+    const isEmergency = c.isEmergency === true;
+    queue(() =>
+      batch.update(docRef.ref, {
+        lastEscalatedAt: now,
+        escalationCount: FieldValue.increment(1),
+        escalations: FieldValue.arrayUnion({ type: "re-notified", at: now }),
+        updatedAt: now,
+      }),
+    );
+    for (const uid of targetAdminUids) {
+      queue(() =>
+        batch.set(db.collection("notifications").doc(), {
+          recipientId: uid,
+          type: "serious_case_escalated",
+          bookingId: c.bookingId,
+          title: "Overdue: case still needs action",
+          message: `A ${isEmergency ? "Crisis SOS" : "serious"} case has had no action taken for over 24 hours — please respond.`,
+          read: false,
+          createdAt: now,
+        }),
+      );
+    }
+    for (const uid of oversightAdminUids) {
+      if (targetAdminUids.includes(uid)) continue;
+      queue(() =>
+        batch.set(db.collection("notifications").doc(), {
+          recipientId: uid,
+          type: "serious_case_escalated",
+          bookingId: c.bookingId,
+          title: "Overdue: case still needs action (oversight)",
+          message: `A ${isEmergency ? "Crisis SOS" : "serious"} case has had no action taken for over 24 hours. For your visibility — it's assigned to another admin.`,
+          read: false,
+          createdAt: now,
+        }),
+      );
+    }
+  }
+  if (opsInBatch > 0) batches.push(batch);
+
+  for (const b of batches) await b.commit();
+});
 
 export { sendAppointmentEmails } from "./appointmentEmails";

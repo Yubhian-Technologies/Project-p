@@ -29,7 +29,11 @@ export type NotificationType =
   | "monthly_report_uploaded"
   | "journal_entry_shared"
   | "session_summary_shared"
-  | "team_chat_message";
+  | "team_chat_message"
+  | "serious_case_created"
+  | "serious_case_head_notice"
+  | "serious_case_escalated"
+  | "serious_case_resolved";
 
 export interface Notification {
   id: string;

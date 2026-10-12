@@ -21,7 +21,10 @@ export function LoginsManagementSection() {
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
   const [logins, setLogins] = useState<UserProfile[]>([]);
-  const [campusId, setCampusId] = useState("");
+  const [campusId, setCampusId] = useState(() =>
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses" && profile.adminAccess.campusIds?.length === 1
+      ? profile.adminAccess.campusIds[0]
+      : "");
   const [loadingCampuses, setLoadingCampuses] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
   const [editingLogin, setEditingLogin] = useState<UserProfile | null>(null);
@@ -51,7 +54,10 @@ export function LoginsManagementSection() {
 
   useEffect(() => {
     listCampuses().then((c) => {
-      setCampuses(scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c);
+      const visible = scopedCampusIds ? c.filter((campus) => scopedCampusIds.includes(campus.id)) : c;
+      setCampuses(visible);
+      // Admin assigned to a single campus has nothing to choose.
+      if (scopedCampusIds && visible.length === 1) setCampusId(visible[0].id);
       setLoadingCampuses(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,6 +96,8 @@ export function LoginsManagementSection() {
 
   if (loadingCampuses) return null;
 
+  const hideCampusPicker = scopedCampusIds?.length === 1;
+
   return (
     <div className="logins-management">
       <div className="logins-management__header">
@@ -98,6 +106,7 @@ export function LoginsManagementSection() {
         </Button>
       </div>
 
+      {!hideCampusPicker && (
       <div className="logins-management__filters">
         <div className="logins-management__field">
           <label htmlFor="logins-campus">Campus</label>
@@ -113,9 +122,10 @@ export function LoginsManagementSection() {
           </Select>
         </div>
       </div>
+      )}
 
       {deleteError && <p className="logins-management__error">{deleteError}</p>}
-      {!campusId && <p>Select a campus to view its logins.</p>}
+      {!campusId && scopedCampusIds?.length !== 1 && <p>Select a campus to view its logins.</p>}
       {campusId && logins.length === 0 && <p>No logins on this campus yet.</p>}
 
       {campusId &&

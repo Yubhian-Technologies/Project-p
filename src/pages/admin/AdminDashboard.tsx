@@ -6,6 +6,7 @@ import { CampusManagementSection } from "../super-admin/CampusManagementSection"
 import { LoginsManagementSection } from "../super-admin/LoginsManagementSection";
 import { AnalyticsSection } from "./analytics/AnalyticsSection";
 import { SsiAnalyticsSection } from "./analytics/SsiAnalyticsSection";
+import { SeriousCasesSection } from "./SeriousCasesSection";
 import { EventsOverviewSection } from "./EventsOverviewSection";
 import { MonthlyReportsViewSection } from "./MonthlyReportsViewSection";
 import { CounsellorWorksheetSection } from "./CounsellorWorksheetSection";
@@ -57,6 +58,14 @@ const SECTIONS = [
     ),
   },
   {
+    id: "serious-cases",
+    label: "Serious Cases",
+    variant: "urgent" as const,
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+    ),
+  },
+  {
     id: "counsellor-worksheet",
     label: "Counsellor Worksheet",
     icon: (
@@ -79,6 +88,7 @@ const TITLES: Record<string, string> = {
   events: "Events & Programs",
   analytics: "Analytics",
   "ssi-analytics": "SSI Analytics",
+  "serious-cases": "Serious Cases",
   "counsellor-worksheet": "Counsellor Worksheet",
   "monthly-reports": "Consolidated Reports",
 };
@@ -96,9 +106,24 @@ export function AdminDashboard() {
   // unconditionally (also matches firestore.rules' isGlobalCampusManager()).
   const isCampusRestricted = profile?.role === "admin" && profile.adminAccess?.scope === "campuses";
   const allowedSections = profile?.adminAccess?.sections;
+  // Management/Administration-designated admins (and any global-scope admin)
+  // always see every Serious Case platform-wide, regardless of their own
+  // scope — so the tab itself can't be accidentally hidden from them by an
+  // unchecked "sections" box either. Principal/Vice-Principal admins still
+  // need it explicitly granted, same as any other section.
+  const seesSeriousCasesRegardless =
+    !profile?.adminAccess ||
+    profile.adminAccess.scope === "global" ||
+    profile.adminAccess.designation === "management" ||
+    profile.adminAccess.designation === "administration";
   const visibleSections = (
     allowedSections
-      ? SECTIONS.filter((s) => s.id === "overview" || allowedSections.includes(s.id as (typeof allowedSections)[number]))
+      ? SECTIONS.filter(
+          (s) =>
+            s.id === "overview" ||
+            allowedSections.includes(s.id as (typeof allowedSections)[number]) ||
+            (s.id === "serious-cases" && seesSeriousCasesRegardless),
+        )
       : SECTIONS
   ).filter((s) => !(isCampusRestricted && s.id === "campuses"));
 
@@ -121,6 +146,8 @@ export function AdminDashboard() {
         <AnalyticsSection />
       ) : activeSection === "ssi-analytics" ? (
         <SsiAnalyticsSection />
+      ) : activeSection === "serious-cases" ? (
+        <SeriousCasesSection />
       ) : activeSection === "counsellor-worksheet" ? (
         <CounsellorWorksheetSection />
       ) : activeSection === "monthly-reports" ? (

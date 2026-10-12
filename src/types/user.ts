@@ -11,6 +11,7 @@ export type AdminSectionId =
   | "events"
   | "analytics"
   | "ssi-analytics"
+  | "serious-cases"
   | "counsellor-worksheet"
   | "monthly-reports";
 
