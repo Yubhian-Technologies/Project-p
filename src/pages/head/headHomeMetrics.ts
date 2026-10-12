@@ -44,6 +44,21 @@ export function periodLabel(period: HomePeriod, now: Date): string {
   return `Academic Year ${academicYearStartYear}-${String(academicYearStartYear + 1).slice(2)}`;
 }
 
+const PERIOD_CHIP_LABEL: Record<HomePeriod, string> = {
+  week: "This Week",
+  month: "This Month",
+  semester: "Last 6 Months",
+  year: "This Academic Year",
+};
+
+/** Short, generic label for the period TOGGLE BUTTON itself — "This Week" /
+    "This Month" — kept separate from periodLabel(), which stays concrete
+    ("2nd Week Oct" / "October") for the data/results shown once a period is
+    picked (KPI headers, "Showing results for…" lines, etc). */
+export function periodChipLabel(period: HomePeriod): string {
+  return PERIOD_CHIP_LABEL[period];
+}
+
 const WEEK_START_DAY: Record<number, number> = { 1: 1, 2: 8, 3: 15, 4: 22, 5: 29 };
 
 /** Semester is approximated as the last six months, and the academic year as

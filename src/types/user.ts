@@ -31,17 +31,30 @@ export interface AdminAccess {
   sections: AdminSectionId[]; // "campuses" only valid here when scope === "global"
 }
 
-// Student-only extended record — Course, Date of Birth, parent/guardian
-// contact details, and addresses. Kept as its own nested object rather than
-// flattened onto UserProfile since it's a distinct block of ~14 fields,
-// filled in either by the student themselves (Profile page) or in bulk by
-// Super Admin via a Register-Number-matched spreadsheet import.
+// Extended bio-data record for BOTH students and working professionals —
+// which fields apply is decided by `studentOrProfessional`, not by this type
+// (every field here is optional for that reason). Kept as its own nested
+// object rather than flattened onto UserProfile since it's a large block,
+// filled in either by the person themselves (Profile page) or, for students
+// only, in bulk by Super Admin via a Register-Number-matched spreadsheet
+// import.
 export interface StudentBioData {
+  // Student-only
   course?: string; // e.g. "B.Tech" — distinct from `branch` (e.g. "CSE")
   dateOfBirth?: string; // free text as entered (no fixed format enforced)
   hostelOrDayScholar?: "" | "Hostel" | "Day Scholar";
+  // Working-professional-only
+  employeeId?: string;
+  institution?: string;
+  designation?: string;
+  age?: string; // professionals enter this directly; a student's age is derived from dateOfBirth instead
+  preferredLanguage?: string;
+  maritalStatus?: string; // optional, free text
+  address?: string;
+  // Shared (student + professional)
   mobileNumber?: string; // distinct from `whatsappNumber`, which drives booking/crisis contact flows
   personalEmail?: string;
+  // Student-only (parent/guardian details — not applicable to professionals)
   fatherName?: string;
   motherName?: string;
   fatherOccupation?: string;

@@ -143,18 +143,20 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
                 <option value="lateral">Lateral</option>
               </Select>
             </div>
-            <div className="campus-logins-detail__field">
-              <label htmlFor="edit-user-branch">Branch</label>
-              <input
-                id="edit-user-branch"
-                type="text"
-                placeholder="e.g. CSE"
-                value={branch}
-                onChange={(e) => setBranch(e.target.value)}
-              />
-            </div>
           </>
         )}
+        <div className="campus-logins-detail__field">
+          <label htmlFor="edit-user-branch">
+            {studentOrProfessional === "student" ? "Branch" : "Department"}
+          </label>
+          <input
+            id="edit-user-branch"
+            type="text"
+            placeholder={studentOrProfessional === "student" ? "e.g. CSE" : "e.g. Human Resources"}
+            value={branch}
+            onChange={(e) => setBranch(e.target.value)}
+          />
+        </div>
         <div className="campus-logins-detail__field">
           <label htmlFor="edit-user-gender">Gender</label>
           <Select id="edit-user-gender" value={gender} onChange={setGender}>

@@ -33,6 +33,52 @@
   min-width: 180px;
 }
 
+.ssi-results__search-wrap {
+  position: relative;
+  display: flex;
+}
+
+.ssi-results__search-input {
+  font-family: inherit;
+  font-size: 13.5px;
+  padding: 10px 32px 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(46, 43, 39, 0.14);
+  background: #FFFFFF;
+  color: #2E2B27;
+  min-width: 220px;
+  box-sizing: border-box;
+}
+
+.ssi-results__search-input:focus {
+  outline: none;
+  border-color: #0B193C;
+  box-shadow: 0 0 0 3px rgba(11, 25, 60, 0.1);
+}
+
+.ssi-results__search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #718096;
+  font-size: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.ssi-results__search-clear:hover {
+  background: rgba(46, 43, 39, 0.08);
+  color: #2E2B27;
+}
+
 .ssi-results__period-chips {
   display: flex;
   gap: 8px;
@@ -64,6 +110,16 @@
   border-color: #0B193C;
   color: #FFFFFF;
   box-shadow: 0 2px 8px rgba(11, 25, 60, 0.18);
+}
+
+.ssi-results__period-note {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: #4A5568;
+}
+
+.ssi-results__period-note strong {
+  color: #0B193C;
 }
 
 .ssi-results__summary {

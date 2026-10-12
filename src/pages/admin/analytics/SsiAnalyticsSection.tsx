@@ -5,6 +5,7 @@ import { listSsiCollegeResultsForCampus, type SsiCollegeResult } from "../../../
 import type { Campus } from "../../../types/campus";
 import {
   SSI_ANALYTICS_PERIODS,
+  ssiAnalyticsChipLabel,
   ssiAnalyticsPeriodLabel,
   filterSsiResultsByPeriod,
   computeSsiAnalyticsSummary,
@@ -87,11 +88,15 @@ export function SsiAnalyticsSection() {
                   aria-pressed={period === p}
                   onClick={() => setPeriod(p)}
                 >
-                  {ssiAnalyticsPeriodLabel(p, now)}
+                  {ssiAnalyticsChipLabel(p)}
                 </button>
               ))}
             </div>
           </div>
+
+          <p className="ssi-results__period-note">
+            Showing results for <strong>{ssiAnalyticsPeriodLabel(period, now)}</strong>
+          </p>
 
           <div className="ssi-results__summary">
             <div className="ssi-results__summary-card">

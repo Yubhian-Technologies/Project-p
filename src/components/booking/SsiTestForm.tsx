@@ -7,7 +7,7 @@ import {
   SSI_FORM_TITLE,
   SSI_LEVELS,
   SSI_LEVEL1_FIELDS,
-  SSI_PAGE1_NOTE,
+  ssiPage1Note,
   SSI_LIKERT_OPTIONS,
   SSI_LIKERT_QUESTIONS,
   SSI_LEVEL3_QUESTIONS,
@@ -61,7 +61,7 @@ export interface SsiTestFormProps {
     whatsappNumber?: string;
     branch?: string;
     yearOrBatch?: string;
-    bioData?: { dateOfBirth?: string; hostelOrDayScholar?: string };
+    bioData?: { dateOfBirth?: string; hostelOrDayScholar?: string; age?: string };
   };
   /** Pre-filled WhatsApp number fetched from the booking intake if the profile has none. */
   initialWhatsappNumber?: string;
@@ -80,6 +80,11 @@ export interface SsiTestFormProps {
  * whether they'll be attached to a specific booking/counsellor or to a college.
  */
 export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, onSubmit, onClose, chrome = "modal" }: SsiTestFormProps) {
+  const isProfessional = profile.studentOrProfessional === "professional";
+  // Year and Hostel/Day Scholar only make sense for a student — a working
+  // professional only ever sees/answers Department on this page.
+  const level1Fields = isProfessional ? SSI_LEVEL1_FIELDS.filter((f) => f.id === "department") : SSI_LEVEL1_FIELDS;
+
   const [step, setStep] = useState(1);
   const [level1, setLevel1] = useState<Record<string, string>>(() => {
     const prefilled: Record<string, string> = {};
@@ -89,8 +94,10 @@ export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, o
       prefilled.hostelOrDayScholar = profile.bioData.hostelOrDayScholar.trim();
     return prefilled;
   });
-  // Never a form field — always computed from the profile's Date of Birth.
-  const computedAge = ageFromDob(profile.bioData?.dateOfBirth);
+  // Never a form field — always computed. A professional types their Age
+  // directly into their profile's bio data; a student's is derived from
+  // their Date of Birth instead.
+  const computedAge = isProfessional ? profile.bioData?.age?.trim() || "" : ageFromDob(profile.bioData?.dateOfBirth);
   const [likert, setLikert] = useState<Record<string, number>>({});
   const [lvl3, setLvl3] = useState<Record<string, string>>({});
   const [whatsapp, setWhatsapp] = useState(
@@ -103,7 +110,7 @@ export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, o
 
   const level = SSI_LEVELS.find((l) => l.id === step) ?? SSI_LEVELS[0];
 
-  const level1Ready = SSI_LEVEL1_FIELDS.every((f) => !f.required || (level1[f.id] ?? "").trim());
+  const level1Ready = level1Fields.every((f) => !f.required || (level1[f.id] ?? "").trim());
   const likertReady = SSI_LIKERT_QUESTIONS.every((q) => likert[q.id] !== undefined);
   const level3Ready = SSI_LEVEL3_QUESTIONS.every((q) => !q.required || (lvl3[q.id] ?? "").trim());
   const consentReady = SSI_CONSENT_ITEMS.every((_, i) => Boolean(consentChecks[i]));
@@ -220,7 +227,7 @@ export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, o
       {/* ── Level 1: basic details ──────────────────────────────────── */}
       {step === 1 && (
         <div className="ssi-modal__fields">
-          {SSI_LEVEL1_FIELDS.map((f) => (
+          {level1Fields.map((f) => (
             <div key={f.id} className="ssi-modal__field">
               <label className="ssi-modal__label" htmlFor={`ssi-${f.id}`}>
                 {f.label} {f.required && <span className="ssi-modal__required">*</span>}
@@ -250,7 +257,7 @@ export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, o
               {computedAge || "Set your Date of Birth in Profile → Bio Data to fill this in automatically."}
             </p>
           </div>
-          <p className="ssi-modal__note">{SSI_PAGE1_NOTE}</p>
+          <p className="ssi-modal__note">{ssiPage1Note(profile.studentOrProfessional)}</p>
         </div>
       )}
 

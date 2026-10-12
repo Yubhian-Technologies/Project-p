@@ -62,6 +62,13 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const [hostelOrDayScholarDraft, setHostelOrDayScholarDraft] = useState(
     profile?.bioData?.hostelOrDayScholar ?? "",
   );
+  const [employeeIdDraft, setEmployeeIdDraft] = useState(profile?.bioData?.employeeId ?? "");
+  const [institutionDraft, setInstitutionDraft] = useState(profile?.bioData?.institution ?? "");
+  const [designationDraft, setDesignationDraft] = useState(profile?.bioData?.designation ?? "");
+  const [ageDraft, setAgeDraft] = useState(profile?.bioData?.age ?? "");
+  const [preferredLanguageDraft, setPreferredLanguageDraft] = useState(profile?.bioData?.preferredLanguage ?? "");
+  const [maritalStatusDraft, setMaritalStatusDraft] = useState(profile?.bioData?.maritalStatus ?? "");
+  const [addressDraft, setAddressDraft] = useState(profile?.bioData?.address ?? "");
   const [mobileNumberDraft, setMobileNumberDraft] = useState(profile?.bioData?.mobileNumber ?? "");
   const [personalEmailDraft, setPersonalEmailDraft] = useState(profile?.bioData?.personalEmail ?? "");
   const [fatherNameDraft, setFatherNameDraft] = useState(profile?.bioData?.fatherName ?? "");
@@ -227,6 +234,13 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
         course: courseDraft.trim(),
         dateOfBirth: dateOfBirthDraft.trim(),
         hostelOrDayScholar: hostelOrDayScholarDraft,
+        employeeId: employeeIdDraft.trim(),
+        institution: institutionDraft.trim(),
+        designation: designationDraft.trim(),
+        age: ageDraft.trim(),
+        preferredLanguage: preferredLanguageDraft.trim(),
+        maritalStatus: maritalStatusDraft.trim(),
+        address: addressDraft.trim(),
         mobileNumber: mobileNumberDraft.trim(),
         personalEmail: personalEmailDraft.trim(),
         fatherName: fatherNameDraft.trim(),
@@ -309,6 +323,13 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     courseDraft === (profile.bioData?.course ?? "") &&
     dateOfBirthDraft === (profile.bioData?.dateOfBirth ?? "") &&
     hostelOrDayScholarDraft === (profile.bioData?.hostelOrDayScholar ?? "") &&
+    employeeIdDraft === (profile.bioData?.employeeId ?? "") &&
+    institutionDraft === (profile.bioData?.institution ?? "") &&
+    designationDraft === (profile.bioData?.designation ?? "") &&
+    ageDraft === (profile.bioData?.age ?? "") &&
+    preferredLanguageDraft === (profile.bioData?.preferredLanguage ?? "") &&
+    maritalStatusDraft === (profile.bioData?.maritalStatus ?? "") &&
+    addressDraft === (profile.bioData?.address ?? "") &&
     mobileNumberDraft === (profile.bioData?.mobileNumber ?? "") &&
     personalEmailDraft === (profile.bioData?.personalEmail ?? "") &&
     fatherNameDraft === (profile.bioData?.fatherName ?? "") &&
@@ -690,25 +711,54 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                   />
                 </div>
                 {isStudent && (
+                  <div className="profile-section__field">
+                    <label htmlFor="intake-year">Year / Batch</label>
+                    <input
+                      id="intake-year"
+                      type="text"
+                      placeholder="e.g. 2nd Year"
+                      value={yearOrBatchDraft}
+                      onChange={(e) => setYearOrBatchDraft(e.target.value)}
+                    />
+                  </div>
+                )}
+                <div className="profile-section__field">
+                  <label htmlFor="intake-branch">{isStudent ? "Branch" : "Department"}</label>
+                  <input
+                    id="intake-branch"
+                    type="text"
+                    placeholder={isStudent ? "e.g. CSE" : "e.g. Human Resources"}
+                    value={branchDraft}
+                    onChange={(e) => setBranchDraft(e.target.value)}
+                  />
+                </div>
+                {!isStudent && (
                   <>
                     <div className="profile-section__field">
-                      <label htmlFor="intake-year">Year / Batch</label>
+                      <label htmlFor="intake-employee-id">Employee ID</label>
                       <input
-                        id="intake-year"
+                        id="intake-employee-id"
                         type="text"
-                        placeholder="e.g. 2nd Year"
-                        value={yearOrBatchDraft}
-                        onChange={(e) => setYearOrBatchDraft(e.target.value)}
+                        value={employeeIdDraft}
+                        onChange={(e) => setEmployeeIdDraft(e.target.value)}
                       />
                     </div>
                     <div className="profile-section__field">
-                      <label htmlFor="intake-branch">Branch</label>
+                      <label htmlFor="intake-institution">Institution</label>
                       <input
-                        id="intake-branch"
+                        id="intake-institution"
                         type="text"
-                        placeholder="e.g. CSE"
-                        value={branchDraft}
-                        onChange={(e) => setBranchDraft(e.target.value)}
+                        value={institutionDraft}
+                        onChange={(e) => setInstitutionDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-designation">Designation</label>
+                      <input
+                        id="intake-designation"
+                        type="text"
+                        value={designationDraft}
+                        onChange={(e) => setDesignationDraft(e.target.value)}
                       />
                     </div>
                   </>
@@ -749,17 +799,52 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                     </div>
                   </>
                 )}
+                {!isStudent && (
+                  <>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-preferred-language">Preferred language</label>
+                      <input
+                        id="intake-preferred-language"
+                        type="text"
+                        value={preferredLanguageDraft}
+                        onChange={(e) => setPreferredLanguageDraft(e.target.value)}
+                      />
+                    </div>
+                    <div className="profile-section__field">
+                      <label htmlFor="intake-marital-status">Marital status (optional)</label>
+                      <input
+                        id="intake-marital-status"
+                        type="text"
+                        value={maritalStatusDraft}
+                        onChange={(e) => setMaritalStatusDraft(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+                {isStudent ? (
+                  <div className="profile-section__field">
+                    <label htmlFor="intake-dob">Date of birth</label>
+                    <input
+                      id="intake-dob"
+                      type="date"
+                      value={dateOfBirthDraft}
+                      onChange={(e) => setDateOfBirthDraft(e.target.value)}
+                    />
+                  </div>
+                ) : (
+                  <div className="profile-section__field">
+                    <label htmlFor="intake-age">Age</label>
+                    <input
+                      id="intake-age"
+                      type="number"
+                      min={0}
+                      value={ageDraft}
+                      onChange={(e) => setAgeDraft(e.target.value)}
+                    />
+                  </div>
+                )}
                 <div className="profile-section__field">
-                  <label htmlFor="intake-dob">Date of birth</label>
-                  <input
-                    id="intake-dob"
-                    type="date"
-                    value={dateOfBirthDraft}
-                    onChange={(e) => setDateOfBirthDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field">
-                  <label htmlFor="intake-mobile">Mobile number</label>
+                  <label htmlFor="intake-mobile">{isStudent ? "Mobile number" : "Phone Number"}</label>
                   <input
                     id="intake-mobile"
                     type="tel"
@@ -768,7 +853,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                   />
                 </div>
                 <div className="profile-section__field">
-                  <label htmlFor="intake-personal-email">Email ID (personal)</label>
+                  <label htmlFor="intake-personal-email">{isStudent ? "Email ID (personal)" : "Email ID"}</label>
                   <input
                     id="intake-personal-email"
                     type="email"
@@ -776,6 +861,17 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                     onChange={(e) => setPersonalEmailDraft(e.target.value)}
                   />
                 </div>
+                {!isStudent && (
+                  <div className="profile-section__field profile-section__field--full">
+                    <label htmlFor="intake-address">Address</label>
+                    <textarea
+                      id="intake-address"
+                      rows={2}
+                      value={addressDraft}
+                      onChange={(e) => setAddressDraft(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 {isStudent && (
                   <>

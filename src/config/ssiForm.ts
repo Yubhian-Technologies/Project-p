@@ -70,8 +70,14 @@ export const SSI_LEVEL1_FIELDS: SsiLevel1Field[] = [
   { id: "hostelOrDayScholar", label: "Hostel / Day Scholar", kind: "select", options: ["Hostel", "Day Scholar"], required: true },
 ];
 
-export const SSI_PAGE1_NOTE =
-  "Your Institution and campus details will automatically be shared with the counsellor, as they were set at the time of sign-up. Department, Year and Hostel/Day Scholar are pre-filled from your profile where available — please correct them here if anything has changed. Age is calculated automatically from your Date of Birth in your Profile's bio data.";
+export function ssiPage1Note(studentOrProfessional?: "student" | "professional"): string {
+  const base =
+    "Your Institution and campus details will automatically be shared with the counsellor, as they were set at the time of sign-up.";
+  if (studentOrProfessional === "professional") {
+    return `${base} Department and Age are pre-filled from your profile's bio data where available — please correct them here if anything has changed.`;
+  }
+  return `${base} Department, Year and Hostel/Day Scholar are pre-filled from your profile where available — please correct them here if anything has changed. Age is calculated automatically from your Date of Birth in your Profile's bio data.`;
+}
 
 // ── Page 2: DASS-21 rating scale + statements ─────────────────────────────────
 export interface SsiLikertOption {

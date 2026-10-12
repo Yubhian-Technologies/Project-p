@@ -165,18 +165,20 @@ export function AddStudentModal({ campusId, onClose, onCreated }: AddStudentModa
                 <option value="lateral">Lateral</option>
               </Select>
             </div>
-            <div className="import-logins-modal__field">
-              <label htmlFor="add-student-branch">Branch (optional)</label>
-              <input
-                id="add-student-branch"
-                type="text"
-                placeholder="e.g. CSE"
-                value={branch}
-                onChange={(e) => setBranch(e.target.value)}
-              />
-            </div>
           </>
         )}
+        <div className="import-logins-modal__field">
+          <label htmlFor="add-student-branch">
+            {studentOrProfessional === "student" ? "Branch (optional)" : "Department (optional)"}
+          </label>
+          <input
+            id="add-student-branch"
+            type="text"
+            placeholder={studentOrProfessional === "student" ? "e.g. CSE" : "e.g. Human Resources"}
+            value={branch}
+            onChange={(e) => setBranch(e.target.value)}
+          />
+        </div>
         <div className="import-logins-modal__field">
           <label htmlFor="add-student-gender">Gender (optional)</label>
           <Select id="add-student-gender" value={gender} onChange={setGender}>

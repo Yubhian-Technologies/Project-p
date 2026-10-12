@@ -759,10 +759,24 @@ export function RequestDetailModal({
             <dd>{studentProfile.bioData?.dateOfBirth || "—"}</dd>
             <dt>Hostel / Day Scholar</dt>
             <dd>{studentProfile.bioData?.hostelOrDayScholar || "—"}</dd>
-            <dt>Mobile number</dt>
+            <dt>Employee ID</dt>
+            <dd>{studentProfile.bioData?.employeeId || "—"}</dd>
+            <dt>Institution</dt>
+            <dd>{studentProfile.bioData?.institution || "—"}</dd>
+            <dt>Designation</dt>
+            <dd>{studentProfile.bioData?.designation || "—"}</dd>
+            <dt>Age</dt>
+            <dd>{studentProfile.bioData?.age || "—"}</dd>
+            <dt>Preferred language</dt>
+            <dd>{studentProfile.bioData?.preferredLanguage || "—"}</dd>
+            <dt>Marital status</dt>
+            <dd>{studentProfile.bioData?.maritalStatus || "—"}</dd>
+            <dt>Mobile / Phone number</dt>
             <dd>{studentProfile.bioData?.mobileNumber || "—"}</dd>
-            <dt>Personal email</dt>
+            <dt>Email ID</dt>
             <dd>{studentProfile.bioData?.personalEmail || "—"}</dd>
+            <dt>Address</dt>
+            <dd>{studentProfile.bioData?.address || "—"}</dd>
             <dt>Father's name</dt>
             <dd>{studentProfile.bioData?.fatherName || "—"}</dd>
             <dt>Father's occupation</dt>

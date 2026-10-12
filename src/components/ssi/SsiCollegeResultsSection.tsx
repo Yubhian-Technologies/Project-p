@@ -12,6 +12,7 @@ import { toIsoDate } from "../../utils/dateFormat";
 import { formatDateDMY, formatDateTimeDMY, formatWeekdayDateDMY } from "../../utils/formatDate";
 import {
   SSI_ANALYTICS_PERIODS,
+  ssiAnalyticsChipLabel,
   ssiAnalyticsPeriodLabel,
   filterSsiResultsByPeriod,
   computeSsiAnalyticsSummary,
@@ -31,6 +32,7 @@ export function SsiCollegeResultsSection() {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<SsiCollegeResult | null>(null);
   const [dateFilter, setDateFilter] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [period, setPeriod] = useState<SsiAnalyticsPeriod>("all");
   const [savingAction, setSavingAction] = useState(false);
   const [now] = useState(() => new Date());
@@ -85,7 +87,16 @@ export function SsiCollegeResultsSection() {
     ? periodResults.filter((r) => toIsoDate(new Date(r.submittedAt)) === dateFilter)
     : periodResults;
 
-  const summary = useMemo(() => computeSsiAnalyticsSummary(filteredResults), [filteredResults]);
+  const searchQueryNormalized = searchQuery.trim().toLowerCase();
+  const searchedResults = searchQueryNormalized
+    ? filteredResults.filter(
+        (r) =>
+          r.displayName.toLowerCase().includes(searchQueryNormalized) ||
+          r.userEmail.toLowerCase().includes(searchQueryNormalized),
+      )
+    : filteredResults;
+
+  const summary = useMemo(() => computeSsiAnalyticsSummary(searchedResults), [searchedResults]);
 
   async function handleToggleAction(result: SsiCollegeResult) {
     if (!profile?.email) return;
@@ -130,11 +141,15 @@ export function SsiCollegeResultsSection() {
                 aria-pressed={period === p}
                 onClick={() => setPeriod(p)}
               >
-                {ssiAnalyticsPeriodLabel(p, now)}
+                {ssiAnalyticsChipLabel(p)}
               </button>
             ))}
           </div>
         </div>
+
+        <p className="ssi-results__period-note">
+          Showing results for <strong>{ssiAnalyticsPeriodLabel(period, now)}</strong>
+        </p>
 
         <div className="ssi-results__summary">
           <div className="ssi-results__summary-card">
@@ -183,11 +198,30 @@ export function SsiCollegeResultsSection() {
                 );
               })}
             </Select>
+            <div className="ssi-results__search-wrap">
+              <input
+                type="text"
+                className="ssi-results__search-input"
+                placeholder="Search by name or email…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="ssi-results__search-clear"
+                  aria-label="Clear search"
+                  onClick={() => setSearchQuery("")}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             <Button
               type="button"
               variant="outlined"
-              disabled={filteredResults.length === 0}
-              onClick={() => exportSsiResultsCsv(filteredResults, dateFilter ? `ssi-test-results-${dateFilter}.csv` : undefined)}
+              disabled={searchedResults.length === 0}
+              onClick={() => exportSsiResultsCsv(searchedResults, dateFilter ? `ssi-test-results-${dateFilter}.csv` : undefined)}
             >
               Export to CSV
             </Button>
@@ -195,18 +229,20 @@ export function SsiCollegeResultsSection() {
         </div>
       </Card>
 
-      {filteredResults.length === 0 && (
+      {searchedResults.length === 0 && (
         <Card className="ssi-results__empty-card">
           <p>
             {results.length === 0
               ? `No SSI check-ins have been submitted by students at your ${isHead ? "campus" : "college"} yet.`
-              : "No check-ins were submitted on this date."}
+              : searchQueryNormalized
+                ? "No check-ins match this search."
+                : "No check-ins were submitted on this date."}
           </p>
         </Card>
       )}
 
       <div className="ssi-results__list">
-        {filteredResults.map((r) => (
+        {searchedResults.map((r) => (
           <Card
             key={r.id}
             className={`ssi-results__row ssi-results__row--${r.severity}`}

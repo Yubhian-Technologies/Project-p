@@ -12,7 +12,7 @@ export function VishnuWellnessMissionCard({ onSelectSection }: VishnuWellnessMis
         {/* Header Section */}
         <div className="vwm-header">
           <div className="vwm-header__badge">
-            SRI VISHNU EDUCATIONAL SOCIETY • EST. 2017
+            SRI VISHNU EDUCATIONAL SOCIETY
           </div>
 
           <div className="vwm-header__main">

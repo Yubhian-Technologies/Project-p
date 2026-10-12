@@ -15,6 +15,7 @@ import type { Booking } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
 import {
   periodLabel,
+  periodChipLabel,
   computeHomeMetrics,
   type HomeInput,
   type HomePeriod,
@@ -178,12 +179,15 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
                 aria-pressed={period === p}
                 onClick={() => setPeriod(p)}
               >
-                {periodLabel(p, now)}
+                {periodChipLabel(p)}
               </button>
             ))}
           </div>
         </div>
-        <p className="hch-muted hch-small">The period filter applies to the first four cards and Team Pulse below.</p>
+        <p className="hch-muted hch-small">
+          Showing results for <strong>{periodLabel(period, now)}</strong> — applies to the first four cards and
+          Team Pulse below.
+        </p>
         <div className="hch-kpis">
           <Kpi label="Students Supported" value={m.kpis.students} note="Students who accessed wellness services" />
           <Kpi label="Sessions" value={m.kpis.sessions} note="Counselling sessions booked or completed" />

@@ -7,6 +7,7 @@ import type { Booking } from "../../types/booking";
 import type { SessionFeedback } from "../../types/feedback";
 import {
   periodLabel,
+  periodChipLabel,
   computeHomeMetrics,
   type HomeMetrics,
   type HomePeriod,
@@ -91,11 +92,14 @@ export function CounsellorTrends() {
                 aria-pressed={period === p}
                 onClick={() => setPeriod(p)}
               >
-                {periodLabel(p, now)}
+                {periodChipLabel(p)}
               </button>
             ))}
           </div>
         </div>
+        <p className="hch-muted hch-small">
+          Showing results for <strong>{periodLabel(period, now)}</strong>
+        </p>
         <div className="hch-kpis">
           <div className="hch-kpi">
             <p className="hch-kpi__label">Students Supported</p>

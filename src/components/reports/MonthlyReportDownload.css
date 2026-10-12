@@ -11,6 +11,10 @@
   max-width: 640px;
 }
 
+.monthly-report-download__kind-card {
+  max-width: 320px;
+}
+
 .monthly-report-download__intro {
   margin: 0;
   font-size: 13px;
