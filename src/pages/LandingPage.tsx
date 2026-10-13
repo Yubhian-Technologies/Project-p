@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { motion, useScroll, useSpring } from "framer-motion";
+import { motion, useScroll } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { dashboardPathForRole } from "../utils/roleRedirect";
 import { CardFanCarousel } from "../components/ui/CardFanCarousel";
@@ -16,49 +16,37 @@ const DOING_CARDS = [
     id: 1,
     title: "My brain won't switch off.",
     desc: "Overthinking • Anxiety • Racing thoughts",
-    image: "/find-help/find-help-1.jpg",
     theme: "pink",
-    alt: "My brain won't switch off",
   },
   {
     id: 2,
     title: "Academics are getting to me.",
     desc: "Exam stress • Performance pressure • Procrastination",
-    image: "/find-help/find-help-2.jpg",
     theme: "blue",
-    alt: "Academics are getting to me",
   },
   {
     id: 3,
     title: "I'm running on empty.",
     desc: "Burnout • Sleep • Motivation • Digital overload",
-    image: "/find-help/find-help-3.jpg",
     theme: "mint",
-    alt: "I'm running on empty",
   },
   {
     id: 4,
     title: "It's complicated.",
     desc: "Relationships • Friendships • Family • Boundaries",
-    image: "/find-help/find-help-4.jpg",
     theme: "peach",
-    alt: "It's complicated",
   },
   {
     id: 5,
     title: "I'm figuring myself out.",
     desc: "Confidence • Self-esteem • Identity • Personal growth",
-    image: "/find-help/find-help-5.jpg",
     theme: "lavender",
-    alt: "I'm figuring myself out",
   },
   {
     id: 6,
     title: "I need someone to talk to.",
     desc: "A safe space to share and get support",
-    image: "/find-help/find-help-6.jpg",
     theme: "yellow",
-    alt: "I need someone to talk to",
   },
 ];
 
@@ -431,12 +419,7 @@ export function LandingPage() {
     scrollToDoingCard(next);
   };
 
-  const { scrollYProgress, scrollY } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
+  const { scrollY } = useScroll();
 
   useEffect(() => {
     return scrollY.on("change", (latest) => {
@@ -446,9 +429,6 @@ export function LandingPage() {
 
   return (
     <div className="landing-page">
-      {/* Top Reading Progress Bar */}
-      <motion.div className="landing-scroll-progress" style={{ scaleX }} />
-
       <motion.header
         className={`landing-header ${isScrolled ? "landing-header--scrolled" : ""}`}
         initial={{ y: -25, opacity: 0 }}

@@ -82,9 +82,17 @@ export async function listSsiCollegeResultsForUser(uid: string): Promise<SsiColl
   return snap.docs.map((d) => toSsiCollegeResult(d.id, d.data()));
 }
 
-/** Every standalone SSI submission for a college — used by that college's own counsellors. */
-export async function listSsiCollegeResultsForCollege(collegeId: string): Promise<SsiCollegeResult[]> {
-  const q = query(collection(db, COLLECTION), where("collegeId", "==", collegeId));
+/** Every standalone SSI submission for a college — used by that college's own
+    counsellors (who don't need campusId — their own read rule branch only
+    depends on collegeId) and by a campus-scoped Admin (Principal/VP), whose
+    read rule branch depends on campusId instead. Firestore can only validate
+    a list query against a rule that reads resource.data.campusId if the
+    query itself filters on campusId — pass it when the caller is an Admin,
+    same as listEventsForCollege(). */
+export async function listSsiCollegeResultsForCollege(collegeId: string, campusId?: string): Promise<SsiCollegeResult[]> {
+  const q = campusId
+    ? query(collection(db, COLLECTION), where("collegeId", "==", collegeId), where("campusId", "==", campusId))
+    : query(collection(db, COLLECTION), where("collegeId", "==", collegeId));
   const snap = await getDocs(q);
   return snap.docs.map((d) => toSsiCollegeResult(d.id, d.data()));
 }

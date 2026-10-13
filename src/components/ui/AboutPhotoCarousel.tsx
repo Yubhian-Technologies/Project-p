@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 // — until then, that slide shows a placeholder so the carousel still works.
 const SLIDES: { src: string | null; alt: string }[] = [
   { src: "/about-1.jpg", alt: "Vishnu Wellness Centre — campus life photo 1" },
-  { src: null, alt: "Vishnu Wellness Centre — campus life photo 2" },
-  { src: null, alt: "Vishnu Wellness Centre — campus life photo 3" },
+  { src: "/about-2.jpg", alt: "Vishnu Wellness Centre — campus life photo 2" },
+  { src: "/about-3.jpg", alt: "Vishnu Wellness Centre — campus life photo 3" },
+  { src: null, alt: "Vishnu Wellness Centre — campus life photo 4" },
 ];
 
 const AUTO_ADVANCE_MS = 5000;

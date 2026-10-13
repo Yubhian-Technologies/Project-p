@@ -74,6 +74,13 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
   const [loading, setLoading] = useState(true);
 
   const collegeIds = profile?.adminAccess?.collegeIds ?? [];
+  // A Principal/VP is always scoped to exactly one campus in practice (one
+  // college, one campus) — the single value here is enough for every real
+  // account. Firestore can only validate these list queries against the
+  // Admin branch of the events/ssi_college_results read rules (which reads
+  // resource.data.campusId) when the query itself filters on campusId too —
+  // omitting it is what was throwing "Missing or insufficient permissions".
+  const campusId = profile?.adminAccess?.campusIds?.[0];
   const grantedSections = profile?.adminAccess?.sections;
   const seesSeriousCases = !grantedSections || grantedSections.includes("serious-cases");
 
@@ -85,8 +92,8 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
     let active = true;
     setLoading(true);
     Promise.all([
-      Promise.all(collegeIds.map((id) => listEventsForCollege(id))).then((lists) => lists.flat()),
-      Promise.all(collegeIds.map((id) => listSsiCollegeResultsForCollege(id))).then((lists) => lists.flat()),
+      Promise.all(collegeIds.map((id) => listEventsForCollege(id, campusId))).then((lists) => lists.flat()),
+      Promise.all(collegeIds.map((id) => listSsiCollegeResultsForCollege(id, campusId))).then((lists) => lists.flat()),
       Promise.all(
         collegeIds.map((id) =>
           getDocs(query(collection(db, "users"), where("role", "==", "counsellor"), where("collegeId", "==", id))),

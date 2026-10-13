@@ -5,19 +5,6 @@ html {
   scroll-padding-top: 100px;
 }
 
-/* Smooth Real-Time Reading Progress Bar */
-.landing-scroll-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3.5px;
-  background: linear-gradient(90deg, #EA580C 0%, #D97706 40%, #0D9488 100%);
-  transform-origin: 0%;
-  z-index: 9999;
-  pointer-events: none;
-}
-
 body {
   margin: 0;
   padding: 0;
@@ -48,9 +35,9 @@ body {
   justify-content: space-between;
   gap: 20px;
   width: calc(100% - clamp(24px, 4vw, 64px));
-  max-width: 1240px;
+  max-width: 1320px;
   margin: 16px auto 0 auto;
-  padding: 10px 24px;
+  padding: 16px 28px;
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(16px);
@@ -69,7 +56,7 @@ body {
               0 4px 12px -2px rgba(15, 23, 42, 0.06);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  padding: 8px 24px;
+  padding: 14px 28px;
 }
 
 .landing-brand {
@@ -82,8 +69,8 @@ body {
 }
 
 .landing-brand__logo {
-  width: 32px;
-  height: 32px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
@@ -91,7 +78,7 @@ body {
 
 .landing-brand__name {
   font-family: 'Playfair Display', var(--font-headline), serif;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 400;
   letter-spacing: -0.01em;
   color: #0f172a;
@@ -125,10 +112,10 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 15px;
+  padding: 9px 14px;
   border-radius: 8px;
   font-family: var(--font-main);
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 550;
   color: #475569;
   text-decoration: none;
@@ -180,9 +167,9 @@ body {
   color: #111827;
   background: #F97316;
   border: none;
-  padding: 11px 24px;
+  padding: 13px 27px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   text-decoration: none;
   display: inline-flex;

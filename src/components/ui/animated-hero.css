@@ -7,7 +7,10 @@
   position: relative;
   overflow: hidden;
   padding: 60px 24px 80px;
-  background: radial-gradient(circle at 50% 20%, rgba(239, 246, 255, 0.7) 0%, rgba(255, 255, 255, 0.95) 70%, #FFFFFF 100%);
+  /* No background of its own — lets the page's own warm cream background
+     (#FCFBF9, set on .landing-page) show through uninterrupted, instead of
+     this cool blue-white radial gradient creating a visible seam right
+     where the floating header sits. */
 }
 
 .animated-hero__container {
