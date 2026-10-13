@@ -66,6 +66,8 @@ export function CounsellorWorksheetSection() {
     return () => {
       cancelled = true;
     };
+    // Mount-only: only needs the initial render's selectedCampusId/scopedCampusIds.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

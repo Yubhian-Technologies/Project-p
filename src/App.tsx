@@ -1,5 +1,6 @@
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { AcademicYearProvider } from "./context/AcademicYearContext";
 import { ToastProvider } from "./context/ToastContext";
 import { AppRoutes } from "./routes/AppRoutes";
 import { useScrollReveal } from "./hooks/useScrollReveal";
@@ -12,9 +13,11 @@ function App() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <AcademicYearProvider>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </AcademicYearProvider>
       </AuthProvider>
     </ToastProvider>
   );

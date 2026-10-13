@@ -22,6 +22,7 @@ import { JournalSection } from "../user/journal/JournalSection";
 import { HeadCommandCentre } from "./HeadCommandCentre";
 import { SessionReportsSection } from "./SessionReportsSection";
 import { ReportDownloadsSection } from "./ReportDownloadsSection";
+import { AcademicYearsSection } from "./AcademicYearsSection";
 import type { Notification } from "../../types/notification";
 import "../../styles/bento-grid.css";
 
@@ -87,6 +88,13 @@ const SECTIONS = [
     label: "My Reports",
     icon: (
       <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+    ),
+  },
+  {
+    id: "academic-years",
+    label: "Academic Years",
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z" /><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5" /></svg>
     ),
   },
   {
@@ -199,6 +207,7 @@ export function HeadDashboard() {
     "team-management": "Team Management",
     "session-reports": "Session Reports",
     "report-downloads": "My Reports",
+    "academic-years": "Academic Years",
     events: "Events & Programs",
     "transfer-requests": "Transfer Requests",
     "counsellor-monthly-reports": "Monthly Reports",
@@ -261,6 +270,7 @@ export function HeadDashboard() {
       )}
       {activeSection === "session-reports" && <SessionReportsSection />}
       {activeSection === "report-downloads" && <ReportDownloadsSection />}
+      {activeSection === "academic-years" && <AcademicYearsSection />}
       {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "transfer-requests" && <TransferRequestsSection />}
       {activeSection === "counsellor-monthly-reports" && <TeamMonthlyReportsSection />}

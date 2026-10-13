@@ -47,6 +47,16 @@ service cloud.firestore {
       );
     }
 
+    // A Principal/VP is restricted to one college — the campus-wide
+    // Consolidated Report (filed once by the Head, can span several colleges
+    // on that campus) is out of scope for them even though they otherwise
+    // pass adminCanAccessCampus() for their own campus. Global/other-
+    // designation admins and Super Admin are unaffected.
+    function isPrincipalOrVp() {
+      return myRole() == 'admin' && 'adminAccess' in myProfile() &&
+        myProfile().adminAccess.designation in ['principal', 'vice-principal'];
+    }
+
     // Only a "global"-scope admin (or super-admin) may create/edit/delete a
     // Campus or College record at all — a campus-restricted admin never can,
     // regardless of which campuses they're otherwise scoped to.
@@ -103,12 +113,18 @@ service cloud.firestore {
           // Self-service profile edits: never touch role/campus/college/email.
           // studentOrProfessional is set once at signup and locked here too —
           // only a Super Admin (see the branch below) can correct it afterward.
+          // campusId/collegeId/studentOrProfessional aren't present on every
+          // document (e.g. a Counsellor/Head never has studentOrProfessional
+          // at all, and some legacy student accounts predate campus/college
+          // tracking) — a plain resource.data.field throws when the key is
+          // simply absent, which Firestore reports as permission-denied, so
+          // these three use .get(field, null) to compare safely either way.
           isSelf(uid) &&
           request.resource.data.role == resource.data.role &&
-          request.resource.data.campusId == resource.data.campusId &&
-          request.resource.data.collegeId == resource.data.collegeId &&
+          request.resource.data.get('campusId', null) == resource.data.get('campusId', null) &&
+          request.resource.data.get('collegeId', null) == resource.data.get('collegeId', null) &&
           request.resource.data.email == resource.data.email &&
-          request.resource.data.studentOrProfessional == resource.data.studentOrProfessional
+          request.resource.data.get('studentOrProfessional', null) == resource.data.get('studentOrProfessional', null)
         ) || (
           // Head/Admin/Super Admin toggling a counsellor's/head's availability badge.
           isStaff() &&
@@ -175,7 +191,7 @@ service cloud.firestore {
       // here rather than trusted to the client query alone. campusId is also
       // the exact field listEventsForCampus() queries on, so Firestore can
       // validate that list query against this check.
-      allow read: if canViewEventsCalendar(resource.data.campusId) || (isRole('user') && resource.data.campusId == myProfile().campusId);
+      allow read: if canViewEventsCalendar(resource.data.get('campusId', null)) || (isRole('user') && resource.data.campusId == myProfile().campusId);
 
       // Head or Counsellor can create an event, only for their own campus + a
       // college that actually belongs to that campus.
@@ -202,7 +218,7 @@ service cloud.firestore {
     match /calendarYears/{yearId} {
       // Head, Admin, Super Admin, and Counsellor can all view the academic years
       // written for a college; Head or Counsellor on that campus can create one.
-      allow read: if canViewEventsCalendar(resource.data.campusId);
+      allow read: if canViewEventsCalendar(resource.data.get('campusId', null));
       allow create: if canEditEventsCalendar()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId
@@ -221,7 +237,7 @@ service cloud.firestore {
     // ---------- calendarMonths ----------
     match /calendarMonths/{monthId} {
       // Same shape as calendarYears — Head or Counsellor adds months one at a time.
-      allow read: if canViewEventsCalendar(resource.data.campusId);
+      allow read: if canViewEventsCalendar(resource.data.get('campusId', null));
       allow create: if canEditEventsCalendar()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId
@@ -243,7 +259,10 @@ service cloud.firestore {
     // Campus-wide (not college-scoped) — a Head or Counsellor manages the
     // L&D/training schedule for every college in their campus.
     match /worksheetAcademicYears/{yearId} {
-      allow read: if isSignedIn() && (resource.data.campusId == myProfile().campusId || adminCanAccessCampus(resource.data.campusId));
+      // Admin/Super Admin have no campusId on their own profile at all
+      // (scoped via adminAccess.campusIds instead), so both sides here use
+      // .get(field, null) — a bare myProfile().campusId throws for them.
+      allow read: if isSignedIn() && (resource.data.get('campusId', null) == myProfile().get('campusId', null) || adminCanAccessCampus(resource.data.get('campusId', null)));
       allow create: if canEditWorksheets()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId;
@@ -256,7 +275,7 @@ service cloud.firestore {
 
     // ---------- worksheets ----------
     match /worksheets/{worksheetId} {
-      allow read: if isSignedIn() && (resource.data.campusId == myProfile().campusId || adminCanAccessCampus(resource.data.campusId));
+      allow read: if isSignedIn() && (resource.data.get('campusId', null) == myProfile().get('campusId', null) || adminCanAccessCampus(resource.data.get('campusId', null)));
       allow create: if canEditWorksheets()
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId;
@@ -272,7 +291,7 @@ service cloud.firestore {
       // their campus — either can add, edit, delete, or flip the status
       // of any session row.
       match /rows/{rowId} {
-        allow read: if isSignedIn() && (resource.data.campusId == myProfile().campusId || adminCanAccessCampus(resource.data.campusId));
+        allow read: if isSignedIn() && (resource.data.get('campusId', null) == myProfile().get('campusId', null) || adminCanAccessCampus(resource.data.get('campusId', null)));
 
         allow create: if canEditWorksheets() && request.resource.data.campusId == myProfile().campusId;
 
@@ -296,8 +315,12 @@ service cloud.firestore {
       // record exists yet.
       allow read: if isSignedIn() && (
         recordId.split('_')[0] == request.auth.uid ||
-        (isStaff() && resource.data.campusId == myProfile().campusId) ||
-        adminCanAccessCampus(resource.data.campusId)
+        // isStaff() includes Admin/Super Admin, whose own profile has no
+        // campusId field at all (they're scoped via adminAccess.campusIds
+        // instead) — myProfile().campusId would throw for them here, so
+        // both sides use .get(field, null) to compare safely regardless.
+        (isStaff() && resource.data.get('campusId', null) == myProfile().get('campusId', null)) ||
+        adminCanAccessCampus(resource.data.get('campusId', null))
       );
 
       // Check-in: the owner only, counsellor or head only, on their own campus,
@@ -341,7 +364,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         ownerUid == request.auth.uid ||
         (isRole('head') && resource.data.campusId == myProfile().campusId) ||
-        adminCanAccessCampus(resource.data.campusId)
+        adminCanAccessCampus(resource.data.get('campusId', null))
       );
       allow create: if canEditWorksheets()
                     && (ownerUid == request.auth.uid || isRole('head'))
@@ -357,12 +380,30 @@ service cloud.firestore {
                     && resource.data.campusId == myProfile().campusId;
     }
 
+    // ---------- academicYears ----------
+    // A campus's academic year (date range + the colleges that follow it).
+    // Written only by the saveAcademicYear Cloud Function: the "no overlap
+    // per college" rule needs a cross-document query rules can't do. Read by
+    // anyone on that campus or an Admin/Super Admin scoped to it; the app
+    // always queries by campusId, which is what this rule is checked against.
+    match /academicYears/{yearId} {
+      // An Admin/Super Admin's own profile has no campusId field at all
+      // (scoped via adminAccess.campusIds instead) — myProfile().campusId
+      // would throw for them here, so this uses .get(field, null) on both
+      // sides to compare safely regardless of which fields exist.
+      allow read: if isSignedIn() && (
+        resource.data.get('campusId', null) == myProfile().get('campusId', null) ||
+        adminCanAccessCampus(resource.data.get('campusId', null))
+      );
+      allow write: if false;
+    }
+
     // ---------- bookings ----------
     match /bookings/{bookingId} {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.counsellorId == request.auth.uid ||
-        isRole('head') || adminCanAccessCampus(resource.data.campusId) ||
+        isRole('head') || adminCanAccessCampus(resource.data.get('campusId', null)) ||
         // listScheduledBookings() is queried platform-wide by every signed-in user
         // (BookingSection.tsx) purely to compute a counsellor's live "in session"
         // badge. Only "scheduled" bookings are exposed this way; the sensitive
@@ -491,7 +532,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.counsellorId == request.auth.uid ||
-        isRole('head') || adminCanAccessCampus(resource.data.campusId)
+        isRole('head') || adminCanAccessCampus(resource.data.get('campusId', null))
       );
 
       // The sender must be the student of the matching booking; the booking
@@ -571,7 +612,7 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid ||
         (isRole('counsellor') && myProfile().collegeId == resource.data.collegeId) ||
         (isRole('head') && myProfile().campusId == resource.data.campusId) ||
-        adminCanAccessCampus(resource.data.campusId)
+        adminCanAccessCampus(resource.data.get('campusId', null))
       );
 
       allow create: if isSignedIn()
@@ -616,7 +657,15 @@ service cloud.firestore {
     match /seriousCases/{bookingId} {
       allow create: if false;
 
+      // getSeriousCaseForBooking() does a getDoc() on every booking a
+      // Head/Counsellor opens to check "is this already flagged?" — most
+      // bookings have no case at all, so resource is null for that get.
+      // Accessing resource.data below would throw on a null resource
+      // (Firestore reports that as permission-denied, not "not found"), so
+      // a nonexistent doc must be allowed through before anything reads
+      // resource.data — there's nothing to leak when there's no document.
       allow get, list: if isSignedIn() && (
+        resource == null ||
         isRole('super-admin') ||
         request.auth.uid in resource.data.targetAdminUids ||
         resource.data.notifiedHeadUid == request.auth.uid ||
@@ -999,7 +1048,7 @@ service cloud.firestore {
     // own campus's reports — never another campus's. Counsellors have no
     // access here at all (their own reports live in counsellorMonthlyReports).
     match /monthlyReports/{reportId} {
-      allow read: if adminCanAccessCampus(resource.data.campusId)
+      allow read: if (adminCanAccessCampus(resource.data.get('campusId', null)) && !isPrincipalOrVp())
                   || (isRole('head') && resource.data.campusId == myProfile().campusId);
       allow create: if isRole('head')
                     && request.resource.data.uploadedByUid == request.auth.uid
@@ -1008,7 +1057,7 @@ service cloud.firestore {
                     && request.resource.data.status == 'pending';
       // Only Admin/Super Admin can verify (update status → verified); the
       // report's identity/ownership fields must stay untouched.
-      allow update: if adminCanAccessCampus(resource.data.campusId)
+      allow update: if adminCanAccessCampus(resource.data.get('campusId', null)) && !isPrincipalOrVp()
                     && request.resource.data.status == 'verified'
                     && request.resource.data.uploadedByUid == resource.data.uploadedByUid
                     && request.resource.data.campusId == resource.data.campusId
@@ -1054,8 +1103,8 @@ service cloud.firestore {
     // can manage any campus's cards.
     match /flash_qa/{qaId} {
       allow read: if isSignedIn() && (
-        resource.data.campusId == myProfile().campusId ||
-        isRole('head') || adminCanAccessCampus(resource.data.campusId)
+        resource.data.get('campusId', null) == myProfile().get('campusId', null) ||
+        isRole('head') || adminCanAccessCampus(resource.data.get('campusId', null))
       );
 
       allow write: if isSignedIn() && (

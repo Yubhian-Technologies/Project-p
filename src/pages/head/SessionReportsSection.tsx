@@ -4,6 +4,7 @@ import { listAttendance } from "../../services/firebase/attendance";
 import { listBookableProfiles } from "../../services/firebase/bookings";
 import { listColleges } from "../../services/firebase/colleges";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import type { UserProfile } from "../../types/user";
 import { Button } from "../../components/common/Button";
 import { Select } from "../../components/common/Select";
@@ -63,6 +64,7 @@ function getWeekDateRange(weekIdx: number, year: number, month: number): { start
 
 export function SessionReportsSection() {
   const { profile: headProfile } = useAuth();
+  const { includesMonth } = useAcademicYear();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [collegeMap, setCollegeMap] = useState<Map<string, string>>(new Map());
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -98,11 +100,15 @@ export function SessionReportsSection() {
       const startM = y === startYear ? startMonth : 0;
       const endM = y === endYear ? endMonth : 11;
       for (let m = startM; m <= endM; m++) {
-        months.push(`${y}-${String(m + 1).padStart(2, "0")}`);
+        // Only months inside the academic year chosen in the header.
+        if (includesMonth(y, m + 1, headProfile?.campusId)) {
+          months.push(`${y}-${String(m + 1).padStart(2, "0")}`);
+        }
       }
     }
     return months.reverse(); // newest first
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [includesMonth, headProfile?.campusId]);
 
   const loadReport = useCallback(async (month: string) => {
     if (!month) return;

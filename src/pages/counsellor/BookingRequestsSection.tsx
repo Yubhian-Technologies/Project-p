@@ -65,8 +65,9 @@ const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
-const THIS_YEAR = new Date().getFullYear();
-const YEARS = Array.from({ length: 6 }, (_, i) => THIS_YEAR - i);
+function yearsWithData(bookings: Booking[], dateOf: (b: Booking) => Date): number[] {
+  return Array.from(new Set(bookings.map((b) => dateOf(b).getFullYear()))).sort((a, b) => b - a);
+}
 
 // The date a completed/cancelled/rejected booking is filtered by — its
 // scheduled session time when it has one, otherwise when it last changed
@@ -145,9 +146,11 @@ export function BookingRequestsSection({
       return;
     }
     let active = true;
-    getSeriousCaseForBooking(selectedId).then((c) => {
-      if (active) setSeriousCase(c);
-    });
+    getSeriousCaseForBooking(selectedId)
+      .then((c) => {
+        if (active) setSeriousCase(c);
+      })
+      .catch((err) => console.error("Failed to load serious case status", err));
     return () => {
       active = false;
     };
@@ -272,6 +275,7 @@ export function BookingRequestsSection({
     return true;
   });
   const completedFiltersActive = completedFilterMonth !== 0 || completedFilterYear !== 0;
+  const completedYears = yearsWithData(completed, completedDate);
   const filteredCancelled = cancelled.filter((b) => {
     if (!cancelledFilterMonth && !cancelledFilterYear) return true;
     const d = completedDate(b);
@@ -280,6 +284,7 @@ export function BookingRequestsSection({
     return true;
   });
   const cancelledFiltersActive = cancelledFilterMonth !== 0 || cancelledFilterYear !== 0;
+  const cancelledYears = yearsWithData(cancelled, completedDate);
   const filteredMissed = missed.filter((b) => {
     if (!missedFilterMonth && !missedFilterYear) return true;
     const d = completedDate(b);
@@ -288,6 +293,7 @@ export function BookingRequestsSection({
     return true;
   });
   const missedFiltersActive = missedFilterMonth !== 0 || missedFilterYear !== 0;
+  const missedYears = yearsWithData(missed, completedDate);
 
   const tabCounts: Record<Tab, number> = {
     new: newRequests.length,
@@ -377,7 +383,7 @@ export function BookingRequestsSection({
                   onChange={(v) => setCompletedFilterYear(Number(v))}
                 >
                   <option value="0">All years</option>
-                  {YEARS.map((y) => (
+                  {completedYears.map((y) => (
                     <option key={y} value={String(y)}>{y}</option>
                   ))}
                 </Select>
@@ -433,7 +439,7 @@ export function BookingRequestsSection({
                   onChange={(v) => setCancelledFilterYear(Number(v))}
                 >
                   <option value="0">All years</option>
-                  {YEARS.map((y) => (
+                  {cancelledYears.map((y) => (
                     <option key={y} value={String(y)}>{y}</option>
                   ))}
                 </Select>
@@ -489,7 +495,7 @@ export function BookingRequestsSection({
                   onChange={(v) => setMissedFilterYear(Number(v))}
                 >
                   <option value="0">All years</option>
-                  {YEARS.map((y) => (
+                  {missedYears.map((y) => (
                     <option key={y} value={String(y)}>{y}</option>
                   ))}
                 </Select>

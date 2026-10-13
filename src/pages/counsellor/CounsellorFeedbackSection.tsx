@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import { listFeedbackForCounsellor } from "../../services/firebase/feedback";
 import type { SessionFeedback } from "../../types/feedback";
 import { Card } from "../../components/common/Card";
@@ -11,7 +12,8 @@ import "./CounsellorFeedbackSection.css";
 
 export function CounsellorFeedbackSection() {
   const { profile } = useAuth();
-  const [feedbackList, setFeedbackList] = useState<SessionFeedback[]>([]);
+  const { includes: inAcademicYear } = useAcademicYear();
+  const [allFeedback, setFeedbackList] = useState<SessionFeedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFeedback, setSelectedFeedback] = useState<SessionFeedback | null>(null);
 
@@ -26,6 +28,9 @@ export function CounsellorFeedbackSection() {
   }, [profile]);
 
   if (loading) return <p className="counsellor-feedback__loading">Loading feedback…</p>;
+
+  // Only the academic year chosen in the header.
+  const feedbackList = allFeedback.filter((f) => inAcademicYear(f.submittedAt, profile?.campusId));
 
   const average =
     feedbackList.length > 0

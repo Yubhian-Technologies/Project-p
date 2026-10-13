@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import {
   listMonthlyReportsByCampus,
   uploadMonthlyReport,
@@ -16,6 +17,7 @@ import "./MonthlyReportsSection.css";
     lives in its own "Monthly Reports" tab.) */
 export function MonthlyReportsSection() {
   const { profile } = useAuth();
+  const { includesMonth } = useAcademicYear();
   const campusId = profile?.campusId ?? "";
   const collegeId = profile?.collegeId ?? "";
 
@@ -78,7 +80,7 @@ export function MonthlyReportsSection() {
 
       <ReportList
         title="Your Consolidated Reports"
-        reports={ownReports}
+        reports={ownReports.filter((r) => includesMonth(r.year, r.month, r.campusId || campusId, r.collegeId))}
         loading={loadingOwnReports}
         emptyMessage="You haven't submitted a consolidated report yet."
         showUploader={false}

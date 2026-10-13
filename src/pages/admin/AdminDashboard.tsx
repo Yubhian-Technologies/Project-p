@@ -11,6 +11,7 @@ import { EventsOverviewSection } from "./EventsOverviewSection";
 import { MonthlyReportsViewSection } from "./MonthlyReportsViewSection";
 import { CounsellorWorksheetSection } from "./CounsellorWorksheetSection";
 import { AdminHomeActivityOverview } from "./AdminHomeActivityOverview";
+import { PrincipalHomeOverview } from "./PrincipalHomeOverview";
 import "../../styles/bento-grid.css";
 import "./AdminDashboard.css";
 
@@ -116,6 +117,15 @@ export function AdminDashboard() {
     profile.adminAccess.scope === "global" ||
     profile.adminAccess.designation === "management" ||
     profile.adminAccess.designation === "administration";
+  // Consolidated Reports is a campus-wide roll-up filed once by a campus's
+  // Head and can span several colleges under that campus — a Principal/VP is
+  // restricted to just their own college, so this is hard-excluded for them
+  // no matter what a Super Admin checked in "sections" (same enforcement
+  // style as Campus Management above). They already get their own college's
+  // activity through Counsellor Worksheet instead.
+  const isPrincipalOrVp =
+    profile?.role === "admin" &&
+    (profile.adminAccess?.designation === "principal" || profile.adminAccess?.designation === "vice-principal");
   const visibleSections = (
     allowedSections
       ? SECTIONS.filter(
@@ -125,7 +135,7 @@ export function AdminDashboard() {
             (s.id === "serious-cases" && seesSeriousCasesRegardless),
         )
       : SECTIONS
-  ).filter((s) => !(isCampusRestricted && s.id === "campuses"));
+  ).filter((s) => !(isCampusRestricted && s.id === "campuses") && !(isPrincipalOrVp && s.id === "monthly-reports"));
 
   return (
     <AppShell
@@ -150,7 +160,7 @@ export function AdminDashboard() {
         <SeriousCasesSection />
       ) : activeSection === "counsellor-worksheet" ? (
         <CounsellorWorksheetSection />
-      ) : activeSection === "monthly-reports" ? (
+      ) : activeSection === "monthly-reports" && !isPrincipalOrVp ? (
         <MonthlyReportsViewSection />
       ) : (
         <div className="bento-grid">
@@ -158,7 +168,11 @@ export function AdminDashboard() {
             Welcome, {profile?.displayName || profile?.email || "Administrator"}
           </h2>
 
-          <AdminHomeActivityOverview onSelectSection={setActiveSection} />
+          {isPrincipalOrVp ? (
+            <PrincipalHomeOverview onSelectSection={setActiveSection} />
+          ) : (
+            <AdminHomeActivityOverview onSelectSection={setActiveSection} />
+          )}
         </div>
       )}
     </AppShell>

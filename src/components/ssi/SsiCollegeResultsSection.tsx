@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import { SSI_SEVERITY_LABELS, type SsiSeverity } from "../../config/ssiForm";
 import {
   listSsiCollegeResultsForCollege,
@@ -28,7 +29,8 @@ const SEVERITY_RANK: Record<SsiSeverity, number> = { severe: 0, medium: 1, norma
 
 export function SsiCollegeResultsSection() {
   const { profile } = useAuth();
-  const [results, setResults] = useState<SsiCollegeResult[]>([]);
+  const { includes: inAcademicYear, selectedLabel: academicYearLabel } = useAcademicYear();
+  const [allResults, setResults] = useState<SsiCollegeResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<SsiCollegeResult | null>(null);
   const [dateFilter, setDateFilter] = useState("");
@@ -63,6 +65,14 @@ export function SsiCollegeResultsSection() {
   // Period (Today/Week/Month/All) narrows the pool first; the specific-date
   // dropdown below then lets a Head/Counsellor jump to one exact day within
   // that pool instead of scrolling the whole severity-sorted list.
+  // Scoped to the academic year chosen in the header (a no-op until the
+  // campus has defined one).
+  const results = useMemo(
+    () => allResults.filter((r) => inAcademicYear(r.submittedAt, r.campusId ?? profile?.campusId, r.collegeId)),
+    // academicYearLabel changes which year `inAcademicYear` resolves to.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allResults, inAcademicYear, academicYearLabel, profile?.campusId],
+  );
   const periodResults = useMemo(() => filterSsiResultsByPeriod(results, period, now), [results, period, now]);
 
   const availableDates = useMemo(() => {

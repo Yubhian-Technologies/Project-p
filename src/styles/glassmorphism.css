@@ -1,4 +1,4 @@
-/* Shared typography, radius, and animation tokens for Vishnu Wellness Center (Typography: Playfair Display + Work Sans) */
+/* Shared typography, radius, and animation tokens for Vishnu Wellness Centre (Typography: Playfair Display + Work Sans) */
 /* Fonts are loaded once, centrally, in index.html — no @import here to avoid double-loading. */
 
 :root {

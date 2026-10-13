@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import { listBookingsForCounsellor } from "../../services/firebase/bookings";
 import { listSsiCollegeResultsForCollege, type SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
 import { listFeedbackForCounsellor } from "../../services/firebase/feedback";
@@ -36,6 +37,7 @@ function formatChange(value: number | null): { text: string; tone: "up" | "down"
  */
 export function CounsellorTrends() {
   const { currentUser, profile } = useAuth();
+  const { includes: inAcademicYear } = useAcademicYear();
   const [bookings, setBookings] = useState<Booking[] | null>(null);
   const [ssiResults, setSsiResults] = useState<SsiCollegeResult[]>([]);
   const [feedbackList, setFeedbackList] = useState<SessionFeedback[]>([]);
@@ -62,15 +64,17 @@ export function CounsellorTrends() {
 
   if (!currentUser || !profile || !bookings) return null;
 
+  // Everything is limited to the academic year chosen in the header.
+  const campusId = profile.campusId;
   const m: HomeMetrics = computeHomeMetrics({
-    bookings,
+    bookings: bookings.filter((b) => inAcademicYear(b.createdAt, campusId, b.collegeId)),
     counsellors: [profile],
     colleges: [],
     events: [],
     reports: [],
     transfers: [],
-    ssiResults,
-    feedbackList,
+    ssiResults: ssiResults.filter((r) => inAcademicYear(r.submittedAt, r.campusId ?? campusId, r.collegeId)),
+    feedbackList: feedbackList.filter((f) => inAcademicYear(f.submittedAt, campusId)),
     period,
     now,
   });

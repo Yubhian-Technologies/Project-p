@@ -113,7 +113,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 10px 16px;
   padding-bottom: 14px;
   border-bottom: 2px solid rgba(43, 43, 43, 0.12);
 }
@@ -124,6 +125,8 @@
   font-size: 18px;
   font-weight: 800;
   color: #2E2B27;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .counsellor-feedback__detail-date {

@@ -7,6 +7,8 @@ const KNOWN_ERROR_CODES = new Set([
   "functions/invalid-argument",
   "functions/already-exists",
   "functions/unauthenticated",
+  "functions/failed-precondition",
+  "functions/not-found",
 ]);
 
 export function functionsErrorMessage(err: unknown, fallback: string): string {
@@ -34,4 +36,51 @@ export interface UpdateCampusLoginInput {
 export async function updateCampusLogin(input: UpdateCampusLoginInput): Promise<void> {
   const fn = httpsCallable(getFunctions(app), "updateCampusLogin");
   await fn(input);
+}
+
+export interface SaveAcademicYearInput {
+  id?: string;
+  campusId: string;
+  label: string;
+  startDate: number;
+  endDate: number;
+  collegeIds: string[];
+  status?: "active" | "closed";
+}
+
+export async function saveAcademicYear(input: SaveAcademicYearInput): Promise<string> {
+  const fn = httpsCallable<SaveAcademicYearInput, { id: string }>(getFunctions(app), "saveAcademicYear");
+  const result = await fn(input);
+  return result.data.id;
+}
+
+export async function backfillBookingCollegeIds(): Promise<number> {
+  const fn = httpsCallable<undefined, { updated: number }>(getFunctions(app), "backfillBookingCollegeIds");
+  const result = await fn();
+  return result.data.updated;
+}
+
+export interface AcademicYearExportFile {
+  name: string;
+  content: string;
+}
+
+export async function exportAcademicYearCollege(
+  yearId: string,
+  collegeId: string,
+): Promise<{ files: AcademicYearExportFile[]; counts: Record<string, number> }> {
+  const fn = httpsCallable<
+    { yearId: string; collegeId: string },
+    { files: AcademicYearExportFile[]; counts: Record<string, number> }
+  >(getFunctions(app), "exportAcademicYearCollege");
+  const result = await fn({ yearId, collegeId });
+  return result.data;
+}
+
+export async function deleteAcademicYearCollegeData(yearId: string, collegeId: string, confirm: string): Promise<void> {
+  const fn = httpsCallable<{ yearId: string; collegeId: string; confirm: string }, unknown>(
+    getFunctions(app),
+    "deleteAcademicYearCollegeData",
+  );
+  await fn({ yearId, collegeId, confirm });
 }

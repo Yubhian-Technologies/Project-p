@@ -188,7 +188,9 @@ export function CounsellorWorksheetSection() {
   async function handleAddRow() {
     if (!campusId || !currentUser || !selectedWorksheetId) return;
     const counsellor = counsellors.find((c) => c.uid === newRow.counsellorId);
-    if (!counsellor || !newRow.month.trim() || !newRow.topic.trim() || !newRow.dates.trim() || !newRow.time.trim()) {
+    // Time is the only optional field here — everything else must be filled
+    // in before a row can be added.
+    if (!counsellor || !newRow.month.trim() || !newRow.topic.trim() || !newRow.dates.trim()) {
       return;
     }
     setBusy(true);
@@ -498,7 +500,13 @@ export function CounsellorWorksheetSection() {
                 value={newRow.time}
                 onChange={(e) => setNewRow((r) => ({ ...r, time: e.target.value }))}
               />
-              <Button type="button" disabled={busy} onClick={handleAddRow}>
+              <Button
+                type="button"
+                disabled={
+                  busy || !newRow.counsellorId || !newRow.month.trim() || !newRow.topic.trim() || !newRow.dates.trim()
+                }
+                onClick={handleAddRow}
+              >
                 {busy ? "Adding…" : "Add Row"}
               </Button>
             </div>

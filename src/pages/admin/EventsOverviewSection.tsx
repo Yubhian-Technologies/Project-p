@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import { listCampuses } from "../../services/firebase/campuses";
 import { listColleges } from "../../services/firebase/colleges";
 import { listEventsForCollege } from "../../services/firebase/events";
@@ -18,6 +19,7 @@ import "./EventsOverviewSection.css";
 
 export function EventsOverviewSection() {
   const { profile } = useAuth();
+  const { includes: inAcademicYear } = useAcademicYear();
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [campusId, setCampusId] = useState(() =>
     profile?.role === "admin" && profile.adminAccess?.scope === "campuses" && profile.adminAccess.campusIds?.length === 1
@@ -77,12 +79,17 @@ export function EventsOverviewSection() {
       setEvents(eventList);
       setSelectedYearId(yearList[0]?.id || "");
     });
+    // campusId is only ever read here alongside a collegeId change — the
+    // effect above always resets collegeId to "" the moment campusId
+    // changes, so this never runs with a stale campusId in practice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collegeId]);
 
   useEffect(() => {
     setMonths([]);
     if (!selectedYearId) return;
     listCalendarMonths(selectedYearId, campusId).then(setMonths);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYearId]);
 
   const hideCampusPicker = scopedCampusIds?.length === 1;
@@ -120,7 +127,7 @@ export function EventsOverviewSection() {
           selectedYearId={selectedYearId}
           onSelectYear={setSelectedYearId}
           months={months}
-          events={events}
+          events={events.filter((e) => inAcademicYear(e.eventDate, e.campusId, e.collegeId))}
           readOnly
           onSelectEvent={(event) => setSelectedEvent(event)}
         />

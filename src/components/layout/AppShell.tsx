@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { ROLE_LABELS } from "../../config/roles";
 import { Button } from "../common/Button";
 import { NotificationBell } from "../common/NotificationBell";
+import { AcademicYearSelector } from "../common/AcademicYearSelector";
 import { TodayEventsPopup } from "./TodayEventsPopup";
 import { DynamicIsland } from "../common/DynamicIsland";
 import { DynamicIslandProvider } from "../../context/DynamicIslandContext";
@@ -67,11 +68,16 @@ export function AppShell({
               ☰
             </button>
             <div className="app-shell__brand flex-row">
-              <img src="/favicon.png" alt="Vishnu Wellness Center Logo" className="app-shell__logo" />
-              <span>Vishnu Wellness Center</span>
+              <img src="/favicon.png" alt="Vishnu Wellness Centre Logo" className="app-shell__logo" />
+              <span>Vishnu Wellness Centre</span>
             </div>
           </div>
           <div className="flex-row app-shell__topbar-right">
+            {profile &&
+              (profile.role === "counsellor" ||
+                profile.role === "head" ||
+                profile.role === "admin" ||
+                profile.role === "super-admin") && <AcademicYearSelector />}
             {profile && (profile.role === "admin" || profile.role === "super-admin") && (
               <span className="app-shell__role-badge">{ROLE_LABELS[profile.role]}</span>
             )}

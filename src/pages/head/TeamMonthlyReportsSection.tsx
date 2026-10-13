@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import {
   listCounsellorMonthlyReportsForCampus,
   verifyCounsellorMonthlyReport,
@@ -13,6 +14,7 @@ import "./MonthlyReportsSection.css";
     Consolidated Report (sent up to Admin). */
 export function TeamMonthlyReportsSection() {
   const { profile } = useAuth();
+  const { includesMonth } = useAcademicYear();
   const campusId = profile?.campusId ?? "";
 
   const [reports, setReports] = useState<CounsellorMonthlyReport[]>([]);
@@ -52,7 +54,7 @@ export function TeamMonthlyReportsSection() {
     <div className="mr-section">
       <ReportList
         title="Reports from your campus's counsellors"
-        reports={reports}
+        reports={reports.filter((r) => includesMonth(r.year, r.month, r.campusId || campusId, r.collegeId))}
         loading={loading}
         emptyMessage="No counsellor has submitted a monthly report yet."
         onRefresh={loadReports}

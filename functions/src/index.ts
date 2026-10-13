@@ -169,7 +169,12 @@ async function validateAdminAccess(adminAccess: AdminAccessInput): Promise<void>
     if (campusDocs.some((d) => !d.exists)) {
       throw new HttpsError("invalid-argument", "One or more campuses do not exist.");
     }
-    if (adminAccess.collegeIds && adminAccess.collegeIds.length > 0) {
+    // Every non-global admin (Principal, Vice-Principal, …) must be tied to
+    // specific colleges — that is what scopes their academic-year data.
+    if (!Array.isArray(adminAccess.collegeIds) || adminAccess.collegeIds.length === 0) {
+      throw new HttpsError("invalid-argument", "Assign at least one college to a campus-restricted admin.");
+    }
+    {
       const collegeDocs = await Promise.all(
         adminAccess.collegeIds.map((id) => db.collection("colleges").doc(id).get()),
       );
@@ -799,7 +804,13 @@ export const verifyMonthlyReport = onCall<VerifyMonthlyReportRequest>(async (req
 
   const callerDoc = await db.collection("users").doc(callerUid).get();
   const callerData = callerDoc.data();
-  if (!isCampusManagerRole(callerData?.role)) {
+  // A Principal/VP is restricted to one college — the campus-wide
+  // Consolidated Report (filed once by the Head, can span several colleges
+  // on that campus) is out of scope for them, mirroring firestore.rules'
+  // isPrincipalOrVp() exclusion on the same collection.
+  const isPrincipalOrVpCaller =
+    callerData?.role === "admin" && hasDesignation(callerData ?? {}, ["principal", "vice-principal"]);
+  if (!isCampusManagerRole(callerData?.role) || isPrincipalOrVpCaller) {
     throw new HttpsError("permission-denied", "Only an Admin or Super Admin can verify a consolidated report.");
   }
   const verifiedByUid = callerUid;
@@ -1025,6 +1036,9 @@ export const createBooking = onCall<{
       durationMinutes: SESSION_DURATION_MINUTES,
       proposedSlots: data.proposedSlots,
       campusId,
+      // Stamped from the student's own profile so every record can be
+      // separated per college (academic-year views and exports).
+      ...(typeof caller.collegeId === "string" && caller.collegeId ? { collegeId: caller.collegeId } : {}),
       ...(data.concernCategories?.length ? { concernCategories: data.concernCategories } : {}),
       createdAt: now,
       updatedAt: now,
@@ -1635,3 +1649,446 @@ export const escalateSeriousCases = onSchedule("every 15 minutes", async () => {
 });
 
 export { sendAppointmentEmails } from "./appointmentEmails";
+
+// ───────────────────────── Academic years ─────────────────────────
+//
+// A campus's academic year (label + date range + the colleges that follow
+// it). Written ONLY here — firestore.rules deny client writes — because the
+// "no two years overlap for the same college" rule needs a query across the
+// campus's other years, which rules can't express.
+
+interface SaveAcademicYearRequest {
+  id?: string; // present = edit, absent = create
+  campusId: string;
+  label: string;
+  startDate: number;
+  endDate: number;
+  collegeIds: string[];
+  status?: "active" | "closed";
+}
+
+export const saveAcademicYear = onCall<SaveAcademicYearRequest>(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+  const callerData = (await db.collection("users").doc(callerUid).get()).data();
+  const d = request.data;
+
+  if (
+    !d ||
+    typeof d.campusId !== "string" ||
+    !d.campusId ||
+    typeof d.label !== "string" ||
+    !d.label.trim() ||
+    typeof d.startDate !== "number" ||
+    typeof d.endDate !== "number" ||
+    !Array.isArray(d.collegeIds) ||
+    d.collegeIds.length === 0 ||
+    !d.collegeIds.every((c) => typeof c === "string")
+  ) {
+    throw new HttpsError("invalid-argument", "Label, dates and at least one college are required.");
+  }
+  if (d.endDate <= d.startDate) {
+    throw new HttpsError("invalid-argument", "The end date must be after the start date.");
+  }
+  if (d.status !== undefined && d.status !== "active" && d.status !== "closed") {
+    throw new HttpsError("invalid-argument", "Invalid status.");
+  }
+
+  // Academic years are managed by the campus Head (or Super Admin) only —
+  // Admin accounts of any designation/scope never create, edit, export or
+  // delete this data (they only read it, for the year-scoped filtering on
+  // their own dashboards).
+  const role = callerData?.role;
+  const allowed = role === "super-admin" || (role === "head" && callerData?.campusId === d.campusId);
+  if (!allowed) {
+    throw new HttpsError("permission-denied", "You cannot manage academic years for this campus.");
+  }
+
+  const collegeIds = Array.from(new Set(d.collegeIds));
+  const collegeDocs = await Promise.all(collegeIds.map((id) => db.collection("colleges").doc(id).get()));
+  if (collegeDocs.some((c) => !c.exists || c.data()?.campusId !== d.campusId)) {
+    throw new HttpsError("invalid-argument", "Every selected college must belong to this campus.");
+  }
+
+  const startDate = d.startDate;
+  const endDate = d.endDate;
+  const existing = await db.collection("academicYears").where("campusId", "==", d.campusId).get();
+  for (const other of existing.docs) {
+    if (other.id === d.id) continue;
+    const o = other.data();
+    const overlapsDates = startDate <= (o.endDate as number) && endDate >= (o.startDate as number);
+    const sharedCollege = (o.collegeIds as string[]).some((c) => collegeIds.includes(c));
+    if (overlapsDates && sharedCollege) {
+      throw new HttpsError(
+        "already-exists",
+        `These dates overlap "${o.label}" for a college already assigned to it. Adjust the dates or the colleges.`,
+      );
+    }
+  }
+
+  const now = Date.now();
+  const payload = {
+    campusId: d.campusId,
+    label: d.label.trim(),
+    startDate,
+    endDate,
+    collegeIds,
+    status: d.status ?? "active",
+    updatedAt: now,
+  };
+
+  if (d.id) {
+    const ref = db.collection("academicYears").doc(d.id);
+    const snap = await ref.get();
+    if (!snap.exists || snap.data()?.campusId !== d.campusId) {
+      throw new HttpsError("invalid-argument", "That academic year was not found on this campus.");
+    }
+    await ref.update(payload);
+    return { id: d.id };
+  }
+  const ref = await db.collection("academicYears").add({ ...payload, createdBy: callerUid, createdAt: now });
+  return { id: ref.id };
+});
+
+// One-off: stamps collegeId (from the student's own profile) on bookings
+// created before collegeId was recorded, so they can be attributed to a
+// college in academic-year views. Safe to re-run: it only touches bookings
+// that have no collegeId yet and whose student has one.
+export const backfillBookingCollegeIds = onCall(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+  const callerData = (await db.collection("users").doc(callerUid).get()).data();
+  const access = callerData?.adminAccess as { scope?: string } | undefined;
+  const allowed =
+    callerData?.role === "super-admin" ||
+    callerData?.role === "head" ||
+    (callerData?.role === "admin" && (!access || access.scope === "global"));
+  if (!allowed) {
+    throw new HttpsError("permission-denied", "Only a Head, global Admin or Super Admin can run this.");
+  }
+
+  // A Head only backfills their own campus; the others do everything.
+  const campusFilter = callerData?.role === "head" ? (callerData.campusId as string) : null;
+  const bookings = campusFilter
+    ? await db.collection("bookings").where("campusId", "==", campusFilter).get()
+    : await db.collection("bookings").get();
+
+  const userCollege = new Map<string, string | null>();
+  async function collegeOf(uid: string): Promise<string | null> {
+    if (userCollege.has(uid)) return userCollege.get(uid) ?? null;
+    const c = ((await db.collection("users").doc(uid).get()).data()?.collegeId as string | undefined) ?? null;
+    userCollege.set(uid, c);
+    return c;
+  }
+
+  let updated = 0;
+  let batch = db.batch();
+  let ops = 0;
+  for (const b of bookings.docs) {
+    const data = b.data();
+    if (data.collegeId || typeof data.userId !== "string") continue;
+    const collegeId = await collegeOf(data.userId);
+    if (!collegeId) continue;
+    batch.update(b.ref, { collegeId });
+    updated++;
+    if (++ops === 400) {
+      await batch.commit();
+      batch = db.batch();
+      ops = 0;
+    }
+  }
+  if (ops > 0) await batch.commit();
+  return { updated };
+});
+
+// ───────────── Academic year export / delete (per college) ─────────────
+//
+// Everything is separated by college: a download or a delete only ever
+// covers one college of one academic year. Records are attributed by the
+// `collegeId` stamped on them (bookings — see backfillBookingCollegeIds),
+// and bounded by the year's start/end dates.
+
+type CallerRecord = Record<string, unknown> | undefined;
+
+function csvCell(value: unknown): string {
+  if (value === undefined || value === null) return "";
+  const text = typeof value === "object" ? JSON.stringify(value) : String(value);
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function toCsv(headers: string[], rows: Record<string, unknown>[]): string {
+  const lines = [headers.map(csvCell).join(",")];
+  for (const row of rows) lines.push(headers.map((h) => csvCell(row[h])).join(","));
+  // BOM so Excel opens UTF-8 correctly.
+  return "﻿" + lines.join("\n");
+}
+
+function isoDate(ms: unknown): string {
+  return typeof ms === "number" ? new Date(ms).toISOString() : "";
+}
+
+// Head of the year's campus and a global Admin / Super Admin may act on any
+// college of it; a college-restricted Admin only on their own colleges (and
+// `manage` actions — delete — are never open to a restricted Admin).
+// Academic Years export/delete is a Head-only (and Super Admin) capability —
+// Admin accounts of any designation never manage or download this data, so
+// there's deliberately no "admin" branch here at all (not just a hidden UI
+// tab — this is what actually gates the callables below).
+function canActOnYearCollege(caller: CallerRecord, campusId: string): boolean {
+  const role = caller?.role;
+  if (role === "super-admin") return true;
+  if (role === "head") return caller?.campusId === campusId;
+  return false;
+}
+
+async function loadYearCollegeRecords(year: Record<string, unknown>, collegeId: string) {
+  const start = year.startDate as number;
+  const end = year.endDate as number;
+
+  // Single-field queries filtered in memory — a (collegeId + date range)
+  // query would need a composite index per collection.
+  const [bookingSnap, ssiSnap, eventSnap] = await Promise.all([
+    db.collection("bookings").where("collegeId", "==", collegeId).get(),
+    db.collection("ssi_college_results").where("collegeId", "==", collegeId).get(),
+    db.collection("events").where("collegeId", "==", collegeId).get(),
+  ]);
+
+  const bookings = bookingSnap.docs.filter((d) => {
+    const t = d.data().createdAt as number;
+    return t >= start && t <= end;
+  });
+  const ssi = ssiSnap.docs.filter((d) => {
+    const t = d.data().submittedAt as number;
+    return t >= start && t <= end;
+  });
+  const events = eventSnap.docs.filter((d) => {
+    const t = d.data().eventDate as number;
+    return t >= start && t <= end;
+  });
+
+  // sessionFeedback docs are keyed by their booking id.
+  const feedbackRefs = bookings.map((b) => db.collection("sessionFeedback").doc(b.id));
+  const feedbackDocs = feedbackRefs.length > 0 ? await db.getAll(...feedbackRefs) : [];
+  const feedback = feedbackDocs.filter((d) => d.exists);
+
+  return { bookings, ssi, events, feedback };
+}
+
+async function loadYearForCaller(request: { auth?: { uid: string }; data: { yearId?: string; collegeId?: string } }) {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) throw new HttpsError("unauthenticated", "You must be signed in.");
+  const { yearId, collegeId } = request.data ?? {};
+  if (!yearId || typeof yearId !== "string" || !collegeId || typeof collegeId !== "string") {
+    throw new HttpsError("invalid-argument", "An academic year and a college are required.");
+  }
+  const yearSnap = await db.collection("academicYears").doc(yearId).get();
+  const year = yearSnap.data();
+  if (!year) throw new HttpsError("not-found", "That academic year was not found.");
+  if (!(year.collegeIds as string[]).includes(collegeId)) {
+    throw new HttpsError("invalid-argument", "That college is not part of this academic year.");
+  }
+  const caller = (await db.collection("users").doc(callerUid).get()).data();
+  if (!canActOnYearCollege(caller, year.campusId as string)) {
+    throw new HttpsError("permission-denied", "You are not allowed to do this for that college.");
+  }
+  return { callerUid, yearId, collegeId, year, yearRef: yearSnap.ref };
+}
+
+// Returns one CSV per record type for ONE college of ONE academic year, and
+// stamps `exports.<collegeId>` on the year — delete refuses to run until
+// that stamp exists. Student-identifying intake details (bookings/*/private)
+// are intentionally not included.
+export const exportAcademicYearCollege = onCall<{ yearId: string; collegeId: string }>(async (request) => {
+  const { callerUid, collegeId, year, yearRef } = await loadYearForCaller(request);
+  const { bookings, ssi, events, feedback } = await loadYearCollegeRecords(year, collegeId);
+
+  const sessionRows = bookings.map((b) => {
+    const d = b.data();
+    return {
+      bookingId: b.id,
+      requestedAt: isoDate(d.createdAt),
+      scheduledAt: isoDate(d.scheduledAt),
+      status: d.status,
+      outcome: d.outcome,
+      isEmergency: d.isEmergency === true ? "yes" : "no",
+      sessionMode: d.sessionMode,
+      studentEmail: d.userEmail,
+      counsellorEmail: d.counsellorEmail,
+      concernCategories: Array.isArray(d.concernCategories) ? d.concernCategories.join("; ") : "",
+      studentRating: d.userRatingOfCounsellor,
+    };
+  });
+  const feedbackRows = feedback.map((f) => {
+    const d = f.data() ?? {};
+    return {
+      bookingId: f.id,
+      submittedAt: isoDate(d.submittedAt),
+      counsellorEmail: d.counsellorEmail,
+      studentEmail: d.userEmail,
+      rating: d.rating,
+      answers: d.answers,
+    };
+  });
+  const ssiRows = ssi.map((s) => {
+    const d = s.data();
+    return {
+      resultId: s.id,
+      submittedAt: isoDate(d.submittedAt),
+      studentEmail: d.userEmail,
+      severity: d.severity,
+      likertScore: d.likertScore,
+      likertMax: d.likertMax,
+      depressionScore: d.depressionScore,
+      anxietyScore: d.anxietyScore,
+      stressScore: d.stressScore,
+    };
+  });
+  const eventRows = events.map((e) => {
+    const d = e.data();
+    return {
+      eventId: e.id,
+      eventDate: isoDate(d.eventDate),
+      title: d.title,
+      category: d.category,
+      description: d.description,
+    };
+  });
+
+  const files = [
+    {
+      name: "sessions.csv",
+      content: toCsv(
+        [
+          "bookingId", "requestedAt", "scheduledAt", "status", "outcome", "isEmergency",
+          "sessionMode", "studentEmail", "counsellorEmail", "concernCategories", "studentRating",
+        ],
+        sessionRows,
+      ),
+    },
+    {
+      name: "feedback.csv",
+      content: toCsv(["bookingId", "submittedAt", "counsellorEmail", "studentEmail", "rating", "answers"], feedbackRows),
+    },
+    {
+      name: "ssi-results.csv",
+      content: toCsv(
+        [
+          "resultId", "submittedAt", "studentEmail", "severity", "likertScore", "likertMax",
+          "depressionScore", "anxietyScore", "stressScore",
+        ],
+        ssiRows,
+      ),
+    },
+    {
+      name: "events.csv",
+      content: toCsv(["eventId", "eventDate", "title", "category", "description"], eventRows),
+    },
+  ];
+
+  const counts = {
+    sessions: sessionRows.length,
+    feedback: feedbackRows.length,
+    ssiResults: ssiRows.length,
+    events: eventRows.length,
+  };
+  await yearRef.update({
+    [`exports.${collegeId}`]: { at: Date.now(), byUid: callerUid, counts },
+    updatedAt: Date.now(),
+  });
+
+  return { files, counts };
+});
+
+// Permanently deletes ONE college's records for ONE closed, already-exported
+// academic year: its bookings (with intake/private subcollections), their
+// feedback and chat/resources, SSI results, and events in the date range.
+// Bookings that never got a collegeId (legacy data) can't be attributed to a
+// college and are left untouched.
+export const deleteAcademicYearCollegeData = onCall<{ yearId: string; collegeId: string; confirm: string }>(
+  async (request) => {
+    const { callerUid, collegeId, year, yearRef } = await loadYearForCaller(request);
+
+    if (year.status !== "closed") {
+      throw new HttpsError("failed-precondition", "Close the academic year before deleting its data.");
+    }
+    const exportInfo = (year.exports as Record<string, { at: number }> | undefined)?.[collegeId];
+    if (!exportInfo) {
+      throw new HttpsError("failed-precondition", "Download this college's export first — it is required before deleting.");
+    }
+    if ((year.archive as Record<string, unknown> | undefined)?.[collegeId]) {
+      throw new HttpsError("failed-precondition", "This college's data for this year was already deleted.");
+    }
+    const expected = `DELETE ${year.label as string}`;
+    if (request.data.confirm !== expected) {
+      throw new HttpsError("invalid-argument", `Type "${expected}" to confirm.`);
+    }
+
+    const { bookings, ssi, events, feedback } = await loadYearCollegeRecords(year, collegeId);
+    const bookingIds = bookings.map((b) => b.id);
+
+    // Chat messages and session resources hang off bookings by bookingId.
+    async function refsByBookingId(collectionName: string, field: string) {
+      const refs: FirebaseFirestore.DocumentReference[] = [];
+      for (let i = 0; i < bookingIds.length; i += 30) {
+        const chunk = bookingIds.slice(i, i + 30);
+        const snap = await db.collection(collectionName).where(field, "in", chunk).get();
+        refs.push(...snap.docs.map((d) => d.ref));
+      }
+      return refs;
+    }
+    const [chatRefs, resourceRefs] =
+      bookingIds.length > 0
+        ? await Promise.all([
+            refsByBookingId("chat_messages", "chatRoomId"),
+            refsByBookingId("session_resources", "bookingId"),
+          ])
+        : [[], []];
+
+    // Summary snapshot kept on the year so multi-year trends survive.
+    const summary = {
+      deletedAt: Date.now(),
+      byUid: callerUid,
+      sessions: bookings.length,
+      completedSessions: bookings.filter((b) => b.data().status === "completed" && b.data().outcome !== "missed").length,
+      missedSessions: bookings.filter((b) => b.data().outcome === "missed").length,
+      feedbackCount: feedback.length,
+      averageRating:
+        feedback.length > 0
+          ? feedback.reduce((sum, f) => sum + (Number(f.data()?.rating) || 0), 0) / feedback.length
+          : null,
+      ssiResults: ssi.length,
+      ssiSevere: ssi.filter((s) => s.data().severity === "severe").length,
+      ssiMedium: ssi.filter((s) => s.data().severity === "medium").length,
+      ssiNormal: ssi.filter((s) => s.data().severity === "normal").length,
+      events: events.length,
+    };
+    await yearRef.update({ [`archive.${collegeId}`]: summary, updatedAt: Date.now() });
+
+    const flat: FirebaseFirestore.DocumentReference[] = [
+      ...feedback.map((f) => f.ref),
+      ...ssi.map((s) => s.ref),
+      ...events.map((e) => e.ref),
+      ...chatRefs,
+      ...resourceRefs,
+    ];
+    let batch = db.batch();
+    let ops = 0;
+    for (const ref of flat) {
+      batch.delete(ref);
+      if (++ops === 400) {
+        await batch.commit();
+        batch = db.batch();
+        ops = 0;
+      }
+    }
+    if (ops > 0) await batch.commit();
+    // Bookings last, recursively, so their private/ subcollections go too.
+    for (const b of bookings) await db.recursiveDelete(b.ref);
+
+    return { summary };
+  },
+);

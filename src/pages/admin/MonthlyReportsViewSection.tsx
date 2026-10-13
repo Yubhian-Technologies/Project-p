@@ -5,6 +5,7 @@ import {
   type MonthlyReport,
 } from "../../services/firebase/monthlyReports";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import { listCampuses } from "../../services/firebase/campuses";
 import type { Campus } from "../../types/campus";
 import { useViewMore } from "../../hooks/useViewMore";
@@ -44,6 +45,7 @@ function formatDate(iso: string) {
 
 export function MonthlyReportsViewSection() {
   const { profile } = useAuth();
+  const { includesMonth } = useAcademicYear();
 
   // ── Campus state ─────────────────────────────────────────────────
   const [campuses, setCampuses] = useState<Campus[]>([]);
@@ -112,6 +114,7 @@ export function MonthlyReportsViewSection() {
   }
 
   const filtered = reports.filter((r) => {
+    if (!includesMonth(r.year, r.month, r.campusId, r.collegeId)) return false;
     if (filterMonth && r.month !== filterMonth) return false;
     if (filterYear && r.year !== filterYear) return false;
     return true;

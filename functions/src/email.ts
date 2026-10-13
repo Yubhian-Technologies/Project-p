@@ -8,7 +8,7 @@ const resendApiKey = defineSecret("RESEND_API_KEY");
 /** Sender address. Must be on a domain verified in Resend. The default works
     for Resend's test sender, which only delivers to the account owner's address. */
 const emailFrom = defineString("EMAIL_FROM", {
-  default: "Vishnu Wellness Center <onboarding@resend.dev>",
+  default: "Vishnu Wellness Centre <onboarding@resend.dev>",
 });
 
 interface NotificationDoc {
@@ -33,13 +33,13 @@ function escapeHtml(value: string): string {
 
 export function buildNotificationEmail(n: NotificationDoc): { subject: string; text: string; html: string } {
   const subject = n.title;
-  const text = `${n.title}\n\n${n.message}\n\nOpen Vishnu Wellness Center to see the details.`;
+  const text = `${n.title}\n\n${n.message}\n\nOpen Vishnu Wellness Centre to see the details.`;
   const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;color:#2E2B27;max-width:560px;margin:0 auto;padding:24px">
       <h2 style="margin:0 0 12px;font-size:20px">${escapeHtml(n.title)}</h2>
       <p style="margin:0 0 20px;font-size:15px;line-height:1.6">${escapeHtml(n.message)}</p>
       <p style="margin:0;font-size:12px;color:#8A8375">
-        You're receiving this because of activity on your Vishnu Wellness Center account.
+        You're receiving this because of activity on your Vishnu Wellness Centre account.
       </p>
     </div>`;
   return { subject, text, html };

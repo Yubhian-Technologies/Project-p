@@ -80,4 +80,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  /* When the name wraps to its own line, justify-content: space-between
+     would otherwise left-align this lone group on its new line instead of
+     keeping it on the right where it always was. */
+  margin-left: auto;
 }

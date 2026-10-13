@@ -7,23 +7,25 @@ export type SsiAnalyticsPeriod = "today" | "week" | "month" | "all";
 export const SSI_ANALYTICS_PERIODS: SsiAnalyticsPeriod[] = ["today", "week", "month", "all"];
 
 /** Short, generic label for the period TOGGLE BUTTON — "Today" / "This Week" /
-    "This Month" / "All Time". Kept separate from ssiAnalyticsPeriodLabel(),
+    "This Month" / "Academic Year". Kept separate from ssiAnalyticsPeriodLabel(),
     which stays concrete ("2nd Week Oct" / "October") for the data/results
-    shown once a period is picked. */
+    shown once a period is picked. "all" isn't actually unbounded time — the
+    results it's filtering are already scoped to the academic year picked in
+    the header, so "Academic Year" is the accurate label, not "All Time". */
 export function ssiAnalyticsChipLabel(period: SsiAnalyticsPeriod): string {
   if (period === "today") return "Today";
-  if (period === "all") return "All Time";
+  if (period === "all") return "Academic Year";
   return periodChipLabel(period);
 }
 
-/** "Today" / "2nd Week Oct" / "October" / "All Time" — reuses the same
+/** "Today" / "2nd Week Oct" / "October" / "Academic Year" — reuses the same
     calendar-grounded week/month labels already established by the Head's
     Home dashboard (headHomeMetrics.ts), so "week"/"month" mean the same
     thing everywhere in this app. Used for the data/results label, not the
     toggle button itself — see ssiAnalyticsChipLabel() for that. */
 export function ssiAnalyticsPeriodLabel(period: SsiAnalyticsPeriod, now: Date): string {
   if (period === "today") return "Today";
-  if (period === "all") return "All Time";
+  if (period === "all") return "Academic Year";
   return periodLabel(period, now);
 }
 

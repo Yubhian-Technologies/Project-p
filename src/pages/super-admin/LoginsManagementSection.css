@@ -202,4 +202,8 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  /* When a long name wraps to its own line, justify-content: space-between
+     would otherwise left-align this lone group on its new line instead of
+     keeping it on the right where it always was. */
+  margin-left: auto;
 }

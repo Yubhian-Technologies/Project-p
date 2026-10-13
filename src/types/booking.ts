@@ -84,6 +84,9 @@ export interface Booking {
       now" notification has gone out, so it's never sent twice. */
   reminderStartSent?: boolean;
   campusId?: string; // set on every booking so campus staff (e.g. the Head) can find it
+  /** The student's college, stamped at creation so records can be separated per college
+      (academic-year views/exports). Older bookings are filled in by backfillBookingCollegeIds. */
+  collegeId?: string;
   /** Optional, student-chosen at booking time — aggregated (never shown
       per-person) in the Head's wellness-trends dashboard. */
   concernCategories?: ConcernCategory[];

@@ -1,0 +1,23 @@
+.academic-year-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.academic-year-selector__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neu-text-muted, #64748b);
+  white-space: nowrap;
+}
+
+.academic-year-selector .md-select,
+.academic-year-selector > div:last-child {
+  min-width: 130px;
+}
+
+@media (max-width: 640px) {
+  .academic-year-selector__label {
+    display: none;
+  }
+}

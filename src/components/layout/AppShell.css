@@ -258,6 +258,12 @@
     flex-shrink: 0;
   }
 
+  /* Collides with the brand name at phone widths — not essential there,
+     the page content below still respects whichever year was last picked. */
+  .app-shell__topbar-right .academic-year-selector {
+    display: none;
+  }
+
   .app-shell__topbar-right .notification-bell__trigger {
     width: 36px;
     height: 36px;

@@ -83,7 +83,7 @@ const GAMES: {
     subtitle: "Flip cards and find every pair in as few moves as possible.",
     icon: <LeafIcon />,
     motivation: "Have fun with it — every round trains your focus a little more.",
-    fact: "Simple memory games like this activate the hippocampus, your brain's memory center.",
+    fact: "Simple memory games like this activate the hippocampus, your brain's memory centre.",
   },
   {
     id: "simon-says",

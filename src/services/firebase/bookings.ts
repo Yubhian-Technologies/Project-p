@@ -95,6 +95,7 @@ export async function createEmergencySosBooking(
     whatsappNumber?: string;
     studentOrProfessional?: "student" | "professional";
     campusId?: string;
+    collegeId?: string;
   },
 ): Promise<string> {
   if (!profile.campusId) {
@@ -128,6 +129,7 @@ export async function createEmergencySosBooking(
     durationMinutes: SESSION_DURATION_MINUTES,
     isEmergency: true,
     campusId: profile.campusId,
+    ...(profile.collegeId ? { collegeId: profile.collegeId } : {}),
     createdAt: now,
     updatedAt: now,
   });

@@ -68,8 +68,8 @@ export function Login() {
       <div className="auth-glass-card">
         <div className="auth-header">
           <Link to="/" className="auth-logo-link">
-            <img src="/favicon.png" alt="Vishnu Wellness Center Logo" className="auth-logo-img" />
-            <span className="auth-logo-text">Vishnu Wellness Center</span>
+            <img src="/favicon.png" alt="Vishnu Wellness Centre Logo" className="auth-logo-img" />
+            <span className="auth-logo-text">Vishnu Wellness Centre</span>
           </Link>
           <h1 className="auth-card__title">{mode === "signin" ? "Welcome Back" : "Reset your password"}</h1>
           <p className="auth-card__subtitle">

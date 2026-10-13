@@ -7,6 +7,7 @@ import { listCampuses } from "../../services/firebase/campuses";
 import type { Campus } from "../../types/campus";
 import { formatDateDMY } from "../../utils/formatDate";
 import { useViewMore } from "../../hooks/useViewMore";
+import { useAuth } from "../../hooks/useAuth";
 import { Button } from "../../components/common/Button";
 import {
   TrendingUpIcon,
@@ -26,16 +27,26 @@ interface AdminHomeActivityOverviewProps {
 }
 
 export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivityOverviewProps) {
+  const { profile } = useAuth();
   const [monthlyReports, setMonthlyReports] = useState<MonthlyReport[]>([]);
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // A campus-restricted Admin (e.g. a college's Principal/Vice-Principal)
+  // only ever sees their own assigned campus(es) here — monthly reports are
+  // filed per-campus by that campus's Head, so this is the same scoping
+  // already used for the full "Consolidated Reports" section.
+  const scopedCampusIds =
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses"
+      ? (profile.adminAccess.campusIds ?? [])
+      : null;
 
   async function loadData() {
     setLoading(true);
     try {
       const [reports, campusList] = await Promise.all([listMonthlyReports(), listCampuses()]);
-      setMonthlyReports(reports);
-      setCampuses(campusList);
+      setMonthlyReports(scopedCampusIds ? reports.filter((r) => scopedCampusIds.includes(r.campusId)) : reports);
+      setCampuses(scopedCampusIds ? campusList.filter((c) => scopedCampusIds.includes(c.id)) : campusList);
     } catch (err) {
       console.error("Failed to load admin home activity", err);
     } finally {
@@ -46,6 +57,7 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
   useEffect(() => {
     // eslint-disable-next-line react/set-state-in-effect -- initial data fetch, not resetting state from a prop change
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const now = new Date();
@@ -99,10 +111,24 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
 
   const { visible: visibleCampusRows, hiddenCount, showMore } = useViewMore(campusRows, 7);
 
+  const isScoped = scopedCampusIds !== null;
+
   const kpis = [
-    { label: "Total Campuses", value: campuses.length, icon: BuildingIcon, color: "#2563EB", bg: "#DBEAFE" },
+    {
+      label: isScoped ? "Your Campus" : "Total Campuses",
+      value: campuses.length,
+      icon: BuildingIcon,
+      color: "#2563EB",
+      bg: "#DBEAFE",
+    },
     { label: `Submitted (${periodLabel})`, value: submittedCount, icon: CheckCircleIcon, color: "#15803D", bg: "#DCFCE7" },
-    { label: "Campuses Pending", value: pendingCount, icon: AlertCircleIcon, color: "#D97706", bg: "#FFFBEB" },
+    {
+      label: isScoped ? "Still Pending" : "Campuses Pending",
+      value: pendingCount,
+      icon: AlertCircleIcon,
+      color: "#D97706",
+      bg: "#FFFBEB",
+    },
     { label: "Total Reports Uploaded", value: totalReports, icon: FileTextIcon, color: "#0D9488", bg: "#CCFBF1" },
     { label: "Colleges Covered", value: collegesCovered, icon: MapPinIcon, color: "#EA580C", bg: "#FFF7ED" },
     { label: `Reports This Period`, value: reportsThisMonth.length, icon: CalendarIcon, color: "#1E3A8A", bg: "#E0E7FF" },
@@ -118,7 +144,9 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
             <span>System Activity & Submission Analysis</span>
           </h3>
           <p className="aha-header__sub">
-            Campus-wise monthly report submission analysis across the platform.
+            {isScoped
+              ? "Monthly report submission analysis for your campus."
+              : "Campus-wise monthly report submission analysis across the platform."}
           </p>
         </div>
         <Button type="button" variant="outlined" onClick={loadData}>
@@ -135,12 +163,20 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
               <div>
                 <h4 className="aha-card__title">Consolidated Reports Submitted</h4>
                 <span className="aha-card__subtitle">
-                  Which campuses shared their reports for {periodLabel} — and which haven't yet.
+                  {isScoped
+                    ? `Whether your campus shared its report for ${periodLabel} yet.`
+                    : `Which campuses shared their reports for ${periodLabel} — and which haven't yet.`}
                 </span>
               </div>
             </div>
             <span className="aha-badge aha-badge--blue">
-              {loading ? "…" : `${submittedCount} / ${campuses.length} Campuses Submitted`}
+              {loading
+                ? "…"
+                : isScoped
+                  ? submittedCount > 0
+                    ? "✓ Submitted"
+                    : "Pending"
+                  : `${submittedCount} / ${campuses.length} Campuses Submitted`}
             </span>
           </div>
 
@@ -166,7 +202,7 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
               {/* ── Per-Campus Breakdown ───────────────────────── */}
               {campuses.length === 0 ? (
                 <div className="aha-empty">
-                  <p>No campuses defined yet.</p>
+                  <p>{isScoped ? "Your account has no campus assigned — contact a Super Admin." : "No campuses defined yet."}</p>
                 </div>
               ) : monthlyReports.length === 0 ? (
                 <div className="aha-empty">

@@ -70,6 +70,20 @@ export function AddAdminModal({ onClose, onCreated }: AddAdminModalProps) {
     setSections((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
   }
 
+  // Consolidated Reports is a campus-wide roll-up that can span several
+  // colleges — out of scope for a Principal/VP, who only ever oversees one
+  // college, so it's dropped the moment that designation is picked (mirrors
+  // handleScopeChange dropping "campuses" above).
+  function handleDesignationChange(value: string) {
+    const next = value as "" | AdminDesignation;
+    setDesignation(next);
+    if (next === "principal" || next === "vice-principal") {
+      setSections((prev) => prev.filter((s) => s !== "monthly-reports"));
+    }
+  }
+
+  const isPrincipalOrVp = designation === "principal" || designation === "vice-principal";
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
@@ -100,7 +114,8 @@ export function AddAdminModal({ onClose, onCreated }: AddAdminModalProps) {
     value: c.id,
     label: campusIds.length > 1 ? `${c.name} (${campusNameById.get(c.campusId) ?? "?"})` : c.name,
   }));
-  const canSubmit = !saving && (scope === "global" || campusIds.length > 0) && sections.length > 0;
+  const canSubmit =
+    !saving && (scope === "global" || (campusIds.length > 0 && collegeIds.length > 0)) && sections.length > 0;
 
   return (
     <Modal title="Add Admin" onClose={onClose}>
@@ -144,7 +159,7 @@ export function AddAdminModal({ onClose, onCreated }: AddAdminModalProps) {
           <Select
             id="add-admin-designation"
             value={designation}
-            onChange={(v) => setDesignation(v as "" | AdminDesignation)}
+            onChange={handleDesignationChange}
           >
             <option value="">—</option>
             {ADMIN_DESIGNATIONS.map((d) => (
@@ -175,13 +190,13 @@ export function AddAdminModal({ onClose, onCreated }: AddAdminModalProps) {
         )}
         {scope === "campuses" && campusIds.length > 0 && (
           <div className="logins-management__field">
-            <label htmlFor="add-admin-colleges">Colleges (optional)</label>
+            <label htmlFor="add-admin-colleges">Colleges</label>
             <MultiSelect
               id="add-admin-colleges"
               options={collegeOptions}
               selected={collegeIds}
               onChange={setCollegeIds}
-              placeholder="Leave blank for every college on these campuses…"
+              placeholder="Select the college(s) this admin oversees…"
             />
             {collegeIds.length > 0 && (
               <p className="logins-management__hint">
@@ -200,7 +215,10 @@ export function AddAdminModal({ onClose, onCreated }: AddAdminModalProps) {
                 <input
                   type="checkbox"
                   checked={sections.includes(section.id)}
-                  disabled={section.id === "campuses" && scope === "campuses"}
+                  disabled={
+                    (section.id === "campuses" && scope === "campuses") ||
+                    (section.id === "monthly-reports" && isPrincipalOrVp)
+                  }
                   onChange={() => toggleSection(section.id)}
                 />
                 {section.label}

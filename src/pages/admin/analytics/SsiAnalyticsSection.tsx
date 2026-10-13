@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
+import { useAcademicYear } from "../../../hooks/useAcademicYear";
 import { listCampuses } from "../../../services/firebase/campuses";
 import { listSsiCollegeResultsForCampus, type SsiCollegeResult } from "../../../services/firebase/ssiCollegeResults";
 import type { Campus } from "../../../types/campus";
@@ -25,12 +26,13 @@ import "./AnalyticsSection.css";
  */
 export function SsiAnalyticsSection() {
   const { profile } = useAuth();
+  const { includes: inAcademicYear, selectedLabel: academicYearLabel } = useAcademicYear();
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [campusId, setCampusId] = useState(() =>
     profile?.role === "admin" && profile.adminAccess?.scope === "campuses" && profile.adminAccess.campusIds?.length === 1
       ? profile.adminAccess.campusIds[0]
       : "");
-  const [results, setResults] = useState<SsiCollegeResult[]>([]);
+  const [allResults, setResults] = useState<SsiCollegeResult[]>([]);
   const [loadingResults, setLoadingResults] = useState(false);
   const [period, setPeriod] = useState<SsiAnalyticsPeriod>("all");
   const [now] = useState(() => new Date());
@@ -58,6 +60,20 @@ export function SsiAnalyticsSection() {
       .finally(() => setLoadingResults(false));
   }, [campusId]);
 
+  // A college-restricted Admin only ever sees their own colleges, and every
+  // admin sees just the academic year chosen in the header.
+  const scopedCollegeIds =
+    profile?.role === "admin" && profile.adminAccess?.scope === "campuses" && profile.adminAccess.collegeIds?.length
+      ? profile.adminAccess.collegeIds
+      : null;
+  const results = useMemo(
+    () =>
+      allResults
+        .filter((r) => !scopedCollegeIds || scopedCollegeIds.includes(r.collegeId))
+        .filter((r) => inAcademicYear(r.submittedAt, r.campusId ?? campusId, r.collegeId)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allResults, inAcademicYear, academicYearLabel, campusId],
+  );
   const filteredResults = useMemo(() => filterSsiResultsByPeriod(results, period, now), [results, period, now]);
   const summary = useMemo(() => computeSsiAnalyticsSummary(filteredResults), [filteredResults]);
 

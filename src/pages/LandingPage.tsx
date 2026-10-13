@@ -6,6 +6,7 @@ import { dashboardPathForRole } from "../utils/roleRedirect";
 import { CardFanCarousel } from "../components/ui/CardFanCarousel";
 import { PerspectiveDeckCarousel } from "../components/ui/PerspectiveDeckCarousel";
 import { AnimatedHero } from "../components/ui/animated-hero";
+import { AboutPhotoCarousel } from "../components/ui/AboutPhotoCarousel";
 import { MorphingPopover, MorphingPopoverTrigger, MorphingPopoverContent } from "../components/common/MorphingPopover";
 import { ReferStudentForm } from "./ReferStudentForm";
 import "./LandingPage.css";
@@ -587,39 +588,8 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Right Column: Photo with Doodle Stickers */}
-            <div className="landing-about-media">
-              <div className="landing-about-image-wrapper">
-                <img
-                  src="/about-campus-students.jpg"
-                  alt="Vishnu Wellness Centre campus students talking together"
-                  className="landing-about-image"
-                  width={1200}
-                  height={896}
-                />
-              </div>
-
-              {/* Doodle Sticker 1 (Top Left) */}
-              <div className="landing-about-doodle landing-about-doodle--yellow">
-                <div className="landing-about-doodle__card">
-                  <span className="landing-about-doodle__line1">You</span>
-                  <span className="landing-about-doodle__line2">Matter</span>
-                  <span className="landing-about-doodle__line3">Here</span>
-                </div>
-              </div>
-
-              {/* Doodle Sticker 2 (Top Right) */}
-              <div className="landing-about-doodle landing-about-doodle--mint">
-                <div className="landing-about-doodle__bubble">
-                  <span>TALK</span>
-                  <span>REFLECT</span>
-                  <span>GROW</span>
-                  <svg className="landing-about-doodle__arrow" width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <path d="M6 8C10 8 16 10 16 18M16 18L11 14M16 18L20 14" stroke="#0D9488" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
-            </div>
+            {/* Right Column: 3-photo carousel — real photos to be added later */}
+            <AboutPhotoCarousel />
           </div>
         </motion.section>
 

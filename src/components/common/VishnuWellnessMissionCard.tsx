@@ -88,9 +88,7 @@ export function VishnuWellnessMissionCard({ onSelectSection }: VishnuWellnessMis
         {/* Card Footer */}
         <div className="vwm-footer">
           <div className="vwm-footer__left">YOUR INSTITUTIONAL WELLNESS TEAM</div>
-          <div className="vwm-footer__right">
-            100% Confidential • On-Campus & Online
-          </div>
+          <div className="vwm-footer__right">100% Confidential</div>
         </div>
       </div>
     </div>

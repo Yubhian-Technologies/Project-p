@@ -49,11 +49,11 @@ const EMERGENCY_LINES: EmergencyLine[] = [
   {
     id: "campus-counseling",
     icon: <MapPinIcon />,
-    name: "Vishnu Wellness Center",
+    name: "Vishnu Wellness Centre",
     description: "Walk-in confidential counseling on-campus (A-Block Ground Floor)",
     actionLabel: "CAMPUS",
     href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      "Vishnu Institute of Technology Wellness Center A-Block",
+      "Vishnu Institute of Technology Wellness Centre A-Block",
     )}`,
     accent: "purple",
   },
@@ -77,6 +77,7 @@ export function CrisisSosSection() {
           whatsappNumber: profile?.whatsappNumber,
           studentOrProfessional: profile?.studentOrProfessional,
           campusId: profile?.campusId,
+          collegeId: profile?.collegeId,
         },
       );
       setDispatchedTo(profile?.email ?? "a counsellor");

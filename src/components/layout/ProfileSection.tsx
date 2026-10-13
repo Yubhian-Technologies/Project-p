@@ -13,7 +13,6 @@ import {
 } from "../../services/firebase/firestore";
 import { getSignatureURL, saveSignatureURL } from "../../services/firebase/signature";
 import { AttendanceCheckCard } from "../attendance/AttendanceCheckCard";
-import { ImportLoginsModal } from "../profile/ImportLoginsModal";
 import { AddStudentModal } from "../profile/AddStudentModal";
 import { authErrorMessage, changeOwnPassword } from "../../services/firebase/auth";
 import { defaultAvailabilitySchedule } from "../../types/availability";
@@ -127,7 +126,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const [uploadingSignature, setUploadingSignature] = useState(false);
   const [signatureError, setSignatureError] = useState<string | null>(null);
 
-  const [showImportLogins, setShowImportLogins] = useState(false);
   const [showAddStudent, setShowAddStudent] = useState(false);
 
   useEffect(() => {
@@ -211,9 +209,13 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   async function handleAvailabilityChange(value: string) {
     if (!currentUser) return;
     setSavingAvailability(true);
+    setError(null);
     try {
       await setAvailability(currentUser.uid, value === "available");
       await refreshProfile();
+    } catch (err) {
+      console.error("Failed to update availability", err);
+      setError("Couldn't update your availability. Please try again.");
     } finally {
       setSavingAvailability(false);
     }
@@ -400,7 +402,11 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
             </div>
           )}
 
-          {isCounsellorLike && !!profile.campusId && <AttendanceCheckCard span={12} />}
+          {isCounsellorLike && !!profile.campusId && (
+            <div className="profile-section__attendance">
+              <AttendanceCheckCard span={12} />
+            </div>
+          )}
         </div>
 
         <div className="profile-section__main">
@@ -1111,21 +1117,15 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
 
         {isHead && !!profile.campusId && (
           <div className="profile-section__password">
-            <p className="profile-section__subheading">TEAM</p>
+            <p className="profile-section__subheading">ADD</p>
             <Button type="button" variant="outlined" onClick={() => setShowAddStudent(true)}>
               + Add User
-            </Button>
-            <Button type="button" variant="outlined" onClick={() => setShowImportLogins(true)}>
-              Import Login Mails
             </Button>
           </div>
         )}
         </div>
       </div>
     </Card>
-    {showImportLogins && profile.campusId && (
-      <ImportLoginsModal campusId={profile.campusId} onClose={() => setShowImportLogins(false)} />
-    )}
     {showAddStudent && profile.campusId && (
       <AddStudentModal campusId={profile.campusId} onClose={() => setShowAddStudent(false)} onCreated={async () => {}} />
     )}

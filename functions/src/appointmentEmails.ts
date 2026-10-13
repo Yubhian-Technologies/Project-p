@@ -4,7 +4,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 const resendApiKey = defineSecret("RESEND_API_KEY");
 const emailFrom = defineString("EMAIL_FROM", {
-  default: "Vishnu Wellness Center <onboarding@resend.dev>",
+  default: "Vishnu Wellness Centre <onboarding@resend.dev>",
 });
 
 const DISPLAY_TIMEZONE = "Asia/Kolkata";
@@ -83,7 +83,7 @@ function renderEmail(opts: {
         </table>
       </div>
       <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;text-align:center">
-        Vishnu Wellness Center &middot; You're receiving this because of a session booked through the app.
+        Vishnu Wellness Centre &middot; You're receiving this because of a session booked through the app.
       </p>
     </div>
   </body>
