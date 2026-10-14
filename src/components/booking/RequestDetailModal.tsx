@@ -16,6 +16,7 @@ import type { SeriousCase } from "../../types/seriousCase";
 import { useAuth } from "../../hooks/useAuth";
 import { ChatModal } from "../chat/ChatModal";
 import { SessionResourcesPanel } from "../resources/SessionResourcesPanel";
+import { StudentMoodSummary } from "./StudentMoodSummary";
 import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./RequestCard.css";
 
@@ -844,6 +845,8 @@ export function RequestDetailModal({
           <dd>{intake.issue}</dd>
         </dl>
       )}
+
+      <StudentMoodSummary bookingId={booking.id} />
 
       {studentProfile && (
         <Button type="button" variant="outlined" onClick={() => setShowBioData(true)}>

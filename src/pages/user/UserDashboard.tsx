@@ -196,7 +196,7 @@ export function UserDashboard() {
           >
             <WellnessScoreBanner />
             <div style={{ marginTop: "12px", fontSize: "14px", lineHeight: "1.6" }}>
-              Connect with certified psychologists, manage your upcoming counselling sessions, and track your wellness journey.
+              Connect with certified counsellors, manage your upcoming counselling sessions, and track your wellness journey.
             </div>
           </BentoCard>
 

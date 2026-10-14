@@ -61,7 +61,7 @@ export async function generateMonthlyReportDocx(input: MonthlyReportInput): Prom
       {
         children: [
           new Paragraph({ text: `MONTHLY REPORT – ${header.monthLabel}`, heading: HeadingLevel.HEADING_1 }),
-          new Paragraph(`In-Charge Psychologist: ${header.preparedByName}`),
+          new Paragraph(`In-Charge Counsellor: ${header.preparedByName}`),
           new Paragraph("Department: Vishnu Wellness Centre"),
           new Paragraph(`Institution: ${header.institutionName}`),
           new Paragraph(""),

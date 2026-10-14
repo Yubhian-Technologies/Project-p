@@ -1,7 +1,6 @@
 import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { db } from "./config";
 import type { Role, StudentBioData, UserProfile } from "../../types/user";
-import type { DayAvailability } from "../../types/availability";
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snapshot = await getDoc(doc(db, "users", uid));
@@ -94,7 +93,6 @@ export async function updateCounsellorProfile(
     certifications: string[];
     sessionType: "online" | "offline" | "both";
     languages: string[];
-    availabilitySchedule: DayAvailability[];
   },
 ): Promise<void> {
   await updateDoc(doc(db, "users", uid), data);

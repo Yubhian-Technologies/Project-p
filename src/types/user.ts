@@ -1,5 +1,3 @@
-import type { DayAvailability } from "./availability";
-
 export type Role = "user" | "counsellor" | "head" | "admin" | "super-admin";
 
 // The six Admin-dashboard sidebar sections a Super Admin can individually
@@ -114,6 +112,5 @@ export interface UserProfile {
   certifications?: string[];
   sessionType?: "online" | "offline" | "both";
   languages?: string[];
-  availabilitySchedule?: DayAvailability[];
   createdAt: number;
 }

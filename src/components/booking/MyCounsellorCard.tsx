@@ -7,7 +7,6 @@ import type { UserProfile } from "../../types/user";
 import type { Booking } from "../../types/booking";
 import type { LiveStatus } from "../../utils/counsellorStatus";
 import { liveStatusLabel } from "../../utils/counsellorStatus";
-import { formatAvailabilitySchedule } from "../../utils/scheduleFormat";
 import "./MyCounsellorCard.css";
 
 interface MyCounsellorCardProps {
@@ -57,8 +56,7 @@ export function MyCounsellorCard({
   }, [profile.uid]);
 
   const avgRating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
-  const scheduleLines = formatAvailabilitySchedule(profile.availabilitySchedule ?? []);
-  const hasConsultation = profile.sessionType || scheduleLines.length > 0 || (profile.languages?.length ?? 0) > 0;
+  const hasConsultation = profile.sessionType || (profile.languages?.length ?? 0) > 0;
   const hasQualifications =
     profile.educationDegree ||
     profile.educationInstitution ||
@@ -169,7 +167,7 @@ export function MyCounsellorCard({
                 </div>
               </div>
             )}
-            <span className="my-counsellor__verified">✓ Certified Psychologist</span>
+            <span className="my-counsellor__verified">✓ Certified Counsellor</span>
           </section>
         )}
 
@@ -181,16 +179,6 @@ export function MyCounsellorCard({
                 <div className="my-counsellor__field">
                   <span className="my-counsellor__field-label">Session type</span>
                   <p className="my-counsellor__field-value">{SESSION_TYPE_LABEL[profile.sessionType]}</p>
-                </div>
-              )}
-              {scheduleLines.length > 0 && (
-                <div className="my-counsellor__field">
-                  <span className="my-counsellor__field-label">Availability</span>
-                  {scheduleLines.map((line) => (
-                    <p key={line} className="my-counsellor__field-value">
-                      {line}
-                    </p>
-                  ))}
                 </div>
               )}
               {profile.languages && profile.languages.length > 0 && (

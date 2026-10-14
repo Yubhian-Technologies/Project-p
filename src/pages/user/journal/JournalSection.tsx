@@ -42,18 +42,23 @@ export function JournalSection() {
     refresh();
   }, [currentUser]);
 
-  // Same-campus counsellors and Heads to share an entry with — only needed
-  // for a student viewer, but harmless to skip fetching for the others.
+  // The counsellor assigned to this student's own college, plus the campus
+  // Head — same scoping rule as "My Counsellor" (CampusCounsellorsSection):
+  // a Counsellor is matched by collegeId, a Head oversees the whole campus
+  // so is matched by campusId instead. Only needed for a student viewer, but
+  // harmless to skip fetching for the others.
   useEffect(() => {
     if (profile?.role !== "user" || !profile.campusId) return;
     listBookableProfiles()
       .then((all) =>
         setShareCandidates(
-          all.filter((p) => (p.role === "counsellor" || p.role === "head") && p.campusId === profile.campusId),
+          all.filter((p) =>
+            p.role === "head" ? p.campusId === profile.campusId : p.role === "counsellor" && p.collegeId === profile.collegeId,
+          ),
         ),
       )
       .catch(() => setShareCandidates([]));
-  }, [profile?.role, profile?.campusId]);
+  }, [profile?.role, profile?.campusId, profile?.collegeId]);
 
   // Entries other students have shared with this viewer (a Counsellor or Head).
   useEffect(() => {

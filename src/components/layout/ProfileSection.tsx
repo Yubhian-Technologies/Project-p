@@ -15,14 +15,11 @@ import { getSignatureURL, saveSignatureURL } from "../../services/firebase/signa
 import { AttendanceCheckCard } from "../attendance/AttendanceCheckCard";
 import { AddStudentModal } from "../profile/AddStudentModal";
 import { authErrorMessage, changeOwnPassword } from "../../services/firebase/auth";
-import { defaultAvailabilitySchedule } from "../../types/availability";
-import type { DayAvailability } from "../../types/availability";
 import { Card } from "../common/Card";
 import { Avatar } from "../common/Avatar";
 import { Button } from "../common/Button";
 import { Select } from "../common/Select";
 import { AvatarCropModal } from "../common/AvatarCropModal";
-import { AvailabilityScheduleEditor } from "./AvailabilityScheduleEditor";
 import "./ProfileSection.css";
 
 function toCsv(list?: string[]): string {
@@ -103,9 +100,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     profile?.sessionType ?? "offline",
   );
   const [languagesDraft, setLanguagesDraft] = useState(toCsv(profile?.languages));
-  const [scheduleDraft, setScheduleDraft] = useState<DayAvailability[]>(
-    profile?.availabilitySchedule ?? defaultAvailabilitySchedule(),
-  );
   const [savingCounsellorProfile, setSavingCounsellorProfile] = useState(false);
 
   const [showEditProfileForm, setShowEditProfileForm] = useState(false);
@@ -290,7 +284,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
         certifications: fromCsv(certificationsDraft),
         sessionType: sessionTypeDraft,
         languages: fromCsv(languagesDraft),
-        availabilitySchedule: scheduleDraft,
       });
       await refreshProfile();
     } finally {
@@ -365,8 +358,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     currentOrganizationDraft === (profile.currentOrganization ?? "") &&
     certificationsDraft === toCsv(profile.certifications) &&
     sessionTypeDraft === (profile.sessionType ?? "offline") &&
-    languagesDraft === toCsv(profile.languages) &&
-    JSON.stringify(scheduleDraft) === JSON.stringify(profile.availabilitySchedule ?? defaultAvailabilitySchedule());
+    languagesDraft === toCsv(profile.languages);
 
   return (
     <div className="profile-page">
@@ -484,7 +476,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                   <input
                     id="specialization"
                     type="text"
-                    placeholder="e.g. Counselling Psychologist"
+                    placeholder="e.g. Wellness Counsellor"
                     value={specializationDraft}
                     onChange={(e) => setSpecializationDraft(e.target.value)}
                   />
@@ -592,7 +584,7 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                     onChange={(e) => setCertificationsDraft(e.target.value)}
                   />
                 </div>
-                <p className="profile-section__verified-note">✓ Certified Psychologist</p>
+                <p className="profile-section__verified-note">✓ Certified Counsellor</p>
 
                 <p className="profile-section__subheading">Consultation</p>
                 <div className="profile-section__field">
@@ -606,10 +598,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                     <option value="online">Online</option>
                     <option value="both">Online &amp; Offline</option>
                   </Select>
-                </div>
-                <div className="profile-section__field profile-section__field--full">
-                  <label>Weekly availability</label>
-                  <AvailabilityScheduleEditor value={scheduleDraft} onChange={setScheduleDraft} />
                 </div>
 
                 <div className="profile-section__bio">

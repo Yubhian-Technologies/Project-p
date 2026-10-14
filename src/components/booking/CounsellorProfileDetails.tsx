@@ -7,7 +7,6 @@ import { fetchCounsellorReviews, type CounsellorReview } from "../../services/fi
 import type { UserProfile } from "../../types/user";
 import type { LiveStatus } from "../../utils/counsellorStatus";
 import { liveStatusLabel } from "../../utils/counsellorStatus";
-import { formatAvailabilitySchedule } from "../../utils/scheduleFormat";
 import "./CounsellorProfileModal.css";
 
 interface CounsellorProfileDetailsProps {
@@ -57,8 +56,7 @@ export function CounsellorProfileDetails({
   const avgRating =
     reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
 
-  const scheduleLines = formatAvailabilitySchedule(profile.availabilitySchedule ?? []);
-  const hasConsultation = profile.sessionType || scheduleLines.length > 0 || (profile.languages?.length ?? 0) > 0;
+  const hasConsultation = profile.sessionType || (profile.languages?.length ?? 0) > 0;
 
   return (
     <div className={`counsellor-profile ${inModal ? "counsellor-profile--modal" : "counsellor-profile--standalone"}`}>
@@ -150,7 +148,7 @@ export function CounsellorProfileDetails({
               </div>
             )}
 
-            <span className="counsellor-profile__verified">✓ Certified Psychologist</span>
+            <span className="counsellor-profile__verified">✓ Certified Counsellor</span>
           </section>
 
           {hasConsultation && (
@@ -161,17 +159,6 @@ export function CounsellorProfileDetails({
                 <div className="counsellor-profile__field">
                   <span className="counsellor-profile__field-label">Session type</span>
                   <p className="counsellor-profile__field-value">{SESSION_TYPE_LABEL[profile.sessionType]}</p>
-                </div>
-              )}
-
-              {scheduleLines.length > 0 && (
-                <div className="counsellor-profile__field">
-                  <span className="counsellor-profile__field-label">Availability</span>
-                  {scheduleLines.map((line) => (
-                    <p key={line} className="counsellor-profile__field-value">
-                      {line}
-                    </p>
-                  ))}
                 </div>
               )}
 

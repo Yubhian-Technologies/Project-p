@@ -54,7 +54,7 @@ export async function generateMonthlyReportPdf(input: MonthlyReportInput): Promi
   doc.setFontSize(18).setFont("helvetica", "bold").text(`MONTHLY REPORT – ${header.monthLabel}`, margin, y);
   y += 26;
   doc.setFontSize(11).setFont("helvetica", "normal");
-  doc.text(`In-Charge Psychologist: ${header.preparedByName}`, margin, y);
+  doc.text(`In-Charge Counsellor: ${header.preparedByName}`, margin, y);
   y += 16;
   doc.text("Department: Vishnu Wellness Centre", margin, y);
   y += 16;

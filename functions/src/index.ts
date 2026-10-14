@@ -1648,6 +1648,47 @@ export const escalateSeriousCases = onSchedule("every 15 minutes", async () => {
   for (const b of batches) await b.commit();
 });
 
+// ── Student mood visibility for Counsellor/Head ─────────────────────────────
+// moodLogs/{uid}/entries/{date} is otherwise fully private (firestore.rules:
+// isSelf(uid) only) — a student's daily mood log is personal wellness data,
+// not blanket-readable the way a profile doc is. This callable is the one
+// deliberate exception: it lets the Counsellor actually assigned to a
+// booking (or the campus Head) see that student's mood/streak history when
+// they open that booking's details, with the relationship verified
+// server-side against the real booking record rather than opened up as a
+// standing Firestore rule.
+export const getStudentMoodLogs = onCall<{ bookingId: string }>(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) {
+    throw new HttpsError("unauthenticated", "You must be signed in.");
+  }
+  const bookingId = request.data?.bookingId;
+  if (!bookingId || typeof bookingId !== "string") {
+    throw new HttpsError("invalid-argument", "bookingId is required.");
+  }
+
+  const [callerDoc, bookingDoc] = await Promise.all([
+    db.collection("users").doc(callerUid).get(),
+    db.collection("bookings").doc(bookingId).get(),
+  ]);
+  const caller = callerDoc.data();
+  const booking = bookingDoc.data();
+  if (!booking) {
+    throw new HttpsError("not-found", "That booking was not found.");
+  }
+
+  const callerRole = caller?.role as string | undefined;
+  const isOwningCounsellor = callerRole === "counsellor" && booking.counsellorId === callerUid;
+  const isCampusHead = callerRole === "head" && booking.campusId === caller?.campusId;
+  if (!isOwningCounsellor && !isCampusHead) {
+    throw new HttpsError("permission-denied", "You don't have access to this booking.");
+  }
+
+  const studentUid = booking.userId as string;
+  const entriesSnap = await db.collection("moodLogs").doc(studentUid).collection("entries").get();
+  return { entries: entriesSnap.docs.map((d) => d.data()) };
+});
+
 export { sendAppointmentEmails } from "./appointmentEmails";
 
 // ───────────────────────── Academic years ─────────────────────────

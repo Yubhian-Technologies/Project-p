@@ -1,5 +1,6 @@
 import { collection, doc, getDocs, setDoc } from "firebase/firestore";
-import { db } from "./config";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "./config";
 import type { DayStreakItem, MoodEntry, MoodType, StreakStats } from "../../types/mood";
 
 export function getTodayISO(): string {
@@ -28,6 +29,17 @@ export async function getMoodLogs(uid: string): Promise<MoodEntry[]> {
   const colRef = collection(db, "moodLogs", uid, "entries");
   const snapshot = await getDocs(colRef);
   return snapshot.docs.map((d) => d.data() as MoodEntry);
+}
+
+/** moodLogs is otherwise fully private (firestore.rules: isSelf(uid) only),
+    so a Counsellor/Head can't getDocs() it directly — this goes through the
+    getStudentMoodLogs Cloud Function instead, which verifies server-side
+    that the caller is the counsellor assigned to this booking (or the
+    campus Head) before returning anything. */
+export async function getStudentMoodLogsForBooking(bookingId: string): Promise<MoodEntry[]> {
+  const fn = httpsCallable<{ bookingId: string }, { entries: MoodEntry[] }>(functions, "getStudentMoodLogs");
+  const result = await fn({ bookingId });
+  return result.data.entries;
 }
 
 export function computeStreakStats(logs: MoodEntry[]): StreakStats {

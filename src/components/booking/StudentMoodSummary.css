@@ -1,0 +1,70 @@
+.student-mood-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #FFFFFF;
+  border: var(--sketch-border);
+  border-radius: var(--sketch-radius) !important;
+  box-shadow: var(--sketch-shadow-sm);
+  padding: 14px 16px;
+  margin: 12px 0;
+}
+
+.student-mood-summary__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.student-mood-summary__title {
+  font-family: var(--md-sys-typescale-font-display);
+  font-weight: 800;
+  font-size: 14px;
+  color: #0F172A;
+}
+
+.student-mood-summary__today {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.student-mood-summary__today-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.student-mood-summary__week {
+  display: flex;
+  gap: 6px;
+}
+
+.student-mood-summary__day {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1px solid #E2E8F0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #CBD5E1;
+}
+
+.student-mood-summary__day svg {
+  width: 14px;
+  height: 14px;
+}
+
+.student-mood-summary__day--today {
+  border-width: 2px;
+}
+
+.student-mood-summary__day-dot {
+  font-size: 10px;
+}

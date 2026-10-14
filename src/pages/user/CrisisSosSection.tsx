@@ -101,7 +101,7 @@ export function CrisisSosSection() {
         </div>
       ) : (
         <button type="button" className="crisis-sos__dispatch" disabled={dispatching} onClick={handleDispatch}>
-          <ShieldIcon /> {dispatching ? "Dispatching…" : "Dispatch Emergency SOS to On-Call Psychologist"}
+          <ShieldIcon /> {dispatching ? "Dispatching…" : "Dispatch Emergency SOS to On-Call Counsellor"}
         </button>
       )}
       {error && <p className="crisis-sos__error">{error}</p>}

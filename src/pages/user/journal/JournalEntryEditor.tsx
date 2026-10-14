@@ -108,7 +108,7 @@ export function JournalEntryEditor({
 
       {showShare && (
         <div className="journal-editor__share">
-          <label htmlFor={`journal-share-${date}`}>Share with (your campus only)</label>
+          <label htmlFor={`journal-share-${date}`}>Share with (your counsellor or campus head only)</label>
           <Select id={`journal-share-${date}`} value={shareCounsellorId} onChange={setShareCounsellorId}>
             <option value="" disabled>
               Select a counsellor…

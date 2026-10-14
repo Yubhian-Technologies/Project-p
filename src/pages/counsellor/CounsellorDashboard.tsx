@@ -232,7 +232,7 @@ export function CounsellorDashboard() {
               span={12}
               variant="hero"
               title={`Welcome, ${profile?.displayName || profile?.email || "Counsellor"}`}
-              subtitle="Certified Psychologist & Counsellor Workspace"
+              subtitle="Certified Counsellor Workspace"
               action={{
                 label: "Review Booking Requests →",
                 variant: "secondary",
