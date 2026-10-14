@@ -81,6 +81,27 @@
   padding: 4px 0 16px 0;
 }
 
+.booking-section > section {
+  width: 100%;
+}
+
+/* "My Counsellor" — full profile details shown directly (no click-to-open
+   popup), expanding across the full screen width. */
+.campus-counsellors__list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 4px 0 16px 0;
+}
+
+.campus-counsellors__list > * + * {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  padding-top: 20px;
+}
+
 @media (max-width: 768px) {
   .booking-section__grid {
     grid-template-columns: 1fr;

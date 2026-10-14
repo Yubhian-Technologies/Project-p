@@ -228,34 +228,6 @@
   padding: 5px 14px;
 }
 
-.counsellor-profile__approach-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 16px;
-}
-
-.counsellor-profile__approach-card {
-  background: #FFFFFF;
-  border: var(--sketch-border);
-  border-radius: var(--sketch-radius) !important;
-  box-shadow: var(--sketch-shadow-sm);
-  padding: 16px;
-}
-
-.counsellor-profile__approach-card h4 {
-  margin: 0 0 6px 0;
-  font-size: 13px;
-  font-weight: 800;
-  color: #5B21B6;
-}
-
-.counsellor-profile__approach-card p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-  color: #334155;
-}
-
 @media (max-width: 768px) {
   /* The card itself stays put on screen — only the content inside it scrolls.
      (Before, the whole panel — including the header and the Book Session
@@ -326,5 +298,67 @@
   .counsellor-profile__footer .md-button {
     min-width: 0;
     width: 100%;
+  }
+}
+
+/* ── Standalone (no modal) — CampusCounsellorsSection's "My Counsellor" ──
+   Keeps the same wide, two-column desktop layout the modal already used
+   (avatar column + flowing details column) — there's no modal viewport to
+   be cramped by here, so there's no reason to force the stacked/centered
+   mobile layout at desktop widths too. The existing 768px breakpoint below
+   still stacks it on phones exactly as it already did for the modal.
+   Supplies its own card chrome since it's no longer sitting inside a
+   .modal__panel, and a noticeably bigger photo since this is the one and
+   only profile shown here, not a compact pick-from-several card. */
+.counsellor-profile--standalone {
+  width: 100%;
+  box-sizing: border-box;
+  flex: none;
+  min-height: auto;
+  background: #FFFFFF;
+  border: var(--sketch-border);
+  border-radius: var(--sketch-radius) !important;
+  box-shadow: var(--sketch-shadow-sm);
+  overflow: hidden;
+}
+
+.counsellor-profile--standalone .counsellor-profile__main {
+  flex: none;
+  min-height: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.counsellor-profile--standalone .counsellor-profile__right {
+  overflow: visible;
+  padding-right: 0;
+  width: 100%;
+}
+
+.counsellor-profile--standalone .counsellor-profile__footer {
+  border-top: var(--sketch-border);
+  padding: 18px 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Desktop only — the existing 768px breakpoint above already stacks/shrinks
+   everything for mobile and must keep winning there, so these sizing bumps
+   (wider avatar column, bigger photo, roomier padding) are scoped to
+   exactly the widths that breakpoint doesn't touch. */
+@media (min-width: 769px) {
+  .counsellor-profile--standalone .counsellor-profile__main {
+    padding: 36px;
+    gap: 36px;
+  }
+
+  .counsellor-profile--standalone .counsellor-profile__left {
+    width: 220px;
+  }
+
+  .counsellor-profile--standalone .counsellor-profile__left .avatar--xl {
+    width: 180px;
+    height: 180px;
+    font-size: 64px;
   }
 }

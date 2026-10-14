@@ -21,6 +21,7 @@ import { Card } from "../common/Card";
 import { Avatar } from "../common/Avatar";
 import { Button } from "../common/Button";
 import { Select } from "../common/Select";
+import { AvatarCropModal } from "../common/AvatarCropModal";
 import { AvailabilityScheduleEditor } from "./AvailabilityScheduleEditor";
 import "./ProfileSection.css";
 
@@ -44,6 +45,9 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Object URL for the just-picked file, shown in the crop modal — nothing
+  // is uploaded until the person confirms the crop.
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [bioDraft, setBioDraft] = useState(profile?.bio ?? "");
   const [savingBio, setSavingBio] = useState(false);
   const [savingAvailability, setSavingAvailability] = useState(false);
@@ -99,13 +103,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     profile?.sessionType ?? "offline",
   );
   const [languagesDraft, setLanguagesDraft] = useState(toCsv(profile?.languages));
-  const [approachEmpatheticDraft, setApproachEmpatheticDraft] = useState(profile?.approachEmpathetic ?? "");
-  const [approachEvidenceBasedDraft, setApproachEvidenceBasedDraft] = useState(
-    profile?.approachEvidenceBased ?? "",
-  );
-  const [approachSolutionFocusedDraft, setApproachSolutionFocusedDraft] = useState(
-    profile?.approachSolutionFocused ?? "",
-  );
   const [scheduleDraft, setScheduleDraft] = useState<DayAvailability[]>(
     profile?.availabilitySchedule ?? defaultAvailabilitySchedule(),
   );
@@ -177,17 +174,30 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     }
   }
 
-  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
-    if (!file || !currentUser) return;
-
+    if (!file) return;
     setError(null);
+    // Opens the crop modal instead of uploading right away — the actual
+    // upload happens in handleCropSave, once a crop is confirmed.
+    setCropImageSrc(URL.createObjectURL(file));
+  }
+
+  function closeCropModal() {
+    if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);
+    setCropImageSrc(null);
+  }
+
+  async function handleCropSave(blob: Blob) {
+    if (!currentUser) return;
     setUploading(true);
     try {
-      const photoURL = await uploadAvatar(currentUser.uid, file);
+      const croppedFile = new File([blob], "avatar.jpg", { type: "image/jpeg" });
+      const photoURL = await uploadAvatar(currentUser.uid, croppedFile);
       await updateUserPhoto(currentUser.uid, photoURL);
       await refreshProfile();
+      closeCropModal();
     } catch {
       setError("Could not upload image. Try a smaller file or a different format.");
     } finally {
@@ -280,9 +290,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
         certifications: fromCsv(certificationsDraft),
         sessionType: sessionTypeDraft,
         languages: fromCsv(languagesDraft),
-        approachEmpathetic: approachEmpatheticDraft.trim(),
-        approachEvidenceBased: approachEvidenceBasedDraft.trim(),
-        approachSolutionFocused: approachSolutionFocusedDraft.trim(),
         availabilitySchedule: scheduleDraft,
       });
       await refreshProfile();
@@ -359,9 +366,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
     certificationsDraft === toCsv(profile.certifications) &&
     sessionTypeDraft === (profile.sessionType ?? "offline") &&
     languagesDraft === toCsv(profile.languages) &&
-    approachEmpatheticDraft === (profile.approachEmpathetic ?? "") &&
-    approachEvidenceBasedDraft === (profile.approachEvidenceBased ?? "") &&
-    approachSolutionFocusedDraft === (profile.approachSolutionFocused ?? "") &&
     JSON.stringify(scheduleDraft) === JSON.stringify(profile.availabilitySchedule ?? defaultAvailabilitySchedule());
 
   return (
@@ -385,6 +389,10 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
             {uploading ? "Uploading…" : "Change photo"}
           </Button>
           {error && <p className="profile-section__error">{error}</p>}
+
+          {cropImageSrc && (
+            <AvatarCropModal imageSrc={cropImageSrc} onCancel={closeCropModal} onSave={handleCropSave} />
+          )}
 
           {isCounsellorLike && (
             <div className="profile-section__availability">
@@ -585,38 +593,6 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
                   />
                 </div>
                 <p className="profile-section__verified-note">✓ Certified Psychologist</p>
-
-                <p className="profile-section__subheading">My approach</p>
-                <div className="profile-section__field profile-section__field--full">
-                  <label htmlFor="approach-empathetic">Empathetic</label>
-                  <textarea
-                    id="approach-empathetic"
-                    rows={2}
-                    placeholder="Creates a safe and non-judgmental environment."
-                    value={approachEmpatheticDraft}
-                    onChange={(e) => setApproachEmpatheticDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field profile-section__field--full">
-                  <label htmlFor="approach-evidence">Evidence-based</label>
-                  <textarea
-                    id="approach-evidence"
-                    rows={2}
-                    placeholder="Uses appropriate psychological techniques and structured interventions."
-                    value={approachEvidenceBasedDraft}
-                    onChange={(e) => setApproachEvidenceBasedDraft(e.target.value)}
-                  />
-                </div>
-                <div className="profile-section__field profile-section__field--full">
-                  <label htmlFor="approach-solution">Solution-focused</label>
-                  <textarea
-                    id="approach-solution"
-                    rows={2}
-                    placeholder="Works collaboratively toward practical and achievable goals."
-                    value={approachSolutionFocusedDraft}
-                    onChange={(e) => setApproachSolutionFocusedDraft(e.target.value)}
-                  />
-                </div>
 
                 <p className="profile-section__subheading">Consultation</p>
                 <div className="profile-section__field">

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Drop each photo into /public and set its path here (e.g. "/about-1.jpg")
 // — until then, that slide shows a placeholder so the carousel still works.
@@ -6,7 +7,7 @@ const SLIDES: { src: string | null; alt: string }[] = [
   { src: "/about-1.jpg", alt: "Vishnu Wellness Centre — campus life photo 1" },
   { src: "/about-2.jpg", alt: "Vishnu Wellness Centre — campus life photo 2" },
   { src: "/about-3.jpg", alt: "Vishnu Wellness Centre — campus life photo 3" },
-  { src: null, alt: "Vishnu Wellness Centre — campus life photo 4" },
+  { src: "/about-4.jpg", alt: "Vishnu Wellness Centre — campus life photo 4" },
 ];
 
 const AUTO_ADVANCE_MS = 5000;
@@ -34,6 +35,14 @@ export function AboutPhotoCarousel() {
     }, AUTO_ADVANCE_MS);
   }
 
+  function prevSlide() {
+    goTo((active - 1 + SLIDES.length) % SLIDES.length);
+  }
+
+  function nextSlide() {
+    goTo((active + 1) % SLIDES.length);
+  }
+
   return (
     <div className="landing-about-media">
       <div className="landing-about-image-wrapper landing-about-carousel">
@@ -59,18 +68,38 @@ export function AboutPhotoCarousel() {
         ))}
       </div>
 
-      <div className="landing-about-carousel__dots" role="tablist" aria-label="Photo carousel">
-        {SLIDES.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            role="tab"
-            aria-selected={i === active}
-            aria-label={`Show photo ${i + 1}`}
-            className={`landing-about-carousel__dot${i === active ? " landing-about-carousel__dot--active" : ""}`}
-            onClick={() => goTo(i)}
-          />
-        ))}
+      <div className="landing-about-carousel__controls" aria-label="Photo carousel controls">
+        <button
+          type="button"
+          onClick={prevSlide}
+          className="landing-about-carousel__arrow-btn landing-about-carousel__arrow-btn--prev"
+          aria-label="Previous photo"
+        >
+          <ChevronLeft size={16} />
+        </button>
+
+        <div className="landing-about-carousel__dots" role="tablist" aria-label="Photo carousel dots">
+          {SLIDES.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              role="tab"
+              aria-selected={i === active}
+              aria-label={`Show photo ${i + 1}`}
+              className={`landing-about-carousel__dot${i === active ? " landing-about-carousel__dot--active" : ""}`}
+              onClick={() => goTo(i)}
+            />
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={nextSlide}
+          className="landing-about-carousel__arrow-btn landing-about-carousel__arrow-btn--next"
+          aria-label="Next photo"
+        >
+          <ChevronRight size={16} />
+        </button>
       </div>
     </div>
   );

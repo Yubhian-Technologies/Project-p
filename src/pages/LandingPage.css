@@ -1975,11 +1975,47 @@ body {
   visibility: visible;
 }
 
+.landing-about-carousel__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.landing-about-carousel__arrow-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #64748B;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+}
+
+.landing-about-carousel__arrow-btn:hover {
+  background: #F8FAFC;
+  border-color: #0D9488;
+  color: #0D9488;
+  transform: scale(1.08);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.15);
+}
+
+.landing-about-carousel__arrow-btn:active {
+  transform: scale(0.95);
+}
+
 .landing-about-carousel__dots {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-top: 18px;
+  gap: 8px;
 }
 
 .landing-about-carousel__dot {

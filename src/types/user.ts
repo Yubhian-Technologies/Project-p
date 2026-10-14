@@ -114,9 +114,6 @@ export interface UserProfile {
   certifications?: string[];
   sessionType?: "online" | "offline" | "both";
   languages?: string[];
-  approachEmpathetic?: string;
-  approachEvidenceBased?: string;
-  approachSolutionFocused?: string;
   availabilitySchedule?: DayAvailability[];
   createdAt: number;
 }

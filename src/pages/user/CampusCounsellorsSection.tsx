@@ -6,8 +6,8 @@ import {
   listBookingsForUser,
   isSessionEndedPending,
 } from "../../services/firebase/bookings";
-import { CounsellorCard } from "../../components/booking/CounsellorCard";
-import { CounsellorProfileModal } from "../../components/booking/CounsellorProfileModal";
+import { MyCounsellorCard } from "../../components/booking/MyCounsellorCard";
+import { ChatModal } from "../../components/chat/ChatModal";
 import { computeLiveStatus } from "../../utils/counsellorStatus";
 import type { UserProfile } from "../../types/user";
 import type { Booking } from "../../types/booking";
@@ -25,7 +25,7 @@ export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellors
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
+  const [chatTarget, setChatTarget] = useState<Booking | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,35 +74,59 @@ export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellors
     return p.role === "head" ? p.campusId === profile?.campusId : p.collegeId === profile?.collegeId;
   });
 
+  // The booking "Send Message" opens — the same chat room BookingSection's
+  // own "Chat" button already uses, just reached from here instead. Prefers
+  // whichever booking with this person is currently active; otherwise the
+  // most recent one. No booking with them at all yet means no chat room
+  // exists, so MyCounsellorCard leaves the button out entirely.
+  function bookingWith(uid: string): Booking | undefined {
+    const withThem = myBookings.filter((b) => b.counsellorId === uid);
+    const active = withThem.find(
+      (b) => ACTIVE_STATUSES.includes(b.status) && !(b.status === "scheduled" && isSessionEndedPending(b)),
+    );
+    return active ?? [...withThem].sort((a, b) => b.createdAt - a.createdAt)[0];
+  }
+
   return (
     <div className="booking-section">
       <section>
         {counsellorsAndHeads.length === 0 ? (
           <p>No campus counsellors are available at the moment.</p>
         ) : (
-          <div className="booking-section__grid">
+          // Only ever the one counsellor (+ the campus Head) assigned to this
+          // student's own college — shown in full directly, no card-you-have-
+          // to-click-for-details popup, since there's nothing to pick between.
+          <div className="campus-counsellors__list">
             {counsellorsAndHeads.map((p) => (
-              <CounsellorCard
+              <MyCounsellorCard
                 key={p.uid}
                 profile={p}
                 status={computeLiveStatus(p, scheduledBookings)}
-                onClick={() => setSelectedProfile(p)}
+                bookingDisabled={hasActiveBooking}
+                onBook={() => onBookCounsellor(p.uid)}
+                chatBooking={bookingWith(p.uid)}
+                onOpenChat={setChatTarget}
               />
             ))}
           </div>
         )}
       </section>
 
-      {selectedProfile && (
-        <CounsellorProfileModal
-          profile={selectedProfile}
-          status={computeLiveStatus(selectedProfile, scheduledBookings)}
-          bookingDisabled={hasActiveBooking}
-          onBook={() => {
-            onBookCounsellor(selectedProfile.uid);
-            setSelectedProfile(null);
+      {chatTarget && currentUser && profile && (
+        <ChatModal
+          chatRoomId={chatTarget.id}
+          bookingId={chatTarget.id}
+          counterpartName={chatTarget.counsellorEmail}
+          counterpartRole={
+            counsellorsAndHeads.find((p) => p.uid === chatTarget.counsellorId)?.role === "head" ? "head" : "counsellor"
+          }
+          currentUser={{
+            uid: currentUser.uid,
+            email: profile.email,
+            displayName: profile.displayName,
+            role: profile.role,
           }}
-          onClose={() => setSelectedProfile(null)}
+          onClose={() => setChatTarget(null)}
         />
       )}
     </div>

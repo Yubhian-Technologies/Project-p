@@ -9,7 +9,7 @@ interface ChatModalProps {
   chatRoomId: string;
   bookingId?: string;
   counterpartName: string;
-  counterpartRole: "user" | "counsellor";
+  counterpartRole: "user" | "counsellor" | "head";
   currentUser: {
     uid: string;
     email: string;
