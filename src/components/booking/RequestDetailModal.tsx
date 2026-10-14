@@ -1242,17 +1242,23 @@ export function RequestDetailModal({
                 </div>
               ) : (
                 <div className="request-card__actions">
-                  <Button type="button" disabled={closing} onClick={handleCloseComplete}>
+                  <Button type="button" disabled={closing || !sessionStarted} onClick={handleCloseComplete}>
                     {closing ? "Closing…" : "Close & Complete Session"}
                   </Button>
                   <Button
                     type="button"
                     variant="outlined"
-                    disabled={closing}
+                    disabled={closing || !sessionStarted}
                     onClick={() => setShowFollowUp(true)}
                   >
                     Close &amp; Follow-up Session
                   </Button>
+                  {!sessionStarted && (
+                    <p className="request-card__summary-hint">
+                      Available once the session starts
+                      {booking.scheduledAt ? ` (${formatDateTimeDMY(booking.scheduledAt)})` : ""}.
+                    </p>
+                  )}
                 </div>
               )}
 
