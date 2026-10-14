@@ -2146,6 +2146,7 @@ body {
   .landing-section .perspective-deck__text-card-desc {
     font-size: 13px;
     -webkit-line-clamp: 6;
+    line-clamp: 6;
   }
 
   .landing-section .perspective-deck__text-card-accent-line {

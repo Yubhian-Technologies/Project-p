@@ -349,42 +349,6 @@
   transform: translateY(-1px);
 }
 
-.fan-card-details__tag:nth-child(6n + 1) {
-  background: #FFF0F2;
-  color: #BE123C;
-  border-color: #FECDD3;
-}
-
-.fan-card-details__tag:nth-child(6n + 2) {
-  background: #EFF6FF;
-  color: #1D4ED8;
-  border-color: #BFDBFE;
-}
-
-.fan-card-details__tag:nth-child(6n + 3) {
-  background: #ECFDF5;
-  color: #047857;
-  border-color: #A7F3D0;
-}
-
-.fan-card-details__tag:nth-child(6n + 4) {
-  background: #FFF7ED;
-  color: #C2410C;
-  border-color: #FED7AA;
-}
-
-.fan-card-details__tag:nth-child(6n + 5) {
-  background: #F5F3FF;
-  color: #6D28D9;
-  border-color: #DDD6FE;
-}
-
-.fan-card-details__tag:nth-child(6n + 6) {
-  background: #FEFCE8;
-  color: #A16207;
-  border-color: #FEF08A;
-}
-
 .fan-card-details__contact-row {
   display: flex;
   flex-wrap: wrap;

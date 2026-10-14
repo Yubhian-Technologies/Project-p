@@ -142,3 +142,9 @@
   font-size: 12px;
   color: var(--neu-text-muted, #718096);
 }
+
+.emergency-alerts__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}

@@ -4,7 +4,7 @@ import { Button } from "../common/Button";
 import { Select } from "../common/Select";
 import { DateTimePicker } from "../common/DateTimePicker";
 import { StarRating } from "../common/StarRating";
-import { MicIcon } from "../common/icons";
+import { CheckIcon, FlagIcon, MicIcon } from "../common/icons";
 import { useSpeechToText } from "../../hooks/useSpeechToText";
 import { getBookingIntake, SESSION_DURATION_LABEL } from "../../services/firebase/bookings";
 import { getSsiResult, type SsiResult } from "../../services/firebase/ssiTest";
@@ -17,6 +17,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { ChatModal } from "../chat/ChatModal";
 import { SessionResourcesPanel } from "../resources/SessionResourcesPanel";
 import { StudentMoodSummary } from "./StudentMoodSummary";
+import { StudentBioDataModal } from "./StudentBioDataModal";
 import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./RequestCard.css";
 
@@ -58,7 +59,7 @@ interface NotifyAdminBlockProps {
 // same createSeriousCase flow at a different moment. Collapses to a single
 // status chip (badge + "View" toggle for the admin's note) once a case
 // already exists for this booking.
-function NotifyAdminBlock({ seriousCase, buttonLabel, onNotify }: NotifyAdminBlockProps) {
+export function NotifyAdminBlock({ seriousCase, buttonLabel, onNotify }: NotifyAdminBlockProps) {
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -71,7 +72,11 @@ function NotifyAdminBlock({ seriousCase, buttonLabel, onNotify }: NotifyAdminBlo
       <div className="request-card__notify-status">
         <div className="request-card__notify-status-row">
           <span className={`request-card__notify-badge request-card__notify-badge--${resolved ? "resolved" : "open"}`}>
-            {resolved ? "✓ Admin action taken" : "🚩 Admin notified — awaiting action"}
+            {resolved ? (
+              <><CheckIcon /> Admin action taken</>
+            ) : (
+              <><FlagIcon /> Admin notified — awaiting action</>
+            )}
           </span>
           {resolved && seriousCase.actionTaken && (
             <Button
@@ -854,95 +859,9 @@ export function RequestDetailModal({
         </Button>
       )}
 
-      {showBioData &&
-        studentProfile &&
-        (() => {
-          const isStudentBio = (studentProfile.studentOrProfessional ?? "student") === "student";
-          return (
-            <Modal
-              title={isStudentBio ? "Student Bio Data" : "Working Professional Bio Data"}
-              onClose={() => setShowBioData(false)}
-            >
-              <dl className="request-card__ssi-dl">
-                {isStudentBio ? (
-                  <>
-                    <dt>Register No.</dt>
-                    <dd>{studentProfile.registerNumber || "—"}</dd>
-                    <dt>Batch</dt>
-                    <dd>{studentProfile.yearOrBatch || "—"}</dd>
-                    <dt>Branch</dt>
-                    <dd>{studentProfile.branch || "—"}</dd>
-                    <dt>Regular / Lateral</dt>
-                    <dd>
-                      {studentProfile.admissionType === "regular"
-                        ? "Regular"
-                        : studentProfile.admissionType === "lateral"
-                          ? "Lateral"
-                          : "—"}
-                    </dd>
-                    <dt>Gender</dt>
-                    <dd>{studentProfile.gender || "—"}</dd>
-                    <dt>Course</dt>
-                    <dd>{studentProfile.bioData?.course || "—"}</dd>
-                    <dt>Date of birth</dt>
-                    <dd>{studentProfile.bioData?.dateOfBirth || "—"}</dd>
-                    <dt>Hostel / Day Scholar</dt>
-                    <dd>{studentProfile.bioData?.hostelOrDayScholar || "—"}</dd>
-                    <dt>Mobile number</dt>
-                    <dd>{studentProfile.bioData?.mobileNumber || "—"}</dd>
-                    <dt>Email ID (personal)</dt>
-                    <dd>{studentProfile.bioData?.personalEmail || "—"}</dd>
-                    <dt>Father's name</dt>
-                    <dd>{studentProfile.bioData?.fatherName || "—"}</dd>
-                    <dt>Father's occupation</dt>
-                    <dd>{studentProfile.bioData?.fatherOccupation || "—"}</dd>
-                    <dt>Father's phone</dt>
-                    <dd>{studentProfile.bioData?.fatherPhone || "—"}</dd>
-                    <dt>Father's email</dt>
-                    <dd>{studentProfile.bioData?.fatherEmail || "—"}</dd>
-                    <dt>Mother's name</dt>
-                    <dd>{studentProfile.bioData?.motherName || "—"}</dd>
-                    <dt>Mother's occupation</dt>
-                    <dd>{studentProfile.bioData?.motherOccupation || "—"}</dd>
-                    <dt>Mother's phone</dt>
-                    <dd>{studentProfile.bioData?.motherPhone || "—"}</dd>
-                    <dt>Mother's email</dt>
-                    <dd>{studentProfile.bioData?.motherEmail || "—"}</dd>
-                    <dt>Correspondence address</dt>
-                    <dd>{studentProfile.bioData?.correspondenceAddress || "—"}</dd>
-                    <dt>Permanent address</dt>
-                    <dd>{studentProfile.bioData?.permanentAddress || "—"}</dd>
-                  </>
-                ) : (
-                  <>
-                    <dt>Employee ID</dt>
-                    <dd>{studentProfile.bioData?.employeeId || "—"}</dd>
-                    <dt>Institution</dt>
-                    <dd>{studentProfile.bioData?.institution || "—"}</dd>
-                    <dt>Department</dt>
-                    <dd>{studentProfile.branch || "—"}</dd>
-                    <dt>Designation</dt>
-                    <dd>{studentProfile.bioData?.designation || "—"}</dd>
-                    <dt>Gender</dt>
-                    <dd>{studentProfile.gender || "—"}</dd>
-                    <dt>Age</dt>
-                    <dd>{studentProfile.bioData?.age || "—"}</dd>
-                    <dt>Preferred language</dt>
-                    <dd>{studentProfile.bioData?.preferredLanguage || "—"}</dd>
-                    <dt>Marital status</dt>
-                    <dd>{studentProfile.bioData?.maritalStatus || "—"}</dd>
-                    <dt>Phone Number</dt>
-                    <dd>{studentProfile.bioData?.mobileNumber || "—"}</dd>
-                    <dt>Email ID</dt>
-                    <dd>{studentProfile.bioData?.personalEmail || "—"}</dd>
-                    <dt>Address</dt>
-                    <dd>{studentProfile.bioData?.address || "—"}</dd>
-                  </>
-                )}
-              </dl>
-            </Modal>
-          );
-        })()}
+      {showBioData && studentProfile && (
+        <StudentBioDataModal studentProfile={studentProfile} onClose={() => setShowBioData(false)} />
+      )}
 
       {showResources && currentUser && (
         <SessionResourcesPanel

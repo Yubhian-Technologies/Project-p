@@ -74,11 +74,14 @@ service cloud.firestore {
       return isRole('head') || isRole('counsellor') || adminCanAccessCampus(campusId);
     }
 
-    // Head and Counsellor jointly manage a campus's Events & Programs calendar —
-    // either can create/edit/delete any year/month/event on their own campus, not
-    // just ones they personally created.
-    function canEditEventsCalendar() {
-      return isSignedIn() && myRole() in ['head', 'counsellor'];
+    // A Head oversees the whole campus, so can manage events for any college on
+    // it; a Counsellor is assigned to exactly one college and may only manage
+    // events for that college — never another one on the same campus.
+    function canEditEventsCalendarForCollege(collegeId) {
+      return isSignedIn() && (
+        isRole('head') ||
+        (isRole('counsellor') && myProfile().collegeId == collegeId)
+      );
     }
 
     // Head and Counsellor jointly manage a campus's Counsellor Worksheet —
@@ -194,16 +197,17 @@ service cloud.firestore {
       allow read: if canViewEventsCalendar(resource.data.get('campusId', null)) || (isRole('user') && resource.data.campusId == myProfile().campusId);
 
       // Head or Counsellor can create an event, only for their own campus + a
-      // college that actually belongs to that campus.
-      allow create: if canEditEventsCalendar()
+      // college that actually belongs to that campus — and, for a Counsellor,
+      // only their own assigned college.
+      allow create: if canEditEventsCalendarForCollege(request.resource.data.collegeId)
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId
                     && get(/databases/$(database)/documents/colleges/$(request.resource.data.collegeId)).data.campusId == myProfile().campusId;
 
-      // Any Head/Counsellor on the same campus can update the event (not just its
-      // creator), but updates may never move it to a different campus/college/year
-      // container or reassign who created it.
-      allow update: if canEditEventsCalendar()
+      // The Head, or the Counsellor assigned to this event's own college, can
+      // update it (not just its creator), but updates may never move it to a
+      // different campus/college/year container or reassign who created it.
+      allow update: if canEditEventsCalendarForCollege(resource.data.collegeId)
                     && resource.data.campusId == myProfile().campusId
                     && request.resource.data.campusId == resource.data.campusId
                     && request.resource.data.collegeId == resource.data.collegeId
@@ -211,7 +215,7 @@ service cloud.firestore {
                     && request.resource.data.calendarMonthId == resource.data.calendarMonthId
                     && request.resource.data.createdBy == resource.data.createdBy;
 
-      allow delete: if canEditEventsCalendar() && resource.data.campusId == myProfile().campusId;
+      allow delete: if canEditEventsCalendarForCollege(resource.data.collegeId) && resource.data.campusId == myProfile().campusId;
     }
 
     // ---------- calendarYears ----------
@@ -219,40 +223,41 @@ service cloud.firestore {
       // Head, Admin, Super Admin, and Counsellor can all view the academic years
       // written for a college; Head or Counsellor on that campus can create one.
       allow read: if canViewEventsCalendar(resource.data.get('campusId', null));
-      allow create: if canEditEventsCalendar()
+      allow create: if canEditEventsCalendarForCollege(request.resource.data.collegeId)
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId
                     && get(/databases/$(database)/documents/colleges/$(request.resource.data.collegeId)).data.campusId == myProfile().campusId;
 
-      // Any Head/Counsellor on the same campus can rename or delete a year, but
-      // never reassign it to a different campus/college/owner.
-      allow update: if canEditEventsCalendar()
+      // The Head, or the Counsellor assigned to this year's own college, can
+      // rename or delete it, but never reassign it to a different
+      // campus/college/owner.
+      allow update: if canEditEventsCalendarForCollege(resource.data.collegeId)
                     && resource.data.campusId == myProfile().campusId
                     && request.resource.data.campusId == resource.data.campusId
                     && request.resource.data.collegeId == resource.data.collegeId
                     && request.resource.data.createdBy == resource.data.createdBy;
-      allow delete: if canEditEventsCalendar() && resource.data.campusId == myProfile().campusId;
+      allow delete: if canEditEventsCalendarForCollege(resource.data.collegeId) && resource.data.campusId == myProfile().campusId;
     }
 
     // ---------- calendarMonths ----------
     match /calendarMonths/{monthId} {
       // Same shape as calendarYears — Head or Counsellor adds months one at a time.
       allow read: if canViewEventsCalendar(resource.data.get('campusId', null));
-      allow create: if canEditEventsCalendar()
+      allow create: if canEditEventsCalendarForCollege(request.resource.data.collegeId)
                     && request.resource.data.createdBy == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId
                     && get(/databases/$(database)/documents/colleges/$(request.resource.data.collegeId)).data.campusId == myProfile().campusId;
 
-      // Any Head/Counsellor on the same campus can change which month/year this row
-      // represents or delete it, but never move it to a different year
-      // container/campus/college/owner.
-      allow update: if canEditEventsCalendar()
+      // The Head, or the Counsellor assigned to this row's own college, can
+      // change which month/year it represents or delete it, but never move it
+      // to a different year container/campus/college/owner.
+      allow update: if canEditEventsCalendarForCollege(resource.data.collegeId)
                     && resource.data.campusId == myProfile().campusId
                     && request.resource.data.campusId == resource.data.campusId
                     && request.resource.data.collegeId == resource.data.collegeId
                     && request.resource.data.yearId == resource.data.yearId
                     && request.resource.data.createdBy == resource.data.createdBy;
-      allow delete: if canEditEventsCalendar() && resource.data.campusId == myProfile().campusId;
+      allow delete: if canEditEventsCalendarForCollege(resource.data.collegeId) && resource.data.campusId == myProfile().campusId;
     }
 
     // ---------- worksheetAcademicYears ----------

@@ -50,13 +50,19 @@ export function EventsProgramsManager() {
       return;
     }
     Promise.all([listColleges(profile.campusId), listBookableProfiles()]).then(([collegeList, allBookable]) => {
-      setColleges(collegeList);
+      // A Head oversees the whole campus and can manage any college's
+      // calendar; a Counsellor is assigned to exactly one college and may
+      // only manage that one — never shown the others, let alone able to
+      // switch between them.
+      const visibleColleges =
+        profile.role === "counsellor" ? collegeList.filter((c) => c.id === profile.collegeId) : collegeList;
+      setColleges(visibleColleges);
       setOrganizers(allBookable.filter((p) => p.campusId === profile.campusId));
-      setSelectedCollegeId((current) => current || collegeList[0]?.id || "");
+      setSelectedCollegeId((current) => current || visibleColleges[0]?.id || "");
       setLoading(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.campusId]);
+  }, [profile?.campusId, profile?.role, profile?.collegeId]);
 
   async function loadYearsAndEvents(collegeId: string) {
     const [yearList, collegeEvents] = await Promise.all([listCalendarYears(collegeId), listEventsForCollege(collegeId)]);
@@ -183,7 +189,12 @@ export function EventsProgramsManager() {
 
   return (
     <div className="events-programs">
-      <CollegePicker colleges={colleges} selectedId={selectedCollegeId} onSelect={setSelectedCollegeId} />
+      <CollegePicker
+        colleges={colleges}
+        selectedId={selectedCollegeId}
+        onSelect={setSelectedCollegeId}
+        locked={profile.role === "counsellor"}
+      />
 
       {error && <p className="events-programs__error">{error}</p>}
 

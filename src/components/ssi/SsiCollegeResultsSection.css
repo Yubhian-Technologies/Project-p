@@ -453,3 +453,11 @@
     grid-template-columns: 1fr;
   }
 }
+
+.ssi-results__summary-label svg,
+.ssi-results__action-badge svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  vertical-align: -2px;
+}

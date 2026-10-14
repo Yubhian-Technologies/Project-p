@@ -133,3 +133,10 @@
   background: #D1FAE5;
   color: #065F46;
 }
+
+.ssi-test-section__submitted-badge svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  vertical-align: -2px;
+}

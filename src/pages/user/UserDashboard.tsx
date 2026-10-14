@@ -12,6 +12,7 @@ import { GamesSection } from "./games/GamesSection";
 import type { GamesSectionHandle } from "./games/GamesSection";
 import { GamesSummaryCard } from "./games/GamesSummaryCard";
 import { JournalSection } from "./journal/JournalSection";
+import { JournalSummaryCard } from "./journal/JournalSummaryCard";
 import { CommunitySection } from "./community/CommunitySection";
 import { CrisisSosSection } from "./CrisisSosSection";
 import { DailyQuoteCard } from "../../components/common/DailyQuoteCard";
@@ -206,6 +207,7 @@ export function UserDashboard() {
 
           <GamesSummaryCard onPlay={() => setActiveSection("games")} />
           <UpcomingEventsCard onViewEvents={() => setActiveSection("events")} />
+          <JournalSummaryCard onOpenDiary={() => setActiveSection("journal")} />
 
           <UserHomeActivityOverview onSelectSection={setActiveSection} />
           <VishnuWellnessMissionCard onSelectSection={setActiveSection} />

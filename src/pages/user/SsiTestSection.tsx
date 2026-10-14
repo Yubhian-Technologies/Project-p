@@ -10,6 +10,7 @@ import {
 import { SsiTestForm, type SsiAnswersPayload } from "../../components/booking/SsiTestForm";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
+import { CheckIcon } from "../../components/common/icons";
 import "./SsiTestSection.css";
 
 export function SsiTestSection() {
@@ -103,7 +104,7 @@ export function SsiTestSection() {
                 <span className="ssi-test-section__history-date">
                   {formatDateTimeDMY(r.submittedAt)}
                 </span>
-                <span className="ssi-test-section__submitted-badge">✓ Submitted</span>
+                <span className="ssi-test-section__submitted-badge"><CheckIcon /> Submitted</span>
               </div>
             ))}
           </div>

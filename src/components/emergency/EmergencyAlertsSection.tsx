@@ -6,16 +6,26 @@ import {
   getBookingIntake,
   listEmergencyBookingsForCampus,
 } from "../../services/firebase/bookings";
+import { getUserProfile } from "../../services/firebase/firestore";
 import type { Booking, BookingIntake, BookingStatus } from "../../types/booking";
+import type { UserProfile } from "../../types/user";
 import { Button } from "../common/Button";
 import { AlertTriangleIcon } from "../common/icons";
 import { formatDateTimeDMY } from "../../utils/formatDate";
+import { StudentBioDataModal } from "../booking/StudentBioDataModal";
+import { NotifyAdminBlock } from "../booking/RequestDetailModal";
+import { createSeriousCase, getSeriousCaseForBooking } from "../../services/firebase/seriousCases";
+import type { SeriousCase } from "../../types/seriousCase";
 import "./EmergencyAlertsSection.css";
 
 interface AlertRow {
   booking: Booking;
   intake: BookingIntake | null;
+  studentProfile: UserProfile | null;
+  seriousCase: SeriousCase | null;
 }
+
+const ACTED_ON_STATUSES: BookingStatus[] = ["accepted", "scheduled", "completed"];
 
 const STATUS_LABEL: Record<BookingStatus, string> = {
   pending: "Pending",
@@ -44,8 +54,20 @@ export function EmergencyAlertsSection() {
       return;
     }
     const bookings = await listEmergencyBookingsForCampus(profile.campusId);
-    const intakes = await Promise.all(bookings.map((b) => getBookingIntake(b.id)));
-    setRows(bookings.map((booking, i) => ({ booking, intake: intakes[i] })));
+    const [intakes, profiles, cases] = await Promise.all([
+      Promise.all(bookings.map((b) => getBookingIntake(b.id))),
+      Promise.all(bookings.map((b) => getUserProfile(b.userId))),
+      // A viewer who can't read a given case just sees it as not-yet-flagged.
+      Promise.all(bookings.map((b) => getSeriousCaseForBooking(b.id).catch(() => null))),
+    ]);
+    setRows(
+      bookings.map((booking, i) => ({
+        booking,
+        intake: intakes[i],
+        studentProfile: profiles[i],
+        seriousCase: cases[i],
+      })),
+    );
     setLoading(false);
   }
 
@@ -71,6 +93,14 @@ export function EmergencyAlertsSection() {
     }
   }
 
+  // Mirrors the createSeriousCase Cloud Function's own check: the booking's
+  // own counsellor, or the Head of the campus.
+  function canNotify(booking: Booking): boolean {
+    if (!profile) return false;
+    if (profile.role === "head") return booking.campusId === profile.campusId;
+    return profile.role === "counsellor" && booking.counsellorId === profile.uid;
+  }
+
   if (loading) return null;
 
   if (!profile?.campusId) {
@@ -91,11 +121,15 @@ export function EmergencyAlertsSection() {
 
       {activeRows.length > 0 && (
         <div className="emergency-alerts__list">
-          {activeRows.map(({ booking, intake }) => (
+          {activeRows.map(({ booking, intake, studentProfile, seriousCase }) => (
             <AlertCard
               key={booking.id}
               booking={booking}
               intake={intake}
+              studentProfile={studentProfile}
+              seriousCase={seriousCase}
+              canNotify={canNotify(booking)}
+              onNotified={load}
               accepting={acceptingId === booking.id}
               onAccept={() => handleAccept(booking)}
             />
@@ -107,8 +141,18 @@ export function EmergencyAlertsSection() {
         <>
           <h3 className="emergency-alerts__section-title">Resolved</h3>
           <div className="emergency-alerts__list">
-            {pastRows.map(({ booking, intake }) => (
-              <AlertCard key={booking.id} booking={booking} intake={intake} accepting={false} onAccept={() => {}} />
+            {pastRows.map(({ booking, intake, studentProfile, seriousCase }) => (
+              <AlertCard
+                key={booking.id}
+                booking={booking}
+                intake={intake}
+                studentProfile={studentProfile}
+                seriousCase={seriousCase}
+                canNotify={canNotify(booking)}
+                onNotified={load}
+                accepting={false}
+                onAccept={() => {}}
+              />
             ))}
           </div>
         </>
@@ -120,12 +164,41 @@ export function EmergencyAlertsSection() {
 interface AlertCardProps {
   booking: Booking;
   intake: BookingIntake | null;
+  studentProfile: UserProfile | null;
+  seriousCase: SeriousCase | null;
+  canNotify: boolean;
+  onNotified: () => Promise<void>;
   accepting: boolean;
   onAccept: () => void;
 }
 
-function AlertCard({ booking, intake, accepting, onAccept }: AlertCardProps) {
+function AlertCard({
+  booking,
+  intake,
+  studentProfile,
+  seriousCase,
+  canNotify,
+  onNotified,
+  accepting,
+  onAccept,
+}: AlertCardProps) {
   const isActive = ACTIVE_STATUSES.includes(booking.status);
+  const [showProfile, setShowProfile] = useState(false);
+  const studentName = intake?.username || booking.userEmail;
+
+  // mailto: only works if the device has a desktop mail app registered as
+  // the default handler — on a machine without one (common on Windows),
+  // the browser has nothing to open it with and just shows an app-picker
+  // that can't actually do anything. Gmail's own web compose URL opens
+  // directly in a new browser tab instead, with no OS-level handler
+  // needed, so it always works. No fixed recipient on purpose — whoever
+  // clicks this writes their own write-up and decides who it needs to go
+  // to (a parent, another staff member, an external contact); only the
+  // subject is pre-filled so the recipient immediately knows which case
+  // it's about.
+  const emailSubject = `Crisis SOS — ${studentName} — ${formatDateTimeDMY(booking.createdAt)}`;
+  const emailHref = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(emailSubject)}`;
+
   return (
     <div className={`emergency-alerts__card${isActive ? " emergency-alerts__card--active" : ""}`}>
       <div className="emergency-alerts__card-header">
@@ -134,7 +207,7 @@ function AlertCard({ booking, intake, accepting, onAccept }: AlertCardProps) {
           {STATUS_LABEL[booking.status]}
         </span>
       </div>
-      <p className="emergency-alerts__name">{intake?.username || booking.userEmail}</p>
+      <p className="emergency-alerts__name">{studentName}</p>
       <p className="emergency-alerts__meta">
         {booking.userEmail} • {formatDateTimeDMY(booking.createdAt)}
       </p>
@@ -144,10 +217,48 @@ function AlertCard({ booking, intake, accepting, onAccept }: AlertCardProps) {
         </a>
       )}
       <p className="emergency-alerts__assigned">Assigned to: {booking.counsellorEmail}</p>
-      {booking.status === "pending" && (
-        <Button type="button" disabled={accepting} onClick={onAccept}>
-          {accepting ? "Accepting…" : "Accept"}
-        </Button>
+
+      <div className="emergency-alerts__actions">
+        {studentProfile && (
+          <Button type="button" variant="outlined" onClick={() => setShowProfile(true)}>
+            View Profile
+          </Button>
+        )}
+        {/* Only once this case has actually been taken on — sending a
+            write-up about a request nobody has accepted yet doesn't make
+            sense. A plain anchor styled like a Button, not a Button wrapped
+            in one — a <button> nested inside an <a> is invalid HTML. */}
+        {ACTED_ON_STATUSES.includes(booking.status) && (
+          <a className="md-button md-button--outlined" href={emailHref} target="_blank" rel="noopener noreferrer">
+            Email
+          </a>
+        )}
+        {booking.status === "pending" && (
+          <Button type="button" disabled={accepting} onClick={onAccept}>
+            {accepting ? "Accepting…" : "Accept"}
+          </Button>
+        )}
+        {/* Same createSeriousCase flow as the Requests screen — the Cloud
+            Function routes it to the college's Principal/Vice-Principal
+            (with the usual fallback chain), landing in their Serious Cases. */}
+        {ACTED_ON_STATUSES.includes(booking.status) && (canNotify || seriousCase) && (
+          <NotifyAdminBlock
+            seriousCase={seriousCase}
+            buttonLabel="Notify"
+            onNotify={
+              canNotify
+                ? async (note) => {
+                    await createSeriousCase(booking.id, note);
+                    await onNotified();
+                  }
+                : undefined
+            }
+          />
+        )}
+      </div>
+
+      {showProfile && studentProfile && (
+        <StudentBioDataModal studentProfile={studentProfile} onClose={() => setShowProfile(false)} />
       )}
     </div>
   );

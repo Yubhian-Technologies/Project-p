@@ -14,6 +14,7 @@ import {
 } from "../../../utils/ssiAnalytics";
 import { Card } from "../../../components/common/Card";
 import { Select } from "../../../components/common/Select";
+import { AlertCircleIcon, AlertTriangleIcon, CheckCircleIcon } from "../../../components/common/icons";
 import "../../../components/ssi/SsiCollegeResultsSection.css";
 import "./AnalyticsSection.css";
 
@@ -133,15 +134,15 @@ export function SsiAnalyticsSection() {
             </div>
             <div className="ssi-results__summary-card ssi-results__summary-card--normal">
               <span className="ssi-results__summary-val">{summary.normal}</span>
-              <span className="ssi-results__summary-label">🟢 Normal</span>
+              <span className="ssi-results__summary-label"><CheckCircleIcon /> Normal</span>
             </div>
             <div className="ssi-results__summary-card ssi-results__summary-card--medium">
               <span className="ssi-results__summary-val">{summary.medium}</span>
-              <span className="ssi-results__summary-label">🟡 Medium</span>
+              <span className="ssi-results__summary-label"><AlertCircleIcon /> Medium</span>
             </div>
             <div className="ssi-results__summary-card ssi-results__summary-card--severe">
               <span className="ssi-results__summary-val">{summary.severe}</span>
-              <span className="ssi-results__summary-label">🔴 Severe — needs immediate action</span>
+              <span className="ssi-results__summary-label"><AlertTriangleIcon /> Severe — needs immediate action</span>
             </div>
             <div className="ssi-results__summary-card ssi-results__summary-card--action">
               <span className="ssi-results__summary-val">

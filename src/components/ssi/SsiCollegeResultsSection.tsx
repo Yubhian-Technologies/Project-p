@@ -23,6 +23,7 @@ import { Card } from "../common/Card";
 import { Button } from "../common/Button";
 import { Modal } from "../common/Modal";
 import { Select } from "../common/Select";
+import { AlertCircleIcon, AlertTriangleIcon, CheckCircleIcon, CheckIcon } from "../common/icons";
 import "./SsiCollegeResultsSection.css";
 
 const SEVERITY_RANK: Record<SsiSeverity, number> = { severe: 0, medium: 1, normal: 2 };
@@ -168,15 +169,15 @@ export function SsiCollegeResultsSection() {
           </div>
           <div className="ssi-results__summary-card ssi-results__summary-card--normal">
             <span className="ssi-results__summary-val">{summary.normal}</span>
-            <span className="ssi-results__summary-label">🟢 Normal</span>
+            <span className="ssi-results__summary-label"><CheckCircleIcon /> Normal</span>
           </div>
           <div className="ssi-results__summary-card ssi-results__summary-card--medium">
             <span className="ssi-results__summary-val">{summary.medium}</span>
-            <span className="ssi-results__summary-label">🟡 Medium</span>
+            <span className="ssi-results__summary-label"><AlertCircleIcon /> Medium</span>
           </div>
           <div className="ssi-results__summary-card ssi-results__summary-card--severe">
             <span className="ssi-results__summary-val">{summary.severe}</span>
-            <span className="ssi-results__summary-label">🔴 Severe — needs immediate action</span>
+            <span className="ssi-results__summary-label"><AlertTriangleIcon /> Severe — needs immediate action</span>
           </div>
           <div className="ssi-results__summary-card ssi-results__summary-card--action">
             <span className="ssi-results__summary-val">
@@ -269,7 +270,7 @@ export function SsiCollegeResultsSection() {
                 {SSI_SEVERITY_LABELS[r.severity]}
               </span>
               {r.severity !== "normal" && r.actionTaken && (
-                <span className="ssi-results__action-badge">✓ Action taken</span>
+                <span className="ssi-results__action-badge"><CheckIcon /> Action taken</span>
               )}
             </div>
           </Card>
@@ -283,7 +284,7 @@ export function SsiCollegeResultsSection() {
               {SSI_SEVERITY_LABELS[detail.severity]}
             </span>
             {detail.severity !== "normal" && detail.actionTaken && (
-              <span className="ssi-results__action-badge">✓ Action taken</span>
+              <span className="ssi-results__action-badge"><CheckIcon /> Action taken</span>
             )}
           </div>
 
