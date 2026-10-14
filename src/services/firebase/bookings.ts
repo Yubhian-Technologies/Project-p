@@ -929,3 +929,38 @@ export async function importOfflineSession(
 
   return docRef.id;
 }
+
+/**
+ * Follow-up for an offline-logged session. Same shape as createFollowUpBooking,
+ * but the client has no real account (synthetic offline: userId), so there is
+ * nobody to notify - it just lands as a scheduled booking for the counsellor.
+ */
+export async function createOfflineFollowUp(
+  counsellor: { uid: string; email: string; campusId?: string },
+  row: OfflineSessionRow,
+  originalBookingId: string,
+  scheduledAt: number,
+): Promise<string> {
+  const now = Date.now();
+  const docRef = await addDoc(bookingsCollection, {
+    userId: syntheticClientId(row.clientEmail, row.whatsappNumber),
+    userEmail: clientDisplayLabel(row.clientName, row.whatsappNumber),
+    counsellorId: counsellor.uid,
+    counsellorEmail: counsellor.email,
+    ...(counsellor.campusId ? { campusId: counsellor.campusId } : {}),
+    status: "scheduled",
+    sessionMode: "offline",
+    scheduledAt,
+    durationMinutes: SESSION_DURATION_MINUTES,
+    followUpOfBookingId: originalBookingId,
+    createdAt: now,
+    updatedAt: now,
+  });
+  await setDoc(intakeDocRef(docRef.id), {
+    username: row.clientName,
+    occupation: row.occupation,
+    whatsappNumber: row.whatsappNumber,
+    issue: row.issue,
+  });
+  return docRef.id;
+}

@@ -4,7 +4,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 const resendApiKey = defineSecret("RESEND_API_KEY");
 const emailFrom = defineString("EMAIL_FROM", {
-  default: "Vishnu Wellness Centre <onboarding@resend.dev>",
+  default: "Vishnu Wellness Centre <notifications@vishnuwellnesscentre.in>",
 });
 
 const DISPLAY_TIMEZONE = "Asia/Kolkata";

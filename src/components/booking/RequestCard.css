@@ -902,3 +902,36 @@
   margin-right: 4px;
   vertical-align: -2px;
 }
+
+.request-card__previous-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(30, 58, 138, 0.05);
+  border: 1px solid rgba(30, 58, 138, 0.12);
+}
+
+.request-card__previous-sessions-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1e3a8a;
+}
+
+.request-card__previous-session-date {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.request-card__previous-session p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: #0f172a;
+}

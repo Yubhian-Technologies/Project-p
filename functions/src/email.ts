@@ -5,10 +5,9 @@ import { getFirestore } from "firebase-admin/firestore";
 /** Resend API key — set with: firebase functions:secrets:set RESEND_API_KEY */
 const resendApiKey = defineSecret("RESEND_API_KEY");
 
-/** Sender address. Must be on a domain verified in Resend. The default works
-    for Resend's test sender, which only delivers to the account owner's address. */
+/** Sender address. Must be on a domain verified in Resend. */
 const emailFrom = defineString("EMAIL_FROM", {
-  default: "Vishnu Wellness Centre <onboarding@resend.dev>",
+  default: "Vishnu Wellness Centre <notifications@vishnuwellnesscentre.in>",
 });
 
 interface NotificationDoc {

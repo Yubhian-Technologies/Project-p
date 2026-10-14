@@ -126,6 +126,7 @@ export function CounsellorDashboard() {
   const { profile } = useAuth();
   const [activeSection, setActiveSection] = useState("overview");
   const [showImport, setShowImport] = useState(false);
+  const [showAddSession, setShowAddSession] = useState(false);
   const [pendingBookingId, setPendingBookingId] = useState<string | undefined>();
   const [chatBookingId, setChatBookingId] = useState<string | undefined>();
   const gamesRef = useRef<GamesSectionHandle>(null);
@@ -191,9 +192,14 @@ export function CounsellorDashboard() {
       }
       headerAction={
         activeSection === "requests" ? (
-          <Button type="button" variant="outlined" onClick={() => setShowImport(true)}>
-            Import Sessions
-          </Button>
+          <>
+            <Button type="button" variant="outlined" onClick={() => setShowAddSession(true)}>
+              Add Session
+            </Button>
+            <Button type="button" variant="outlined" onClick={() => setShowImport(true)}>
+              Import Sessions
+            </Button>
+          </>
         ) : undefined
       }
       sections={SECTIONS}
@@ -208,6 +214,8 @@ export function CounsellorDashboard() {
         <BookingRequestsSection
           importOpen={showImport}
           onImportClose={() => setShowImport(false)}
+          addSessionOpen={showAddSession}
+          onAddSessionClose={() => setShowAddSession(false)}
           initialSelectedId={pendingBookingId}
           autoOpenChatBookingId={chatBookingId}
           onChatAutoOpenConsumed={() => setChatBookingId(undefined)}

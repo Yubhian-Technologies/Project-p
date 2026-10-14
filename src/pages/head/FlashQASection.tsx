@@ -11,6 +11,38 @@ import type { Campus } from "../../types/campus";
 import type { FlashQAItem } from "../../types/flashQa";
 import "./FlashQASection.css";
 
+// The student-facing card is a fixed 200px flip card, so text beyond roughly
+// these limits would be clipped/scrolled instead of shown fully. The character
+// cap also stops a long run of text with no spaces from slipping past the
+// word cap.
+const LIMITS = {
+  question: { words: 20, chars: 130 },
+  answer: { words: 30, chars: 220 },
+} as const;
+
+function countWords(text: string): number {
+  const trimmed = text.trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+}
+
+function withinLimit(text: string, limit: { words: number; chars: number }): boolean {
+  return text.length <= limit.chars && countWords(text) <= limit.words;
+}
+
+// Cuts text down to the limit without touching the whitespace the user typed.
+function truncateToLimit(text: string, limit: { words: number; chars: number }): string {
+  let end = text.length;
+  let seen = 0;
+  for (const match of text.matchAll(/\S+/g)) {
+    seen += 1;
+    if (seen > limit.words) {
+      end = match.index ?? end;
+      break;
+    }
+  }
+  return text.slice(0, Math.min(end, limit.chars)).trimEnd();
+}
+
 export function FlashQASection() {
   const { profile } = useAuth();
   const [campuses, setCampuses] = useState<Campus[]>([]);
@@ -96,10 +128,21 @@ export function FlashQASection() {
   ) {
     setItems((prev) => {
       const next = [...prev];
-      next[index] = { ...next[index], [field]: value };
+      let limited = value;
+      if (field === "question" || field === "answer") {
+        const limit = LIMITS[field];
+        const previous = prev[index][field] ?? "";
+        if (!withinLimit(value, limit)) {
+          // Existing text may already be over the limit (older cards) — let it
+          // be edited down, but never let it grow further.
+          limited = value.length <= previous.length ? value : truncateToLimit(value, limit);
+        }
+      }
+      next[index] = { ...next[index], [field]: limited };
       return next;
     });
   }
+
 
   async function handleSaveAll() {
     const targetCampus = selectedCampusId || profile?.campusId;
@@ -232,7 +275,9 @@ export function FlashQASection() {
               </div>
 
               <div className="flash-qa-card-editor__field">
-                <label htmlFor={`qa-q-${idx}`}>Question</label>
+                <label htmlFor={`qa-q-${idx}`}>
+                  Question ({countWords(item.question)}/{LIMITS.question.words} words)
+                </label>
                 <input
                   id={`qa-q-${idx}`}
                   type="text"
@@ -244,7 +289,9 @@ export function FlashQASection() {
               </div>
 
               <div className="flash-qa-card-editor__field">
-                <label htmlFor={`qa-a-${idx}`}>Answer (revealed on flip)</label>
+                <label htmlFor={`qa-a-${idx}`}>
+                  Answer — revealed on flip ({countWords(item.answer)}/{LIMITS.answer.words} words)
+                </label>
                 <textarea
                   id={`qa-a-${idx}`}
                   className="flash-qa-card-editor__textarea"

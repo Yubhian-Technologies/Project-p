@@ -40,6 +40,9 @@ import { RequestDetailModal } from "../../components/booking/RequestDetailModal"
 import { SessionHistoryModal } from "../../components/booking/SessionHistoryModal";
 import "./BookingRequestsSection.css";
 
+const AddSessionModal = lazy(() =>
+  import("../../components/booking/AddSessionModal").then((m) => ({ default: m.AddSessionModal })),
+);
 const ImportSessionsModal = lazy(() =>
   import("../../components/booking/ImportSessionsModal").then((m) => ({ default: m.ImportSessionsModal })),
 );
@@ -85,6 +88,8 @@ interface HistoryState {
 interface BookingRequestsSectionProps {
   importOpen?: boolean;
   onImportClose?: () => void;
+  addSessionOpen?: boolean;
+  onAddSessionClose?: () => void;
   initialSelectedId?: string;
   /** Booking id to auto-open the chat tab for — set when the viewer got here
    *  by tapping a "chat_message" notification. */
@@ -100,6 +105,8 @@ interface BookingRequestsSectionProps {
 export function BookingRequestsSection({
   importOpen = false,
   onImportClose,
+  addSessionOpen = false,
+  onAddSessionClose,
   initialSelectedId,
   autoOpenChatBookingId,
   onChatAutoOpenConsumed,
@@ -657,6 +664,16 @@ export function BookingRequestsSection({
           loading={historyState.loading}
           onClose={() => setHistoryState(null)}
         />
+      )}
+
+      {addSessionOpen && currentUser && (
+        <Suspense fallback={null}>
+          <AddSessionModal
+            counsellor={{ uid: currentUser.uid, email: profile?.email ?? "", campusId: profile?.campusId }}
+            onClose={() => onAddSessionClose?.()}
+            onAdded={refresh}
+          />
+        </Suspense>
       )}
 
       {importOpen && currentUser && (

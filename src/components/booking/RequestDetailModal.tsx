@@ -6,7 +6,7 @@ import { DateTimePicker } from "../common/DateTimePicker";
 import { StarRating } from "../common/StarRating";
 import { CheckIcon, FlagIcon, MicIcon } from "../common/icons";
 import { useSpeechToText } from "../../hooks/useSpeechToText";
-import { getBookingIntake, SESSION_DURATION_LABEL } from "../../services/firebase/bookings";
+import { getBookingIntake, getFollowUpHistory, SESSION_DURATION_LABEL } from "../../services/firebase/bookings";
 import { getSsiResult, type SsiResult } from "../../services/firebase/ssiTest";
 import { SSI_SEVERITY_LABELS, SSI_SUBSCALE_MAX } from "../../config/ssiForm";
 import type { SsiSeverity } from "../../config/ssiForm";
@@ -312,6 +312,25 @@ export function RequestDetailModal({
       .then((result) => setSsiResult(result))
       .catch(() => setSsiResult(null));
   }, [booking.id, booking.status]);
+
+  // For a follow-up, the earlier sessions' summaries are shown inline so the
+  // whole history is visible next to where the new summary gets written.
+  const [previousSessions, setPreviousSessions] = useState<{ scheduledAt?: number; summary?: string }[]>([]);
+  useEffect(() => {
+    if (!booking.followUpOfBookingId) {
+      setPreviousSessions([]);
+      return;
+    }
+    let active = true;
+    getFollowUpHistory(booking.id)
+      .then((history) => {
+        if (active) setPreviousSessions(history);
+      })
+      .catch((err) => console.error("Failed to load previous session summaries", err));
+    return () => {
+      active = false;
+    };
+  }, [booking.id, booking.followUpOfBookingId]);
 
   const [now] = useState(() => Date.now());
   const nowValue = toDateTimeLocalValue(now);
@@ -849,6 +868,20 @@ export function RequestDetailModal({
           <dt>Issue</dt>
           <dd>{intake.issue}</dd>
         </dl>
+      )}
+
+      {previousSessions.length > 0 && (
+        <div className="request-card__previous-sessions">
+          <span className="request-card__previous-sessions-title">Previous session summaries</span>
+          {previousSessions.map((prev, i) => (
+            <div key={i} className="request-card__previous-session">
+              <span className="request-card__previous-session-date">
+                {prev.scheduledAt ? formatDateTimeDMY(prev.scheduledAt) : "Earlier session"}
+              </span>
+              <p>{prev.summary || "No summary was written for this session."}</p>
+            </div>
+          ))}
+        </div>
       )}
 
       <StudentMoodSummary bookingId={booking.id} />

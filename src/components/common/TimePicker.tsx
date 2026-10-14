@@ -35,7 +35,11 @@ export function TimePicker({ id, value, onChange, disabled }: TimePickerProps) {
   useEffect(() => {
     if (!open) return;
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Element;
+      // Select menus are portaled to <body>, so they sit outside containerRef
+      // even though they belong to this picker.
+      if (target.closest?.(".md-select__menu")) return;
+      if (containerRef.current && !containerRef.current.contains(target)) {
         setOpen(false);
       }
     }
