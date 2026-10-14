@@ -6,6 +6,13 @@ const resendApiKey = defineSecret("RESEND_API_KEY");
 const emailFrom = defineString("EMAIL_FROM", {
   default: "Vishnu Wellness Centre <notifications@vishnuwellnesscentre.in>",
 });
+/** notifications@ has no real inbox behind it — a reply to it would just
+    bounce. This address gets the reply instead, with no change needed on
+    the recipient's end: clicking "Reply" in their mail client addresses it
+    here automatically. */
+const emailReplyTo = defineString("EMAIL_REPLY_TO", {
+  default: "vishnuwellnesscentre@gmail.com",
+});
 
 const DISPLAY_TIMEZONE = "Asia/Kolkata";
 
@@ -188,6 +195,7 @@ async function sendEmail(
     body: JSON.stringify({
       from: emailFrom.value(),
       to: [to],
+      reply_to: emailReplyTo.value(),
       subject: email.subject,
       html: email.html,
       text: email.text,

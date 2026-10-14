@@ -9,6 +9,11 @@ const resendApiKey = defineSecret("RESEND_API_KEY");
 const emailFrom = defineString("EMAIL_FROM", {
   default: "Vishnu Wellness Centre <notifications@vishnuwellnesscentre.in>",
 });
+/** notifications@ has no real inbox behind it — a reply to it would just
+    bounce. This address gets the reply instead. */
+const emailReplyTo = defineString("EMAIL_REPLY_TO", {
+  default: "vishnuwellnesscentre@gmail.com",
+});
 
 interface NotificationDoc {
   recipientId: string;
@@ -69,7 +74,14 @@ export const emailNotification = onDocumentCreated(
           Authorization: `Bearer ${resendApiKey.value()}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ from: emailFrom.value(), to: [to], subject, html, text }),
+        body: JSON.stringify({
+          from: emailFrom.value(),
+          to: [to],
+          reply_to: emailReplyTo.value(),
+          subject,
+          html,
+          text,
+        }),
       });
       if (!response.ok) {
         console.error("Resend rejected email", response.status, await response.text());
