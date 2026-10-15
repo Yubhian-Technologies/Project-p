@@ -1311,9 +1311,12 @@ export function LandingPage() {
             <span>&copy; 2018 Vishnu Wellness Centre</span>
             <span className="landing-footer__bottom-sub">A wellness initiative of Sri Vishnu Educational Society</span>
           </div>
-          <span>
-            <a href="#">Privacy &amp; Confidentiality</a> | <a href="#terms">Terms of Use</a> | <a href="#">Accessibility</a>
-          </span>
+          <div className="landing-footer__bottom-right">
+            <span>
+              <a href="#">Privacy &amp; Confidentiality</a> | <a href="#terms">Terms of Use</a> | <a href="#">Accessibility</a>
+            </span>
+            <span className="landing-footer__bottom-sub">Developed by Vishnu Tech Hub</span>
+          </div>
         </div>
       </footer>
     </div>
