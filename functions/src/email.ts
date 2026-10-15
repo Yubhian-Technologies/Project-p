@@ -49,15 +49,21 @@ export function buildNotificationEmail(n: NotificationDoc): { subject: string; t
   return { subject, text, html };
 }
 
-/** Mirrors every in-app notification to the recipient's login email. Errors are
-    logged rather than rethrown, so a provider outage can't cause the same alert
-    to be emailed again on retry. */
-export const emailNotification = onDocumentCreated(
+/** Every head/counsellor on a campus already gets an in-app "emergency_sos"
+    notification the moment a student dispatches a Crisis SOS (see
+    createEmergencySosBooking) — this mirrors that same notification to each
+    of their login emails too, so it can't be missed just because nobody has
+    the app open right then. Scoped to this one notification type on purpose:
+    emailing on every notification (chat messages, routine booking updates,
+    etc.) would be far too noisy. Errors are logged rather than rethrown, so
+    a provider outage can't cause the same alert to be emailed again on retry. */
+export const emailOnEmergencySos = onDocumentCreated(
   { document: "notifications/{notificationId}", secrets: [resendApiKey] },
   async (event) => {
     const snapshot = event.data;
     if (!snapshot) return;
     const notification = snapshot.data() as NotificationDoc;
+    if (notification.type !== "emergency_sos") return;
 
     const userSnap = await getFirestore().collection("users").doc(notification.recipientId).get();
     const to = userSnap.get("email") as string | undefined;

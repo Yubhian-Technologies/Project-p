@@ -1407,8 +1407,14 @@ export const createSeriousCase = onCall<CreateSeriousCaseRequest>(async (request
   }
 
   const campusId = booking.campusId as string;
-  const studentDoc = await db.collection("users").doc(booking.userId as string).get();
-  const collegeId = (studentDoc.data()?.collegeId as string | undefined) ?? null;
+  // The college a case routes to is the HANDLING Counsellor/Head's own
+  // collegeId, not the student's — collegeId is a required field on every
+  // Counsellor/Head account (see createCampusLogin) so it's always present,
+  // whereas a student's own profile can easily have none (never collected,
+  // an offline-imported "client," etc.), which previously meant the case
+  // silently skipped the Principal/VP tier and fell through to a much
+  // broader platform-wide fallback for no real reason.
+  const collegeId = (caller?.collegeId as string | undefined) ?? null;
 
   const adminsSnap = await db.collection("users").where("role", "==", "admin").get();
   const admins = adminsSnap.docs.map((d) => ({ uid: d.id, ...d.data() }) as Record<string, unknown> & { uid: string });
@@ -1690,6 +1696,7 @@ export const getStudentMoodLogs = onCall<{ bookingId: string }>(async (request) 
 });
 
 export { sendAppointmentEmails } from "./appointmentEmails";
+export { emailOnEmergencySos } from "./email";
 
 // ───────────────────────── Academic years ─────────────────────────
 //

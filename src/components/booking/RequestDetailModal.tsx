@@ -68,6 +68,13 @@ export function NotifyAdminBlock({ seriousCase, buttonLabel, onNotify }: NotifyA
 
   if (seriousCase) {
     const resolved = seriousCase.status === "resolved";
+    // Same Gmail web-compose approach as the Crisis SOS emergency alert
+    // card's "Email" button (see EmergencyAlertsSection) — no OS mail-client
+    // registration needed, opens straight in a new tab. No fixed recipient:
+    // whoever clicks it writes their own note and picks who it needs to go
+    // to; only the subject is pre-filled so the recipient has context.
+    const emailSubject = `${seriousCase.isEmergency ? "Crisis SOS" : "Serious case"} — ${seriousCase.studentEmail} — ${formatDateTimeDMY(seriousCase.createdAt)}`;
+    const emailHref = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(emailSubject)}`;
     return (
       <div className="request-card__notify-status">
         <div className="request-card__notify-status-row">
@@ -78,6 +85,14 @@ export function NotifyAdminBlock({ seriousCase, buttonLabel, onNotify }: NotifyA
               <><FlagIcon /> Admin notified — awaiting action</>
             )}
           </span>
+          <a
+            className="md-button md-button--outlined request-card__notify-view-btn"
+            href={emailHref}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Email
+          </a>
           {resolved && seriousCase.actionTaken && (
             <Button
               type="button"
