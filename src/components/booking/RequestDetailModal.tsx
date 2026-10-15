@@ -73,8 +73,7 @@ export function NotifyAdminBlock({ seriousCase, buttonLabel, onNotify }: NotifyA
     // registration needed, opens straight in a new tab. No fixed recipient:
     // whoever clicks it writes their own note and picks who it needs to go
     // to; only the subject is pre-filled so the recipient has context.
-    const emailSubject = `${seriousCase.isEmergency ? "Crisis SOS" : "Serious case"} — ${seriousCase.studentEmail} — ${formatDateTimeDMY(seriousCase.createdAt)}`;
-    const emailHref = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(emailSubject)}`;
+    const emailHref = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent("Highly confidential-reporting case")}`;
     return (
       <div className="request-card__notify-status">
         <div className="request-card__notify-status-row">
@@ -1315,7 +1314,7 @@ export function RequestDetailModal({
             <div className="request-card__actions">
               {renderTransferControls()}
               <Button type="button" variant="outlined" onClick={() => setShowCancelReason(true)}>
-                Cancel session
+                Terminate session
               </Button>
             </div>
           )}
