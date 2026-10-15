@@ -16,16 +16,6 @@ const emailReplyTo = defineString("EMAIL_REPLY_TO", {
 
 const DISPLAY_TIMEZONE = "Asia/Kolkata";
 
-export interface AppointmentEmailData {
-  userName: string;
-  userEmail: string;
-  userWhatsapp: string;
-  counsellorName: string;
-  counsellorEmail: string;
-  counsellorWhatsapp: string;
-  startsAt: number;
-}
-
 interface RenderedEmail {
   subject: string;
   html: string;
@@ -109,10 +99,26 @@ function renderEmail(opts: {
   return { subject: opts.subject, html, text };
 }
 
+interface BookingEmailContext {
+  userName: string;
+  userEmail: string;
+  userWhatsapp: string;
+  counsellorName: string;
+  counsellorEmail: string;
+  counsellorWhatsapp: string;
+  /** The session's current scheduled time — absent for a cancellation of a
+      booking that never made it to "scheduled" in the first place. */
+  scheduledAt?: number;
+  cancelledBy?: "user" | "counsellor";
+  cancellationReason?: string;
+}
+
 /** Pure, side-effect-free builder — both emails for a newly scheduled session. */
-export function buildAppointmentEmails(d: AppointmentEmailData): { user: RenderedEmail; counsellor: RenderedEmail } {
-  const date = formatDate(d.startsAt);
-  const time = formatTime(d.startsAt);
+export function buildAppointmentEmails(
+  d: BookingEmailContext & { scheduledAt: number },
+): { user: RenderedEmail; counsellor: RenderedEmail } {
+  const date = formatDate(d.scheduledAt);
+  const time = formatTime(d.scheduledAt);
 
   const user = renderEmail({
     subject: `Your session is confirmed — ${date}, ${time}`,
@@ -141,16 +147,109 @@ export function buildAppointmentEmails(d: AppointmentEmailData): { user: Rendere
   return { user, counsellor };
 }
 
-/** Booking-level event that triggers emails. Rescheduling/cancellation can be added here. */
-type AppointmentEmailEvent = "scheduled";
+/** Both emails for a session whose confirmed time just changed — same shape
+    as buildAppointmentEmails, but calls out that it's a change rather than a
+    first confirmation, and shows the previous time when it's known. */
+export function buildRescheduledEmails(
+  d: BookingEmailContext & { scheduledAt: number },
+  previousScheduledAt?: number,
+): { user: RenderedEmail; counsellor: RenderedEmail } {
+  const date = formatDate(d.scheduledAt);
+  const time = formatTime(d.scheduledAt);
+  const previousRow: [string, string][] =
+    typeof previousScheduledAt === "number"
+      ? [["Previously", `${formatDate(previousScheduledAt)}, ${formatTime(previousScheduledAt)}`]]
+      : [];
+
+  const user = renderEmail({
+    subject: `Your session time has changed — ${date}, ${time}`,
+    heading: "Your session time has changed",
+    intro: `Hi ${d.userName}, your session with ${d.counsellorName} has been moved. Here are the updated details.`,
+    rows: [
+      ["Counsellor", d.counsellorName],
+      ...previousRow,
+      ["New date", date],
+      ["New time", time],
+      ["Counsellor WhatsApp", d.counsellorWhatsapp || "Not provided — please contact us through the app"],
+    ],
+  });
+
+  const counsellor = renderEmail({
+    subject: `Session time changed — ${date}, ${time}`,
+    heading: "A session time has changed",
+    intro: `Hi ${d.counsellorName}, your session with ${d.userName} has been moved. Here are the updated details.`,
+    rows: [
+      ["Student", d.userName],
+      ...previousRow,
+      ["New date", date],
+      ["New time", time],
+      ["Student WhatsApp", d.userWhatsapp || "Not provided"],
+    ],
+  });
+
+  return { user, counsellor };
+}
+
+/** Only one of these two is actually sent — to whichever party didn't do the
+    cancelling, same as the in-app notification this mirrors. Both are built
+    regardless since that's cheap and keeps this symmetric with the other
+    builders above. */
+export function buildCancellationEmails(d: BookingEmailContext): { user: RenderedEmail; counsellor: RenderedEmail } {
+  const timeRows: [string, string][] =
+    typeof d.scheduledAt === "number"
+      ? [["Was scheduled for", `${formatDate(d.scheduledAt)}, ${formatTime(d.scheduledAt)}`]]
+      : [];
+  const reasonRow: [string, string][] = [["Reason", d.cancellationReason || "No reason given"]];
+
+  const user = renderEmail({
+    subject: "Your session was cancelled",
+    heading: "Your session was cancelled",
+    intro: `Hi ${d.userName}, your session with ${d.counsellorName} has been cancelled.`,
+    rows: [["Counsellor", d.counsellorName], ...timeRows, ...reasonRow],
+  });
+
+  const counsellor = renderEmail({
+    subject: "A session was cancelled",
+    heading: "A session was cancelled",
+    intro: `Hi ${d.counsellorName}, your session with ${d.userName} has been cancelled.`,
+    rows: [["Student", d.userName], ...timeRows, ...reasonRow],
+  });
+
+  return { user, counsellor };
+}
+
+/** Booking-level events that trigger an email. */
+type AppointmentEmailEvent = "scheduled" | "rescheduled" | "cancelled";
+
+interface DetectedEvent {
+  event: AppointmentEmailEvent;
+  /** Only set for "rescheduled" — the time being replaced, so the email can
+      show "previously X, now Y" when it's known. */
+  previousScheduledAt?: number;
+}
 
 function detectEvent(
   before: FirebaseFirestore.DocumentData,
   after: FirebaseFirestore.DocumentData,
-): AppointmentEmailEvent | null {
+): DetectedEvent | null {
+  // Crisis SOS is handled immediately, never scheduled/rescheduled/cancelled
+  // the normal way — no appointment emails apply to it.
   if (after.isEmergency) return null;
+
   if (after.status === "scheduled" && before.status !== "scheduled" && typeof after.scheduledAt === "number") {
-    return "scheduled";
+    return { event: "scheduled" };
+  }
+  if (after.status === "cancelled" && before.status !== "cancelled") {
+    return { event: "cancelled" };
+  }
+  if (
+    after.status === "scheduled" &&
+    before.status === "scheduled" &&
+    typeof after.scheduledAt === "number" &&
+    typeof before.scheduledAt === "number" &&
+    after.scheduledAt !== before.scheduledAt
+  ) {
+    return { event: "rescheduled", previousScheduledAt: before.scheduledAt };
   }
   return null;
 }
@@ -165,7 +264,7 @@ async function claimEvent(bookingId: string, event: AppointmentEmailEvent): Prom
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     const data = snap.data();
-    if (!data || data.status !== "scheduled") return false;
+    if (!data) return false;
     if (data.emailEvents?.[event]) return false;
     tx.update(ref, { [`emailEvents.${event}`]: Date.now() });
     return true;
@@ -206,11 +305,11 @@ async function sendEmail(
   }
 }
 
-async function loadEmailData(bookingId: string): Promise<AppointmentEmailData | null> {
+async function loadEmailContext(bookingId: string): Promise<BookingEmailContext | null> {
   const db = getFirestore();
   const bookingSnap = await db.collection("bookings").doc(bookingId).get();
   const booking = bookingSnap.data();
-  if (!booking || typeof booking.scheduledAt !== "number") return null;
+  if (!booking) return null;
 
   const [userSnap, counsellorSnap, intakeSnap] = await Promise.all([
     db.collection("users").doc(booking.userId as string).get(),
@@ -231,7 +330,9 @@ async function loadEmailData(bookingId: string): Promise<AppointmentEmailData | 
     counsellorName: (counsellor.displayName as string) || counsellorEmail,
     counsellorEmail,
     counsellorWhatsapp: (counsellor.whatsappNumber as string) || "",
-    startsAt: booking.scheduledAt as number,
+    scheduledAt: typeof booking.scheduledAt === "number" ? (booking.scheduledAt as number) : undefined,
+    cancelledBy: booking.cancelledBy as "user" | "counsellor" | undefined,
+    cancellationReason: booking.cancellationReason as string | undefined,
   };
 }
 
@@ -242,29 +343,48 @@ export const sendAppointmentEmails = onDocumentUpdated(
     const after = event.data?.after.data();
     if (!before || !after) return;
 
-    const appointmentEvent = detectEvent(before, after);
-    if (!appointmentEvent) return;
+    const detected = detectEvent(before, after);
+    if (!detected) return;
+    const { event: appointmentEvent, previousScheduledAt } = detected;
 
     const bookingId = event.params.bookingId;
     const claimed = await claimEvent(bookingId, appointmentEvent);
     if (!claimed) return;
 
     try {
-      const data = await loadEmailData(bookingId);
+      const data = await loadEmailContext(bookingId);
       if (!data) return;
-      const emails = buildAppointmentEmails(data);
 
       const sends: Promise<void>[] = [];
-      if (data.userEmail) {
-        sends.push(sendEmail(data.userEmail, emails.user, `${bookingId}:${appointmentEvent}:user`));
-      } else {
-        console.warn("Skipping student email: no address on booking", bookingId);
+
+      if (appointmentEvent === "cancelled") {
+        // Only the party who didn't cancel it gets told — the canceller
+        // already knows, same as the in-app notification this mirrors.
+        const emails = buildCancellationEmails(data);
+        if (data.cancelledBy === "user" && data.counsellorEmail) {
+          sends.push(sendEmail(data.counsellorEmail, emails.counsellor, `${bookingId}:cancelled:counsellor`));
+        } else if (data.cancelledBy !== "user" && data.userEmail) {
+          sends.push(sendEmail(data.userEmail, emails.user, `${bookingId}:cancelled:user`));
+        }
+      } else if (typeof data.scheduledAt === "number") {
+        const withScheduledAt = { ...data, scheduledAt: data.scheduledAt };
+        const emails =
+          appointmentEvent === "scheduled"
+            ? buildAppointmentEmails(withScheduledAt)
+            : buildRescheduledEmails(withScheduledAt, previousScheduledAt);
+
+        if (data.userEmail) {
+          sends.push(sendEmail(data.userEmail, emails.user, `${bookingId}:${appointmentEvent}:user`));
+        } else {
+          console.warn("Skipping student email: no address on booking", bookingId);
+        }
+        if (data.counsellorEmail) {
+          sends.push(sendEmail(data.counsellorEmail, emails.counsellor, `${bookingId}:${appointmentEvent}:counsellor`));
+        } else {
+          console.warn("Skipping counsellor email: no address on booking", bookingId);
+        }
       }
-      if (data.counsellorEmail) {
-        sends.push(sendEmail(data.counsellorEmail, emails.counsellor, `${bookingId}:${appointmentEvent}:counsellor`));
-      } else {
-        console.warn("Skipping counsellor email: no address on booking", bookingId);
-      }
+
       await Promise.all(sends);
     } catch (err) {
       // Release the claim so a retry can go out — Resend's Idempotency-Key
