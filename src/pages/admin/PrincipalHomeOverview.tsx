@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../services/firebase/config";
 import { useAuth } from "../../hooks/useAuth";
@@ -9,6 +8,7 @@ import { subscribeToAdminSeriousCases } from "../../services/firebase/seriousCas
 import { listAllBookingsForStats } from "../../services/firebase/bookings";
 import { listCounsellorMonthlyReportsForCollege } from "../../services/firebase/counsellorMonthlyReports";
 import { listAttendanceForCampusOnDate, istDateKey, formatIstTime } from "../../services/firebase/attendance";
+import { periodLabel, periodChipLabel, periodStart, type HomePeriod } from "../head/headHomeMetrics";
 import type { EventProgram } from "../../types/event";
 import type { SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
 import type { SeriousCase } from "../../types/seriousCase";
@@ -16,7 +16,16 @@ import type { Booking, ConcernCategory } from "../../types/booking";
 import { CONCERN_CATEGORY_LABELS } from "../../types/booking";
 import type { CounsellorMonthlyReport } from "../../services/firebase/counsellorMonthlyReports";
 import type { AttendanceRecord } from "../../types/attendance";
-import { TrendingUpIcon, ClockIcon, FileTextIcon, UsersIcon, DownloadIcon } from "../../components/common/icons";
+import {
+  CalendarIcon,
+  TrendingUpIcon,
+  AlertTriangleIcon,
+  FileTextIcon,
+  UsersIcon,
+  ClockIcon,
+  ClipboardListIcon,
+  DownloadIcon,
+} from "../../components/common/icons";
 import { Modal } from "../../components/common/Modal";
 import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./PrincipalHomeOverview.css";
@@ -25,80 +34,60 @@ interface PrincipalHomeOverviewProps {
   onSelectSection: (sectionId: string) => void;
 }
 
-// Same icon markup as the sidebar's own section icons (AdminDashboard.tsx),
-// reused here so each card visually matches the tab it jumps to.
-const SECTION_ICONS: Record<string, ReactNode> = {
-  events: (
-    <svg viewBox="0 0 24 24">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  ),
-  analytics: (
-    <svg viewBox="0 0 24 24">
-      <line x1="18" y1="20" x2="18" y2="10" />
-      <line x1="12" y1="20" x2="12" y2="4" />
-      <line x1="6" y1="20" x2="6" y2="14" />
-    </svg>
-  ),
-  "ssi-analytics": (
-    <svg viewBox="0 0 24 24">
-      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-    </svg>
-  ),
-  "serious-cases": (
-    <svg viewBox="0 0 24 24">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  ),
-  "counsellor-worksheet": (
-    <svg viewBox="0 0 24 24">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-      <polyline points="10 9 9 9 8 9" />
-    </svg>
-  ),
-};
-
+const PERIODS: HomePeriod[] = ["week", "month"];
 const DAY_MS = 24 * 60 * 60 * 1000;
-const REPORT_MONTH_LABEL = (m: number, y: number) => new Date(y, m - 1, 1).toLocaleString("en-US", { month: "long", year: "numeric" });
+const REPORT_MONTH_LABEL = (m: number, y: number) =>
+  new Date(y, m - 1, 1).toLocaleString("en-US", { month: "long", year: "numeric" });
 
 function isHeldSession(b: Booking): boolean {
   return b.status === "completed" && b.outcome !== "missed";
 }
 
-/** The Home overview for a college-restricted Principal/Vice-Principal — a
-    clean set of shortcut cards summarizing their own granted sections
-    (Events, Analytics, SSI Analytics, Counsellor Worksheet, and Serious
-    Cases when granted), plus a fixed set of always-visible "at a glance"
-    cards about their own college's counsellor(s)/head specifically —
-    sessions held, group sessions run, what students are coming in with,
-    monthly report submissions, and today's check-in/out — so they can see
-    what needs attention at a glance and jump straight to it, instead of
-    the campus-wide Consolidated Reports widget other admins get
-    (irrelevant to a single-college role). */
+function bookingTime(b: Booking): number {
+  return b.scheduledAt ?? b.createdAt;
+}
+
+/** Each read is individually labeled so a permission/other failure in
+    Promise.all tells us exactly which query broke, instead of one opaque
+    "something failed" error — same pattern as HeadCommandCentre's load(). */
+function labeled<T>(label: string, p: Promise<T>): Promise<T> {
+  return p.catch((err) => {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`[${label}] ${message}`, { cause: err });
+  });
+}
+
+interface LoadedData {
+  events: EventProgram[];
+  ssiResults: SsiCollegeResult[];
+  staffUids: string[];
+  staffNames: Map<string, string>;
+  counsellorCount: number;
+  collegeBookings: Booking[];
+  monthlyReports: CounsellorMonthlyReport[];
+  attendanceToday: AttendanceRecord[];
+}
+
+/** The Home overview for a college-restricted Principal/Vice-Principal —
+    big, always-visible KPI tiles (matching the Head Command Centre's own
+    visual scale) about their own college's counsellor(s)/head specifically:
+    granted sections (Analytics, SSI Analytics, Serious Cases, Events,
+    Counsellor Worksheet) plus sessions held, group sessions run, monthly
+    report submissions, and today's check-in/out — each a shortcut into
+    more detail, instead of the campus-wide Consolidated Reports widget
+    other admins get (irrelevant to a single-college role). A This Week /
+    This Month toggle (same as the Head dashboard) scopes the activity
+    tiles and the student-concerns panel. */
 export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverviewProps) {
   const { profile } = useAuth();
-  const [events, setEvents] = useState<EventProgram[]>([]);
-  const [ssiResults, setSsiResults] = useState<SsiCollegeResult[]>([]);
-  const [counsellorCount, setCounsellorCount] = useState<number | null>(null);
+  const [data, setData] = useState<LoadedData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [period, setPeriod] = useState<HomePeriod>("month");
+  const [now] = useState(() => new Date());
   const [seriousCases, setSeriousCases] = useState<SeriousCase[]>([]);
-  const [staffUids, setStaffUids] = useState<string[]>([]);
-  const [staffNames, setStaffNames] = useState<Map<string, string>>(new Map());
-  const [collegeBookings, setCollegeBookings] = useState<Booking[]>([]);
-  const [monthlyReports, setMonthlyReports] = useState<CounsellorMonthlyReport[]>([]);
-  const [attendanceToday, setAttendanceToday] = useState<AttendanceRecord[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const [showSessions, setShowSessions] = useState(false);
   const [showGroupSessions, setShowGroupSessions] = useState(false);
-  const [showConcerns, setShowConcerns] = useState(false);
   const [showReports, setShowReports] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
 
@@ -112,62 +101,70 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
   const campusId = profile?.adminAccess?.campusIds?.[0];
   const grantedSections = profile?.adminAccess?.sections;
   const seesSeriousCases = !grantedSections || grantedSections.includes("serious-cases");
+  const sees = (id: string) => !grantedSections || grantedSections.includes(id as (typeof grantedSections)[number]);
 
   useEffect(() => {
-    if (!profile || collegeIds.length === 0) {
-      setLoading(false);
-      return;
-    }
+    if (!profile || collegeIds.length === 0) return;
     let active = true;
-    setLoading(true);
-    Promise.all([
-      Promise.all(collegeIds.map((id) => listEventsForCollege(id, campusId))).then((lists) => lists.flat()),
-      Promise.all(collegeIds.map((id) => listSsiCollegeResultsForCollege(id, campusId))).then((lists) => lists.flat()),
-      Promise.all(
-        collegeIds.map((id) =>
-          getDocs(query(collection(db, "users"), where("role", "==", "counsellor"), where("collegeId", "==", id))),
-        ),
-      ),
-      campusId
-        ? getDocs(query(collection(db, "users"), where("role", "==", "head"), where("campusId", "==", campusId)))
-        : Promise.resolve(null),
-      Promise.all(collegeIds.map((id) => listCounsellorMonthlyReportsForCollege(id, campusId))).then((lists) =>
-        lists.flat(),
-      ),
-    ])
-      .then(([eventList, ssiList, counsellorSnaps, headSnap, reportList]) => {
-        if (!active) return;
-        setEvents(eventList);
-        setSsiResults(ssiList);
+    setError(null);
+
+    async function load() {
+      try {
+        const [eventLists, ssiLists, counsellorSnaps, headSnap, reportLists] = await Promise.all([
+          labeled("events", Promise.all(collegeIds.map((id) => listEventsForCollege(id, campusId)))),
+          labeled("ssiResults", Promise.all(collegeIds.map((id) => listSsiCollegeResultsForCollege(id, campusId)))),
+          labeled(
+            "counsellors",
+            Promise.all(
+              collegeIds.map((id) =>
+                getDocs(query(collection(db, "users"), where("role", "==", "counsellor"), where("collegeId", "==", id))),
+              ),
+            ),
+          ),
+          labeled(
+            "head",
+            campusId
+              ? getDocs(query(collection(db, "users"), where("role", "==", "head"), where("campusId", "==", campusId)))
+              : Promise.resolve(null),
+          ),
+          labeled("monthlyReports", Promise.all(collegeIds.map((id) => listCounsellorMonthlyReportsForCollege(id, campusId)))),
+        ]);
+
         const counsellorDocs = counsellorSnaps.flatMap((s) => s.docs);
         const headDocs = headSnap?.docs ?? [];
         const allStaffDocs = [...counsellorDocs, ...headDocs];
-        setCounsellorCount(counsellorDocs.length);
-        const uids = allStaffDocs.map((d) => d.id);
-        setStaffUids(uids);
-        setStaffNames(
-          new Map(allStaffDocs.map((d) => [d.id, (d.data().displayName as string) || (d.data().email as string)])),
+        const staffUids = allStaffDocs.map((d) => d.id);
+        const staffNames = new Map(
+          allStaffDocs.map((d) => [d.id, (d.data().displayName as string) || (d.data().email as string)]),
         );
-        setMonthlyReports(reportList);
 
-        // Bookings and today's attendance both need the resolved staff uid
-        // list, so they're fetched in a second wave rather than the Promise.all
-        // above (which can't see uids until this first wave resolves).
         const todayKey = istDateKey(Date.now());
-        Promise.all([
-          campusId ? listAllBookingsForStats(campusId, uids) : Promise.resolve([]),
-          campusId ? listAttendanceForCampusOnDate(campusId, todayKey) : Promise.resolve([]),
-        ]).then(([allCampusBookings, attendance]) => {
-          if (!active) return;
-          setCollegeBookings(allCampusBookings.filter((b) => uids.includes(b.counsellorId)));
-          setAttendanceToday(attendance.filter((r) => uids.includes(r.uid)));
-          setLoading(false);
+        const [allCampusBookings, attendance] = await Promise.all([
+          labeled("bookings", campusId ? listAllBookingsForStats(campusId, staffUids) : Promise.resolve([])),
+          labeled("attendance", campusId ? listAttendanceForCampusOnDate(campusId, todayKey) : Promise.resolve([])),
+        ]);
+
+        if (!active) return;
+        setData({
+          events: eventLists.flat(),
+          ssiResults: ssiLists.flat(),
+          staffUids,
+          staffNames,
+          counsellorCount: counsellorDocs.length,
+          collegeBookings: allCampusBookings.filter((b) => staffUids.includes(b.counsellorId)),
+          monthlyReports: reportLists.flat(),
+          attendanceToday: attendance.filter((r) => staffUids.includes(r.uid)),
         });
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Failed to load Principal home overview", err);
-        if (active) setLoading(false);
-      });
+        if (active) {
+          const detail = err instanceof Error ? err.message : "";
+          setError(`Couldn't load some of your college's data.${detail ? ` (${detail})` : ""}`);
+        }
+      }
+    }
+
+    load();
     return () => {
       active = false;
     };
@@ -183,30 +180,46 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.uid, seesSeriousCases]);
 
-  const now = Date.now();
-  const nowDate = new Date();
-  const upcomingEvents = events.filter((e) => e.eventDate >= now && e.eventDate <= now + 30 * DAY_MS);
+  if (!collegeIds.length) return null;
+
+  const nowMs = now.getTime();
+  const periodStartMs = periodStart(period, now);
+  const loading = !data;
+
+  const events = data?.events ?? [];
+  const ssiResults = data?.ssiResults ?? [];
+  const staffUids = data?.staffUids ?? [];
+  const staffNames = data?.staffNames ?? new Map<string, string>();
+  const collegeBookings = data?.collegeBookings ?? [];
+  const monthlyReports = data?.monthlyReports ?? [];
+  const attendanceToday = data?.attendanceToday ?? [];
+  const counsellorCount = data?.counsellorCount ?? 0;
+
+  const upcomingEvents = events
+    .filter((e) => e.eventDate >= nowMs && e.eventDate <= nowMs + 30 * DAY_MS)
+    .sort((a, b) => a.eventDate - b.eventDate);
   const severeSsi = ssiResults.filter((r) => r.severity === "severe").length;
   const openCases = seriousCases.filter((c) => c.status === "open").length;
 
-  // ── Sessions held by this college's own counsellor(s)/head ─────────────
-  const heldSessions = collegeBookings.filter(isHeldSession);
+  // ── Sessions held by this college's own counsellor(s)/head, this period ─
+  const periodBookings = collegeBookings.filter((b) => bookingTime(b) >= periodStartMs);
+  const heldSessions = periodBookings.filter(isHeldSession);
   const sessionsByStaff = staffUids
     .map((uid) => ({ uid, name: staffNames.get(uid) ?? uid, count: heldSessions.filter((b) => b.counsellorId === uid).length }))
     .filter((row) => row.count > 0)
     .sort((a, b) => b.count - a.count);
 
   // ── Group sessions (Events & Programs, category "group-session") run by
-  //    this college's own staff ────────────────────────────────────────
-  const groupSessionEvents = events.filter(
-    (e) => e.category === "group-session" && e.organizerIds.some((id) => staffUids.includes(id)),
-  );
+  //    this college's own staff, this period ─────────────────────────────
+  const groupSessionEvents = events
+    .filter((e) => e.category === "group-session" && e.organizerIds.some((id) => staffUids.includes(id)) && e.eventDate >= periodStartMs)
+    .sort((a, b) => b.eventDate - a.eventDate);
 
   // ── What students are coming in with (student-chosen at booking time),
-  //    scoped to bookings handled by this college's own staff ───────────
+  //    scoped to bookings handled by this college's own staff, this period ─
   const concernCounts = new Map<ConcernCategory, number>();
   let concernTagged = 0;
-  for (const b of collegeBookings) {
+  for (const b of periodBookings) {
     if (!b.concernCategories?.length) continue;
     concernTagged += 1;
     for (const c of b.concernCategories) concernCounts.set(c, (concernCounts.get(c) ?? 0) + 1);
@@ -217,150 +230,223 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
       return { category, label: CONCERN_CATEGORY_LABELS[category], count, pct: concernTagged > 0 ? Math.round((count / concernTagged) * 100) : 0 };
     })
     .filter((row) => row.count > 0)
-    .sort((a, b) => b.count - a.count);
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
 
-  // ── Monthly reports this month ──────────────────────────────────────
-  const reportsThisMonth = monthlyReports.filter((r) => r.month === nowDate.getMonth() + 1 && r.year === nowDate.getFullYear());
+  // ── Monthly reports this calendar month (fixed — not period-scoped) ────
+  const reportsThisMonth = monthlyReports.filter((r) => r.month === now.getMonth() + 1 && r.year === now.getFullYear());
   const pendingReports = reportsThisMonth.filter((r) => r.status === "pending").length;
 
-  // ── Today's check-in/check-out ──────────────────────────────────────
+  // ── Today's check-in/check-out (fixed — not period-scoped) ─────────────
   const attendanceByUid = new Map(attendanceToday.map((r) => [r.uid, r]));
   const checkedInCount = staffUids.filter((uid) => attendanceByUid.get(uid)?.checkInAt).length;
 
-  if (!collegeIds.length) return null;
+  const greetingName = profile?.displayName || profile?.email || "Principal";
 
-  const cards: {
+  interface KpiTile {
     id: string;
+    icon: typeof CalendarIcon;
     label: string;
     value: string;
-    hint: string;
+    note: string;
     urgent?: boolean;
-  }[] = [
-    {
-      id: "events",
-      label: "Events & Programs",
-      value: loading ? "…" : String(upcomingEvents.length),
-      hint: "upcoming in 30 days",
-    },
-    {
+    onClick: () => void;
+  }
+
+  const tiles: KpiTile[] = [];
+  if (sees("analytics")) {
+    tiles.push({
       id: "analytics",
+      icon: TrendingUpIcon,
       label: "Analytics",
-      value: loading || counsellorCount === null ? "…" : String(counsellorCount),
-      hint: "counsellors at your college",
-    },
-    {
+      value: loading ? "…" : String(counsellorCount),
+      note: "counsellors at your college",
+      onClick: () => onSelectSection("analytics"),
+    });
+  }
+  if (sees("ssi-analytics")) {
+    tiles.push({
       id: "ssi-analytics",
+      icon: AlertTriangleIcon,
       label: "SSI Analytics",
       value: loading ? "…" : String(severeSsi),
-      hint: "severe check-ins",
+      note: "severe check-ins",
       urgent: severeSsi > 0,
-    },
-    {
-      id: "counsellor-worksheet",
-      label: "Counsellor Worksheet",
-      value: "→",
-      hint: "view monthly worksheets",
-    },
-  ];
-
+      onClick: () => onSelectSection("ssi-analytics"),
+    });
+  }
   if (seesSeriousCases) {
-    cards.splice(3, 0, {
+    tiles.push({
       id: "serious-cases",
+      icon: AlertTriangleIcon,
       label: "Serious Cases",
       value: loading ? "…" : String(openCases),
-      hint: "awaiting your action",
+      note: "awaiting your action",
       urgent: openCases > 0,
+      onClick: () => onSelectSection("serious-cases"),
+    });
+  }
+  if (sees("events")) {
+    tiles.push({
+      id: "events",
+      icon: CalendarIcon,
+      label: "Events & Programs",
+      value: loading ? "…" : String(upcomingEvents.length),
+      note: "programs going on (next 30 days)",
+      onClick: () => onSelectSection("events"),
+    });
+  }
+  tiles.push({
+    id: "sessions-held",
+    icon: UsersIcon,
+    label: "Sessions Held",
+    value: loading ? "…" : String(heldSessions.length),
+    note: `by your college counsellor/head — ${periodChipLabel(period).toLowerCase()}`,
+    onClick: () => setShowSessions(true),
+  });
+  tiles.push({
+    id: "group-sessions",
+    icon: CalendarIcon,
+    label: "Group Sessions",
+    value: loading ? "…" : String(groupSessionEvents.length),
+    note: `run by your college counsellor/head — ${periodChipLabel(period).toLowerCase()}`,
+    onClick: () => setShowGroupSessions(true),
+  });
+  tiles.push({
+    id: "monthly-reports",
+    icon: FileTextIcon,
+    label: "Monthly Reports",
+    value: loading ? "…" : String(reportsThisMonth.length),
+    note: loading ? "this month" : `${pendingReports} awaiting verification`,
+    urgent: pendingReports > 0,
+    onClick: () => setShowReports(true),
+  });
+  tiles.push({
+    id: "attendance",
+    icon: ClockIcon,
+    label: "Checked In Today",
+    value: loading ? "…" : `${checkedInCount}/${staffUids.length}`,
+    note: "your college counsellor/head",
+    onClick: () => setShowAttendance(true),
+  });
+  if (sees("counsellor-worksheet")) {
+    tiles.push({
+      id: "counsellor-worksheet",
+      icon: ClipboardListIcon,
+      label: "Counsellor Worksheet",
+      value: "→",
+      note: "view monthly worksheets",
+      onClick: () => onSelectSection("counsellor-worksheet"),
     });
   }
 
-  // Only show a card for a section this Principal/VP was actually granted —
-  // a card is a shortcut into that tab, so it shouldn't offer one the Super
-  // Admin didn't check for them in the first place.
-  const visibleCards = grantedSections ? cards.filter((c) => grantedSections.includes(c.id as (typeof grantedSections)[number])) : cards;
-
-  if (visibleCards.length === 0 && collegeBookings.length === 0) return null;
-
   return (
     <div className="pha-overview">
-      <div className="pha-header">
-        <h3 className="pha-header__title">
-          <TrendingUpIcon />
-          <span>Your College at a Glance</span>
-        </h3>
-        <p className="pha-header__sub">Tap any card to open that section.</p>
-      </div>
+      <section className="pha-hero">
+        <div>
+          <h2 className="pha-hero__title">Welcome, {greetingName}</h2>
+          <p className="pha-hero__subtitle">Your College at a Glance — Vishnu Wellness Centre</p>
+          <p className="pha-hero__body">
+            Counsellor/head activity, student wellness signals, and case follow-up for your own college, in one
+            place. Tap any tile for more detail.
+          </p>
+        </div>
+      </section>
 
-      <div className="pha-grid">
-        {visibleCards.map((card) => (
-          <button
-            key={card.id}
-            type="button"
-            className={`pha-card${card.urgent ? " pha-card--urgent" : ""}`}
-            onClick={() => onSelectSection(card.id)}
-          >
-            <span className="pha-card__icon">{SECTION_ICONS[card.id]}</span>
-            <span className="pha-card__body">
-              <span className="pha-card__value">{card.value}</span>
-              <span className="pha-card__label">{card.label}</span>
-              <span className="pha-card__hint">{card.hint}</span>
-            </span>
-          </button>
-        ))}
+      {error && <p className="pha-error">{error}</p>}
 
-        <button type="button" className="pha-card" onClick={() => setShowSessions(true)}>
-          <span className="pha-card__icon"><UsersIcon /></span>
-          <span className="pha-card__body">
-            <span className="pha-card__value">{loading ? "…" : String(heldSessions.length)}</span>
-            <span className="pha-card__label">Sessions Held</span>
-            <span className="pha-card__hint">by your college counsellor/head</span>
-          </span>
-        </button>
+      <section className="pha-section">
+        <div className="pha-section__head">
+          <h3 className="pha-section__title">Activity</h3>
+          <div className="pha-filters" role="group" aria-label="Period">
+            {PERIODS.map((p) => (
+              <button
+                key={p}
+                type="button"
+                className={`pha-chip ${period === p ? "pha-chip--active" : ""}`}
+                aria-pressed={period === p}
+                onClick={() => setPeriod(p)}
+              >
+                {periodChipLabel(p)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="pha-muted">
+          Sessions Held, Group Sessions, and Student Concerns below are for <strong>{periodLabel(period, now)}</strong>.
+        </p>
 
-        <button type="button" className="pha-card" onClick={() => setShowGroupSessions(true)}>
-          <span className="pha-card__icon">{SECTION_ICONS.events}</span>
-          <span className="pha-card__body">
-            <span className="pha-card__value">{loading ? "…" : String(groupSessionEvents.length)}</span>
-            <span className="pha-card__label">Group Sessions</span>
-            <span className="pha-card__hint">run by your college counsellor/head</span>
-          </span>
-        </button>
+        <div className="pha-kpis">
+          {tiles.map((tile) => (
+            <button
+              key={tile.id}
+              type="button"
+              className={`pha-kpi${tile.urgent ? " pha-kpi--urgent" : ""}`}
+              onClick={tile.onClick}
+            >
+              <span className="pha-kpi__icon">
+                <tile.icon />
+              </span>
+              <span className="pha-kpi__value">{tile.value}</span>
+              <p className="pha-kpi__label">{tile.label}</p>
+              <p className="pha-kpi__note">{tile.note}</p>
+            </button>
+          ))}
+        </div>
+      </section>
 
-        <button type="button" className="pha-card" onClick={() => setShowConcerns(true)}>
-          <span className="pha-card__icon">{SECTION_ICONS["ssi-analytics"]}</span>
-          <span className="pha-card__body">
-            <span className="pha-card__value">{loading ? "…" : String(concernRows[0]?.pct ?? 0)}%</span>
-            <span className="pha-card__label">Top Student Concern</span>
-            <span className="pha-card__hint">{concernRows[0]?.label ?? "What students are coming in with"}</span>
-          </span>
-        </button>
+      <section className="pha-section">
+        <div className="pha-two-col">
+          <div className="pha-panel">
+            <p className="pha-panel__title">What are students coming in with?</p>
+            <p className="pha-muted">
+              {loading ? "…" : `${concernTagged} session${concernTagged === 1 ? "" : "s"} tagged`} · aggregated and
+              de-identified.
+            </p>
+            {!loading && concernRows.length === 0 ? (
+              <p className="pha-muted">No concern categories tagged yet for your college's sessions.</p>
+            ) : (
+              <ul className="pha-severity">
+                {concernRows.map((row) => (
+                  <li key={row.category} className="pha-severity__row">
+                    <span>{row.label}</span>
+                    <span className="pha-severity__bar">
+                      <span className="pha-severity__fill" style={{ width: `${row.pct}%` }} />
+                    </span>
+                    <strong>{row.pct}%</strong>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
-        <button
-          type="button"
-          className={`pha-card${pendingReports > 0 ? " pha-card--urgent" : ""}`}
-          onClick={() => setShowReports(true)}
-        >
-          <span className="pha-card__icon"><FileTextIcon /></span>
-          <span className="pha-card__body">
-            <span className="pha-card__value">{loading ? "…" : String(reportsThisMonth.length)}</span>
-            <span className="pha-card__label">Monthly Reports</span>
-            <span className="pha-card__hint">{loading ? "this month" : `${pendingReports} awaiting verification`}</span>
-          </span>
-        </button>
-
-        <button type="button" className="pha-card" onClick={() => setShowAttendance(true)}>
-          <span className="pha-card__icon"><ClockIcon /></span>
-          <span className="pha-card__body">
-            <span className="pha-card__value">{loading ? "…" : `${checkedInCount}/${staffUids.length}`}</span>
-            <span className="pha-card__label">Checked In Today</span>
-            <span className="pha-card__hint">your college counsellor/head</span>
-          </span>
-        </button>
-      </div>
+          <div className="pha-panel">
+            <p className="pha-panel__title">Upcoming Programs</p>
+            {!loading && upcomingEvents.length === 0 ? (
+              <p className="pha-muted">No programs scheduled in the next 30 days.</p>
+            ) : (
+              <div className="bento-list">
+                {upcomingEvents.slice(0, 5).map((e) => (
+                  <div key={e.id} className="bento-list-item">
+                    <span className="bento-list-item__title">{e.title}</span>
+                    <span>{formatDateTimeDMY(e.eventDate)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {sees("events") && (
+              <button type="button" className="pha-panel__link" onClick={() => onSelectSection("events")}>
+                View all Events &amp; Programs →
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
 
       {showSessions && (
         <Modal title="Sessions Held" onClose={() => setShowSessions(false)}>
           {sessionsByStaff.length === 0 ? (
-            <p>No sessions held yet by your college's counsellor/head.</p>
+            <p>No sessions held yet by your college's counsellor/head this period.</p>
           ) : (
             <div className="bento-list">
               {sessionsByStaff.map((row) => (
@@ -377,33 +463,13 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
       {showGroupSessions && (
         <Modal title="Group Sessions" onClose={() => setShowGroupSessions(false)}>
           {groupSessionEvents.length === 0 ? (
-            <p>No group sessions run by your college's counsellor/head yet.</p>
+            <p>No group sessions run by your college's counsellor/head this period.</p>
           ) : (
             <div className="bento-list">
-              {groupSessionEvents
-                .sort((a, b) => b.eventDate - a.eventDate)
-                .map((e) => (
-                  <div key={e.id} className="bento-list-item">
-                    <span className="bento-list-item__title">{e.title}</span>
-                    <span>{formatDateTimeDMY(e.eventDate)}</span>
-                  </div>
-                ))}
-            </div>
-          )}
-        </Modal>
-      )}
-
-      {showConcerns && (
-        <Modal title="What are students coming in with?" onClose={() => setShowConcerns(false)}>
-          <p className="pha-modal__sub">{concernTagged} session{concernTagged === 1 ? "" : "s"} tagged · aggregated and de-identified.</p>
-          {concernRows.length === 0 ? (
-            <p>No concern categories tagged yet for your college's sessions.</p>
-          ) : (
-            <div className="bento-list">
-              {concernRows.map((row) => (
-                <div key={row.category} className="bento-list-item">
-                  <span className="bento-list-item__title">{row.label}</span>
-                  <span>{row.pct}% ({row.count})</span>
+              {groupSessionEvents.map((e) => (
+                <div key={e.id} className="bento-list-item">
+                  <span className="bento-list-item__title">{e.title}</span>
+                  <span>{formatDateTimeDMY(e.eventDate)}</span>
                 </div>
               ))}
             </div>

@@ -294,10 +294,12 @@ export async function listBookingsForCounsellor(counsellorId: string, campusId?:
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
-// Scoped to one campus — this is only ever used for a Head's own Team
+// Scoped to one campus — originally only ever used for a Head's own Team
 // Management/Home stats, so there's no reason to pull every booking ever made
 // platform-wide (this collection only grows, and was making every Head
-// dashboard load slower every month).
+// dashboard load slower every month). Also used by PrincipalHomeOverview for
+// an Admin caller, which is why the supplemental query below is now wrapped
+// in its own try/catch — see that comment for why.
 //
 // `staffUids` (this campus's own counsellors/heads) is used for a second,
 // supplemental query: offline-imported sessions predate campusId being
@@ -318,18 +320,30 @@ export async function listAllBookingsForStats(campusId: string, staffUids: strin
   const seen = new Set(bookings.map((b) => b.id));
   const chunks: string[][] = [];
   for (let i = 0; i < staffUids.length; i += 30) chunks.push(staffUids.slice(i, i + 30));
-  const supplementalSnaps = await Promise.all(
-    chunks.map((chunk) => getDocs(query(bookingsCollection, where("counsellorId", "in", chunk)))),
-  );
-  for (const snap of supplementalSnaps) {
-    for (const d of snap.docs) {
-      if (seen.has(d.id)) continue;
-      const b = toBooking(d.id, d.data());
-      if (!b.campusId) {
-        bookings.push(b);
-        seen.add(b.id);
+  try {
+    // bookings.rules only grants a Head unconditional read (isRole('head') is
+    // a constant from the caller's own profile, true for any query); an Admin
+    // reader instead needs adminCanAccessCampus(resource.data.campusId), which
+    // Firestore can't validate for THIS query since it filters on
+    // counsellorId, not campusId — so it throws for an Admin caller even
+    // though their primary, campusId-filtered query above succeeds fine. That
+    // only costs a handful of legacy, campusId-less bookings from before this
+    // field was back-filled, not worth failing the whole stats load over.
+    const supplementalSnaps = await Promise.all(
+      chunks.map((chunk) => getDocs(query(bookingsCollection, where("counsellorId", "in", chunk)))),
+    );
+    for (const snap of supplementalSnaps) {
+      for (const d of snap.docs) {
+        if (seen.has(d.id)) continue;
+        const b = toBooking(d.id, d.data());
+        if (!b.campusId) {
+          bookings.push(b);
+          seen.add(b.id);
+        }
       }
     }
+  } catch (err) {
+    console.warn("listAllBookingsForStats: supplemental legacy-booking lookup skipped", err);
   }
   return bookings;
 }
