@@ -352,7 +352,13 @@ export function UsersManagementSection() {
       ))}
 
       {editingUser && (
-        <EditUserModal user={editingUser} campuses={campuses} onClose={() => setEditingUser(null)} onSaved={load} />
+        <EditUserModal
+          user={editingUser}
+          campuses={campuses}
+          onClose={() => setEditingUser(null)}
+          onSaved={load}
+          onDeleted={load}
+        />
       )}
 
       {showAddUser && canCreateUsers && (

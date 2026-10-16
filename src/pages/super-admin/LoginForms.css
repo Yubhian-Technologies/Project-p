@@ -132,6 +132,12 @@
   gap: 12px;
 }
 
+.campus-logins-detail__danger-zone {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(229, 62, 62, 0.25);
+}
+
 .campus-logins-detail__row-actions {
   display: flex;
   align-items: center;

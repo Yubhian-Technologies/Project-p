@@ -670,7 +670,8 @@
   font-weight: 700;
 }
 
-.request-card__schedule textarea {
+.request-card__schedule textarea,
+.request-card__schedule input[type="text"] {
   width: 100%;
   font-family: inherit;
   font-size: 14px;

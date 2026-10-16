@@ -365,10 +365,11 @@ export async function rejectBooking(booking: Booking): Promise<void> {
   });
 }
 
-export async function scheduleBooking(booking: Booking, scheduledAt: number): Promise<void> {
+export async function scheduleBooking(booking: Booking, scheduledAt: number, venue?: string): Promise<void> {
   await updateDoc(doc(db, "bookings", booking.id), {
     status: "scheduled",
     scheduledAt,
+    ...(venue ? { venue } : {}),
     updatedAt: Date.now(),
   });
   await createNotification({
@@ -376,15 +377,16 @@ export async function scheduleBooking(booking: Booking, scheduledAt: number): Pr
     type: "booking_scheduled",
     bookingId: booking.id,
     title: "Session scheduled",
-    message: `Your session with ${booking.counsellorEmail} is scheduled for ${new Date(scheduledAt).toLocaleString()}`,
+    message: `Your session with ${booking.counsellorEmail} is scheduled for ${new Date(scheduledAt).toLocaleString()}${venue ? ` at ${venue}` : ""}`,
   });
 }
 
 /** Counsellor accepting one of the two time slots the student proposed at request time. */
-export async function acceptProposedSlot(booking: Booking, chosenAt: number): Promise<void> {
+export async function acceptProposedSlot(booking: Booking, chosenAt: number, venue?: string): Promise<void> {
   await updateDoc(doc(db, "bookings", booking.id), {
     status: "scheduled",
     scheduledAt: chosenAt,
+    ...(venue ? { venue } : {}),
     updatedAt: Date.now(),
   });
   await createNotification({
@@ -392,7 +394,7 @@ export async function acceptProposedSlot(booking: Booking, chosenAt: number): Pr
     type: "booking_scheduled",
     bookingId: booking.id,
     title: "Session scheduled",
-    message: `Your session with ${booking.counsellorEmail} is scheduled for ${new Date(chosenAt).toLocaleString()}`,
+    message: `Your session with ${booking.counsellorEmail} is scheduled for ${new Date(chosenAt).toLocaleString()}${venue ? ` at ${venue}` : ""}`,
   });
 }
 

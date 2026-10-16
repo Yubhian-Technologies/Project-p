@@ -13,6 +13,19 @@ import { db, storage } from "./config";
 import { createNotification } from "./notifications";
 import { listUsersByRole } from "./firestore";
 import { attachmentMetadata } from "../../utils/attachmentMetadata";
+import type { UserProfile } from "../../types/user";
+
+/** True if this admin's own scope covers the given college — global, or
+    this college specifically named in their collegeIds. Mirrors the same
+    tiering createSeriousCase uses server-side, simplified to just the
+    "does this college match" question (no campus-wide fallback tiers —
+    a monthly report is only ever relevant to that one college's own
+    Principal/VP, never a platform-wide notification). */
+function coversCollege(admin: UserProfile, collegeId: string): boolean {
+  const access = admin.adminAccess;
+  if (!access || access.scope === "global") return true;
+  return !!access.collegeIds?.includes(collegeId);
+}
 
 export type CounsellorMonthlyReportStatus = "pending" | "verified";
 
@@ -76,17 +89,24 @@ export async function submitCounsellorMonthlyReport(
   });
 
   const monthName = new Date(year, month - 1, 1).toLocaleString("en-IN", { month: "long" });
-  const heads = await listUsersByRole("head");
+  const [heads, admins] = await Promise.all([listUsersByRole("head"), listUsersByRole("admin")]);
   // Exactly one Head per campus, overseeing every college in it — not scoped
   // to the submitting counsellor's own college.
   const campusHeads = heads.filter((h) => h.campusId === campusId);
+  // The Principal/VP (or any wider-scope admin) for this specific college —
+  // unlike the Head above, this IS scoped to just the submitter's own
+  // college, since a Principal/VP has no standing visibility elsewhere.
+  const collegeAdmins = admins.filter(
+    (a) => a.adminAccess?.designation === "principal" || a.adminAccess?.designation === "vice-principal",
+  ).filter((a) => coversCollege(a, collegeId));
+  const message = `${uploadedBy} submitted a monthly report: ${title} (${monthName} ${year}).`;
   await Promise.all(
-    campusHeads.map((head) =>
+    [...campusHeads, ...collegeAdmins].map((recipient) =>
       createNotification({
-        recipientId: head.uid,
+        recipientId: recipient.uid,
         type: "monthly_report_uploaded",
         title: "Monthly report submitted",
-        message: `${uploadedBy} submitted a monthly report: ${title} (${monthName} ${year}).`,
+        message,
       }),
     ),
   );
@@ -139,6 +159,24 @@ export async function listCounsellorMonthlyReportsForUser(uid: string): Promise<
     that campus's one Head, who oversees every college in it. */
 export async function listCounsellorMonthlyReportsForCampus(campusId: string): Promise<CounsellorMonthlyReport[]> {
   const q = query(collection(db, COLLECTION), where("campusId", "==", campusId));
+  const snap = await getDocs(q);
+  return sortByUploadedAtDesc(snap.docs.map((d) => docToReport(d.id, d.data())));
+}
+
+/** Every report submitted by one college's own counsellor(s) — used by that
+    college's Principal/Vice-Principal, who (unlike the Head) only ever sees
+    their own college, not the whole campus. The rule this validates against
+    (adminCanAccessCollege) reads both campusId and collegeId, so — same fix
+    as listEventsForCollege/listSsiCollegeResultsForCollege — the query must
+    filter on both too, or Firestore rejects the whole list query outright
+    regardless of how clean the underlying data is. */
+export async function listCounsellorMonthlyReportsForCollege(
+  collegeId: string,
+  campusId?: string,
+): Promise<CounsellorMonthlyReport[]> {
+  const q = campusId
+    ? query(collection(db, COLLECTION), where("collegeId", "==", collegeId), where("campusId", "==", campusId))
+    : query(collection(db, COLLECTION), where("collegeId", "==", collegeId));
   const snap = await getDocs(q);
   return sortByUploadedAtDesc(snap.docs.map((d) => docToReport(d.id, d.data())));
 }

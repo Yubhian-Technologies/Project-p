@@ -55,7 +55,7 @@ function statusLabel(booking: Booking): string {
     case "accepted":
       return booking.isEmergency ? "Accepted — being handled directly, no session time needed" : "Accepted — time coming soon";
     case "scheduled":
-      return `Scheduled for ${booking.scheduledAt ? formatDateTimeDMY(booking.scheduledAt) : "—"} (${SESSION_DURATION_LABEL})`;
+      return `Scheduled for ${booking.scheduledAt ? formatDateTimeDMY(booking.scheduledAt) : "—"} (${SESSION_DURATION_LABEL})${booking.venue ? ` — Venue: ${booking.venue}` : ""}`;
     case "rejected":
       return "Rejected";
     case "cancelled":
@@ -522,9 +522,22 @@ export function BookingSection({
         <div className="booking-section__header-row">
           <h2 className="booking-section__heading">My Bookings</h2>
           {activeBooking ? (
-            <span className="booking-section__active-notice">
-              You already have an active booking — cancel it or wait for it to finish before booking another.
-            </span>
+            <div className="booking-section__active-booking-notice">
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={() => {
+                  setCancelTarget(activeBooking);
+                  setCancelReasonField("");
+                  setActionError("");
+                }}
+              >
+                Cancel Session
+              </Button>
+              <span className="booking-section__active-notice">
+                You already have an active booking — cancel it or wait for it to finish before booking another.
+              </span>
+            </div>
           ) : (
             <Button type="button" onClick={() => setShowPicker(true)}>
               + Book a Session

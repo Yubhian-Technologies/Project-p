@@ -57,6 +57,21 @@ service cloud.firestore {
         myProfile().adminAccess.designation in ['principal', 'vice-principal'];
     }
 
+    // Like adminCanAccessCampus(), but narrows further to one college when
+    // the admin's own adminAccess.collegeIds says so (a Principal/VP) — an
+    // admin with no collegeIds set (Management/Administration/global) is
+    // unaffected by this narrowing and still covers the whole campus.
+    function adminCanAccessCollege(campusId, collegeId) {
+      return adminCanAccessCampus(campusId) && (
+        myRole() == 'super-admin' ||
+        !('adminAccess' in myProfile()) ||
+        myProfile().adminAccess.scope == 'global' ||
+        !('collegeIds' in myProfile().adminAccess) ||
+        myProfile().adminAccess.collegeIds.size() == 0 ||
+        collegeId in myProfile().adminAccess.collegeIds
+      );
+    }
+
     // Only a "global"-scope admin (or super-admin) may create/edit/delete a
     // Campus or College record at all — a campus-restricted admin never can,
     // regardless of which campuses they're otherwise scoped to.
@@ -1080,9 +1095,13 @@ service cloud.firestore {
     // verification of it: no delete by anyone, and no update besides that
     // Head marking it verified.
     match /counsellorMonthlyReports/{reportId} {
+      // The Principal/VP (or any wider-scope admin) for the submitting
+      // counsellor's own college can also see it — college-scoped, unlike
+      // the Head's campus-wide view just below.
       allow read: if isSignedIn() && (
         resource.data.uploadedByUid == request.auth.uid ||
-        (isRole('head') && resource.data.campusId == myProfile().campusId)
+        (isRole('head') && resource.data.campusId == myProfile().campusId) ||
+        adminCanAccessCollege(resource.data.campusId, resource.data.collegeId)
       );
       allow create: if isRole('counsellor')
                     && request.resource.data.uploadedByUid == request.auth.uid

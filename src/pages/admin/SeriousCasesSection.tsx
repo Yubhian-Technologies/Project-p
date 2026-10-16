@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../../services/firebase/config";
 import { useAuth } from "../../hooks/useAuth";
 import { listCampuses } from "../../services/firebase/campuses";
 import { listColleges } from "../../services/firebase/colleges";
@@ -13,8 +15,26 @@ import type { College } from "../../types/college";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { Modal } from "../../components/common/Modal";
+import { Select } from "../../components/common/Select";
 import { formatDateTimeDMY } from "../../utils/formatDate";
 import "./SeriousCasesSection.css";
+
+interface CollegeCounsellor {
+  uid: string;
+  name: string;
+  email: string;
+}
+
+/** The case is resolved and the targeted admin wants to tell the college's
+    own counsellor(s) it's been handled — same Gmail web-compose approach
+    used on the Crisis SOS emergency alert card and the Notify Admin status
+    chip: no OS mail-client registration needed, opens directly in a new
+    tab. Pre-addressed straight to the one counsellor if there's only one
+    for this college; the admin picks which one when there's more than
+    one. */
+function gmailComposeHref(to: string, subject: string): string {
+  return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}`;
+}
 
 const TARGET_TIER_LABELS: Record<SeriousCase["targetTier"], string> = {
   "principal-vp": "Principal / Vice-Principal",
@@ -33,6 +53,10 @@ export function SeriousCasesSection() {
   const [delayText, setDelayText] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [loadingCounsellors, setLoadingCounsellors] = useState(false);
+  const [collegeCounsellors, setCollegeCounsellors] = useState<CollegeCounsellor[]>([]);
+  const [emailRecipientUid, setEmailRecipientUid] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     listCampuses().then((list) => {
@@ -78,6 +102,50 @@ export function SeriousCasesSection() {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleEmailResolved() {
+    if (!detail) return;
+    setEmailError("");
+    setEmailRecipientUid("");
+    setLoadingCounsellors(true);
+    try {
+      const snap = detail.collegeId
+        ? await getDocs(
+            query(collection(db, "users"), where("role", "==", "counsellor"), where("collegeId", "==", detail.collegeId)),
+          )
+        : null;
+      const counsellors: CollegeCounsellor[] = (snap?.docs ?? []).map((d) => ({
+        uid: d.id,
+        name: (d.data().displayName as string) || (d.data().email as string),
+        email: d.data().email as string,
+      }));
+      setCollegeCounsellors(counsellors);
+
+      const subject = `Case Resolved — ${detail.studentEmail} — ${formatDateTimeDMY(detail.createdAt)}`;
+      if (counsellors.length === 1) {
+        window.open(gmailComposeHref(counsellors[0].email, subject), "_blank", "noopener,noreferrer");
+      } else if (counsellors.length === 0) {
+        // No counsellor record for this college — fall back to whoever
+        // actually filed the case, so this never dead-ends with nothing to
+        // send to.
+        window.open(gmailComposeHref(detail.authorEmail, subject), "_blank", "noopener,noreferrer");
+      }
+      // More than one match: left for the picker below to resolve — the
+      // admin selects one, which opens the compose window itself.
+    } catch {
+      setEmailError("Couldn't look up this college's counsellors. Please try again.");
+    } finally {
+      setLoadingCounsellors(false);
+    }
+  }
+
+  function handleSendToSelected() {
+    if (!detail || !emailRecipientUid) return;
+    const recipient = collegeCounsellors.find((c) => c.uid === emailRecipientUid);
+    if (!recipient) return;
+    const subject = `Case Resolved — ${detail.studentEmail} — ${formatDateTimeDMY(detail.createdAt)}`;
+    window.open(gmailComposeHref(recipient.email, subject), "_blank", "noopener,noreferrer");
   }
 
   async function handleDelay() {
@@ -142,7 +210,15 @@ export function SeriousCasesSection() {
       </div>
 
       {detail && (
-        <Modal title={`${detail.isEmergency ? "Crisis SOS" : "Flagged session"} — ${detail.studentEmail}`} onClose={() => setDetailId(null)}>
+        <Modal
+          title={`${detail.isEmergency ? "Crisis SOS" : "Flagged session"} — ${detail.studentEmail}`}
+          onClose={() => {
+            setDetailId(null);
+            setCollegeCounsellors([]);
+            setEmailRecipientUid("");
+            setEmailError("");
+          }}
+        >
           <dl className="serious-cases__dl">
             <dt>Campus</dt>
             <dd>{campusName(detail.campusId)}</dd>
@@ -192,6 +268,28 @@ export function SeriousCasesSection() {
                   — {detail.actionTaken.byEmail}, {formatDateTimeDMY(detail.actionTaken.at)}
                 </span>
               </p>
+              <Button type="button" variant="outlined" disabled={loadingCounsellors} onClick={handleEmailResolved}>
+                {loadingCounsellors ? "Looking up counsellors…" : "Email"}
+              </Button>
+              {collegeCounsellors.length > 1 && (
+                <div className="serious-cases__email-picker">
+                  <label htmlFor="serious-case-email-recipient">This college has more than one counsellor — pick one:</label>
+                  <Select id="serious-case-email-recipient" value={emailRecipientUid} onChange={setEmailRecipientUid}>
+                    <option value="" disabled>
+                      Select a counsellor…
+                    </option>
+                    {collegeCounsellors.map((c) => (
+                      <option key={c.uid} value={c.uid}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </Select>
+                  <Button type="button" disabled={!emailRecipientUid} onClick={handleSendToSelected}>
+                    Open email to this counsellor
+                  </Button>
+                </div>
+              )}
+              {emailError && <p className="serious-cases__error">{emailError}</p>}
             </div>
           )}
 

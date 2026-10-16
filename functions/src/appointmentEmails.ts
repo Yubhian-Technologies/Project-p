@@ -109,6 +109,9 @@ interface BookingEmailContext {
   /** The session's current scheduled time — absent for a cancellation of a
       booking that never made it to "scheduled" in the first place. */
   scheduledAt?: number;
+  /** Set by the counsellor/head when they confirm the time — absent until
+      then, and for any booking scheduled before this existed. */
+  venue?: string;
   cancelledBy?: "user" | "counsellor";
   cancellationReason?: string;
 }
@@ -120,6 +123,8 @@ export function buildAppointmentEmails(
   const date = formatDate(d.scheduledAt);
   const time = formatTime(d.scheduledAt);
 
+  const venueRow: [string, string][] = d.venue ? [["Venue", d.venue]] : [];
+
   const user = renderEmail({
     subject: `Your session is confirmed — ${date}, ${time}`,
     heading: "Your session is confirmed",
@@ -128,6 +133,7 @@ export function buildAppointmentEmails(
       ["Counsellor", d.counsellorName],
       ["Date", date],
       ["Time", time],
+      ...venueRow,
       ["Counsellor WhatsApp", d.counsellorWhatsapp || "Not provided — please contact us through the app"],
     ],
   });
@@ -140,6 +146,7 @@ export function buildAppointmentEmails(
       ["Student", d.userName],
       ["Date", date],
       ["Time", time],
+      ...venueRow,
       ["Student WhatsApp", d.userWhatsapp || "Not provided"],
     ],
   });
@@ -160,6 +167,7 @@ export function buildRescheduledEmails(
     typeof previousScheduledAt === "number"
       ? [["Previously", `${formatDate(previousScheduledAt)}, ${formatTime(previousScheduledAt)}`]]
       : [];
+  const venueRow: [string, string][] = d.venue ? [["Venue", d.venue]] : [];
 
   const user = renderEmail({
     subject: `Your session time has changed — ${date}, ${time}`,
@@ -170,6 +178,7 @@ export function buildRescheduledEmails(
       ...previousRow,
       ["New date", date],
       ["New time", time],
+      ...venueRow,
       ["Counsellor WhatsApp", d.counsellorWhatsapp || "Not provided — please contact us through the app"],
     ],
   });
@@ -183,6 +192,7 @@ export function buildRescheduledEmails(
       ...previousRow,
       ["New date", date],
       ["New time", time],
+      ...venueRow,
       ["Student WhatsApp", d.userWhatsapp || "Not provided"],
     ],
   });
@@ -331,6 +341,7 @@ async function loadEmailContext(bookingId: string): Promise<BookingEmailContext 
     counsellorEmail,
     counsellorWhatsapp: (counsellor.whatsappNumber as string) || "",
     scheduledAt: typeof booking.scheduledAt === "number" ? (booking.scheduledAt as number) : undefined,
+    venue: (booking.venue as string | undefined) || undefined,
     cancelledBy: booking.cancelledBy as "user" | "counsellor" | undefined,
     cancellationReason: booking.cancellationReason as string | undefined,
   };

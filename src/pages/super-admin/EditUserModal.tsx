@@ -5,6 +5,7 @@ import { Button } from "../../components/common/Button";
 import { Select } from "../../components/common/Select";
 import { listColleges } from "../../services/firebase/colleges";
 import { updateUserAccount } from "../../services/firebase/firestore";
+import { deleteCampusLogin, functionsErrorMessage } from "../../services/firebase/functions";
 import type { Campus } from "../../types/campus";
 import type { College } from "../../types/college";
 import type { UserProfile } from "../../types/user";
@@ -15,9 +16,13 @@ interface EditUserModalProps {
   campuses: Campus[];
   onClose: () => void;
   onSaved: () => Promise<void>;
+  /** Deleting a user login reuses deleteCampusLogin — despite the name, it
+      deletes any non-admin account (see functions/src/index.ts), Auth
+      record included, not just counsellor/head logins. */
+  onDeleted: () => Promise<void>;
 }
 
-export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModalProps) {
+export function EditUserModal({ user, campuses, onClose, onSaved, onDeleted }: EditUserModalProps) {
   const [displayName, setDisplayName] = useState(user.displayName ?? "");
   const [studentOrProfessional, setStudentOrProfessional] = useState<"student" | "professional">(
     user.studentOrProfessional ?? "student",
@@ -33,6 +38,9 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
   const [colleges, setColleges] = useState<College[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!campusId) {
@@ -69,6 +77,19 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
     } catch {
       setError("Could not update this account. Please try again.");
       setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleteError(null);
+    setDeleting(true);
+    try {
+      await deleteCampusLogin(user.uid);
+      await onDeleted();
+      onClose();
+    } catch (err) {
+      setDeleteError(functionsErrorMessage(err, "Could not delete this account. Please try again."));
+      setDeleting(false);
     }
   }
 
@@ -198,6 +219,30 @@ export function EditUserModal({ user, campuses, onClose, onSaved }: EditUserModa
           {saving ? "Saving…" : "Save changes"}
         </Button>
       </form>
+
+      <div className="campus-logins-detail__danger-zone">
+        {!confirmingDelete ? (
+          <Button type="button" variant="outlined" onClick={() => setConfirmingDelete(true)}>
+            Delete this login
+          </Button>
+        ) : (
+          <div className="campus-logins-detail__field">
+            <p className="campus-logins-detail__error">
+              This permanently deletes {user.email}'s login and account — they will no longer be able to sign in.
+              This can't be undone.
+            </p>
+            <div className="campus-logins-detail__edit-form" style={{ flexDirection: "row", gap: "10px" }}>
+              <Button type="button" disabled={deleting} onClick={handleDelete}>
+                {deleting ? "Deleting…" : "Yes, delete this login"}
+              </Button>
+              <Button type="button" variant="outlined" disabled={deleting} onClick={() => setConfirmingDelete(false)}>
+                Cancel
+              </Button>
+            </div>
+            {deleteError && <p className="campus-logins-detail__error">{deleteError}</p>}
+          </div>
+        )}
+      </div>
     </Modal>
   );
 }

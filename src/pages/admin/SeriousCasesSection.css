@@ -178,6 +178,18 @@
   resize: vertical;
 }
 
+.serious-cases__email-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.serious-cases__email-picker label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #6B7280;
+}
+
 .serious-cases__error {
   margin: 0;
   font-size: 13px;

@@ -183,10 +183,10 @@ interface RequestDetailModalProps {
   compensationCandidates: UserProfile[];
   campusHead: UserProfile | null;
   viewerRole: "head" | "counsellor";
-  onAcceptSlot: (chosenAt: number) => Promise<void>;
+  onAcceptSlot: (chosenAt: number, venue?: string) => Promise<void>;
   onAcceptEmergency: () => Promise<void>;
   onReject: () => Promise<void>;
-  onSchedule: (scheduledAt: number) => Promise<void>;
+  onSchedule: (scheduledAt: number, venue?: string) => Promise<void>;
   onRequestReschedule: (proposedAt: number, reason?: string) => Promise<void>;
   onAcceptReschedule: () => Promise<void>;
   onCancel: (reason: string) => Promise<void>;
@@ -252,6 +252,7 @@ export function RequestDetailModal({
   const [timeValue, setTimeValue] = useState(
     booking.scheduledAt ? toDateTimeLocalValue(booking.scheduledAt) : "",
   );
+  const [venueDraft, setVenueDraft] = useState(booking.venue ?? "");
   const [intake, setIntake] = useState<BookingIntake | null>(null);
   const [showBioData, setShowBioData] = useState(false);
   const [showReschedulePropose, setShowReschedulePropose] = useState(false);
@@ -408,7 +409,7 @@ export function RequestDetailModal({
 
   function handleConfirmSchedule() {
     if (!timeValue) return;
-    runAction(() => onSchedule(new Date(timeValue).getTime()), () => setShowProposeTime(false));
+    runAction(() => onSchedule(new Date(timeValue).getTime(), venueDraft.trim() || undefined), () => setShowProposeTime(false));
   }
 
   function handleProposeReschedule() {
@@ -930,18 +931,27 @@ export function RequestDetailModal({
           {booking.proposedSlots && (
             <>
               <p>Proposed times:</p>
+              <label htmlFor={`venue-${booking.id}`}>Venue</label>
+              <input
+                id={`venue-${booking.id}`}
+                type="text"
+                required
+                placeholder="e.g. Wellness Centre, A-Block Ground Floor / Google Meet link"
+                value={venueDraft}
+                onChange={(e) => setVenueDraft(e.target.value)}
+              />
               <div className="request-card__actions">
                 <Button
                   type="button"
-                  disabled={actionBusy || isPastChoice(toDateTimeLocalValue(booking.proposedSlots[0]))}
-                  onClick={() => runAction(() => onAcceptSlot(booking.proposedSlots![0]), () => {})}
+                  disabled={actionBusy || !venueDraft.trim() || isPastChoice(toDateTimeLocalValue(booking.proposedSlots[0]))}
+                  onClick={() => runAction(() => onAcceptSlot(booking.proposedSlots![0], venueDraft.trim()), () => {})}
                 >
                   Accept: {formatDateTimeDMY(booking.proposedSlots[0])}
                 </Button>
                 <Button
                   type="button"
-                  disabled={actionBusy || isPastChoice(toDateTimeLocalValue(booking.proposedSlots[1]))}
-                  onClick={() => runAction(() => onAcceptSlot(booking.proposedSlots![1]), () => {})}
+                  disabled={actionBusy || !venueDraft.trim() || isPastChoice(toDateTimeLocalValue(booking.proposedSlots[1]))}
+                  onClick={() => runAction(() => onAcceptSlot(booking.proposedSlots![1], venueDraft.trim()), () => {})}
                 >
                   Accept: {formatDateTimeDMY(booking.proposedSlots[1])}
                 </Button>
@@ -956,8 +966,21 @@ export function RequestDetailModal({
               {isPastChoice(timeValue) && (
                 <p className="request-card__time-warning">This time has already passed. Pick a time later than now.</p>
               )}
+              {!booking.proposedSlots && (
+                <>
+                  <label htmlFor={`venue-${booking.id}`}>Venue</label>
+                  <input
+                    id={`venue-${booking.id}`}
+                    type="text"
+                    required
+                    placeholder="e.g. Wellness Centre, A-Block Ground Floor / Google Meet link"
+                    value={venueDraft}
+                    onChange={(e) => setVenueDraft(e.target.value)}
+                  />
+                </>
+              )}
               <div className="request-card__actions">
-                <Button type="button" disabled={isPastOrEmpty(timeValue)} onClick={handleConfirmSchedule}>
+                <Button type="button" disabled={isPastOrEmpty(timeValue) || !venueDraft.trim()} onClick={handleConfirmSchedule}>
                   Confirm
                 </Button>
                 <Button type="button" variant="outlined" onClick={() => setShowProposeTime(false)}>
@@ -1015,6 +1038,15 @@ export function RequestDetailModal({
           {isPastChoice(timeValue) && (
             <p className="request-card__time-warning">This time has already passed. Pick a time later than now.</p>
           )}
+          <label htmlFor={`venue-transfer-${booking.id}`}>Venue</label>
+          <input
+            id={`venue-transfer-${booking.id}`}
+            type="text"
+            required
+            placeholder="e.g. Wellness Centre, A-Block Ground Floor / Google Meet link"
+            value={venueDraft}
+            onChange={(e) => setVenueDraft(e.target.value)}
+          />
 
           {showCancelReason ? (
             <div className="request-card__cancel-reason">
@@ -1037,7 +1069,7 @@ export function RequestDetailModal({
             </div>
           ) : (
             <div className="request-card__actions">
-              <Button type="button" disabled={actionBusy || isPastOrEmpty(timeValue)} onClick={handleConfirmSchedule}>
+              <Button type="button" disabled={actionBusy || isPastOrEmpty(timeValue) || !venueDraft.trim()} onClick={handleConfirmSchedule}>
                 {actionBusy ? "Scheduling…" : "Schedule"}
               </Button>
               <Button type="button" variant="outlined" onClick={() => setShowCancelReason(true)}>
@@ -1061,7 +1093,16 @@ export function RequestDetailModal({
           {isPastChoice(timeValue) && (
             <p className="request-card__time-warning">This time has already passed. Pick a time later than now.</p>
           )}
-          <Button type="button" disabled={isPastOrEmpty(timeValue)} onClick={handleConfirmSchedule}>
+          <label htmlFor={`venue-${booking.id}`}>Venue</label>
+          <input
+            id={`venue-${booking.id}`}
+            type="text"
+            required
+            placeholder="e.g. Wellness Centre, A-Block Ground Floor / Google Meet link"
+            value={venueDraft}
+            onChange={(e) => setVenueDraft(e.target.value)}
+          />
+          <Button type="button" disabled={isPastOrEmpty(timeValue) || !venueDraft.trim()} onClick={handleConfirmSchedule}>
             Save
           </Button>
         </div>
@@ -1131,6 +1172,7 @@ export function RequestDetailModal({
             Scheduled for {booking.scheduledAt ? formatDateTimeDMY(booking.scheduledAt) : "—"} (
             {SESSION_DURATION_LABEL})
           </p>
+          {booking.venue && <p className="request-card__scheduled-time">Venue: {booking.venue}</p>}
 
           {booking.rescheduleProposal?.proposedBy === "counsellor" && (
             <p className="request-card__summary-hint">Reschedule proposed — awaiting student response.</p>
@@ -1414,7 +1456,13 @@ export function RequestDetailModal({
       {booking.status === "completed" && booking.outcome !== "missed" && (
         <div className="request-card__completed">
           <p>{booking.outcome === "followup" ? "Follow-up session scheduled." : "Session complete."}</p>
-          {seriousCase && <NotifyAdminBlock seriousCase={seriousCase} />}
+          {onNotifySerious && (
+            <NotifyAdminBlock
+              seriousCase={seriousCase}
+              buttonLabel="Flag as Serious & Notify"
+              onNotify={onNotifySerious}
+            />
+          )}
           {intake?.summary && (
             <Button type="button" variant="outlined" onClick={() => setSummaryFocusMode(true)}>
               View Summary

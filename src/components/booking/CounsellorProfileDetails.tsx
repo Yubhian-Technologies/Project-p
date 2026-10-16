@@ -56,8 +56,6 @@ export function CounsellorProfileDetails({
   const avgRating =
     reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
 
-  const hasConsultation = profile.sessionType || (profile.languages?.length ?? 0) > 0;
-
   return (
     <div className={`counsellor-profile ${inModal ? "counsellor-profile--modal" : "counsellor-profile--standalone"}`}>
       <div className="counsellor-profile__main">
@@ -151,31 +149,35 @@ export function CounsellorProfileDetails({
             <span className="counsellor-profile__verified">✓ Certified Counsellor</span>
           </section>
 
-          {hasConsultation && (
-            <section className="counsellor-profile__section">
-              <h3 className="counsellor-profile__section-title">Consultation</h3>
+          <section className="counsellor-profile__section">
+            <h3 className="counsellor-profile__section-title">Consultation</h3>
 
-              {profile.sessionType && (
-                <div className="counsellor-profile__field">
-                  <span className="counsellor-profile__field-label">Session type</span>
-                  <p className="counsellor-profile__field-value">{SESSION_TYPE_LABEL[profile.sessionType]}</p>
-                </div>
-              )}
+            {profile.sessionType && (
+              <div className="counsellor-profile__field">
+                <span className="counsellor-profile__field-label">Session type</span>
+                <p className="counsellor-profile__field-value">{SESSION_TYPE_LABEL[profile.sessionType]}</p>
+              </div>
+            )}
 
-              {profile.languages && profile.languages.length > 0 && (
-                <div className="counsellor-profile__field">
-                  <span className="counsellor-profile__field-label">Languages</span>
-                  <div className="counsellor-profile__chips">
-                    {profile.languages.map((lang) => (
-                      <span key={lang} className="counsellor-profile__chip">
-                        {lang}
-                      </span>
-                    ))}
-                  </div>
+            <div className="counsellor-profile__field">
+              <span className="counsellor-profile__field-label">Available Time</span>
+              <p className="counsellor-profile__field-value">Monday to Saturday</p>
+              <p className="counsellor-profile__field-value">9:00 AM – 5:00 PM</p>
+            </div>
+
+            {profile.languages && profile.languages.length > 0 && (
+              <div className="counsellor-profile__field">
+                <span className="counsellor-profile__field-label">Languages</span>
+                <div className="counsellor-profile__chips">
+                  {profile.languages.map((lang) => (
+                    <span key={lang} className="counsellor-profile__chip">
+                      {lang}
+                    </span>
+                  ))}
                 </div>
-              )}
-            </section>
-          )}
+              </div>
+            )}
+          </section>
         </div>
       </div>
 

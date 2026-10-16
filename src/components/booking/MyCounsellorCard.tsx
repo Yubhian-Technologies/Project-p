@@ -56,7 +56,6 @@ export function MyCounsellorCard({
   }, [profile.uid]);
 
   const avgRating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
-  const hasConsultation = profile.sessionType || (profile.languages?.length ?? 0) > 0;
   const hasQualifications =
     profile.educationDegree ||
     profile.educationInstitution ||
@@ -171,25 +170,28 @@ export function MyCounsellorCard({
           </section>
         )}
 
-        {hasConsultation && (
-          <section className="my-counsellor__section">
-            <h3 className="my-counsellor__section-title">Consultation</h3>
-            <div className="my-counsellor__consultation-grid">
-              {profile.sessionType && (
-                <div className="my-counsellor__field">
-                  <span className="my-counsellor__field-label">Session type</span>
-                  <p className="my-counsellor__field-value">{SESSION_TYPE_LABEL[profile.sessionType]}</p>
-                </div>
-              )}
-              {profile.languages && profile.languages.length > 0 && (
-                <div className="my-counsellor__field">
-                  <span className="my-counsellor__field-label">Languages</span>
-                  <p className="my-counsellor__field-value">{profile.languages.join(", ")}</p>
-                </div>
-              )}
+        <section className="my-counsellor__section">
+          <h3 className="my-counsellor__section-title">Consultation</h3>
+          <div className="my-counsellor__consultation-grid">
+            {profile.sessionType && (
+              <div className="my-counsellor__field">
+                <span className="my-counsellor__field-label">Session type</span>
+                <p className="my-counsellor__field-value">{SESSION_TYPE_LABEL[profile.sessionType]}</p>
+              </div>
+            )}
+            <div className="my-counsellor__field">
+              <span className="my-counsellor__field-label">Available Time</span>
+              <p className="my-counsellor__field-value">Monday to Saturday</p>
+              <p className="my-counsellor__field-value">9:00 AM – 5:00 PM</p>
             </div>
-          </section>
-        )}
+            {profile.languages && profile.languages.length > 0 && (
+              <div className="my-counsellor__field">
+                <span className="my-counsellor__field-label">Languages</span>
+                <p className="my-counsellor__field-value">{profile.languages.join(", ")}</p>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );

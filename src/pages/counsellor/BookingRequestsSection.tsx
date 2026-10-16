@@ -265,12 +265,23 @@ export function BookingRequestsSection({
     );
   }
 
+  // A Crisis SOS, once accepted, is never auto-aged out of Upcoming into
+  // Missed Sessions the way an overdue scheduled booking is — it stays
+  // visible and actionable here for as long as it takes, until the
+  // counsellor/head who accepted it closes it out themselves (the same
+  // "Close & Complete Session" action that's always been available for it,
+  // just now easy to find instead of silently falling into Missed Sessions
+  // after the 2h review-grace window).
+  const isOpenCrisisSos = (b: Booking) => b.status === "accepted" && b.isEmergency === true;
   const newRequests = bookings.filter((b) => NEW_STATUSES.includes(b.status));
-  const upcoming = bookings.filter((b) => UPCOMING_STATUSES.includes(b.status) && !isSessionEndedPending(b));
+  const upcoming = bookings.filter(
+    (b) => UPCOMING_STATUSES.includes(b.status) && !isSessionEndedPending(b) && !isOpenCrisisSos(b),
+  );
+  const upcomingCrisisSos = bookings.filter(isOpenCrisisSos);
   const completed = bookings.filter((b) => COMPLETED_STATUSES.includes(b.status) && b.outcome !== "missed");
   const cancelled = bookings.filter((b) => CANCELLED_STATUSES.includes(b.status));
   const missed = bookings.filter(
-    (b) => (b.status === "completed" && b.outcome === "missed") || isSessionEndedPending(b),
+    (b) => (b.status === "completed" && b.outcome === "missed") || (isSessionEndedPending(b) && !isOpenCrisisSos(b)),
   );
   const upcomingFollowUps = upcoming.filter((b) => b.followUpOfBookingId);
   const upcomingNewSessions = upcoming.filter((b) => !b.followUpOfBookingId);
@@ -304,7 +315,7 @@ export function BookingRequestsSection({
 
   const tabCounts: Record<Tab, number> = {
     new: newRequests.length,
-    upcoming: upcoming.length,
+    upcoming: upcoming.length + upcomingCrisisSos.length,
     completed: completed.length,
     cancelled: cancelled.length,
     missed: missed.length,
@@ -358,6 +369,16 @@ export function BookingRequestsSection({
               <p>No new sessions.</p>
             ) : (
               upcomingNewSessions.map((b) => (
+                <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} photoURL={userPhotos.get(b.userId)} onClick={() => setSelectedId(b.id)} />
+              ))
+            )}
+          </div>
+          <div className="booking-requests-section__group">
+            <h3 className="booking-requests-section__group-title">Crisis SOS</h3>
+            {upcomingCrisisSos.length === 0 ? (
+              <p>No open Crisis SOS cases.</p>
+            ) : (
+              upcomingCrisisSos.map((b) => (
                 <RequestCard key={b.id} booking={b} displayName={userNames.get(b.userId)} photoURL={userPhotos.get(b.userId)} onClick={() => setSelectedId(b.id)} />
               ))
             )}
@@ -555,8 +576,8 @@ export function BookingRequestsSection({
             await suggestSsiTest(selectedBooking);
             await refresh();
           }}
-          onAcceptSlot={async (chosenAt) => {
-            await acceptProposedSlot(selectedBooking, chosenAt);
+          onAcceptSlot={async (chosenAt, venue) => {
+            await acceptProposedSlot(selectedBooking, chosenAt, venue);
             await refresh();
           }}
           onAcceptEmergency={async () => {
@@ -568,8 +589,8 @@ export function BookingRequestsSection({
             await rejectBooking(selectedBooking);
             await refresh();
           }}
-          onSchedule={async (scheduledAt) => {
-            await scheduleBooking(selectedBooking, scheduledAt);
+          onSchedule={async (scheduledAt, venue) => {
+            await scheduleBooking(selectedBooking, scheduledAt, venue);
             await refresh();
           }}
           onRequestReschedule={async (proposedAt, reason) => {

@@ -61,6 +61,10 @@ export interface Booking {
   counsellorEmail: string;
   status: BookingStatus;
   scheduledAt?: number;
+  /** Where to meet, set by the counsellor/head when they confirm the
+      session's time (accepting a proposed slot or scheduling directly) —
+      shown to the student in-app and in the confirmation email. */
+  venue?: string;
   durationMinutes: number;
   outcome?: BookingOutcome;
   followUpOfBookingId?: string;
