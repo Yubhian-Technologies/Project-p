@@ -693,17 +693,19 @@ service cloud.firestore {
         (myRole() == 'admin' && (
           !('adminAccess' in myProfile()) ||
           myProfile().adminAccess.scope == 'global' ||
-          myProfile().adminAccess.designation in ['management', 'administration']
+          myProfile().adminAccess.designation in ['management', 'administration'] ||
+          adminCanAccessCollege(resource.data.get('campusId', null), resource.data.get('collegeId', null))
         ))
       );
 
-      // Only the specifically-targeted admin can act — never Management/
-      // Administration/global admins viewing a case that isn't theirs, which
-      // keeps the 24h SLA's accountability on exactly the person it's on.
+      // Only the targeted admin or the admin overseeing that specific college
+      // (or Super Admin) can act to resolve the case or log an explanation.
       allow update: if isSignedIn() && resource.data.status == 'open' && (
         (
           // Resolving: write-once, flips status, only these three keys.
-          request.auth.uid in resource.data.targetAdminUids &&
+          (request.auth.uid in resource.data.targetAdminUids ||
+           isRole('super-admin') ||
+           (myRole() == 'admin' && adminCanAccessCollege(resource.data.get('campusId', null), resource.data.get('collegeId', null)))) &&
           !('actionTaken' in resource.data) &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['actionTaken', 'status', 'updatedAt']) &&
           request.resource.data.status == 'resolved' &&
@@ -711,7 +713,9 @@ service cloud.firestore {
         ) || (
           // Logging why no action yet, during an overdue escalation — doesn't
           // resolve the case, just appends one entry to the history.
-          request.auth.uid in resource.data.targetAdminUids &&
+          (request.auth.uid in resource.data.targetAdminUids ||
+           isRole('super-admin') ||
+           (myRole() == 'admin' && adminCanAccessCollege(resource.data.get('campusId', null), resource.data.get('collegeId', null)))) &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['escalations', 'updatedAt']) &&
           request.resource.data.escalations.size() == resource.data.escalations.size() + 1
         )

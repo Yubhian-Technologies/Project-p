@@ -1,18 +1,25 @@
 .monthly-report-download {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
+  width: 100%;
 }
 
 .monthly-report-download__card {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  max-width: 640px;
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .monthly-report-download__kind-card {
-  max-width: 320px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.monthly-report-download__kind-card .monthly-report-download__field {
+  max-width: 360px;
 }
 
 .monthly-report-download__intro {
@@ -115,4 +122,15 @@
   .monthly-report-download__row {
     grid-template-columns: 1fr;
   }
+}
+
+.monthly-report-download__field:has(#mr-format),
+.monthly-report-download__field:has(#cr-format) {
+  max-width: 360px;
+}
+
+.monthly-report-download__card > .md-button,
+.monthly-report-download__card > button {
+  align-self: flex-start;
+  min-width: 220px;
 }

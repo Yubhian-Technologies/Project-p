@@ -97,7 +97,10 @@ export async function submitCounsellorMonthlyReport(
   // unlike the Head above, this IS scoped to just the submitter's own
   // college, since a Principal/VP has no standing visibility elsewhere.
   const collegeAdmins = admins.filter(
-    (a) => a.adminAccess?.designation === "principal" || a.adminAccess?.designation === "vice-principal",
+    (a) =>
+      a.adminAccess?.designation === "principal" ||
+      a.adminAccess?.designation === "vice-principal" ||
+      a.adminAccess?.designation === "administration",
   ).filter((a) => coversCollege(a, collegeId));
   const message = `${uploadedBy} submitted a monthly report: ${title} (${monthName} ${year}).`;
   await Promise.all(

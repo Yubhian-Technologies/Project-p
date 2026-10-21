@@ -64,16 +64,27 @@ export function SeriousCasesSection() {
   const campusName = (id: string) => campuses.find((c) => c.id === id)?.name ?? "Unknown campus";
   const collegeName = (id: string | null) => (id ? colleges.find((c) => c.id === id)?.name ?? "Unknown college" : "—");
 
-  const sorted = [...cases].sort((a, b) => {
-    const overdueA = a.status === "open" && a.escalationCount > 0;
-    const overdueB = b.status === "open" && b.escalationCount > 0;
-    if (overdueA !== overdueB) return overdueA ? -1 : 1;
-    if ((a.status === "open") !== (b.status === "open")) return a.status === "open" ? -1 : 1;
-    return b.createdAt - a.createdAt;
-  });
+  const sorted = [...cases]
+    .filter((c) => Boolean(c.collegeId))
+    .sort((a, b) => {
+      const overdueA = a.status === "open" && a.escalationCount > 0;
+      const overdueB = b.status === "open" && b.escalationCount > 0;
+      if (overdueA !== overdueB) return overdueA ? -1 : 1;
+      if ((a.status === "open") !== (b.status === "open")) return a.status === "open" ? -1 : 1;
+      return b.createdAt - a.createdAt;
+    });
 
   const detail = cases.find((c) => c.id === detailId) ?? null;
-  const isTargeted = !!detail && !!profile && detail.targetAdminUids.includes(profile.uid);
+  const isTargeted =
+    !!detail &&
+    !!profile &&
+    (detail.targetAdminUids.includes(profile.uid) ||
+      (profile.role === "admin" &&
+        Boolean(detail.collegeId) &&
+        (profile.adminAccess?.collegeIds ?? []).includes(detail.collegeId!)) ||
+      profile.role === "super-admin" ||
+      profile.adminAccess?.designation === "administration" ||
+      profile.adminAccess?.designation === "management");
 
   async function handleResolve() {
     if (!detail || !profile || !actionText.trim()) return;

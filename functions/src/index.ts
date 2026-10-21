@@ -1583,7 +1583,10 @@ export const escalateSeriousCases = onSchedule("every 15 minutes", async () => {
   const now = Date.now();
   const openSnap = await db.collection("seriousCases").where("status", "==", "open").get();
 
-  const overdue = openSnap.docs.filter((d) => now - (d.data().lastEscalatedAt as number) >= SERIOUS_CASE_ESCALATION_MS);
+  const overdue = openSnap.docs.filter((d) => {
+    const data = d.data();
+    return Boolean(data.collegeId) && now - (data.lastEscalatedAt as number) >= SERIOUS_CASE_ESCALATION_MS;
+  });
   if (overdue.length === 0) return;
 
   // Same oversight treatment as createSeriousCase: Management/Administration

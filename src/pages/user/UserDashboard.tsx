@@ -21,6 +21,9 @@ import { MoodTrackerCard } from "../../components/common/MoodTrackerCard";
 import { WellnessScoreBanner } from "../../components/common/WellnessScoreBanner";
 import { UserHomeActivityOverview } from "./UserHomeActivityOverview";
 import { VishnuWellnessMissionCard } from "../../components/common/VishnuWellnessMissionCard";
+import { CampusRankingsCard } from "../../components/common/CampusRankingsCard";
+import { CampusRankingsSection } from "./CampusRankingsSection";
+import { TrophyIcon } from "../../components/common/icons";
 import type { Notification } from "../../types/notification";
 import "../../styles/bento-grid.css";
 
@@ -82,6 +85,11 @@ const SECTIONS = [
     ),
   },
   {
+    id: "campus-rankings",
+    label: "Campus Rankings",
+    icon: <TrophyIcon />,
+  },
+  {
     id: "crisis-sos",
     label: "Crisis SOS",
     variant: "urgent" as const,
@@ -128,6 +136,7 @@ export function UserDashboard() {
     games: "Wellness Exercise",
     journal: "My Diary",
     community: "Wellness Community",
+    "campus-rankings": "Campus Rankings",
     "crisis-sos": "Crisis SOS",
   };
   const title = activeSection === "overview" ? "" : (titleBySection[activeSection] ?? "");
@@ -181,6 +190,9 @@ export function UserDashboard() {
       {activeSection === "games" && <GamesSection ref={gamesRef} onActiveChange={setGameOpen} />}
       {activeSection === "journal" && <JournalSection />}
       {activeSection === "community" && <CommunitySection />}
+      {activeSection === "campus-rankings" && (
+        <CampusRankingsSection onSelectSection={setActiveSection} />
+      )}
       {activeSection === "crisis-sos" && <CrisisSosSection />}
       {activeSection === "overview" && (
         <div className="bento-grid">
@@ -205,6 +217,7 @@ export function UserDashboard() {
           <FlashQACard />
           <MoodTrackerCard />
 
+          <CampusRankingsCard onOpenRankings={() => setActiveSection("campus-rankings")} />
           <GamesSummaryCard onPlay={() => setActiveSection("games")} />
           <UpcomingEventsCard onViewEvents={() => setActiveSection("events")} />
           <JournalSummaryCard onOpenDiary={() => setActiveSection("journal")} />

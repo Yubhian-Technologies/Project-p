@@ -91,14 +91,17 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
   const [showReports, setShowReports] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
 
-  const collegeIds = profile?.adminAccess?.collegeIds ?? [];
-  // A Principal/VP is always scoped to exactly one campus in practice (one
-  // college, one campus) — the single value here is enough for every real
-  // account. Firestore can only validate these list queries against the
-  // Admin branch of the events/ssi_college_results read rules (which reads
-  // resource.data.campusId) when the query itself filters on campusId too —
-  // omitting it is what was throwing "Missing or insufficient permissions".
-  const campusId = profile?.adminAccess?.campusIds?.[0];
+  const collegeIds =
+    profile?.adminAccess?.collegeIds?.length
+      ? profile.adminAccess.collegeIds
+      : profile?.collegeId
+        ? [profile.collegeId]
+        : [];
+  // A college-restricted Admin (Principal/VP/Administration) is scoped to
+  // their assigned campus and college(s). Firestore can only validate list
+  // queries against the Admin branch of the events/ssi_college_results read
+  // rules when the query itself filters on campusId too.
+  const campusId = profile?.adminAccess?.campusIds?.[0] || profile?.campusId;
   const grantedSections = profile?.adminAccess?.sections;
   const seesSeriousCases = !grantedSections || grantedSections.includes("serious-cases");
   const sees = (id: string) => !grantedSections || grantedSections.includes(id as (typeof grantedSections)[number]);
@@ -198,7 +201,7 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
   const upcomingEvents = events
     .filter((e) => e.eventDate >= nowMs && e.eventDate <= nowMs + 30 * DAY_MS)
     .sort((a, b) => a.eventDate - b.eventDate);
-  const severeSsi = ssiResults.filter((r) => r.severity === "severe").length;
+  const pendingSevereSsi = ssiResults.filter((r) => r.severity === "severe" && !r.actionTaken).length;
   const openCases = seriousCases.filter((c) => c.status === "open").length;
 
   // ── Sessions held by this college's own counsellor(s)/head, this period ─
@@ -241,7 +244,16 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
   const attendanceByUid = new Map(attendanceToday.map((r) => [r.uid, r]));
   const checkedInCount = staffUids.filter((uid) => attendanceByUid.get(uid)?.checkInAt).length;
 
-  const greetingName = profile?.displayName || profile?.email || "Principal";
+  const designation = profile?.adminAccess?.designation;
+  const fallbackGreeting =
+    designation === "administration"
+      ? "Administrator"
+      : designation === "vice-principal"
+        ? "Vice-Principal"
+        : designation === "management"
+          ? "Management"
+          : "Principal";
+  const greetingName = profile?.displayName || profile?.email || fallbackGreeting;
 
   interface KpiTile {
     id: string;
@@ -269,9 +281,9 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
       id: "ssi-analytics",
       icon: AlertTriangleIcon,
       label: "SSI Analytics",
-      value: loading ? "…" : String(severeSsi),
-      note: "severe check-ins",
-      urgent: severeSsi > 0,
+      value: loading ? "…" : String(pendingSevereSsi),
+      note: pendingSevereSsi === 0 ? "all severe addressed" : "severe awaiting action",
+      urgent: pendingSevereSsi > 0,
       onClick: () => onSelectSection("ssi-analytics"),
     });
   }

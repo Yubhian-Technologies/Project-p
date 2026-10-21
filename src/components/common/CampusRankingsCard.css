@@ -1,0 +1,136 @@
+/* ── Campus Rankings Bento Card ────────────────────────────── */
+.cr-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+}
+
+.cr-card__user-standing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fde68a;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.cr-card__standing-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cr-card__standing-icon {
+  font-size: 1.5rem;
+}
+
+.cr-card__standing-title {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #92400e;
+  margin: 0;
+}
+
+.cr-card__standing-sub {
+  font-size: 0.75rem;
+  color: #b45309;
+  margin: 0;
+}
+
+.cr-card__standing-rank {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #b45309;
+  background: #ffffff;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 6px rgba(180, 83, 9, 0.12);
+}
+
+.cr-card__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cr-card__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+  transition: background 0.15s ease;
+}
+
+.cr-card__item:hover {
+  background: #f1f5f9;
+}
+
+.cr-card__item.is-user {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+}
+
+.cr-card__item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cr-card__item-medal {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.cr-card__item-name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cr-card__item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.cr-card__item-score {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.cr-card__footer {
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.cr-card__view-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cr-card__view-btn:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+}

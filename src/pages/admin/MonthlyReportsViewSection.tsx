@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-  listMonthlyReports,
+  listMonthlyReportsByCampus,
   verifyMonthlyReport,
   type MonthlyReport,
 } from "../../services/firebase/monthlyReports";
@@ -94,10 +94,8 @@ export function MonthlyReportsViewSection() {
     if (!selectedCampusId) return;
     setLoading(true);
     try {
-      // Fetch all reports and filter client-side — avoids needing a
-      // Firestore composite index on (campusId, uploadedAt).
-      const all = await listMonthlyReports();
-      setReports(all.filter((r) => r.campusId === selectedCampusId));
+      const reports = await listMonthlyReportsByCampus(selectedCampusId);
+      setReports(reports);
     } finally {
       setLoading(false);
     }

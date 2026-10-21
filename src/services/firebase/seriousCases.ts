@@ -59,9 +59,37 @@ export function subscribeToAdminSeriousCases(
     access.scope === "global" ||
     access.designation === "management" ||
     access.designation === "administration";
-  const q = seesEverything
-    ? query(seriousCasesCollection, orderBy("createdAt", "desc"))
-    : query(seriousCasesCollection, where("targetAdminUids", "array-contains", admin.uid), orderBy("createdAt", "desc"));
+  const collegeIds = access?.collegeIds ?? [];
+
+  if (collegeIds.length > 0) {
+    const collegeQuery = query(seriousCasesCollection, where("collegeId", "in", collegeIds.slice(0, 30)));
+    const uidQuery = query(seriousCasesCollection, where("targetAdminUids", "array-contains", admin.uid));
+
+    let casesByCollege = new Map<string, SeriousCase>();
+    let casesByUid = new Map<string, SeriousCase>();
+
+    const emitCombined = () => {
+      const merged = new Map<string, SeriousCase>([...casesByCollege, ...casesByUid]);
+      const list = Array.from(merged.values()).sort((a, b) => b.createdAt - a.createdAt);
+      onChange(list);
+    };
+
+    const unsubCollege = onSnapshot(collegeQuery, (snap) => {
+      casesByCollege = new Map(snap.docs.map((d) => [d.id, toSeriousCase(d.id, d.data())]));
+      emitCombined();
+    });
+    const unsubUid = onSnapshot(uidQuery, (snap) => {
+      casesByUid = new Map(snap.docs.map((d) => [d.id, toSeriousCase(d.id, d.data())]));
+      emitCombined();
+    });
+
+    return () => {
+      unsubCollege();
+      unsubUid();
+    };
+  }
+
+  const q = query(seriousCasesCollection, where("targetAdminUids", "array-contains", admin.uid), orderBy("createdAt", "desc"));
   return onSnapshot(q, (snap) => onChange(snap.docs.map((d) => toSeriousCase(d.id, d.data()))));
 }
 

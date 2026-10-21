@@ -12,6 +12,7 @@ import { MonthlyReportsViewSection } from "./MonthlyReportsViewSection";
 import { CounsellorWorksheetSection } from "./CounsellorWorksheetSection";
 import { AdminHomeActivityOverview } from "./AdminHomeActivityOverview";
 import { PrincipalHomeOverview } from "./PrincipalHomeOverview";
+import { ManagementHomeOverview } from "./ManagementHomeOverview";
 import "../../styles/bento-grid.css";
 import "./AdminDashboard.css";
 
@@ -118,14 +119,17 @@ export function AdminDashboard() {
     profile.adminAccess.designation === "management" ||
     profile.adminAccess.designation === "administration";
   // Consolidated Reports is a campus-wide roll-up filed once by a campus's
-  // Head and can span several colleges under that campus — a Principal/VP is
-  // restricted to just their own college, so this is hard-excluded for them
-  // no matter what a Super Admin checked in "sections" (same enforcement
-  // style as Campus Management above). They already get their own college's
-  // activity through Counsellor Worksheet instead.
-  const isPrincipalOrVp =
+  // Head and can span several colleges under that campus — a college-scoped
+  // admin (e.g. Principal/VP or Administration assigned to a college) is
+  // restricted to their own college(s), so this is excluded for them (they
+  // get their college's activity through Counsellor Worksheet and their
+  // dedicated college overview).
+  const isCollegeScoped =
     profile?.role === "admin" &&
-    (profile.adminAccess?.designation === "principal" || profile.adminAccess?.designation === "vice-principal");
+    ((profile.adminAccess?.collegeIds?.length ?? 0) > 0 ||
+      profile.adminAccess?.designation === "principal" ||
+      profile.adminAccess?.designation === "vice-principal" ||
+      (profile.adminAccess?.designation === "administration" && profile.adminAccess?.scope === "campuses"));
   const visibleSections = (
     allowedSections
       ? SECTIONS.filter(
@@ -135,7 +139,7 @@ export function AdminDashboard() {
             (s.id === "serious-cases" && seesSeriousCasesRegardless),
         )
       : SECTIONS
-  ).filter((s) => !(isCampusRestricted && s.id === "campuses") && !(isPrincipalOrVp && s.id === "monthly-reports"));
+  ).filter((s) => !(isCampusRestricted && s.id === "campuses") && !(isCollegeScoped && s.id === "monthly-reports"));
 
   return (
     <AppShell
@@ -160,16 +164,20 @@ export function AdminDashboard() {
         <SeriousCasesSection />
       ) : activeSection === "counsellor-worksheet" ? (
         <CounsellorWorksheetSection />
-      ) : activeSection === "monthly-reports" && !isPrincipalOrVp ? (
+      ) : activeSection === "monthly-reports" && !isCollegeScoped ? (
         <MonthlyReportsViewSection />
       ) : (
         <div className="bento-grid">
-          <h2 className="admin-dashboard__welcome">
-            Welcome, {profile?.displayName || profile?.email || "Administrator"}
-          </h2>
+          {!isCollegeScoped && (
+            <h2 className="admin-dashboard__welcome">
+              Welcome, {profile?.displayName || profile?.email || "Administrator"}
+            </h2>
+          )}
 
-          {isPrincipalOrVp ? (
+          {isCollegeScoped ? (
             <PrincipalHomeOverview onSelectSection={setActiveSection} />
+          ) : profile?.adminAccess?.designation === "management" || !profile?.adminAccess?.designation ? (
+            <ManagementHomeOverview onSelectSection={setActiveSection} />
           ) : (
             <AdminHomeActivityOverview onSelectSection={setActiveSection} />
           )}

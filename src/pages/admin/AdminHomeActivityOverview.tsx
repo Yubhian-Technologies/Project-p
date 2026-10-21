@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   listMonthlyReports,
+  listMonthlyReportsByCampus,
   type MonthlyReport,
 } from "../../services/firebase/monthlyReports";
 import { listCampuses } from "../../services/firebase/campuses";
@@ -44,8 +45,13 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
   async function loadData() {
     setLoading(true);
     try {
-      const [reports, campusList] = await Promise.all([listMonthlyReports(), listCampuses()]);
-      setMonthlyReports(scopedCampusIds ? reports.filter((r) => scopedCampusIds.includes(r.campusId)) : reports);
+      const [reports, campusList] = await Promise.all([
+        scopedCampusIds
+          ? Promise.all(scopedCampusIds.map((id) => listMonthlyReportsByCampus(id))).then((lists) => lists.flat())
+          : listMonthlyReports(),
+        listCampuses(),
+      ]);
+      setMonthlyReports(reports);
       setCampuses(scopedCampusIds ? campusList.filter((c) => scopedCampusIds.includes(c.id)) : campusList);
     } catch (err) {
       console.error("Failed to load admin home activity", err);
