@@ -132,6 +132,11 @@
   background: #FFEDD5;
 }
 
+.counsellor-profile__badge--on-leave {
+  color: #B45309;
+  background: #FEF3C7;
+}
+
 .counsellor-profile__field {
   width: 100%;
 }

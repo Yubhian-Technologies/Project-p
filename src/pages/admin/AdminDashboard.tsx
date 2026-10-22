@@ -14,6 +14,7 @@ import { AdminHomeActivityOverview } from "./AdminHomeActivityOverview";
 import { PrincipalHomeOverview } from "./PrincipalHomeOverview";
 import { ManagementHomeOverview } from "./ManagementHomeOverview";
 import { CampusRankingsSection } from "../user/CampusRankingsSection";
+import { PrincipalLeaveApprovalSection } from "../../components/leaves/PrincipalLeaveApprovalSection";
 import { TrophyIcon } from "../../components/common/icons";
 import "../../styles/bento-grid.css";
 import "./AdminDashboard.css";
@@ -84,6 +85,13 @@ const SECTIONS = [
     ),
   },
   {
+    id: "leave-approvals",
+    label: "Leave Approvals",
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+    ),
+  },
+  {
     id: "campus-rankings",
     label: "Campus Rankings",
     icon: <TrophyIcon />,
@@ -100,6 +108,7 @@ const TITLES: Record<string, string> = {
   "serious-cases": "Serious Cases",
   "counsellor-worksheet": "Counsellor Worksheet",
   "monthly-reports": "Consolidated Reports",
+  "leave-approvals": "Leave Approvals",
   "campus-rankings": "Campus Rankings",
 };
 
@@ -126,6 +135,11 @@ export function AdminDashboard() {
     profile.adminAccess.scope === "global" ||
     profile.adminAccess.designation === "management" ||
     profile.adminAccess.designation === "administration";
+  const seesLeaveApprovalsRegardless =
+    !profile?.adminAccess ||
+    profile.adminAccess.scope === "global" ||
+    profile.adminAccess.designation === "principal" ||
+    profile.adminAccess.designation === "vice-principal";
   // Consolidated Reports is a campus-wide roll-up filed once by a campus's
   // Head and can span several colleges under that campus — a college-scoped
   // admin (e.g. Principal/VP or Administration assigned to a college) is
@@ -145,7 +159,8 @@ export function AdminDashboard() {
             s.id === "overview" ||
             s.id === "campus-rankings" ||
             allowedSections.includes(s.id as (typeof allowedSections)[number]) ||
-            (s.id === "serious-cases" && seesSeriousCasesRegardless),
+            (s.id === "serious-cases" && seesSeriousCasesRegardless) ||
+            (s.id === "leave-approvals" && seesLeaveApprovalsRegardless),
         )
       : SECTIONS
   ).filter((s) => !(isCampusRestricted && s.id === "campuses") && !(isCollegeScoped && s.id === "monthly-reports"));
@@ -175,6 +190,8 @@ export function AdminDashboard() {
         <CounsellorWorksheetSection />
       ) : activeSection === "monthly-reports" && !isCollegeScoped ? (
         <MonthlyReportsViewSection />
+      ) : activeSection === "leave-approvals" ? (
+        <PrincipalLeaveApprovalSection />
       ) : activeSection === "campus-rankings" ? (
         <CampusRankingsSection />
       ) : (

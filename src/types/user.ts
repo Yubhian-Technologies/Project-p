@@ -11,7 +11,8 @@ export type AdminSectionId =
   | "ssi-analytics"
   | "serious-cases"
   | "counsellor-worksheet"
-  | "monthly-reports";
+  | "monthly-reports"
+  | "leave-approvals";
 
 export type AdminDesignation = "principal" | "vice-principal" | "administration" | "management";
 

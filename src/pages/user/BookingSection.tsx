@@ -24,6 +24,8 @@ import { FEEDBACK_FORM } from "../../config/feedbackForm";
 import type { UserProfile } from "../../types/user";
 import type { Booking, BookingIntake, ConcernCategory } from "../../types/booking";
 import { CONCERN_CATEGORY_LABELS } from "../../types/booking";
+import { subscribeActiveLeavesToday } from "../../services/firebase/leaves";
+import type { LeaveRequest } from "../../types/leave";
 import { SsiTestModal } from "../../components/booking/SsiTestModal";
 import { CounsellorCard } from "../../components/booking/CounsellorCard";
 import { CounsellorProfileModal } from "../../components/booking/CounsellorProfileModal";
@@ -142,6 +144,7 @@ export function BookingSection({
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
+  const [activeLeaves, setActiveLeaves] = useState<Record<string, LeaveRequest>>({});
   const [loading, setLoading] = useState(true);
   const [showPicker, setShowPicker] = useState(false);
   const [viewingProfile, setViewingProfile] = useState<UserProfile | null>(null);
@@ -228,6 +231,8 @@ export function BookingSection({
 
   useEffect(() => {
     refresh();
+    const unsubLeaves = subscribeActiveLeavesToday(setActiveLeaves);
+    return () => unsubLeaves();
   }, [currentUser]);
 
   // The bookings list above is a one-off fetch, not a live listener — so when
@@ -812,33 +817,39 @@ export function BookingSection({
               <p>No campus counsellors are available at the moment.</p>
             ) : (
               <div className="booking-section__grid">
-                {counsellorsAndHeads.map((p) => (
-                  <CounsellorCard
-                    key={p.uid}
-                    profile={p}
-                    status={computeLiveStatus(p, scheduledBookings)}
-                    onClick={() => setViewingProfile(p)}
-                  />
-                ))}
+                {counsellorsAndHeads.map((p) => {
+                  const isOnLeave = Boolean(activeLeaves[p.uid]);
+                  return (
+                    <CounsellorCard
+                      key={p.uid}
+                      profile={p}
+                      status={computeLiveStatus(p, scheduledBookings, isOnLeave)}
+                      onClick={() => setViewingProfile(p)}
+                    />
+                  );
+                })}
               </div>
             );
           })()}
         </Modal>
       )}
 
-      {viewingProfile && (
-        <CounsellorProfileModal
-          profile={viewingProfile}
-          status={computeLiveStatus(viewingProfile, scheduledBookings)}
-          bookingDisabled={false}
-          onBook={() => {
-            openConsent(viewingProfile);
-            setViewingProfile(null);
-            setShowPicker(false);
-          }}
-          onClose={() => setViewingProfile(null)}
-        />
-      )}
+      {viewingProfile && (() => {
+        const isOnLeave = Boolean(activeLeaves[viewingProfile.uid]);
+        return (
+          <CounsellorProfileModal
+            profile={viewingProfile}
+            status={computeLiveStatus(viewingProfile, scheduledBookings, isOnLeave)}
+            bookingDisabled={isOnLeave}
+            onBook={() => {
+              openConsent(viewingProfile);
+              setViewingProfile(null);
+              setShowPicker(false);
+            }}
+            onClose={() => setViewingProfile(null)}
+          />
+        );
+      })()}
 
       {target && (
         <Modal title="Before you book" className="booking-section__modal" onClose={() => setTarget(null)}>

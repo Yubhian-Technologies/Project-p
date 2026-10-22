@@ -9,6 +9,8 @@ import {
 import { MyCounsellorCard } from "../../components/booking/MyCounsellorCard";
 import { ChatModal } from "../../components/chat/ChatModal";
 import { computeLiveStatus } from "../../utils/counsellorStatus";
+import { subscribeActiveLeavesToday } from "../../services/firebase/leaves";
+import type { LeaveRequest } from "../../types/leave";
 import type { UserProfile } from "../../types/user";
 import type { Booking } from "../../types/booking";
 import "./BookingSection.css";
@@ -24,6 +26,7 @@ export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellors
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
+  const [activeLeaves, setActiveLeaves] = useState<Record<string, LeaveRequest>>({});
   const [loading, setLoading] = useState(true);
   const [chatTarget, setChatTarget] = useState<Booking | null>(null);
 
@@ -46,8 +49,10 @@ export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellors
       }
     }
     load();
+    const unsubLeaves = subscribeActiveLeavesToday(setActiveLeaves);
     return () => {
       cancelled = true;
+      unsubLeaves();
     };
   }, [currentUser]);
 
@@ -97,17 +102,20 @@ export function CampusCounsellorsSection({ onBookCounsellor }: CampusCounsellors
           // student's own college — shown in full directly, no card-you-have-
           // to-click-for-details popup, since there's nothing to pick between.
           <div className="campus-counsellors__list">
-            {counsellorsAndHeads.map((p) => (
-              <MyCounsellorCard
-                key={p.uid}
-                profile={p}
-                status={computeLiveStatus(p, scheduledBookings)}
-                bookingDisabled={hasActiveBooking}
-                onBook={() => onBookCounsellor(p.uid)}
-                chatBooking={bookingWith(p.uid)}
-                onOpenChat={setChatTarget}
-              />
-            ))}
+            {counsellorsAndHeads.map((p) => {
+              const isOnLeave = Boolean(activeLeaves[p.uid]);
+              return (
+                <MyCounsellorCard
+                  key={p.uid}
+                  profile={p}
+                  status={computeLiveStatus(p, scheduledBookings, isOnLeave)}
+                  bookingDisabled={hasActiveBooking || isOnLeave}
+                  onBook={() => onBookCounsellor(p.uid)}
+                  chatBooking={bookingWith(p.uid)}
+                  onOpenChat={setChatTarget}
+                />
+              );
+            })}
           </div>
         )}
       </section>

@@ -25,6 +25,7 @@ export const ADMIN_SECTIONS: { id: AdminSectionId; label: string }[] = [
   { id: "serious-cases", label: "Serious Cases" },
   { id: "counsellor-worksheet", label: "Counsellor Worksheet" },
   { id: "monthly-reports", label: "Consolidated Reports" },
+  { id: "leave-approvals", label: "Leave Approvals" },
 ];
 
 export const ADMIN_SECTION_LABELS: Record<AdminSectionId, string> = Object.fromEntries(

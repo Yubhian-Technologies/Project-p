@@ -1,0 +1,332 @@
+.leave-details-modal {
+  width: 100%;
+  max-width: 620px;
+}
+
+.leave-details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.leave-details-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+
+.leave-details-status strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.leave-details-status p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.leave-details-status__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  margin-top: 1px;
+}
+
+.leave-details-status--approved .leave-details-status__icon {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+.leave-details-status--pending .leave-details-status__icon {
+  background: rgba(245, 158, 11, 0.18);
+  color: #D97706;
+}
+
+.leave-details-status--disapproved .leave-details-status__icon {
+  background: rgba(239, 68, 68, 0.15);
+  color: #DC2626;
+}
+
+.leave-details-status--cancelled .leave-details-status__icon {
+  background: rgba(100, 116, 139, 0.15);
+  color: #475569;
+}
+
+.leave-details-status--pending {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+  color: #92400E;
+}
+
+.leave-details-status--disapproved {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #991B1B;
+}
+
+.leave-details-status--cancelled {
+  background: #F3F4F6;
+  border-color: #E5E7EB;
+  color: #4B5563;
+}
+
+.leave-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.leave-details-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.leave-details-item--full {
+  grid-column: 1 / -1;
+}
+
+.leave-details-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.leave-details-value {
+  font-size: 14px;
+  color: #1E293B;
+  font-weight: 600;
+}
+
+.leave-details-applicant {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.leave-details-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.leave-details-role {
+  display: block;
+  font-size: 12px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.leave-details-campus {
+  font-size: 12.5px;
+  color: #64748B;
+}
+
+.leave-details-pill {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #E2E8F0;
+  color: #334155;
+  letter-spacing: 0.02em;
+}
+
+.leave-details-dates {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14.5px;
+  color: #0F172A;
+}
+
+.leave-details-dates-icon {
+  font-size: 16px;
+}
+
+.leave-details-reason-box {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.leave-details-reason-box p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.leave-details-audit-card {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  color: #065F46;
+}
+
+.leave-details-audit-card--cancelled {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #475569;
+}
+
+.leave-details-audit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.leave-details-audit-time {
+  font-size: 12px;
+  color: #047857;
+}
+
+.leave-details-audit-remarks {
+  margin: 4px 0 0;
+  font-style: italic;
+}
+
+.leave-details-review-box {
+  border-top: 1px solid #E2E8F0;
+  padding-top: 18px;
+}
+
+.leave-details-review-box h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.leave-details-review-hint {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  color: #64748B;
+}
+
+.leave-details-review-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.leave-approve-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  background: #059669 !important;
+  color: #FFFFFF !important;
+  border-color: #059669 !important;
+  font-weight: 700 !important;
+}
+
+.leave-approve-btn:hover {
+  background: #047857 !important;
+}
+
+.leave-disapprove-prompt-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  color: #DC2626 !important;
+  border-color: #FECACA !important;
+}
+
+.leave-disapprove-prompt-btn:hover {
+  background: #FEF2F2 !important;
+}
+
+.leave-details-disapprove-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.leave-details-disapprove-form label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.leave-details-disapprove-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #CBD5E1;
+  font-family: inherit;
+  font-size: 13.5px;
+  resize: vertical;
+}
+
+.leave-details-disapprove-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.leave-disapprove-btn {
+  background: #DC2626 !important;
+  color: #FFFFFF !important;
+  border-color: #DC2626 !important;
+  font-weight: 700 !important;
+}
+
+.leave-modal-error {
+  margin: 0;
+  font-size: 12.5px;
+  color: #DC2626;
+  font-weight: 600;
+}
+
+.leave-details-cancel-bar {
+  border-top: 1px solid #E2E8F0;
+  padding-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.leave-modal-cancel-btn {
+  color: #DC2626 !important;
+  border-color: #FCA5A5 !important;
+}
+
+.leave-modal-cancel-btn:hover {
+  background: #FEF2F2 !important;
+}
+
+@media (max-width: 600px) {
+  .leave-details-grid {
+    grid-template-columns: 1fr;
+  }
+}

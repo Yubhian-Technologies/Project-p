@@ -11,7 +11,9 @@ import {
   getAttendanceRecord,
   istDateKey,
 } from "../../services/firebase/attendance";
+import { subscribeActiveLeavesToday, formatLeaveRange } from "../../services/firebase/leaves";
 import type { AttendanceRecord } from "../../types/attendance";
+import type { LeaveRequest } from "../../types/leave";
 import "./AttendanceCheckCard.css";
 
 interface AttendanceCheckCardProps {
@@ -29,11 +31,23 @@ export function AttendanceCheckCard({ span = 4 }: AttendanceCheckCardProps) {
   const uid = currentUser?.uid;
   const campusId = profile?.campusId;
   const eligible = profile?.role === "counsellor" || profile?.role === "head";
-  const onLeave = profile?.available === false;
+  const [activeLeave, setActiveLeave] = useState<LeaveRequest | null>(null);
+  const isManuallyUnavailable = profile?.available === false;
+  const onLeave = isManuallyUnavailable || Boolean(activeLeave);
+
   const [dateKey] = useState(() => istDateKey(Date.now()));
   const [record, setRecord] = useState<AttendanceRecord | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Subscribe to real-time active approved leaves today
+  useEffect(() => {
+    if (!uid || !eligible) return;
+    const unsub = subscribeActiveLeavesToday((map) => {
+      setActiveLeave(map[uid] || null);
+    });
+    return () => unsub();
+  }, [uid, eligible]);
 
   useEffect(() => {
     if (!uid || !eligible || onLeave) return;
@@ -53,7 +67,7 @@ export function AttendanceCheckCard({ span = 4 }: AttendanceCheckCardProps) {
   if (!eligible) return null;
 
   async function handleCheckIn() {
-    if (!uid || !campusId) return;
+    if (!uid || !campusId || onLeave) return;
     setBusy(true);
     setError(null);
     try {
@@ -67,7 +81,7 @@ export function AttendanceCheckCard({ span = 4 }: AttendanceCheckCardProps) {
   }
 
   async function handleCheckOut() {
-    if (!uid) return;
+    if (!uid || onLeave) return;
     setBusy(true);
     setError(null);
     try {
@@ -91,7 +105,14 @@ export function AttendanceCheckCard({ span = 4 }: AttendanceCheckCardProps) {
       className="attn-card"
     >
       {onLeave ? (
-        <p className="attn-muted">You're on leave today, so check-in is turned off.</p>
+        <div className="attn-leave-box">
+          <span className="attn-leave-badge">On Leave</span>
+          <p className="attn-leave-text">
+            {activeLeave
+              ? `You have an approved ${activeLeave.type.toUpperCase()} leave active today (${formatLeaveRange(activeLeave)}). Attendance check-in and check-out are disabled.`
+              : "You're marked unavailable today, so attendance check-in and check-out are turned off."}
+          </p>
+        </div>
       ) : (
         <div className="attn">
           <p className="attn-status">
@@ -106,12 +127,12 @@ export function AttendanceCheckCard({ span = 4 }: AttendanceCheckCardProps) {
           )}
           <div className="attn-actions">
             {!checkedIn && (
-              <Button type="button" disabled={busy || !campusId} onClick={handleCheckIn}>
+              <Button type="button" disabled={busy || !campusId || onLeave} onClick={handleCheckIn}>
                 {busy ? "Saving…" : "Check In"}
               </Button>
             )}
             {checkedIn && !checkedOut && (
-              <Button type="button" disabled={busy} onClick={handleCheckOut}>
+              <Button type="button" disabled={busy || onLeave} onClick={handleCheckOut}>
                 {busy ? "Saving…" : "Check Out"}
               </Button>
             )}

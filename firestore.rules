@@ -1184,6 +1184,42 @@ service cloud.firestore {
       );
     }
 
+    // Leave management for counsellors and heads:
+    // - Counsellors and Heads apply for leaves and can cancel at any stage
+    // - College Principals and Vice-Principals can review, approve, or disapprove leaves for their college
+    // - Super Admins and global Admins have platform-wide oversight
+    // - Approved leaves are readable by signed-in users for displaying the active "On Leave" profile badge
+    match /leaves/{leaveId} {
+      allow read: if isSignedIn() && (
+        isStaff() ||
+        resource.data.applicantUid == request.auth.uid ||
+        resource.data.status == 'approved'
+      );
+
+      allow create: if isSignedIn()
+                    && (isRole('counsellor') || isRole('head'))
+                    && request.resource.data.applicantUid == request.auth.uid
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.startDate is string
+                    && request.resource.data.endDate is string;
+
+      allow update: if isSignedIn() && (
+        // Applicant can cancel at any time (before or after approval)
+        (resource.data.applicantUid == request.auth.uid && request.resource.data.status == 'cancelled') ||
+        // College Principal, Vice-Principal, Admin, or Super Admin can approve or disapprove
+        (
+          (myRole() == 'super-admin' || isRole('admin')) &&
+          request.resource.data.status in ['approved', 'disapproved']
+        )
+      );
+
+      allow delete: if isSignedIn() && (
+        myRole() == 'super-admin' ||
+        (resource.data.applicantUid == request.auth.uid && resource.data.status == 'pending')
+      );
+    }
+
+
     // ---------- everything else ----------
     // Explicit default-deny for any path not matched above. Firestore already denies
     // unmatched paths by default — this exists so a newly-added collection that nobody

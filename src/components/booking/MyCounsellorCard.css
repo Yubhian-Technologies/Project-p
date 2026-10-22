@@ -115,6 +115,11 @@
   color: #92400E;
 }
 
+.my-counsellor__badge--on-leave {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
 .my-counsellor__badge--neutral {
   background: #F1F5F9;
   color: #334155;

@@ -102,6 +102,11 @@
   color: #C2410C;
 }
 
+.counsellor-card__status-badge--on-leave {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
 .counsellor-card__body {
   flex: 1;
   min-height: 0;
