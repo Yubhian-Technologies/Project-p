@@ -546,3 +546,32 @@ export function MoodStressedIcon(props: IconProps) {
   );
 }
 
+export function CrownIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
+    </Svg>
+  );
+}
+
+export function MedalIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="14" r="6" />
+      <path d="m8.21 13.89-1.21 9.11 5-3 5 3-1.21-9.11" />
+      <path d="M7 4h10l-2 5H9L7 4z" />
+    </Svg>
+  );
+}
+
+export function LotusIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 3c-1.5 3-3 6.5-3 9.5a3 3 0 0 0 6 0C15 9.5 13.5 6 12 3z" />
+      <path d="M12 12.5C9 9 5 9.5 3 12c2.5 4 6 4 9 4" />
+      <path d="M12 12.5C15 9 19 9.5 21 12c-2.5 4-6 4-9 4" />
+      <path d="M7 16c2 3 5 3 5 3s3 0 5-3" />
+    </Svg>
+  );
+}
+

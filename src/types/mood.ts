@@ -21,5 +21,6 @@ export interface StreakStats {
   totalLoggedDays: number;
   todayLogged: boolean;
   todayMood: MoodType | null;
+  todayNote?: string;
   weekDays: DayStreakItem[];
 }

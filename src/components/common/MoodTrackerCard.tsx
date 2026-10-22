@@ -55,6 +55,13 @@ export function MoodTrackerCard() {
 
   useEffect(() => {
     loadData();
+    const handleMoodUpdated = () => {
+      loadData();
+    };
+    window.addEventListener("mood_updated", handleMoodUpdated);
+    return () => {
+      window.removeEventListener("mood_updated", handleMoodUpdated);
+    };
   }, [currentUser]);
 
   async function handleSelectMood(mood: MoodType) {

@@ -7,32 +7,56 @@
   box-sizing: border-box;
 }
 
+/* ── Management Campus Filter Bar ────────────────────────────── */
+.cr-campus-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cr-campus-filter-btn {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 8px 18px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cr-campus-filter-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.cr-campus-filter-btn.is-active {
+  background: #0B193C;
+  color: #ffffff;
+  border-color: #0B193C;
+  box-shadow: 0 4px 12px rgba(11, 25, 60, 0.2);
+}
+
 /* ── Hero Banner ────────────────────────────────────────────── */
 .cr-hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #31104b 100%);
+  background: #0B193C;
   border-radius: 20px;
   padding: 32px;
   color: #ffffff;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 12px 36px rgba(11, 25, 60, 0.22);
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 24px;
   flex-wrap: wrap;
-}
-
-.cr-hero::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 380px;
-  height: 380px;
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
 }
 
 .cr-hero__left {
@@ -54,6 +78,11 @@
   padding: 4px 12px;
   border-radius: 9999px;
   margin-bottom: 12px;
+}
+
+.cr-hero__tag svg {
+  width: 14px;
+  height: 14px;
 }
 
 .cr-hero__title {
@@ -150,6 +179,13 @@
   gap: 8px;
 }
 
+.cr-section-title svg {
+  width: 20px;
+  height: 20px;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
 .cr-section-sub {
   font-size: 0.875rem;
   color: #64748b;
@@ -184,10 +220,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.75rem;
   margin-bottom: 10px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
   position: relative;
+}
+
+.cr-podium-avatar svg {
+  width: 30px;
+  height: 30px;
+  display: block;
 }
 
 .cr-podium-step--gold .cr-podium-avatar {
@@ -195,7 +236,13 @@
   border: 3px solid #fbbf24;
   width: 72px;
   height: 72px;
-  font-size: 2.25rem;
+}
+
+.cr-podium-step--gold .cr-podium-avatar svg {
+  width: 40px;
+  height: 40px;
+  color: #78350f;
+  filter: drop-shadow(0 2px 4px rgba(180, 83, 9, 0.35));
 }
 
 .cr-podium-step--silver .cr-podium-avatar {
@@ -203,9 +250,23 @@
   border: 3px solid #cbd5e1;
 }
 
+.cr-podium-step--silver .cr-podium-avatar svg {
+  width: 32px;
+  height: 32px;
+  color: #334155;
+  filter: drop-shadow(0 2px 4px rgba(51, 65, 85, 0.25));
+}
+
 .cr-podium-step--bronze .cr-podium-avatar {
   background: linear-gradient(135deg, #fed7aa 0%, #d97706 100%);
   border: 3px solid #f97316;
+}
+
+.cr-podium-step--bronze .cr-podium-avatar svg {
+  width: 32px;
+  height: 32px;
+  color: #7c2d12;
+  filter: drop-shadow(0 2px 4px rgba(124, 45, 18, 0.25));
 }
 
 .cr-podium-name {
@@ -330,8 +391,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   font-weight: 800;
   font-size: 0.875rem;
@@ -340,19 +401,59 @@
 }
 
 .cr-rank-badge--1 {
-  background: #fef3c7;
-  color: #b45309;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  color: #B45309;
+  border: 1.5px solid #F59E0B;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
 }
 
 .cr-rank-badge--2 {
-  background: #f1f5f9;
+  background: linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%);
   color: #475569;
+  border: 1.5px solid #94A3B8;
+  box-shadow: 0 2px 6px rgba(148, 163, 184, 0.2);
 }
 
 .cr-rank-badge--3 {
-  background: #ffedd5;
-  color: #c2410c;
+  background: linear-gradient(135deg, #FFEDD5 0%, #FED7AA 100%);
+  color: #C2410C;
+  border: 1.5px solid #EA580C;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.2);
+}
+
+.cr-rank-icon {
+  width: 18px;
+  height: 18px;
+}
+.cr-rank-icon--gold {
+  color: #D97706;
+}
+.cr-rank-icon--silver {
+  color: #64748B;
+}
+.cr-rank-icon--bronze {
+  color: #EA580C;
+}
+
+/* ── Divider row between top 3 and user standing ─────────────────── */
+.cr-table-divider-row td {
+  padding: 10px 16px !important;
+  background: #F8FAFC !important;
+  border-top: 1px dashed #CBD5E1 !important;
+  border-bottom: 1px dashed #CBD5E1 !important;
+  text-align: center;
+}
+
+.cr-table-divider-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #64748B;
+  text-transform: uppercase;
 }
 
 .cr-campus-cell {
@@ -452,8 +553,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
   flex-shrink: 0;
+}
+
+.cr-guide-icon svg {
+  width: 22px;
+  height: 22px;
+  display: block;
 }
 
 .cr-guide-icon--amber {
@@ -519,6 +625,23 @@
 .cr-guide-action-btn:hover {
   color: #1d4ed8;
   text-decoration: underline;
+}
+
+/* ── Inline Table & Guide Icons ─────────────────────────────── */
+.cr-streak-flame {
+  width: 16px;
+  height: 16px;
+  color: #f97316;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.cr-check-icon {
+  width: 14px;
+  height: 14px;
+  color: #16a34a;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 /* ── Mobile Responsiveness ──────────────────────────────────── */

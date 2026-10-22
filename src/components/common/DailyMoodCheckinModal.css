@@ -1,0 +1,466 @@
+/* ==========================================================================
+   Daily Mood Check-in Popup Card (Modal)
+   ========================================================================== */
+
+@keyframes mood-scrim-fade {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(8px); }
+}
+
+@keyframes mood-card-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(24px);
+  }
+  70% {
+    transform: scale(1.01) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes flame-glow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 6px rgba(255, 107, 107, 0.4));
+  }
+  50% {
+    transform: scale(1.15) rotate(-3deg);
+    filter: drop-shadow(0 0 14px rgba(255, 142, 83, 0.7));
+  }
+}
+
+@keyframes celebration-bounce {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.daily-mood-modal__scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 25, 60, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  z-index: 1200;
+  overflow-y: auto;
+  box-sizing: border-box;
+  animation: mood-scrim-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.daily-mood-modal__card {
+  position: relative;
+  background: linear-gradient(165deg, #FFFFFF 0%, #F8FAFC 100%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 28px;
+  box-shadow: 
+    0 24px 60px -12px rgba(11, 25, 60, 0.28),
+    0 0 0 1px rgba(226, 232, 240, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 40px);
+  margin: auto;
+  padding: 32px 30px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: mood-card-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  overflow-y: auto;
+}
+
+
+/* Close button */
+.daily-mood-modal__close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.85);
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.daily-mood-modal__close-btn:hover {
+  background: #EFF6FF;
+  color: #0B193C;
+  border-color: #0B193C;
+  transform: scale(1.05);
+}
+
+/* Header */
+.daily-mood-modal__header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+  align-items: center;
+}
+
+.daily-mood-modal__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+  border: 1px solid #FED7AA;
+  color: #C2410C;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.daily-mood-modal__flame-icon {
+  display: inline-flex;
+  animation: flame-glow 2s infinite ease-in-out;
+}
+
+.daily-mood-modal__flame-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.daily-mood-modal__title {
+  margin: 0;
+  font-family: var(--bento-font-title, 'Playfair Display', serif);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--bento-primary, #0B193C);
+  line-height: 1.25;
+}
+
+.daily-mood-modal__subtitle {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #64748B;
+  max-width: 420px;
+  min-height: 21px;
+  transition: color 0.3s ease;
+}
+
+.daily-mood-modal__subtitle--active {
+  color: #0F172A;
+  font-weight: 600;
+}
+
+/* Mood Selection Grid */
+.daily-mood-modal__options {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.daily-mood-modal__option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 6px;
+  border-radius: 20px;
+  border: 2px solid rgba(226, 232, 240, 0.8);
+  background: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+  outline: none;
+}
+
+.daily-mood-modal__option:hover:not(:disabled) {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 10px 20px -4px rgba(15, 23, 42, 0.1);
+}
+
+.daily-mood-modal__option:active:not(:disabled) {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.daily-mood-modal__option-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+}
+
+.daily-mood-modal__option-icon-box svg {
+  width: 28px;
+  height: 28px;
+  transition: transform 0.25s ease;
+}
+
+.daily-mood-modal__option-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  transition: color 0.2s ease;
+}
+
+/* Individual Mood Colors */
+.daily-mood-modal__option--amazing .daily-mood-modal__option-icon-box {
+  background: #FEF3C7;
+  color: #D97706;
+}
+.daily-mood-modal__option--amazing:hover {
+  border-color: #FBBF24;
+}
+.daily-mood-modal__option--amazing.daily-mood-modal__option--selected {
+  border-color: #F59E0B;
+  background: #FFFBEB;
+  box-shadow: 0 8px 24px -2px rgba(245, 158, 11, 0.35);
+}
+.daily-mood-modal__option--amazing.daily-mood-modal__option--selected .daily-mood-modal__option-label {
+  color: #B45309;
+}
+
+.daily-mood-modal__option--good .daily-mood-modal__option-icon-box {
+  background: #CCFBF1;
+  color: #0D9488;
+}
+.daily-mood-modal__option--good:hover {
+  border-color: #5EEAD4;
+}
+.daily-mood-modal__option--good.daily-mood-modal__option--selected {
+  border-color: #0D9488;
+  background: #F0FDFA;
+  box-shadow: 0 8px 24px -2px rgba(13, 148, 136, 0.35);
+}
+.daily-mood-modal__option--good.daily-mood-modal__option--selected .daily-mood-modal__option-label {
+  color: #0F766E;
+}
+
+.daily-mood-modal__option--okay .daily-mood-modal__option-icon-box {
+  background: #F1F5F9;
+  color: #64748B;
+}
+.daily-mood-modal__option--okay:hover {
+  border-color: #CBD5E1;
+}
+.daily-mood-modal__option--okay.daily-mood-modal__option--selected {
+  border-color: #64748B;
+  background: #F8FAFC;
+  box-shadow: 0 8px 24px -2px rgba(100, 116, 139, 0.3);
+}
+.daily-mood-modal__option--okay.daily-mood-modal__option--selected .daily-mood-modal__option-label {
+  color: #334155;
+}
+
+.daily-mood-modal__option--low .daily-mood-modal__option-icon-box {
+  background: #E0E7FF;
+  color: #6366F1;
+}
+.daily-mood-modal__option--low:hover {
+  border-color: #A5B4FC;
+}
+.daily-mood-modal__option--low.daily-mood-modal__option--selected {
+  border-color: #6366F1;
+  background: #EEF2FF;
+  box-shadow: 0 8px 24px -2px rgba(99, 102, 241, 0.35);
+}
+.daily-mood-modal__option--low.daily-mood-modal__option--selected .daily-mood-modal__option-label {
+  color: #4338CA;
+}
+
+.daily-mood-modal__option--stressed .daily-mood-modal__option-icon-box {
+  background: #FFEDD5;
+  color: #EA580C;
+}
+.daily-mood-modal__option--stressed:hover {
+  border-color: #FDBA74;
+}
+.daily-mood-modal__option--stressed.daily-mood-modal__option--selected {
+  border-color: #EA580C;
+  background: #FFF7ED;
+  box-shadow: 0 8px 24px -2px rgba(234, 88, 12, 0.35);
+}
+.daily-mood-modal__option--stressed.daily-mood-modal__option--selected .daily-mood-modal__option-label {
+  color: #C2410C;
+}
+
+.daily-mood-modal__option--selected .daily-mood-modal__option-icon-box svg {
+  transform: scale(1.15);
+}
+
+
+/* Actions */
+.daily-mood-modal__actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.daily-mood-modal__submit-btn {
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 16px;
+  background: #0B193C;
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -4px rgba(11, 25, 60, 0.35);
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.daily-mood-modal__submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -4px rgba(11, 25, 60, 0.45);
+  background: #142858;
+}
+
+.daily-mood-modal__submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.daily-mood-modal__submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.daily-mood-modal__skip-btn {
+  background: transparent;
+  border: none;
+  color: #64748B;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px;
+  transition: color 0.2s ease;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: transparent;
+}
+
+.daily-mood-modal__skip-btn:hover {
+  color: #0F172A;
+  text-decoration-color: #CBD5E1;
+}
+
+/* Feedback / Error */
+.daily-mood-modal__feedback {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  color: #DC2626;
+  background: #FEF2F2;
+  border: 1px solid #FEE2E2;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+/* Success Celebration View */
+.daily-mood-modal__success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 20px 8px;
+}
+
+.daily-mood-modal__success-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 28px -4px rgba(16, 185, 129, 0.4);
+  animation: celebration-bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.daily-mood-modal__success-icon-wrap svg {
+  width: 36px;
+  height: 36px;
+}
+
+.daily-mood-modal__success-title {
+  margin: 0;
+  font-family: var(--bento-font-title, 'Playfair Display', serif);
+  font-size: 22px;
+  font-weight: 800;
+  color: #065F46;
+}
+
+.daily-mood-modal__success-msg {
+  margin: 0;
+  font-size: 14.5px;
+  color: #334155;
+  line-height: 1.5;
+  max-width: 360px;
+}
+
+.daily-mood-modal__success-streak-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 6px 18px rgba(255, 107, 107, 0.35);
+}
+
+@media (max-width: 480px) {
+  .daily-mood-modal__card {
+    padding: 24px 18px;
+    border-radius: 22px;
+  }
+  .daily-mood-modal__title {
+    font-size: 20px;
+  }
+  .daily-mood-modal__options {
+    gap: 6px;
+  }
+  .daily-mood-modal__option {
+    padding: 10px 4px;
+  }
+  .daily-mood-modal__option-icon-box {
+    width: 38px;
+    height: 38px;
+  }
+  .daily-mood-modal__option-icon-box svg {
+    width: 22px;
+    height: 22px;
+  }
+}

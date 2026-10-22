@@ -54,7 +54,7 @@ export function getWellnessData(): WellnessScoreData {
   const raw = localStorage.getItem(STORAGE_KEY);
 
   let data: WellnessScoreData = {
-    score: 150,
+    score: 50,
     streak: 1,
     lastActiveDate: today,
     completedChallenges: ["streak"],

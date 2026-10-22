@@ -80,8 +80,8 @@ export async function getCampusStudentRankings(
         const isCurrent = currentUser?.uid === u.uid;
         
         // For the current user, always prioritize live local storage wellness score
-        const score = isCurrent ? userWellness.score : (u.wellnessScore ?? 150);
-        const streak = isCurrent ? userWellness.streak : (u.wellnessStreak ?? 1);
+        const score = isCurrent ? userWellness.score : (u.wellnessScore ?? 0);
+        const streak = isCurrent ? userWellness.streak : (u.wellnessStreak ?? 0);
 
         const name = u.displayName || (u.email ? u.email.split("@")[0] : "Student");
 
@@ -125,8 +125,11 @@ export async function getCampusStudentRankings(
   // Convert map to array
   const studentList = Array.from(studentsMap.values());
 
-  // Sort descending by score to establish real campus rank
-  studentList.sort((a, b) => b.score - a.score);
+  // Sort descending by score, then by streak
+  studentList.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return b.streak - a.streak;
+  });
 
   const badges = [
     "Campus Champion 👑",
@@ -141,7 +144,7 @@ export async function getCampusStudentRankings(
   const rankedStudents = studentList.map((st, idx) => ({
     ...st,
     rank: idx + 1,
-    badge: badges[Math.min(idx, badges.length - 1)],
+    badge: st.score > 0 ? badges[Math.min(idx, badges.length - 1)] : "New Member",
   }));
 
   return {
@@ -151,3 +154,12 @@ export async function getCampusStudentRankings(
     students: rankedStudents,
   };
 }
+
+export async function getAllCampusesTopStudents(): Promise<CampusLeaderboardResult[]> {
+  const campuses = await listCampuses().catch(() => []);
+  const results = await Promise.all(
+    campuses.map((c) => getCampusStudentRankings(c.id, null))
+  );
+  return results;
+}
+

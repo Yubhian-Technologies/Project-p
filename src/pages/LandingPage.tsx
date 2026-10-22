@@ -364,6 +364,63 @@ export function LandingPage() {
   const [flippedDoingIds, setFlippedDoingIds] = useState<Set<number>>(new Set());
   const doingCarouselRef = useRef<HTMLDivElement>(null);
 
+  // Newsletter signup state
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [emailCopied, setEmailCopied] = useState(false);
+
+  const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const input = form.querySelector<HTMLInputElement>("input[type='email']");
+    const email = (input?.value || newsletterEmail).trim();
+    if (!email || !email.includes("@")) {
+      return;
+    }
+
+    setNewsletterStatus("loading");
+    try {
+      // Store in localStorage for instant preservation
+      const key = "vth_newsletter_subscribers";
+      const existing: string[] = JSON.parse(localStorage.getItem(key) || "[]");
+      if (!existing.includes(email)) {
+        existing.push(email);
+        localStorage.setItem(key, JSON.stringify(existing));
+      }
+
+      // Best-effort Firestore storage
+      try {
+        const { collection, addDoc, serverTimestamp } = await import("firebase/firestore");
+        const { db } = await import("../services/firebase/config");
+        await addDoc(collection(db, "newsletterSubscriptions"), {
+          email,
+          createdAt: serverTimestamp(),
+          source: "landing_footer",
+        });
+      } catch {
+        // Ignored for unauthenticated clients; local record was safely captured
+      }
+
+      setNewsletterStatus("success");
+      setNewsletterEmail("");
+      setTimeout(() => {
+        setNewsletterStatus("idle");
+      }, 3500);
+    } catch {
+      setNewsletterStatus("error");
+      setTimeout(() => setNewsletterStatus("idle"), 3000);
+    }
+  };
+
+  const handleCopyEmail = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText("vishnuwellnesscentre@gmail.com").then(() => {
+      setEmailCopied(true);
+      setTimeout(() => setEmailCopied(false), 2200);
+    });
+  };
+
   function toggleDoingFlip(id: number) {
     setFlippedDoingIds((prev) => {
       const next = new Set(prev);
@@ -929,17 +986,74 @@ export function LandingPage() {
               <h4>I'm excited. Tell me more.</h4>
               <form
                 className="landing-footer__signup"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                }}
+                onSubmit={handleNewsletterSubmit}
               >
-                <input type="email" placeholder="Enter your email" required />
-                <button type="submit">Submit</button>
+                <input
+                  type="email"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  placeholder={
+                    newsletterStatus === "success"
+                      ? "Thanks for submitting!"
+                      : "Enter your email"
+                  }
+                  required
+                  disabled={newsletterStatus === "loading" || newsletterStatus === "success"}
+                />
+                <button
+                  type="submit"
+                  disabled={newsletterStatus === "loading" || newsletterStatus === "success"}
+                  className={`landing-footer__signup-btn ${
+                    newsletterStatus === "success"
+                      ? "is-success"
+                      : newsletterStatus === "loading"
+                      ? "is-loading"
+                      : ""
+                  }`}
+                >
+                  {newsletterStatus === "loading"
+                    ? "Submitting..."
+                    : newsletterStatus === "success"
+                    ? "✓ Submitted!"
+                    : "Submit"}
+                </button>
               </form>
               <p className="landing-footer__question">
                 Have a question?
                 <br />
-                Email us anytime: <a href="mailto:vishnuwellnesscentre@gmail.com">vishnuwellnesscentre@gmail.com</a>
+                Email us anytime:{" "}
+                <span className="landing-footer__email-wrapper">
+                  <a
+                    href="https://mail.google.com/mail/?view=cm&fs=1&to=vishnuwellnesscentre@gmail.com&su=Inquiry%20-%20Vishnu%20Wellness%20Centre"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="landing-footer__email-link"
+                    title="Send email directly via Gmail"
+                  >
+                    vishnuwellnesscentre@gmail.com
+                  </a>
+                  <button
+                    type="button"
+                    onClick={handleCopyEmail}
+                    className="landing-footer__copy-btn"
+                    title={emailCopied ? "Email copied!" : "Copy email address"}
+                    aria-label="Copy email address"
+                  >
+                    {emailCopied ? (
+                      <span className="landing-footer__copy-badge">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        Copied!
+                      </span>
+                    ) : (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    )}
+                  </button>
+                </span>
               </p>
               <div className="landing-footer__socials">
                 <a

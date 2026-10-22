@@ -23,6 +23,9 @@ export async function logMood(
     createdAt: Date.now(),
   };
   await setDoc(ref, entry);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("mood_updated"));
+  }
 }
 
 export async function getMoodLogs(uid: string): Promise<MoodEntry[]> {
@@ -52,6 +55,7 @@ export function computeStreakStats(logs: MoodEntry[]): StreakStats {
   const todayEntry = logMap.get(todayISO);
   const todayLogged = !!todayEntry;
   const todayMood = todayEntry?.mood ?? null;
+  const todayNote = todayEntry?.note;
 
   // Calculate current streak
   let currentStreak = 0;
@@ -126,6 +130,7 @@ export function computeStreakStats(logs: MoodEntry[]): StreakStats {
     totalLoggedDays: logMap.size,
     todayLogged,
     todayMood,
+    todayNote,
     weekDays,
   };
 }

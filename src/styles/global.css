@@ -136,3 +136,24 @@ textarea::placeholder {
   }
 }
 
+/* ── Footer Anti-Flickering & Hardware Acceleration Stabilization ──── */
+footer,
+footer * {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Ensure transitions don't target font-weight or cause layout shifts */
+footer a,
+footer p,
+footer span {
+  transition: color 0.2s ease;
+  font-weight: normal;
+}
+
+footer a:hover {
+  font-weight: normal;
+}
+

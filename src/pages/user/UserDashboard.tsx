@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppShell } from "../../components/layout/AppShell";
 import { ProfileSection } from "../../components/layout/ProfileSection";
 import { BentoCard } from "../../components/common/BentoCard";
@@ -18,12 +18,14 @@ import { CrisisSosSection } from "./CrisisSosSection";
 import { DailyQuoteCard } from "../../components/common/DailyQuoteCard";
 import { FlashQACard } from "../../components/common/FlashQACard";
 import { MoodTrackerCard } from "../../components/common/MoodTrackerCard";
+import { DailyMoodCheckinModal } from "../../components/common/DailyMoodCheckinModal";
 import { WellnessScoreBanner } from "../../components/common/WellnessScoreBanner";
 import { UserHomeActivityOverview } from "./UserHomeActivityOverview";
 import { VishnuWellnessMissionCard } from "../../components/common/VishnuWellnessMissionCard";
 import { CampusRankingsCard } from "../../components/common/CampusRankingsCard";
 import { CampusRankingsSection } from "./CampusRankingsSection";
 import { TrophyIcon } from "../../components/common/icons";
+import { computeStreakStats, getMoodLogs, getTodayISO } from "../../services/firebase/mood";
 import type { Notification } from "../../types/notification";
 import "../../styles/bento-grid.css";
 
@@ -100,8 +102,9 @@ const SECTIONS = [
 ];
 
 export function UserDashboard() {
-  const { profile } = useAuth();
+  const { profile, currentUser } = useAuth();
   const [activeSection, setActiveSection] = useState("overview");
+  const [showMoodModal, setShowMoodModal] = useState(false);
   const [chatBookingId, setChatBookingId] = useState<string | undefined>();
   const [resourceBookingId, setResourceBookingId] = useState<string | undefined>();
   const [compensationBookingId, setCompensationBookingId] = useState<string | undefined>();
@@ -109,6 +112,48 @@ export function UserDashboard() {
   const [bookCounsellorId, setBookCounsellorId] = useState<string | undefined>();
   const gamesRef = useRef<GamesSectionHandle>(null);
   const [gameOpen, setGameOpen] = useState(false);
+
+  // Prompt the user to set their mood for the 1st time in the day they open the dashboard
+  useEffect(() => {
+    if (!currentUser) return;
+    const todayISO = getTodayISO();
+    const storageKey = `wellness_mood_popup_shown_${currentUser.uid}_${todayISO}`;
+
+    // If user already dismissed or logged today in this browser, don't show again today
+    try {
+      if (localStorage.getItem(storageKey)) {
+        return;
+      }
+    } catch {}
+
+    let isCancelled = false;
+    getMoodLogs(currentUser.uid)
+      .then((logs) => {
+        if (isCancelled) return;
+        const stats = computeStreakStats(logs);
+        if (stats.todayLogged) {
+          // Already logged today (e.g. earlier or on another device)
+          try {
+            localStorage.setItem(storageKey, "logged");
+          } catch {}
+        } else {
+          // 1st time in the day and hasn't logged mood today!
+          const timer = setTimeout(() => {
+            if (!isCancelled) {
+              setShowMoodModal(true);
+            }
+          }, 650);
+          return () => clearTimeout(timer);
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not check mood logs on mount", err);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentUser]);
 
   function handleNotificationClick(notification: Notification) {
     if (notification.type === "event_today" || notification.type === "event_added") {
@@ -226,6 +271,12 @@ export function UserDashboard() {
           <VishnuWellnessMissionCard onSelectSection={setActiveSection} />
         </div>
       )}
+
+      <DailyMoodCheckinModal
+        isOpen={showMoodModal}
+        onClose={() => setShowMoodModal(false)}
+        onSuccess={() => setShowMoodModal(false)}
+      />
     </AppShell>
   );
 }

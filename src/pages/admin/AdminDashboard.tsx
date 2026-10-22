@@ -13,6 +13,8 @@ import { CounsellorWorksheetSection } from "./CounsellorWorksheetSection";
 import { AdminHomeActivityOverview } from "./AdminHomeActivityOverview";
 import { PrincipalHomeOverview } from "./PrincipalHomeOverview";
 import { ManagementHomeOverview } from "./ManagementHomeOverview";
+import { CampusRankingsSection } from "../user/CampusRankingsSection";
+import { TrophyIcon } from "../../components/common/icons";
 import "../../styles/bento-grid.css";
 import "./AdminDashboard.css";
 
@@ -81,6 +83,11 @@ const SECTIONS = [
       <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
     ),
   },
+  {
+    id: "campus-rankings",
+    label: "Campus Rankings",
+    icon: <TrophyIcon />,
+  },
 ];
 
 const TITLES: Record<string, string> = {
@@ -93,6 +100,7 @@ const TITLES: Record<string, string> = {
   "serious-cases": "Serious Cases",
   "counsellor-worksheet": "Counsellor Worksheet",
   "monthly-reports": "Consolidated Reports",
+  "campus-rankings": "Campus Rankings",
 };
 
 export function AdminDashboard() {
@@ -135,6 +143,7 @@ export function AdminDashboard() {
       ? SECTIONS.filter(
           (s) =>
             s.id === "overview" ||
+            s.id === "campus-rankings" ||
             allowedSections.includes(s.id as (typeof allowedSections)[number]) ||
             (s.id === "serious-cases" && seesSeriousCasesRegardless),
         )
@@ -166,6 +175,8 @@ export function AdminDashboard() {
         <CounsellorWorksheetSection />
       ) : activeSection === "monthly-reports" && !isCollegeScoped ? (
         <MonthlyReportsViewSection />
+      ) : activeSection === "campus-rankings" ? (
+        <CampusRankingsSection />
       ) : (
         <div className="bento-grid">
           {!isCollegeScoped && (
