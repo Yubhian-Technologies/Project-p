@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { Button } from "../common/Button";
 import {
   subscribeAllLeaves,
   approveLeave,
@@ -20,8 +19,6 @@ export function PrincipalLeaveApprovalSection() {
   const [activeTab, setActiveTab] = useState<"pending" | "approved" | "disapproved" | "all">("pending");
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [selectedLeave, setSelectedLeave] = useState<LeaveRequest | null>(null);
-  const [disapprovePromptId, setDisapprovePromptId] = useState<string | null>(null);
-  const [disapproveRemarks, setDisapproveRemarks] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
 
   const today = getTodayDateString();
@@ -133,7 +130,7 @@ export function PrincipalLeaveApprovalSection() {
     }
   };
 
-  const handleConfirmDisapprove = async (leave: LeaveRequest) => {
+  const handleConfirmDisapprove = async (leave: LeaveRequest, remarks: string) => {
     if (!profile) return;
     setActionError(null);
     setProcessingId(leave.id);
@@ -147,10 +144,9 @@ export function PrincipalLeaveApprovalSection() {
           name: reviewerName,
           role: reviewerDesignation,
         },
-        disapproveRemarks.trim() || "Disapproved by college administration",
+        remarks.trim() || "Disapproved by college administration",
       );
-      setDisapprovePromptId(null);
-      setDisapproveRemarks("");
+      setSelectedLeave(null);
     } catch (err) {
       console.error("Failed to disapprove leave:", err);
       setActionError("Failed to disapprove leave. Please try again.");
@@ -343,24 +339,7 @@ export function PrincipalLeaveApprovalSection() {
           await handleApprove(l);
           setSelectedLeave(null);
         }}
-        onDisapprove={async (l, remarks) => {
-          setProcessingId(l.id);
-          try {
-            await disapproveLeave(
-              l.id,
-              profile?.uid || "",
-              profile?.displayName || profile?.email || "College Authority",
-              reviewerRole,
-              remarks,
-            );
-            setSelectedLeave(null);
-          } catch (err) {
-            console.error("Failed to disapprove leave:", err);
-            setActionError("Failed to submit disapproval. Please try again.");
-          } finally {
-            setProcessingId(null);
-          }
-        }}
+        onDisapprove={handleConfirmDisapprove}
         approving={processingId === selectedLeave?.id}
         disapproving={processingId === selectedLeave?.id}
       />

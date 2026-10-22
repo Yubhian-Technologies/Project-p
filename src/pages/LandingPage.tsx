@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { motion, useScroll } from "framer-motion";
+import { db } from "../services/firebase/config";
 import { useAuth } from "../hooks/useAuth";
 import { dashboardPathForRole } from "../utils/roleRedirect";
 import { CardFanCarousel } from "../components/ui/CardFanCarousel";
@@ -390,8 +392,6 @@ export function LandingPage() {
 
       // Best-effort Firestore storage
       try {
-        const { collection, addDoc, serverTimestamp } = await import("firebase/firestore");
-        const { db } = await import("../services/firebase/config");
         await addDoc(collection(db, "newsletterSubscriptions"), {
           email,
           createdAt: serverTimestamp(),

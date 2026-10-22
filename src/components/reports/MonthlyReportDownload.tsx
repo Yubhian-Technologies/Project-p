@@ -3,8 +3,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { listCampuses } from "../../services/firebase/campuses";
 import { listColleges } from "../../services/firebase/colleges";
 import { gatherMonthlySessionData } from "../../utils/monthlyReportData";
-import { generateMonthlyReportPdf } from "../../utils/monthlyReportPdf";
-import { generateMonthlyReportDocx } from "../../utils/monthlyReportDocx";
 import type { ReportSection } from "../../types/report";
 import { Card } from "../common/Card";
 import { Button } from "../common/Button";
@@ -89,8 +87,10 @@ export function MonthlyReportDownload() {
       };
       const input = { header, sections, goals, sessionData, photos };
       if (format === "pdf") {
+        const { generateMonthlyReportPdf } = await import("../../utils/monthlyReportPdf");
         await generateMonthlyReportPdf(input);
       } else {
+        const { generateMonthlyReportDocx } = await import("../../utils/monthlyReportDocx");
         await generateMonthlyReportDocx(input);
       }
       setStatus("idle");

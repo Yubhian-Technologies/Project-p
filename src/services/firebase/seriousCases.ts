@@ -59,6 +59,12 @@ export function subscribeToAdminSeriousCases(
     access.scope === "global" ||
     access.designation === "management" ||
     access.designation === "administration";
+
+  if (seesEverything) {
+    const q = query(seriousCasesCollection, orderBy("createdAt", "desc"));
+    return onSnapshot(q, (snap) => onChange(snap.docs.map((d) => toSeriousCase(d.id, d.data()))));
+  }
+
   const collegeIds = access?.collegeIds ?? [];
 
   if (collegeIds.length > 0) {

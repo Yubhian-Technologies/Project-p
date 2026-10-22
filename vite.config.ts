@@ -16,4 +16,30 @@ export default defineConfig({
   server: {
     port: 8001,
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: 'react-dom',
+              test: /node_modules[\\/]react-dom[\\/]/,
+            },
+            {
+              name: 'firebase-firestore',
+              test: /node_modules[\\/]@firebase[\\/]firestore[\\/]/,
+            },
+            {
+              name: 'firebase-auth',
+              test: /node_modules[\\/]@firebase[\\/]auth[\\/]/,
+            },
+            {
+              name: 'firebase-regex',
+              test: /node_modules[\\/]re2js[\\/]/,
+            },
+          ],
+        },
+      },
+    },
+  },
 })

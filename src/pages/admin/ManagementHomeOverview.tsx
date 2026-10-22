@@ -46,7 +46,6 @@ interface CampusStats {
   ssiTotal: number;
   ssiSevere: number;
   ssiModerate: number;
-  ssiMild: number;
   ssiNormal: number;
   counsellorsCount: number;
   worksheetsCount: number;
@@ -72,7 +71,6 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
   const [seriousCases, setSeriousCases] = useState<SeriousCase[]>([]);
   const [monthlyReports, setMonthlyReports] = useState<MonthlyReport[]>([]);
   const [allEvents, setAllEvents] = useState<{ event: EventProgram; campusName: string }[]>([]);
-  const [allCounsellors, setAllCounsellors] = useState<{ user: UserProfile; campusName: string }[]>([]);
 
   // Modals for drill down
   const [activeModal, setActiveModal] = useState<
@@ -104,7 +102,6 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
       setMonthlyReports(reports);
 
       const eventsAccumulator: { event: EventProgram; campusName: string }[] = [];
-      const counsellorsAccumulator: { user: UserProfile; campusName: string }[] = [];
 
       const statsPromises = activeCampuses.map(async (campus) => {
         try {
@@ -123,9 +120,7 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
           ]);
 
           campusEvents.forEach((ev) => eventsAccumulator.push({ event: ev, campusName: campus.name }));
-
           const counsellors = campusLogins.filter((l) => l.role === "counsellor");
-          counsellors.forEach((c) => counsellorsAccumulator.push({ user: c, campusName: campus.name }));
 
           // Worksheets count
           let totalWs = 0;
@@ -139,7 +134,9 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
           // Filter by period if month is selected
           const filteredBookings = period === "month"
             ? campusBookings.filter((b) => {
-                const d = new Date(b.createdAt || b.scheduledAt);
+                const timestamp = b.createdAt || b.scheduledAt;
+                if (timestamp === undefined) return false;
+                const d = new Date(timestamp);
                 return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
               })
             : campusBookings;
@@ -174,8 +171,7 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
             : campusSsi;
 
           const ssiSevere = filteredSsi.filter((s) => s.severity === "severe").length;
-          const ssiModerate = filteredSsi.filter((s) => s.severity === "moderate").length;
-          const ssiMild = filteredSsi.filter((s) => s.severity === "mild").length;
+          const ssiModerate = filteredSsi.filter((s) => s.severity === "medium").length;
           const ssiNormal = filteredSsi.filter((s) => s.severity === "normal").length;
 
           // Reports info
@@ -201,7 +197,6 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
             ssiTotal: filteredSsi.length,
             ssiSevere,
             ssiModerate,
-            ssiMild,
             ssiNormal,
             counsellorsCount: counsellors.length,
             worksheetsCount: totalWs,
@@ -225,7 +220,6 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
             ssiTotal: 0,
             ssiSevere: 0,
             ssiModerate: 0,
-            ssiMild: 0,
             ssiNormal: 0,
             counsellorsCount: 0,
             worksheetsCount: 0,
@@ -244,7 +238,6 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
       const resolvedStats = await Promise.all(statsPromises);
       setCampusStats(resolvedStats);
       setAllEvents(eventsAccumulator);
-      setAllCounsellors(counsellorsAccumulator);
     } catch (err) {
       console.error("ManagementHomeOverview: Failed to load data", err);
     } finally {
@@ -302,8 +295,6 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
   const totalSsiCheckins = activeCampusStats.reduce((sum, s) => sum + s.ssiTotal, 0);
   const totalSsiSevere = activeCampusStats.reduce((sum, s) => sum + s.ssiSevere, 0);
   const totalSsiModerate = activeCampusStats.reduce((sum, s) => sum + s.ssiModerate, 0);
-  const totalSsiMild = activeCampusStats.reduce((sum, s) => sum + s.ssiMild, 0);
-  const totalSsiNormal = activeCampusStats.reduce((sum, s) => sum + s.ssiNormal, 0);
   const totalCounsellors = activeCampusStats.reduce((sum, s) => sum + s.counsellorsCount, 0);
   const totalWorksheets = activeCampusStats.reduce((sum, s) => sum + s.worksheetsCount, 0);
 
@@ -314,8 +305,6 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
   }, [seriousCases, selectedCampusId]);
 
   const totalCriticalCases = filteredSeriousCases.length;
-  const totalSosCases = filteredSeriousCases.filter((c) => c.isEmergency).length;
-  const totalSevereCases = filteredSeriousCases.filter((c) => !c.isEmergency).length;
   const totalCriticalResolved = filteredSeriousCases.filter((c) => c.status === "resolved").length;
   const totalCriticalPending = filteredSeriousCases.filter((c) => c.status === "open").length;
 
@@ -350,7 +339,6 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
   }, [selectedCampusId, filteredAllEvents, allEvents]);
 
   // Platform-wide metrics for remaining normal wide-campuses view sections
-  const platformCriticalCases = seriousCases.length;
   const platformSosCases = seriousCases.filter((c) => c.isEmergency).length;
   const platformSevereCases = seriousCases.filter((c) => !c.isEmergency).length;
   const platformCriticalResolved = seriousCases.filter((c) => c.status === "resolved").length;
@@ -365,7 +353,6 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
   const platformCampusesPendingReports = campuses.length - platformCampusesSubmittedCount;
 
   const platformSsiNormal = enrichedCampusStats.reduce((sum, s) => sum + s.ssiNormal, 0);
-  const platformSsiMild = enrichedCampusStats.reduce((sum, s) => sum + s.ssiMild, 0);
   const platformSsiModerate = enrichedCampusStats.reduce((sum, s) => sum + s.ssiModerate, 0);
   const platformSsiSevere = enrichedCampusStats.reduce((sum, s) => sum + s.ssiSevere, 0);
   const platformSsiTotal = enrichedCampusStats.reduce((sum, s) => sum + s.ssiTotal, 0);
@@ -953,10 +940,6 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
                 <div className="mho-ssi-dist-card mho-ssi-dist-card--normal">
                   <span className="mho-ssi-dist-card__val">{platformSsiNormal}</span>
                   <span className="mho-ssi-dist-card__label">Normal</span>
-                </div>
-                <div className="mho-ssi-dist-card mho-ssi-dist-card--mild">
-                  <span className="mho-ssi-dist-card__val">{platformSsiMild}</span>
-                  <span className="mho-ssi-dist-card__label">Mild</span>
                 </div>
                 <div className="mho-ssi-dist-card mho-ssi-dist-card--moderate">
                   <span className="mho-ssi-dist-card__val">{platformSsiModerate}</span>

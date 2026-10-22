@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { gatherConsolidatedReportData } from "../../utils/consolidatedReportData";
-import { generateConsolidatedReportPdf } from "../../utils/consolidatedReportPdf";
-import { generateConsolidatedReportDocx } from "../../utils/consolidatedReportDocx";
 import type { ReportSection, ReportStatRow } from "../../types/report";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
@@ -51,8 +49,10 @@ export function ConsolidatedReportDownloadSection() {
       const header = { monthLabel: `${MONTHS[monthIdx].toUpperCase()} ${year}` };
       const input = { header, extraStats, sections, data, photos };
       if (format === "pdf") {
+        const { generateConsolidatedReportPdf } = await import("../../utils/consolidatedReportPdf");
         await generateConsolidatedReportPdf(input);
       } else {
+        const { generateConsolidatedReportDocx } = await import("../../utils/consolidatedReportDocx");
         await generateConsolidatedReportDocx(input);
       }
       setStatus("idle");

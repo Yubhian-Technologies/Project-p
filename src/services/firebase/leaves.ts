@@ -1,16 +1,14 @@
 import {
   collection,
   doc,
-  getDocs,
   onSnapshot,
   query,
   setDoc,
   updateDoc,
   where,
-  orderBy,
 } from "firebase/firestore";
 import { db } from "./config";
-import type { LeaveRequest, LeaveDuration, LeaveType, ActiveLeaveInfo } from "../../types/leave";
+import type { LeaveRequest, LeaveDuration, LeaveType } from "../../types/leave";
 
 const LEAVES_COLLECTION = "leaves";
 
