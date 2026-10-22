@@ -235,7 +235,7 @@ export function LeaveDetailsModal({
               <div className="leave-details-review-actions">
                 <Button
                   type="button"
-                  variant="primary"
+                  variant="filled"
                   disabled={approving || disapproving}
                   onClick={() => onApprove?.(leave)}
                   className="leave-approve-btn"
@@ -282,7 +282,7 @@ export function LeaveDetailsModal({
                   </Button>
                   <Button
                     type="button"
-                    variant="primary"
+                    variant="filled"
                     disabled={disapproving}
                     onClick={handleDisapproveSubmit}
                     className="leave-disapprove-btn"

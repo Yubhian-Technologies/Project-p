@@ -87,7 +87,7 @@ export function ApplyLeaveModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Apply for Leave">
+    <Modal onClose={onClose} title="Apply for Leave">
       <form onSubmit={handleSubmit} className="apply-leave-form">
         {error && <div className="apply-leave-form__error">{error}</div>}
 
@@ -178,10 +178,10 @@ export function ApplyLeaveModal({
         </div>
 
         <div className="apply-leave-form__actions">
-          <Button type="button" variant="ghost" onClick={onClose} disabled={submitting}>
+          <Button type="button" variant="outlined" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" disabled={submitting}>
+          <Button type="submit" variant="filled" disabled={submitting}>
             {submitting ? "Submitting..." : "Submit Leave Request"}
           </Button>
         </div>

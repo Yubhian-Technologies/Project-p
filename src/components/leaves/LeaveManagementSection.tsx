@@ -157,7 +157,7 @@ export function LeaveManagementSection({ isHeadView = false }: LeaveManagementSe
           </p>
         </div>
         <Button
-          variant="primary"
+          variant="filled"
           onClick={() => setIsApplyModalOpen(true)}
           className="leave-section__apply-btn"
         >
