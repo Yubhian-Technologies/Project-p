@@ -41,6 +41,7 @@ export interface ReportListItem {
   uploadedAt: string;
   fileName: string;
   downloadURL: string;
+  uploadedByRole?: "counsellor" | "head";
   status?: "pending" | "verified";
   signedDownloadURL?: string;
   signedFileName?: string;
@@ -116,7 +117,7 @@ export function ReportList<T extends ReportListItem>({
               </div>
               <div className="report-list-block__row-actions">
                 <span className="report-list-block__badge">{monthLabel(r.month)} {r.year}</span>
-                {r.status && (
+                {r.status && r.uploadedByRole !== "head" && (
                   <span className={`report-list-block__status report-list-block__status--${r.status}`}>
                     {r.status === "verified" ? <><CheckIcon /> Verified</> : <><HourglassIcon /> Pending</>}
                   </span>
@@ -137,7 +138,7 @@ export function ReportList<T extends ReportListItem>({
                     <DownloadIcon /> {r.signedKind === "stamped" ? "Download Signed Document" : "Download Verification Certificate"}
                   </a>
                 )}
-                {onVerify && r.status === "pending" && (
+                {onVerify && r.status === "pending" && r.uploadedByRole !== "head" && (
                   <button
                     type="button"
                     className="report-list-block__btn report-list-block__btn--verify"

@@ -90,11 +90,11 @@ service firebase.storage {
     // Counsellor-submitted monthly reports: same pattern as monthly-reports
     // above (src/services/firebase/counsellorMonthlyReports.ts uploads to
     // counsellor-monthly-reports/{uploaderUid}/{year}/{month}/{fileName}).
-    // The Firestore "counsellorMonthlyReports" rule scopes who can list/read
-    // the resulting doc (the counsellor themself, or their own college's
-    // Head) — this is immutable once submitted, so no delete here either.
+    // The author and same-college reporting recipients can read the file;
+    // this is immutable once submitted, so no delete here either.
     match /counsellor-monthly-reports/{uid}/{year}/{month}/{fileName} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null &&
+        (request.auth.uid == uid || resource.metadata[request.auth.uid] == 'true');
       allow write: if request.auth != null && request.auth.uid == uid &&
         request.resource.size < 20 * 1024 * 1024;
       allow delete: if false;

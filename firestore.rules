@@ -72,6 +72,17 @@ service cloud.firestore {
       );
     }
 
+    // Monthly staff reports are visible only within their author's exact
+    // college. A campus-wide/global admin is not implicitly a recipient.
+    function monthlyReportAdminCanAccessCollege(campusId, collegeId) {
+      return isSignedIn() && myRole() == 'admin' &&
+        'adminAccess' in myProfile() &&
+        myProfile().adminAccess.scope == 'campuses' &&
+        myProfile().adminAccess.designation in ['principal', 'vice-principal'] &&
+        campusId in myProfile().adminAccess.campusIds &&
+        collegeId in myProfile().adminAccess.collegeIds;
+    }
+
     // Only a "global"-scope admin (or super-admin) may create/edit/delete a
     // Campus or College record at all — a campus-restricted admin never can,
     // regardless of which campuses they're otherwise scoped to.
@@ -1092,34 +1103,36 @@ service cloud.firestore {
     }
 
     // ---------- counsellorMonthlyReports ----------
-    // A counsellor's own monthly report, submitted straight to (and visible
-    // only to) their campus's one Head — who oversees every college in that
-    // campus, not just the counsellor's own college — never to Admin, and
-    // never to another campus's Head. Immutable except for the Head's own
-    // verification of it: no delete by anyone, and no update besides that
-    // Head marking it verified.
+    // Monthly reports authored by counsellors or Heads are confined to their
+    // assigned college. Other colleges' Heads and non-college-wide admins
+    // cannot read them.
     match /counsellorMonthlyReports/{reportId} {
-      // The Principal/VP (or any wider-scope admin) for the submitting
-      // counsellor's own college can also see it — college-scoped, unlike
-      // the Head's campus-wide view just below.
       allow read: if isSignedIn() && (
         resource.data.uploadedByUid == request.auth.uid ||
-        (isRole('head') && resource.data.campusId == myProfile().campusId) ||
-        adminCanAccessCollege(resource.data.campusId, resource.data.collegeId)
+        (isRole('head') &&
+         resource.data.campusId == myProfile().campusId &&
+         resource.data.collegeId == myProfile().collegeId) ||
+        monthlyReportAdminCanAccessCollege(resource.data.campusId, resource.data.collegeId)
       );
-      allow create: if isRole('counsellor')
+      allow create: if (isRole('counsellor') || isRole('head'))
+                    && request.resource.data.uploadedByRole == myRole()
                     && request.resource.data.uploadedByUid == request.auth.uid
                     && request.resource.data.campusId == myProfile().campusId
                     && request.resource.data.collegeId == myProfile().collegeId
-                    && request.resource.data.status == 'pending';
-      // Only that campus's Head can verify it; the report's identity/
-      // ownership fields must stay untouched.
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.recipientUids is list
+                    && request.resource.data.recipientUids.size() > 0;
+      // Only the Head assigned to the same college can verify a counsellor's
+      // report. Head-authored reports are read-only after submission.
       allow update: if isRole('head')
                     && resource.data.campusId == myProfile().campusId
+                    && resource.data.collegeId == myProfile().collegeId
+                    && resource.data.get('uploadedByRole', 'counsellor') == 'counsellor'
                     && request.resource.data.status == 'verified'
                     && request.resource.data.uploadedByUid == resource.data.uploadedByUid
                     && request.resource.data.campusId == resource.data.campusId
-                    && request.resource.data.collegeId == resource.data.collegeId;
+                    && request.resource.data.collegeId == resource.data.collegeId
+                    && request.resource.data.recipientUids == resource.data.recipientUids;
       allow delete: if false;
     }
 

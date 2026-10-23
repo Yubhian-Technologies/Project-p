@@ -6,7 +6,7 @@ import { listEventsForCollege } from "../../services/firebase/events";
 import { listSsiCollegeResultsForCollege } from "../../services/firebase/ssiCollegeResults";
 import { subscribeToAdminSeriousCases } from "../../services/firebase/seriousCases";
 import { listAllBookingsForStats } from "../../services/firebase/bookings";
-import { listCounsellorMonthlyReportsForCollege } from "../../services/firebase/counsellorMonthlyReports";
+import { listMonthlyStaffReportsForRecipient } from "../../services/firebase/counsellorMonthlyReports";
 import { listAttendanceForCampusOnDate, istDateKey, formatIstTime } from "../../services/firebase/attendance";
 import { periodLabel, periodChipLabel, periodStart, type HomePeriod } from "../head/headHomeMetrics";
 import type { EventProgram } from "../../types/event";
@@ -14,7 +14,7 @@ import type { SsiCollegeResult } from "../../services/firebase/ssiCollegeResults
 import type { SeriousCase } from "../../types/seriousCase";
 import type { Booking, ConcernCategory } from "../../types/booking";
 import { CONCERN_CATEGORY_LABELS } from "../../types/booking";
-import type { CounsellorMonthlyReport } from "../../services/firebase/counsellorMonthlyReports";
+import type { MonthlyStaffReport } from "../../services/firebase/counsellorMonthlyReports";
 import type { AttendanceRecord } from "../../types/attendance";
 import {
   CalendarIcon,
@@ -24,7 +24,6 @@ import {
   UsersIcon,
   ClockIcon,
   ClipboardListIcon,
-  DownloadIcon,
 } from "../../components/common/icons";
 import { Modal } from "../../components/common/Modal";
 import { formatDateTimeDMY } from "../../utils/formatDate";
@@ -36,9 +35,6 @@ interface PrincipalHomeOverviewProps {
 
 const PERIODS: HomePeriod[] = ["week", "month"];
 const DAY_MS = 24 * 60 * 60 * 1000;
-const REPORT_MONTH_LABEL = (m: number, y: number) =>
-  new Date(y, m - 1, 1).toLocaleString("en-US", { month: "long", year: "numeric" });
-
 function isHeldSession(b: Booking): boolean {
   return b.status === "completed" && b.outcome !== "missed";
 }
@@ -64,7 +60,7 @@ interface LoadedData {
   staffNames: Map<string, string>;
   counsellorCount: number;
   collegeBookings: Booking[];
-  monthlyReports: CounsellorMonthlyReport[];
+  monthlyReports: MonthlyStaffReport[];
   attendanceToday: AttendanceRecord[];
 }
 
@@ -88,7 +84,6 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
 
   const [showSessions, setShowSessions] = useState(false);
   const [showGroupSessions, setShowGroupSessions] = useState(false);
-  const [showReports, setShowReports] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
 
   const collegeIds =
@@ -101,13 +96,23 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
   // their assigned campus and college(s). Firestore can only validate list
   // queries against the Admin branch of the events/ssi_college_results read
   // rules when the query itself filters on campusId too.
-  const campusId = profile?.adminAccess?.campusIds?.[0] || profile?.campusId;
+  const campusIds =
+    profile?.adminAccess?.campusIds?.length
+      ? profile.adminAccess.campusIds
+      : profile?.campusId
+        ? [profile.campusId]
+        : [];
+  const campusId = campusIds[0];
+  const reportScopes = campusIds.flatMap((assignedCampusId) =>
+    collegeIds.map((assignedCollegeId) => ({ campusId: assignedCampusId, collegeId: assignedCollegeId })),
+  );
   const grantedSections = profile?.adminAccess?.sections;
   const seesSeriousCases = !grantedSections || grantedSections.includes("serious-cases");
   const sees = (id: string) => !grantedSections || grantedSections.includes(id as (typeof grantedSections)[number]);
 
   useEffect(() => {
     if (!profile || collegeIds.length === 0) return;
+    const profileUid = profile.uid;
     let active = true;
     setError(null);
 
@@ -130,7 +135,10 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
               ? getDocs(query(collection(db, "users"), where("role", "==", "head"), where("campusId", "==", campusId)))
               : Promise.resolve(null),
           ),
-          labeled("monthlyReports", Promise.all(collegeIds.map((id) => listCounsellorMonthlyReportsForCollege(id, campusId)))),
+          labeled(
+            "monthlyReports",
+            profileUid ? listMonthlyStaffReportsForRecipient(profileUid, reportScopes) : Promise.resolve([]),
+          ),
         ]);
 
         const counsellorDocs = counsellorSnaps.flatMap((s) => s.docs);
@@ -331,7 +339,7 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
     value: loading ? "…" : String(reportsThisMonth.length),
     note: loading ? "this month" : `${pendingReports} awaiting verification`,
     urgent: pendingReports > 0,
-    onClick: () => setShowReports(true),
+    onClick: () => onSelectSection("staff-monthly-reports"),
   });
   tiles.push({
     id: "attendance",
@@ -483,35 +491,6 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
                   <span className="bento-list-item__title">{e.title}</span>
                   <span>{formatDateTimeDMY(e.eventDate)}</span>
                 </div>
-              ))}
-            </div>
-          )}
-        </Modal>
-      )}
-
-      {showReports && (
-        <Modal title="Monthly Reports" onClose={() => setShowReports(false)}>
-          {monthlyReports.length === 0 ? (
-            <p>No monthly reports submitted yet for your college.</p>
-          ) : (
-            <div className="bento-list">
-              {monthlyReports.map((r) => (
-                <a
-                  key={r.id}
-                  className="bento-list-item pha-modal__report-row"
-                  href={r.downloadURL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span className="bento-list-item__title">
-                    {r.title} — {r.uploadedBy}
-                    <span className="pha-modal__report-meta"> ({REPORT_MONTH_LABEL(r.month, r.year)})</span>
-                  </span>
-                  <span className={`pha-modal__status pha-modal__status--${r.status}`}>
-                    {r.status === "verified" ? "Verified" : "Pending"}
-                    <DownloadIcon />
-                  </span>
-                </a>
               ))}
             </div>
           )}

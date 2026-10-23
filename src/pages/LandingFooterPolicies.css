@@ -1,0 +1,80 @@
+.footer-policy-links button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.footer-policy-links button:hover {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.footer-policy-links button:focus-visible {
+  outline: 2px solid #bfdbfe;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.footer-policy-modal {
+  max-width: 720px;
+  padding: 30px 34px;
+}
+
+.footer-policy-modal .modal__title {
+  color: #1e3a8a;
+  font-family: var(--font-headline, "Playfair Display", serif);
+  font-size: 22px;
+}
+
+.footer-policy-modal .modal__body {
+  padding-right: 4px;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.footer-policy {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.footer-policy > p,
+.footer-policy section p {
+  margin: 0;
+}
+
+.footer-policy section {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.footer-policy h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.footer-policy ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+@media (max-width: 560px) {
+  .footer-policy-modal {
+    padding: 22px 18px;
+  }
+
+  .footer-policy-modal .modal__title {
+    font-size: 19px;
+  }
+}

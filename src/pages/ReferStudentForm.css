@@ -1,99 +1,276 @@
-.refer-student-form {
+.referral-form-wrap {
+  color: #334155;
+}
+
+.referral-form__intro {
+  margin: 0 0 20px;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.referral-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
-.refer-student-form__intro {
-  margin: 0;
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: #4A5568;
+.referral-honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-.refer-student-form__row {
-  display: flex;
-  gap: 14px;
-}
-
-.refer-student-form__row .refer-student-form__field {
-  flex: 1;
+.referral-form fieldset {
   min-width: 0;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid rgba(30, 58, 138, 0.13);
+  border-radius: 14px;
+  background: #f8fafc;
 }
 
-.refer-student-form__field {
+.referral-form legend {
+  padding: 0 8px;
+  color: #1e3a8a;
+  font-family: var(--font-headline, "Playfair Display", serif);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.referral-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  margin-top: 14px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
 }
 
-.refer-student-form__field span,
-.refer-student-form__field > label {
+.referral-field__label {
+  display: block;
+}
+
+.referral-required {
+  margin-left: 3px;
+  color: #b42318;
+}
+
+.referral-field:first-of-type {
+  margin-top: 0;
+}
+
+.referral-optional {
+  margin-left: 3px;
+  color: #64748b;
   font-size: 12px;
-  font-weight: 700;
-  color: #718096;
+  font-weight: 400;
 }
 
-.refer-student-form__field input,
-.refer-student-form__field select,
-.refer-student-form__field textarea {
-  font-family: var(--font-main);
-  font-size: 13.5px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(46, 43, 39, 0.12);
-  background: #FAFAF9;
-  color: #2E2B27;
+.referral-field__label .referral-optional {
+  margin-left: 4px;
+}
+
+.referral-field input:not([type="checkbox"]):not([type="radio"]),
+.referral-field select,
+.referral-field textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  font-weight: 400;
   box-sizing: border-box;
+}
+
+.referral-field textarea {
   resize: vertical;
 }
 
-.refer-student-form__field input:focus,
-.refer-student-form__field select:focus,
-.refer-student-form__field textarea:focus {
-  outline: none;
-  border-color: #F97316;
+.referral-field input:focus,
+.referral-field select:focus,
+.referral-field textarea:focus {
+  outline: 3px solid rgba(37, 99, 235, 0.18);
+  border-color: #2563eb;
 }
 
-.refer-student-form__submit {
-  align-self: flex-start;
-  font-family: var(--font-main);
-  font-size: 13.5px;
-  font-weight: 800;
-  color: #FFFFFF;
-  background: #EA580C;
-  border: none;
-  padding: 11px 24px;
-  border-radius: 10px;
+.referral-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 14px;
+  padding-top: 2px;
+}
+
+.referral-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 450;
+  line-height: 1.45;
   cursor: pointer;
-  transition: background 0.15s ease;
 }
 
-.refer-student-form__submit:hover {
-  background: #C2410C;
+.referral-option input,
+.referral-consent input {
+  width: 16px;
+  height: 16px;
+  margin: 1px 0 0;
+  accent-color: #1e3a8a;
+  flex: 0 0 auto;
 }
 
-.refer-student-form__done {
+.referral-warning {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-left: 3px solid #d97706;
+  border-radius: 6px;
+  background: #fffbeb;
+  color: #713f12;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.referral-privacy {
+  padding: 16px;
+  border: 1px solid rgba(30, 58, 138, 0.13);
+  border-radius: 12px;
+  background: #eff6ff;
+}
+
+.referral-privacy h3 {
+  margin: 0 0 8px;
+  color: #1e3a8a;
+  font-size: 14px;
+}
+
+.referral-privacy p,
+.referral-success p {
+  margin: 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.referral-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.referral-submit {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 11px 20px;
+  border: 0;
+  border-radius: 9px;
+  background: #1e3a8a;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.referral-submit:hover:not(:disabled) {
+  background: #172554;
+  transform: translateY(-1px);
+}
+
+.referral-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.referral-submit-note {
+  margin: -10px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.referral-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.referral-success {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  padding: 6px 0;
 }
 
-.refer-student-form__done p {
+.referral-success__eyebrow {
+  color: #1e3a8a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.referral-success h3 {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #2E2B27;
+  color: #0f172a;
+  font-family: var(--font-headline, "Playfair Display", serif);
+  font-size: 24px;
 }
 
-.refer-student-form__done-hint {
-  font-size: 12.5px !important;
-  color: #718096 !important;
+.referral-emergency {
+  padding: 14px;
+  border-radius: 10px;
+  background: #fffbeb;
+  color: #713f12;
+}
+
+.referral-emergency strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.referral-emergency p {
+  color: #713f12;
+}
+
+.referral-emergency a {
+  color: #1e3a8a;
+  font-weight: 700;
+}
+
+.referral-success .referral-signoff {
+  color: #1e3a8a;
+  font-weight: 650;
 }
 
 @media (max-width: 560px) {
-  .refer-student-form__row {
-    flex-direction: column;
-    gap: 16px;
+  .referral-form fieldset {
+    padding: 14px;
+  }
+
+  .referral-options {
+    grid-template-columns: 1fr;
+  }
+
+  .referral-submit {
+    width: 100%;
   }
 }

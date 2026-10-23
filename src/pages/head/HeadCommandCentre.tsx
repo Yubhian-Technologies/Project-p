@@ -7,7 +7,7 @@ import {
 } from "../../services/firebase/bookings";
 import { listColleges } from "../../services/firebase/colleges";
 import { listEventsForCampus } from "../../services/firebase/events";
-import { listCounsellorMonthlyReportsForCampus } from "../../services/firebase/counsellorMonthlyReports";
+import { listMonthlyStaffReportsForRecipient } from "../../services/firebase/counsellorMonthlyReports";
 import { AttendanceCheckCard } from "../../components/attendance/AttendanceCheckCard";
 import { TeamAttendanceTodayCard } from "./TeamAttendanceTodayCard";
 import { listSsiCollegeResultsForCampus, type SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
@@ -51,6 +51,8 @@ interface HeadCommandCentreProps {
 export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
   const { profile } = useAuth();
   const campusId = profile?.campusId;
+  const collegeId = profile?.collegeId;
+  const profileUid = profile?.uid;
   const [data, setData] = useState<LoadedData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<HomePeriod>("month");
@@ -77,7 +79,9 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
   };
 
   useEffect(() => {
-    if (!campusId) return;
+    if (!campusId || !collegeId || !profileUid) return;
+    const currentProfileUid = profileUid;
+    const assignedCollegeId = collegeId;
     let active = true;
 
     // Each read is individually labeled so a permission/other failure in
@@ -96,7 +100,10 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
           labeled("bookableProfiles", listBookableProfiles()),
           labeled("colleges", listColleges(id)),
           labeled("events", listEventsForCampus(id)),
-          labeled("counsellorMonthlyReports", listCounsellorMonthlyReportsForCampus(id)),
+          labeled(
+            "monthlyReports",
+            listMonthlyStaffReportsForRecipient(currentProfileUid, [{ campusId: id, collegeId: assignedCollegeId }]),
+          ),
           labeled("pendingTransfers", listPendingTransferRequestsForCampus(id)),
           labeled("feedback", getAllFeedback(id)),
         ]);
@@ -134,7 +141,7 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
     return () => {
       active = false;
     };
-  }, [campusId]);
+  }, [campusId, collegeId, profileUid]);
 
   useEffect(() => {
     updateScrollButtons();
@@ -142,8 +149,8 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
     return () => window.removeEventListener("resize", updateScrollButtons);
   }, [updateScrollButtons, data]);
 
-  if (!campusId) {
-    return <p className="hch-muted">Your profile isn't linked to a campus yet.</p>;
+  if (!campusId || !collegeId) {
+    return <p className="hch-muted">Your profile isn't linked to a campus and college yet.</p>;
   }
   if (error) return <p className="hch-error">{error}</p>;
   if (!data) return <p className="hch-muted">Loading dashboard…</p>;

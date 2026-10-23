@@ -9,6 +9,7 @@ import { SsiAnalyticsSection } from "./analytics/SsiAnalyticsSection";
 import { SeriousCasesSection } from "./SeriousCasesSection";
 import { EventsOverviewSection } from "./EventsOverviewSection";
 import { MonthlyReportsViewSection } from "./MonthlyReportsViewSection";
+import { CollegeMonthlyReportsSection } from "./CollegeMonthlyReportsSection";
 import { CounsellorWorksheetSection } from "./CounsellorWorksheetSection";
 import { AdminHomeActivityOverview } from "./AdminHomeActivityOverview";
 import { PrincipalHomeOverview } from "./PrincipalHomeOverview";
@@ -85,6 +86,13 @@ const SECTIONS = [
     ),
   },
   {
+    id: "staff-monthly-reports",
+    label: "Monthly Reports",
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="16" y2="17" /></svg>
+    ),
+  },
+  {
     id: "leave-approvals",
     label: "Leave Approvals",
     icon: (
@@ -108,6 +116,7 @@ const TITLES: Record<string, string> = {
   "serious-cases": "Serious Cases",
   "counsellor-worksheet": "Counsellor Worksheet",
   "monthly-reports": "Consolidated Reports",
+  "staff-monthly-reports": "Monthly Reports",
   "leave-approvals": "Leave Approvals",
   "campus-rankings": "Campus Rankings",
 };
@@ -124,6 +133,9 @@ export function AdminDashboard() {
   // this isn't just the usual "sections" checklist, it's enforced here
   // unconditionally (also matches firestore.rules' isGlobalCampusManager()).
   const isCampusRestricted = profile?.role === "admin" && profile.adminAccess?.scope === "campuses";
+  const isPrincipalOrVp =
+    profile?.role === "admin" &&
+    (profile.adminAccess?.designation === "principal" || profile.adminAccess?.designation === "vice-principal");
   const allowedSections = profile?.adminAccess?.sections;
   // Management/Administration-designated admins (and any global-scope admin)
   // always see every Serious Case platform-wide, regardless of their own
@@ -158,12 +170,18 @@ export function AdminDashboard() {
           (s) =>
             s.id === "overview" ||
             s.id === "campus-rankings" ||
+            (s.id === "staff-monthly-reports" && isPrincipalOrVp) ||
             allowedSections.includes(s.id as (typeof allowedSections)[number]) ||
             (s.id === "serious-cases" && seesSeriousCasesRegardless) ||
             (s.id === "leave-approvals" && seesLeaveApprovalsRegardless),
         )
       : SECTIONS
-  ).filter((s) => !(isCampusRestricted && s.id === "campuses") && !(isCollegeScoped && s.id === "monthly-reports"));
+  ).filter(
+    (s) =>
+      !(isCampusRestricted && s.id === "campuses") &&
+      !(isCollegeScoped && s.id === "monthly-reports") &&
+      !(s.id === "staff-monthly-reports" && !isPrincipalOrVp),
+  );
 
   return (
     <AppShell
@@ -171,6 +189,17 @@ export function AdminDashboard() {
       sections={visibleSections}
       activeSection={activeSection}
       onSelectSection={setActiveSection}
+      onNotificationClick={(notification) => {
+        if (notification.type === "monthly_report_uploaded") {
+          if (isPrincipalOrVp) {
+            setActiveSection("staff-monthly-reports");
+          } else if (visibleSections.some((section) => section.id === "monthly-reports")) {
+            setActiveSection("monthly-reports");
+          } else {
+            setActiveSection("overview");
+          }
+        }
+      }}
     >
       {activeSection === "profile" ? (
         <ProfileSection />
@@ -188,6 +217,8 @@ export function AdminDashboard() {
         <SeriousCasesSection />
       ) : activeSection === "counsellor-worksheet" ? (
         <CounsellorWorksheetSection />
+      ) : activeSection === "staff-monthly-reports" && isPrincipalOrVp ? (
+        <CollegeMonthlyReportsSection />
       ) : activeSection === "monthly-reports" && !isCollegeScoped ? (
         <MonthlyReportsViewSection />
       ) : activeSection === "leave-approvals" ? (

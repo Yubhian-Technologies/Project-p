@@ -40,6 +40,7 @@ export interface Notification {
   recipientId: string;
   type: NotificationType;
   bookingId?: string;
+  reportId?: string;
   title: string;
   message: string;
   read: boolean;

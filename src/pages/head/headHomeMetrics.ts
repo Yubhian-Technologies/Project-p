@@ -3,7 +3,7 @@ import { CONCERN_CATEGORY_LABELS } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
 import type { College } from "../../types/college";
 import type { EventProgram } from "../../types/event";
-import type { CounsellorMonthlyReport } from "../../services/firebase/counsellorMonthlyReports";
+import type { MonthlyStaffReport } from "../../services/firebase/counsellorMonthlyReports";
 import type { SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
 import type { SessionFeedback } from "../../types/feedback";
 import { FEEDBACK_FORM } from "../../config/feedbackForm";
@@ -190,7 +190,7 @@ export interface HomeInput {
   counsellors: UserProfile[];
   colleges: College[];
   events: EventProgram[];
-  reports: CounsellorMonthlyReport[];
+  reports: MonthlyStaffReport[];
   transfers: Booking[];
   ssiResults: SsiCollegeResult[];
   feedbackList: SessionFeedback[];

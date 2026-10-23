@@ -6,11 +6,12 @@ When generating, modifying, or styling UI components and web pages in this codeb
 
 ## 1. Typography System (Playfair Display + Work Sans)
 - **Display & Headlines:** `'Playfair Display', Georgia, 'Times New Roman', serif` (available via `var(--font-headline)`, `var(--font-title)`, and `var(--md-sys-typescale-font-display)`).
-  - Used for hero headings, page titles, section titles, bento card headlines, and metric values.
+  - Used for hero headings, page titles, section titles, and bento card headlines.
   - Weight: 700 to 900.
 - **Body, Navigation, UI Controls & Labels:** `'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif` (available via `var(--font-main)` and `var(--md-sys-typescale-font-body)`).
   - Used for body copy, paragraphs, table rows, button labels, chips, and metadata.
   - Weight: 400 (regular), 600 (semi-bold), 700 (bold), 800 (extra-bold).
+- **Monthly Report Analytics Values:** Use the regular body font at weight 400 with normal font style. Keep values plain and readable; do not use display serif, bold, or decorative number styling.
 
 ---
 

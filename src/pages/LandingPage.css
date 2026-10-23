@@ -1683,6 +1683,15 @@ body {
   max-width: 600px;
 }
 
+.landing-referral-modal {
+  max-width: 820px;
+}
+
+.landing-referral-modal .morphing-popover__title {
+  color: #1e3a8a;
+  font-family: var(--font-headline, "Playfair Display", serif);
+}
+
 .landing-parents-modal__body {
   display: flex;
   flex-direction: column;
@@ -2254,4 +2263,3 @@ body {
     margin-top: 10px;
   }
 }
-

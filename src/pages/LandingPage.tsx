@@ -11,6 +11,7 @@ import { AnimatedHero } from "../components/ui/animated-hero";
 import { AboutPhotoCarousel } from "../components/ui/AboutPhotoCarousel";
 import { MorphingPopover, MorphingPopoverTrigger, MorphingPopoverContent } from "../components/common/MorphingPopover";
 import { ReferStudentForm } from "./ReferStudentForm";
+import { LandingFooterPolicies } from "./LandingFooterPolicies";
 import "./LandingPage.css";
 
 const DOING_CARDS = [
@@ -1285,9 +1286,9 @@ export function LandingPage() {
                 <li>
                   <MorphingPopover>
                     <MorphingPopoverTrigger className="landing-footer__morph-trigger">
-                      Refer to Counsellor
+                      Refer to a counsellor
                     </MorphingPopoverTrigger>
-                    <MorphingPopoverContent title="Refer to Counsellor" className="landing-parents-modal">
+                    <MorphingPopoverContent title="Refer to a counsellor" className="landing-referral-modal">
                       <ReferStudentForm />
                     </MorphingPopoverContent>
                   </MorphingPopover>
@@ -1426,9 +1427,7 @@ export function LandingPage() {
             <span className="landing-footer__bottom-sub">A wellness initiative of Sri Vishnu Educational Society</span>
           </div>
           <div className="landing-footer__bottom-right">
-            <span>
-              <a href="#">Privacy &amp; Confidentiality</a> | <a href="#terms">Terms of Use</a> | <a href="#">Accessibility</a>
-            </span>
+            <LandingFooterPolicies />
             <span className="landing-footer__bottom-sub">Developed by Vishnu Tech Hub</span>
           </div>
         </div>

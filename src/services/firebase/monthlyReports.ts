@@ -87,13 +87,19 @@ export async function uploadMonthlyReport(
   // Platform-level alert for admins whenever a campus uploads a monthly report.
   const campusName = await getCampusName(campusId);
   const monthName = new Date(year, month - 1, 1).toLocaleString("en-IN", { month: "long" });
-  const admins = await listUsersByRole("admin");
+  const admins = (await listUsersByRole("admin")).filter(
+    (admin) =>
+      admin.adminAccess?.designation !== "principal" &&
+      admin.adminAccess?.designation !== "vice-principal" &&
+      !admin.adminAccess?.collegeIds?.length,
+  );
   const campusLabel = campusName ? `${campusName} campus` : "A campus";
   await Promise.all(
     admins.map((admin) =>
       createNotification({
         recipientId: admin.uid,
         type: "monthly_report_uploaded",
+        reportId: docRef.id,
         title: "Monthly report available",
         message: `${campusLabel} has a new monthly report: ${title} (${monthName} ${year}).`,
       }),

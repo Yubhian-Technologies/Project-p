@@ -2,30 +2,29 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useAcademicYear } from "../../hooks/useAcademicYear";
 import {
-  listCounsellorMonthlyReportsForCampus,
+  listMonthlyStaffReportsForRecipient,
   verifyCounsellorMonthlyReport,
-  type CounsellorMonthlyReport,
+  type MonthlyStaffReport,
 } from "../../services/firebase/counsellorMonthlyReports";
 import { ReportList } from "../../components/reports/ReportList";
 import "./MonthlyReportsSection.css";
 
-/** The monthly reports every counsellor across the Head's whole campus has
-    submitted — reviewed and verified here, separate from the Head's own
-    Consolidated Report (sent up to Admin). */
+/** Monthly reports shared within the Head's assigned college. */
 export function TeamMonthlyReportsSection() {
   const { profile } = useAuth();
   const { includesMonth } = useAcademicYear();
   const campusId = profile?.campusId ?? "";
+  const collegeId = profile?.collegeId ?? "";
 
-  const [reports, setReports] = useState<CounsellorMonthlyReport[]>([]);
+  const [reports, setReports] = useState<MonthlyStaffReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
   async function loadReports() {
-    if (!campusId) { setLoading(false); return; }
+    if (!campusId || !collegeId || !profile?.uid) { setLoading(false); return; }
     setLoading(true);
     try {
-      setReports(await listCounsellorMonthlyReportsForCampus(campusId));
+      setReports(await listMonthlyStaffReportsForRecipient(profile.uid, [{ campusId, collegeId }]));
     } finally {
       setLoading(false);
     }
@@ -34,9 +33,9 @@ export function TeamMonthlyReportsSection() {
   useEffect(() => {
     loadReports();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campusId]);
+  }, [campusId, collegeId, profile?.uid]);
 
-  async function handleVerify(report: CounsellorMonthlyReport) {
+  async function handleVerify(report: MonthlyStaffReport) {
     setVerifyingId(report.id);
     try {
       await verifyCounsellorMonthlyReport(report.id, profile?.displayName || profile?.email || "Head", profile?.uid ?? "", "");
@@ -46,17 +45,21 @@ export function TeamMonthlyReportsSection() {
     }
   }
 
-  if (!campusId) {
-    return <p style={{ color: "var(--neu-text-muted)", fontSize: 14 }}>Your profile isn't linked to a campus yet.</p>;
+  if (!campusId || !collegeId) {
+    return <p style={{ color: "var(--neu-text-muted)", fontSize: 14 }}>Your profile isn't linked to a campus and college yet.</p>;
   }
 
   return (
     <div className="mr-section">
       <ReportList
-        title="Reports from your campus's counsellors"
-        reports={reports.filter((r) => includesMonth(r.year, r.month, r.campusId || campusId, r.collegeId))}
+        title="Monthly reports shared with you by your college team"
+        reports={reports.filter(
+          (r) =>
+            r.uploadedByUid !== profile?.uid &&
+            includesMonth(r.year, r.month, r.campusId || campusId, r.collegeId),
+        )}
         loading={loading}
-        emptyMessage="No counsellor has submitted a monthly report yet."
+        emptyMessage="No monthly reports have been shared with you for your college yet."
         onRefresh={loadReports}
         onVerify={handleVerify}
         verifyingId={verifyingId}

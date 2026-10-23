@@ -1699,7 +1699,7 @@ export const getStudentMoodLogs = onCall<{ bookingId: string }>(async (request) 
 });
 
 export { sendAppointmentEmails } from "./appointmentEmails";
-export { emailOnEmergencySos } from "./email";
+export { emailOnEmergencySos, submitStudentReferral } from "./email";
 
 // ───────────────────────── Academic years ─────────────────────────
 //
