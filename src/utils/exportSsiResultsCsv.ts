@@ -1,5 +1,5 @@
 import type { SsiCollegeResult } from "../services/firebase/ssiCollegeResults";
-import { SSI_SEVERITY_LABELS } from "../config/ssiForm";
+import { ssiSeverityLabel } from "../config/ssiForm";
 import { downloadCsv } from "./csvExport";
 
 function answerFor(result: SsiCollegeResult, questionId: string): string {
@@ -16,9 +16,13 @@ const HEADERS = [
   "WhatsApp Number",
   "Total Score",
   "Max Score",
-  "Depression",
-  "Anxiety",
-  "Stress",
+  "Physical",
+  "Interpersonal Relationship",
+  "Academic",
+  "Environmental",
+  "Legacy Depression",
+  "Legacy Anxiety",
+  "Legacy Stress",
   "Severity",
   "Thoughts of self-harm",
   "Witnessed traumatic event",
@@ -38,10 +42,14 @@ export function exportSsiResultsCsv(results: SsiCollegeResult[], filename = "ssi
     r.whatsappNumber,
     r.likertScore,
     r.likertMax,
-    r.depressionScore,
-    r.anxietyScore,
-    r.stressScore,
-    SSI_SEVERITY_LABELS[r.severity],
+    r.physicalScore ?? "",
+    r.interpersonalScore ?? "",
+    r.academicScore ?? "",
+    r.environmentalScore ?? "",
+    r.depressionScore ?? "",
+    r.anxietyScore ?? "",
+    r.stressScore ?? "",
+    ssiSeverityLabel(r.severity, r.likertMax),
     answerFor(r, "l3_q1"),
     answerFor(r, "l3_q2"),
     answerFor(r, "l3_q4"),

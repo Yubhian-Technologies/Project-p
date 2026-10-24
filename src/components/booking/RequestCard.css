@@ -765,6 +765,12 @@
   color: #EA580C;
 }
 
+.request-card__ssi-score-note {
+  margin: -4px 0 14px;
+  color: #64748b;
+  font-size: 12px;
+}
+
 .request-card__ssi-subscales {
   display: flex;
   flex-wrap: wrap;

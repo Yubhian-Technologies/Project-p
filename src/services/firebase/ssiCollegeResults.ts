@@ -16,9 +16,13 @@ export interface SsiCollegeResultInput {
   level3Answers: SsiAnswerItem[];
   likertScore: number;
   likertMax: number;
-  depressionScore: number;
-  anxietyScore: number;
-  stressScore: number;
+  physicalScore?: number;
+  interpersonalScore?: number;
+  academicScore?: number;
+  environmentalScore?: number;
+  depressionScore?: number;
+  anxietyScore?: number;
+  stressScore?: number;
   severity: SsiSeverity;
   whatsappNumber: string;
   consentGiven: boolean;
@@ -48,10 +52,14 @@ function toSsiCollegeResult(id: string, data: Record<string, unknown>): SsiColle
     likertAnswers: (data.likertAnswers as SsiAnswerItem[]) ?? [],
     level3Answers: (data.level3Answers as SsiAnswerItem[]) ?? [],
     likertScore: (data.likertScore as number) ?? 0,
-    likertMax: (data.likertMax as number) ?? 0,
-    depressionScore: (data.depressionScore as number) ?? 0,
-    anxietyScore: (data.anxietyScore as number) ?? 0,
-    stressScore: (data.stressScore as number) ?? 0,
+    likertMax: (data.likertMax as number) ?? 63,
+    physicalScore: data.physicalScore as number | undefined,
+    interpersonalScore: data.interpersonalScore as number | undefined,
+    academicScore: data.academicScore as number | undefined,
+    environmentalScore: data.environmentalScore as number | undefined,
+    depressionScore: data.depressionScore as number | undefined,
+    anxietyScore: data.anxietyScore as number | undefined,
+    stressScore: data.stressScore as number | undefined,
     severity: (data.severity as SsiSeverity) ?? "normal",
     whatsappNumber: (data.whatsappNumber as string) ?? "",
     consentGiven: (data.consentGiven as boolean) ?? false,

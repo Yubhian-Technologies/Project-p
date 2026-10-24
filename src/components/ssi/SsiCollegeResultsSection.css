@@ -336,6 +336,12 @@
   color: #6B7280;
 }
 
+.ssi-results__score-note {
+  margin: -6px 0 14px;
+  color: #6B7280;
+  font-size: 12px;
+}
+
 .ssi-results__subscales {
   display: flex;
   flex-wrap: wrap;

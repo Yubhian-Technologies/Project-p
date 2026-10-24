@@ -161,21 +161,23 @@ export function SeriousCasesSection({ initialCaseId, onInitialCaseOpened }: Seri
                   {formatDateTimeDMY(c.createdAt)}
                 </span>
               </div>
-              <span
-                className={`serious-cases__badge serious-cases__badge--${
-                  c.status === "resolved" ? "resolved" : overdue ? "overdue" : "open"
-                }`}
-              >
-                {c.status === "resolved" ? "Resolved" : overdue ? `Overdue ×${c.escalationCount}` : "Awaiting action"}
-              </span>
-              <Button
-                type="button"
-                variant="outlined"
-                aria-label={`View ${c.isEmergency ? "Crisis SOS" : "flagged session"} case details`}
-                onClick={() => setDetailId(c.id)}
-              >
-                View
-              </Button>
+              <div className="serious-cases__row-actions">
+                <span
+                  className={`serious-cases__badge serious-cases__badge--${
+                    c.status === "resolved" ? "resolved" : overdue ? "overdue" : "open"
+                  }`}
+                >
+                  {c.status === "resolved" ? "Resolved" : overdue ? `Overdue ×${c.escalationCount}` : "Awaiting action"}
+                </span>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  aria-label={`View ${c.isEmergency ? "Crisis SOS" : "flagged session"} case details`}
+                  onClick={() => setDetailId(c.id)}
+                >
+                  View
+                </Button>
+              </div>
             </Card>
           );
         })}

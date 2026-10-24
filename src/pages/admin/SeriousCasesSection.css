@@ -65,6 +65,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1 1 60%;
   min-width: 200px;
 }
 
@@ -78,6 +79,14 @@
   font-size: 12.5px;
   font-weight: 600;
   color: #718096;
+}
+
+.serious-cases__row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-left: auto;
 }
 
 .serious-cases__badge {

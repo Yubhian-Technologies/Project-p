@@ -144,7 +144,7 @@ interface AdminAccessInput {
   campusIds?: string[];
   collegeIds?: string[]; // optional further narrowing within campusIds — only meaningful when scope === "campuses"
   sections: string[];
-  designation?: string; // purely descriptive — never affects access, see ADMIN_DESIGNATIONS
+  designation?: string; // capability preset that also affects role-specific access rules
 }
 
 async function validateAdminAccess(adminAccess: AdminAccessInput): Promise<void> {
@@ -156,6 +156,15 @@ async function validateAdminAccess(adminAccess: AdminAccessInput): Promise<void>
   }
   if (adminAccess.designation !== undefined && !ADMIN_DESIGNATIONS.includes(adminAccess.designation)) {
     throw new HttpsError("invalid-argument", "Invalid designation.");
+  }
+  if (adminAccess.designation === "administration" && adminAccess.scope !== "campuses") {
+    throw new HttpsError("invalid-argument", "Administration accounts must be restricted to assigned campuses and colleges.");
+  }
+  if (
+    adminAccess.designation === "administration" &&
+    (!Array.isArray(adminAccess.collegeIds) || adminAccess.collegeIds.length === 0)
+  ) {
+    throw new HttpsError("invalid-argument", "Assign at least one college to an Administration account.");
   }
   if (adminAccess.scope === "campuses") {
     if (adminAccess.sections.includes("campuses")) {
@@ -805,13 +814,11 @@ export const verifyMonthlyReport = onCall<VerifyMonthlyReportRequest>(async (req
 
   const callerDoc = await db.collection("users").doc(callerUid).get();
   const callerData = callerDoc.data();
-  // A Principal/VP is restricted to one college — the campus-wide
-  // Consolidated Report (filed once by the Head, can span several colleges
-  // on that campus) is out of scope for them, mirroring firestore.rules'
-  // isPrincipalOrVp() exclusion on the same collection.
   const isPrincipalOrVpCaller =
     callerData?.role === "admin" && hasDesignation(callerData ?? {}, ["principal", "vice-principal"]);
-  if (!isCampusManagerRole(callerData?.role) || isPrincipalOrVpCaller) {
+  const isAdministrationCaller =
+    callerData?.role === "admin" && hasDesignation(callerData ?? {}, ["administration"]);
+  if (!isCampusManagerRole(callerData?.role) || isPrincipalOrVpCaller || isAdministrationCaller) {
     throw new HttpsError("permission-denied", "Only an Admin or Super Admin can verify a consolidated report.");
   }
   const verifiedByUid = callerUid;
@@ -828,6 +835,19 @@ export const verifyMonthlyReport = onCall<VerifyMonthlyReportRequest>(async (req
     throw new HttpsError("not-found", "Report not found.");
   }
   const report = reportSnap.data()!;
+  const callerAccess = callerData?.adminAccess as
+    | { scope?: string; campusIds?: string[] }
+    | undefined;
+  if (
+    callerData?.role === "admin" &&
+    callerAccess?.scope === "campuses" &&
+    (!Array.isArray(callerAccess.campusIds) || !callerAccess.campusIds.includes(String(report.campusId ?? "")))
+  ) {
+    throw new HttpsError("permission-denied", "You don't have access to verify reports from this campus.");
+  }
+  if (report.status !== "pending") {
+    throw new HttpsError("failed-precondition", "Only pending reports can be verified.");
+  }
 
   // No signature uploaded — verify exactly as before, no signed artifact.
   const signatureSnap = await db.collection("users").doc(callerUid).collection("signature").doc("current").get();
@@ -1162,8 +1182,7 @@ export const reshareMonthlyReport = onCall<ReshareMonthlyReportRequest>(async (r
     caller?.role === "super-admin" ||
     !access ||
     access.scope === "global" && !access.designation ||
-    access.designation === "management" ||
-    access.designation === "administration";
+    access.designation === "management";
   const hasCampusAccess =
     caller?.role === "super-admin" ||
     !access ||

@@ -140,6 +140,13 @@ export function AdminDashboard() {
     profile.adminAccess?.scope === "campuses" &&
     (profile.adminAccess.collegeIds?.length ?? 0) > 0 &&
     (profile.adminAccess?.designation === "principal" || profile.adminAccess?.designation === "vice-principal");
+  const isAdministration =
+    profile?.role === "admin" && profile.adminAccess?.designation === "administration";
+  const hasAdministrationAssignment =
+    isAdministration &&
+    profile.adminAccess?.scope === "campuses" &&
+    (profile.adminAccess.campusIds?.length ?? 0) > 0 &&
+    (profile.adminAccess.collegeIds?.length ?? 0) > 0;
   const isConsolidatedReportRecipient =
     profile?.role === "admin" &&
     (profile.adminAccess?.designation === "management" ||
@@ -147,9 +154,8 @@ export function AdminDashboard() {
       (!profile.adminAccess?.designation &&
         (!profile.adminAccess || profile.adminAccess.scope === "global")));
   const allowedSections = profile?.adminAccess?.sections;
-  // Management/Administration-designated admins retain platform-wide
-  // read-only oversight. Assigned Principal/VP accounts also always get the
-  // section because they are the only roles allowed to review and resolve.
+  // Assigned Principal/VP accounts also always get the section because they
+  // are the only roles allowed to review and resolve.
   const seesSeriousCasesRegardless =
     !profile?.adminAccess ||
     profile.adminAccess.scope === "global" ||
@@ -160,10 +166,11 @@ export function AdminDashboard() {
   // the campus-wide report, even when other dashboard data is college-scoped.
   const isCollegeScoped =
     profile?.role === "admin" &&
-    !isConsolidatedReportRecipient &&
-    ((profile.adminAccess?.collegeIds?.length ?? 0) > 0 ||
-      profile.adminAccess?.designation === "principal" ||
-      profile.adminAccess?.designation === "vice-principal");
+    (hasAdministrationAssignment ||
+      (!isConsolidatedReportRecipient &&
+        ((profile.adminAccess?.collegeIds?.length ?? 0) > 0 ||
+          profile.adminAccess?.designation === "principal" ||
+          profile.adminAccess?.designation === "vice-principal")));
   const visibleSections = (
     allowedSections
       ? SECTIONS.filter(
@@ -175,28 +182,40 @@ export function AdminDashboard() {
             allowedSections.includes(s.id as (typeof allowedSections)[number]) ||
             (s.id === "serious-cases" && seesSeriousCasesRegardless) ||
             (s.id === "leave-approvals" && isPrincipalOrVp),
-        )
+          )
       : SECTIONS
   ).filter(
     (s) =>
       !(isCampusRestricted && s.id === "campuses") &&
-      !(isCollegeScoped && s.id === "monthly-reports") &&
+      !(isCollegeScoped && !isAdministration && s.id === "monthly-reports") &&
       !(s.id === "staff-monthly-reports" && !isPrincipalOrVp) &&
       !(s.id === "leave-approvals" && !isPrincipalOrVp),
   );
+  const effectiveActiveSection = visibleSections.some((section) => section.id === activeSection)
+    ? activeSection
+    : "overview";
+
   const handleManagementSectionSelect = (sectionId: string, seriousCaseId?: string) => {
+    if (!visibleSections.some((section) => section.id === sectionId)) {
+      return;
+    }
     if (sectionId === "serious-cases") {
       setSelectedSeriousCaseId(seriousCaseId ?? null);
     }
     setActiveSection(sectionId);
   };
+  const handleSectionSelect = (sectionId: string) => {
+    if (visibleSections.some((section) => section.id === sectionId)) {
+    setActiveSection(sectionId);
+    }
+  };
 
   return (
     <AppShell
-      title={activeSection === "overview" ? "" : (TITLES[activeSection] ?? "")}
+      title={effectiveActiveSection === "overview" ? "" : (TITLES[effectiveActiveSection] ?? "")}
       sections={visibleSections}
-      activeSection={activeSection}
-      onSelectSection={setActiveSection}
+      activeSection={effectiveActiveSection}
+      onSelectSection={handleSectionSelect}
       onNotificationClick={(notification) => {
         if (
           notification.type === "serious_case_created" ||
@@ -214,32 +233,36 @@ export function AdminDashboard() {
         }
       }}
     >
-      {activeSection === "profile" ? (
+      {isAdministration && !hasAdministrationAssignment ? (
+        <div role="alert" className="bento-grid">
+          <p>Your Administration account has no assigned campus and college. Ask a Super Admin to assign them before using the dashboard.</p>
+        </div>
+      ) : effectiveActiveSection === "profile" ? (
         <ProfileSection />
-      ) : activeSection === "campuses" && !isCampusRestricted ? (
+      ) : effectiveActiveSection === "campuses" && !isCampusRestricted ? (
         <CampusManagementSection />
-      ) : activeSection === "logins" ? (
+      ) : effectiveActiveSection === "logins" ? (
         <LoginsManagementSection />
-      ) : activeSection === "events" ? (
+      ) : effectiveActiveSection === "events" ? (
         <EventsOverviewSection />
-      ) : activeSection === "analytics" ? (
+      ) : effectiveActiveSection === "analytics" ? (
         <AnalyticsSection />
-      ) : activeSection === "ssi-analytics" ? (
+      ) : effectiveActiveSection === "ssi-analytics" ? (
         <SsiAnalyticsSection />
-      ) : activeSection === "serious-cases" ? (
+      ) : effectiveActiveSection === "serious-cases" ? (
         <SeriousCasesSection
           initialCaseId={selectedSeriousCaseId}
           onInitialCaseOpened={clearSelectedSeriousCase}
         />
-      ) : activeSection === "counsellor-worksheet" ? (
+      ) : effectiveActiveSection === "counsellor-worksheet" ? (
         <CounsellorWorksheetSection />
-      ) : activeSection === "staff-monthly-reports" && isPrincipalOrVp ? (
+      ) : effectiveActiveSection === "staff-monthly-reports" && isPrincipalOrVp ? (
         <CollegeMonthlyReportsSection />
-      ) : activeSection === "monthly-reports" && !isCollegeScoped ? (
-        <MonthlyReportsViewSection />
-      ) : activeSection === "leave-approvals" && isPrincipalOrVp ? (
+      ) : effectiveActiveSection === "monthly-reports" && (!isCollegeScoped || isAdministration) ? (
+        <MonthlyReportsViewSection readOnly={isAdministration} />
+      ) : effectiveActiveSection === "leave-approvals" && isPrincipalOrVp ? (
         <PrincipalLeaveApprovalSection />
-      ) : activeSection === "campus-rankings" ? (
+      ) : effectiveActiveSection === "campus-rankings" ? (
         <CampusRankingsSection />
       ) : (
         <div className="bento-grid">
@@ -250,7 +273,7 @@ export function AdminDashboard() {
           )}
 
           {isCollegeScoped ? (
-            <PrincipalHomeOverview onSelectSection={setActiveSection} />
+            <PrincipalHomeOverview onSelectSection={handleManagementSectionSelect} />
           ) : profile?.adminAccess?.designation === "management" || !profile?.adminAccess?.designation ? (
             <ManagementHomeOverview onSelectSection={handleManagementSectionSelect} />
           ) : (

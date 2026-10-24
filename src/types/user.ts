@@ -20,18 +20,14 @@ export type AdminDesignation = "principal" | "vice-principal" | "administration"
 // same full access every admin account had before this existed.
 export interface AdminAccess {
   scope: "global" | "campuses";
-  // Purely descriptive (e.g. shown in the Admins list) — does not affect
-  // `sections`/`scope`/`campusIds`, which independently control what this
-  // admin can actually access. Optional; left unset for legacy admins.
+  // Selects role-specific dashboard and permission behavior. Optional; left
+  // unset for legacy admins.
   designation?: AdminDesignation;
-  campusIds?: string[]; // only meaningful when scope === "campuses"
-  // Optional further narrowing within campusIds — when set, this admin can
-  // only manage (create/edit/delete) counsellor/head logins belonging to one
-  // of these colleges, and their Analytics/Events/Counsellor Worksheet
-  // views are narrowed to just these colleges too. Logins themselves still
-  // stay visible platform-wide across the assigned campus(es) — only
-  // editing is restricted. Leaving this unset keeps today's campus-wide
-  // behavior. Only meaningful when scope === "campuses".
+  campusIds?: string[]; // meaningful when scope === "campuses"
+  // Further narrows college-level views and login management within the
+  // assigned campus(es). Administration accounts require at least one
+  // assigned college while retaining campus-level report/ranking views.
+  // Only meaningful when scope === "campuses".
   collegeIds?: string[];
   sections: AdminSectionId[]; // "campuses" only valid here when scope === "global"
 }

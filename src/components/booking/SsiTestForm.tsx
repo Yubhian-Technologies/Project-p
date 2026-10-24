@@ -42,9 +42,10 @@ export interface SsiAnswersPayload {
   level3Answers: SsiAnswerItem[];
   likertScore: number;
   likertMax: number;
-  depressionScore: number;
-  anxietyScore: number;
-  stressScore: number;
+  physicalScore: number;
+  interpersonalScore: number;
+  academicScore: number;
+  environmentalScore: number;
   whatsappNumber: string;
   consentGiven: boolean;
   consentItems: string[];
@@ -154,9 +155,10 @@ export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, o
         })),
         likertScore: likertResult.score,
         likertMax: likertResult.max,
-        depressionScore: likertResult.depression,
-        anxietyScore: likertResult.anxiety,
-        stressScore: likertResult.stress,
+        physicalScore: likertResult.physical,
+        interpersonalScore: likertResult.interpersonal,
+        academicScore: likertResult.academic,
+        environmentalScore: likertResult.environmental,
         whatsappNumber: whatsapp.trim(),
         consentGiven: true,
         consentItems: SSI_CONSENT_ITEMS.filter((_, i) => consentChecks[i]),
@@ -173,15 +175,19 @@ export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, o
   if (done) {
     const doneBody = (
       <div className="ssi-modal__done">
+        <h3>Thank You! Your Responses Have Been Submitted Successfully.</h3>
         <p>
-          {counsellorEmail ? (
-            <>
-              Your SSI test has been submitted and will be shared with <strong>{counsellorEmail}</strong>{" "}
-              before your session.
-            </>
-          ) : (
-            "Your SSI test has been submitted and will be shared with your college's Wellness Counsellor/Head team."
-          )}
+          Your Student Stress Inventory (SSI) responses have been recorded successfully. Based on your
+          responses, a Wellness Counsellor may contact you to discuss your well-being and offer appropriate
+          support, if needed.
+        </p>
+        <p>Remember, seeking support is a positive step towards taking care of yourself.</p>
+        <p>
+          <strong>Need support sooner?</strong> You can contact Vishnu Wellness Centre at{" "}
+          <a href="tel:+918985502211">+91 8985502211</a>.
+        </p>
+        <p className="ssi-modal__signature">
+          <em>Vishnu Wellness Centre — Your well-being matters.</em>
         </p>
         <Button type="button" onClick={onClose}>
           Finish
@@ -267,31 +273,41 @@ export function SsiTestForm({ counsellorEmail, profile, initialWhatsappNumber, o
           <div className="ssi-modal__legend">
             {SSI_LIKERT_OPTIONS.map((o) => (
               <p key={o.value} className="ssi-modal__legend-item">
-                <span className="ssi-modal__legend-num">{o.short}</span>
+                <span className="ssi-modal__legend-num">{o.value}</span>
                 {o.label}
               </p>
             ))}
           </div>
           {SSI_LIKERT_QUESTIONS.map((q, qi) => (
-            <div key={q.id} className="ssi-modal__question">
-              <span className="ssi-modal__q-label">
-                {qi + 1}. {q.label}
-              </span>
-              <div className="ssi-modal__likert">
-                {SSI_LIKERT_OPTIONS.map((o) => {
-                  const selected = likert[q.id] === o.value;
-                  return (
-                    <button
-                      key={o.value}
-                      type="button"
-                      aria-pressed={selected}
-                      className={`ssi-modal__likert-opt${selected ? " ssi-modal__likert-opt--selected" : ""}`}
-                      onClick={() => setLikert((prev) => ({ ...prev, [q.id]: o.value }))}
-                    >
-                      {o.short}
-                    </button>
-                  );
-                })}
+            <div key={q.id}>
+              {qi % 10 === 0 && (
+                <h4 className="ssi-modal__domain-title">
+                  Subscale {qi / 10 + 1}:{" "}
+                  {q.domain === "interpersonal"
+                    ? "Interpersonal Relationship"
+                    : `${q.domain[0].toUpperCase()}${q.domain.slice(1)}`}
+                </h4>
+              )}
+              <div className="ssi-modal__question">
+                <span className="ssi-modal__q-label">
+                  {qi + 1}. {q.label}
+                </span>
+                <div className="ssi-modal__likert">
+                  {SSI_LIKERT_OPTIONS.map((o) => {
+                    const selected = likert[q.id] === o.value;
+                    return (
+                      <button
+                        key={o.value}
+                        type="button"
+                        aria-pressed={selected}
+                        className={`ssi-modal__likert-opt${selected ? " ssi-modal__likert-opt--selected" : ""}`}
+                        onClick={() => setLikert((prev) => ({ ...prev, [q.id]: o.value }))}
+                      >
+                        {o.short}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           ))}

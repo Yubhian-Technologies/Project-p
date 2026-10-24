@@ -32,17 +32,24 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/bookings/$(bookingId)).data;
     }
 
-    // True for super-admin and a "global"-scope admin (unrestricted, same
-    // access every admin account had before per-admin scoping existed); for a
-    // campus-restricted admin, true only when campusId is one of theirs.
-    // Absence of adminAccess entirely = legacy/global admin, unchanged.
+    function isAdministrationAdmin() {
+      return isSignedIn() && myRole() == 'admin' && 'adminAccess' in myProfile() &&
+        myProfile().adminAccess.get('designation', '') == 'administration';
+    }
+
+    // True for super-admin, legacy/global admins, and admins with access to
+    // the requested campus. Administration accounts must be campus-scoped
+    // and have at least one assigned college.
     function adminCanAccessCampus(campusId) {
       return isSignedIn() && (
         myRole() == 'super-admin' ||
         (myRole() == 'admin' && (
           !('adminAccess' in myProfile()) ||
-          myProfile().adminAccess.scope == 'global' ||
-          campusId in myProfile().adminAccess.campusIds
+          (!isAdministrationAdmin() && myProfile().adminAccess.scope == 'global') ||
+          (myProfile().adminAccess.scope == 'campuses' &&
+            campusId in myProfile().adminAccess.get('campusIds', []) &&
+            (!isAdministrationAdmin() ||
+              myProfile().adminAccess.get('collegeIds', []).size() > 0))
         ))
       );
     }
@@ -50,17 +57,16 @@ service cloud.firestore {
     // A Principal/VP is restricted to one college — the campus-wide
     // Consolidated Report (filed once by the Head, can span several colleges
     // on that campus) is out of scope for them even though they otherwise
-    // pass adminCanAccessCampus() for their own campus. Global/other-
-    // designation admins and Super Admin are unaffected.
+    // pass adminCanAccessCampus() for their own campus. Global and management
+    // admins and Super Admin are unaffected.
     function isPrincipalOrVp() {
       return myRole() == 'admin' && 'adminAccess' in myProfile() &&
         myProfile().adminAccess.designation in ['principal', 'vice-principal'];
     }
 
-    // Like adminCanAccessCampus(), but narrows further to one college when
-    // the admin's own adminAccess.collegeIds says so (a Principal/VP) — an
-    // admin with no collegeIds set (Management/Administration/global) is
-    // unaffected by this narrowing and still covers the whole campus.
+    // Like adminCanAccessCampus(), but narrows to assigned colleges when a
+    // campus-scoped account has collegeIds. Global and management accounts
+    // retain their configured campus-wide access.
     function adminCanAccessCollege(campusId, collegeId) {
       return adminCanAccessCampus(campusId) && (
         myRole() == 'super-admin' ||
@@ -73,12 +79,13 @@ service cloud.firestore {
     }
 
     // Monthly staff reports are visible only within their author's exact
-    // college. A campus-wide/global admin is not implicitly a recipient.
+    // college. Principals/VPs and assigned Administration accounts may read
+    // reports from colleges explicitly assigned to them.
     function monthlyReportAdminCanAccessCollege(campusId, collegeId) {
       return isSignedIn() && myRole() == 'admin' &&
         'adminAccess' in myProfile() &&
         myProfile().adminAccess.scope == 'campuses' &&
-        myProfile().adminAccess.designation in ['principal', 'vice-principal'] &&
+        myProfile().adminAccess.designation in ['principal', 'vice-principal', 'administration'] &&
         campusId in myProfile().adminAccess.campusIds &&
         collegeId in myProfile().adminAccess.collegeIds;
     }
@@ -626,14 +633,31 @@ service cloud.firestore {
                     && request.resource.data.keys().hasOnly([
                       'bookingId', 'userId', 'userEmail', 'counsellorId', 'counsellorEmail',
                       'level1', 'likertAnswers', 'level3Answers', 'likertScore', 'likertMax',
-                      'depressionScore', 'anxietyScore', 'stressScore',
+                      'physicalScore', 'interpersonalScore', 'academicScore', 'environmentalScore',
                       'whatsappNumber', 'consentGiven', 'consentItems', 'submittedAt'
                     ])
                     && request.resource.data.likertScore is number
-                    && request.resource.data.likertScore >= 0
-                    && request.resource.data.depressionScore is number
-                    && request.resource.data.anxietyScore is number
-                    && request.resource.data.stressScore is number
+                    && request.resource.data.likertScore >= 40
+                    && request.resource.data.likertScore <= 160
+                    && request.resource.data.likertMax == 160
+                    && request.resource.data.likertAnswers is list
+                    && request.resource.data.likertAnswers.size() == 40
+                    && request.resource.data.physicalScore is number
+                    && request.resource.data.physicalScore >= 10
+                    && request.resource.data.physicalScore <= 40
+                    && request.resource.data.interpersonalScore is number
+                    && request.resource.data.interpersonalScore >= 10
+                    && request.resource.data.interpersonalScore <= 40
+                    && request.resource.data.academicScore is number
+                    && request.resource.data.academicScore >= 10
+                    && request.resource.data.academicScore <= 40
+                    && request.resource.data.environmentalScore is number
+                    && request.resource.data.environmentalScore >= 10
+                    && request.resource.data.environmentalScore <= 40
+                    && request.resource.data.physicalScore +
+                      request.resource.data.interpersonalScore +
+                      request.resource.data.academicScore +
+                      request.resource.data.environmentalScore == request.resource.data.likertScore
                     && request.resource.data.consentGiven == true
                     && bookingOf(bookingId).userId == request.resource.data.userId
                     && bookingOf(bookingId).counsellorId == request.resource.data.counsellorId
@@ -670,15 +694,32 @@ service cloud.firestore {
                     && request.resource.data.keys().hasOnly([
                       'userId', 'userEmail', 'displayName', 'collegeId', 'campusId',
                       'level1', 'likertAnswers', 'level3Answers', 'likertScore', 'likertMax',
-                      'depressionScore', 'anxietyScore', 'stressScore', 'severity',
+                      'physicalScore', 'interpersonalScore', 'academicScore', 'environmentalScore', 'severity',
                       'whatsappNumber', 'consentGiven', 'consentItems', 'submittedAt'
                     ])
                     && request.resource.data.severity in ['normal', 'medium', 'severe']
                     && request.resource.data.likertScore is number
-                    && request.resource.data.likertScore >= 0
-                    && request.resource.data.depressionScore is number
-                    && request.resource.data.anxietyScore is number
-                    && request.resource.data.stressScore is number
+                    && request.resource.data.likertScore >= 40
+                    && request.resource.data.likertScore <= 160
+                    && request.resource.data.likertMax == 160
+                    && request.resource.data.likertAnswers is list
+                    && request.resource.data.likertAnswers.size() == 40
+                    && request.resource.data.physicalScore is number
+                    && request.resource.data.physicalScore >= 10
+                    && request.resource.data.physicalScore <= 40
+                    && request.resource.data.interpersonalScore is number
+                    && request.resource.data.interpersonalScore >= 10
+                    && request.resource.data.interpersonalScore <= 40
+                    && request.resource.data.academicScore is number
+                    && request.resource.data.academicScore >= 10
+                    && request.resource.data.academicScore <= 40
+                    && request.resource.data.environmentalScore is number
+                    && request.resource.data.environmentalScore >= 10
+                    && request.resource.data.environmentalScore <= 40
+                    && request.resource.data.physicalScore +
+                      request.resource.data.interpersonalScore +
+                      request.resource.data.academicScore +
+                      request.resource.data.environmentalScore == request.resource.data.likertScore
                     && request.resource.data.consentGiven == true;
 
       // A Head/Counsellor on their own scope can mark (or unmark) that they've
@@ -714,15 +755,19 @@ service cloud.firestore {
       // resource.data — there's nothing to leak when there's no document.
       allow get, list: if isSignedIn() && (
         resource == null ||
-        isRole('super-admin') ||
-        request.auth.uid in resource.data.targetAdminUids ||
-        resource.data.notifiedHeadUid == request.auth.uid ||
-        resource.data.authorUid == request.auth.uid ||
-        (myRole() == 'admin' && (
-          !('adminAccess' in myProfile()) ||
-          myProfile().adminAccess.scope == 'global' ||
-          myProfile().adminAccess.designation in ['management', 'administration'] ||
-          adminCanAccessCollege(resource.data.get('campusId', null), resource.data.get('collegeId', null))
+        (isAdministrationAdmin() &&
+          adminCanAccessCollege(resource.data.get('campusId', null), resource.data.get('collegeId', null))) ||
+        (!isAdministrationAdmin() && (
+          isRole('super-admin') ||
+          request.auth.uid in resource.data.targetAdminUids ||
+          resource.data.notifiedHeadUid == request.auth.uid ||
+          resource.data.authorUid == request.auth.uid ||
+          (myRole() == 'admin' && (
+            !('adminAccess' in myProfile()) ||
+            myProfile().adminAccess.scope == 'global' ||
+            myProfile().adminAccess.designation == 'management' ||
+            adminCanAccessCollege(resource.data.get('campusId', null), resource.data.get('collegeId', null))
+          ))
         ))
       );
 
@@ -1106,7 +1151,9 @@ service cloud.firestore {
       // Only Admin/Super Admin can verify (update status → verified); the
       // report's identity/ownership fields must stay untouched.
       allow update: if (
-                      adminCanAccessCampus(resource.data.get('campusId', null)) && !isPrincipalOrVp()
+                      adminCanAccessCampus(resource.data.get('campusId', null)) &&
+                      !isPrincipalOrVp() &&
+                      !isAdministrationAdmin()
                       && request.resource.data.status == 'verified'
                       && request.resource.data.uploadedByUid == resource.data.uploadedByUid
                       && request.resource.data.campusId == resource.data.campusId

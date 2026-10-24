@@ -310,12 +310,16 @@ export async function listBookingsForCounsellor(counsellorId: string, campusId?:
 // results are deduped by booking id and only genuinely campusId-less docs
 // are merged in, so a counsellor who later transferred to a different
 // campus doesn't pull in sessions from their old one.
-export async function listAllBookingsForStats(campusId: string, staffUids: string[] = []): Promise<Booking[]> {
+export async function listAllBookingsForStats(
+  campusId: string,
+  staffUids: string[] = [],
+  includeLegacyBookings = true,
+): Promise<Booking[]> {
   const q = query(bookingsCollection, where("campusId", "==", campusId));
   const snapshot = await getDocs(q);
   const bookings = snapshot.docs.map((d) => toBooking(d.id, d.data()));
 
-  if (staffUids.length === 0) return bookings;
+  if (!includeLegacyBookings || staffUids.length === 0) return bookings;
 
   const seen = new Set(bookings.map((b) => b.id));
   const chunks: string[][] = [];

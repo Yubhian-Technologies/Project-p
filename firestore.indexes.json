@@ -50,6 +50,14 @@
       ]
     },
     {
+      "collectionGroup": "seriousCases",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "campusId", "order": "ASCENDING" },
+        { "fieldPath": "collegeId", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "counsellorMonthlyReports",
       "queryScope": "COLLECTION",
       "fields": [

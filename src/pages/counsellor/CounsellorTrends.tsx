@@ -169,25 +169,25 @@ export function CounsellorTrends() {
           ) : (
             <ul className="hch-severity">
               <li className="hch-severity__row">
-                <span>Healthy</span>
+                <span>Mild stress</span>
                 <span className="hch-severity__bar">
-                  <span className="hch-severity__fill hch-severity__fill--ok" style={{ width: `${m.severity.healthy}%` }} />
-                </span>
-                <strong>{m.severity.healthy}%</strong>
-              </li>
-              <li className="hch-severity__row">
-                <span>Mild concerns</span>
-                <span className="hch-severity__bar">
-                  <span className="hch-severity__fill hch-severity__fill--mild" style={{ width: `${m.severity.mild}%` }} />
+                  <span className="hch-severity__fill hch-severity__fill--ok" style={{ width: `${m.severity.mild}%` }} />
                 </span>
                 <strong>{m.severity.mild}%</strong>
               </li>
               <li className="hch-severity__row">
-                <span>Higher concern</span>
+                <span>Moderate stress</span>
                 <span className="hch-severity__bar">
-                  <span className="hch-severity__fill hch-severity__fill--high" style={{ width: `${m.severity.higher}%` }} />
+                  <span className="hch-severity__fill hch-severity__fill--mild" style={{ width: `${m.severity.moderate}%` }} />
                 </span>
-                <strong>{m.severity.higher}%</strong>
+                <strong>{m.severity.moderate}%</strong>
+              </li>
+              <li className="hch-severity__row">
+                <span>Severe stress</span>
+                <span className="hch-severity__bar">
+                  <span className="hch-severity__fill hch-severity__fill--high" style={{ width: `${m.severity.severe}%` }} />
+                </span>
+                <strong>{m.severity.severe}%</strong>
               </li>
             </ul>
           )}

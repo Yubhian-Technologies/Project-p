@@ -27,6 +27,10 @@ import {
 import { formatDateDMY } from "../../utils/formatDate";
 import "./MonthlyReportsViewSection.css";
 
+interface MonthlyReportsViewSectionProps {
+  readOnly?: boolean;
+}
+
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -44,7 +48,7 @@ function formatDate(iso: string) {
   }
 }
 
-export function MonthlyReportsViewSection() {
+export function MonthlyReportsViewSection({ readOnly = false }: MonthlyReportsViewSectionProps) {
   const { profile } = useAuth();
   const { includesMonth } = useAcademicYear();
 
@@ -290,14 +294,16 @@ export function MonthlyReportsViewSection() {
                   >
                     <DownloadIcon /> View / Download
                   </a>
-                  <button
-                    type="button"
-                    className="mrv-btn-share"
-                    disabled={resharingId === r.id}
-                    onClick={() => void handleReshare(r)}
-                  >
-                    {resharingId === r.id ? "Sharing…" : "Reshare to Head & Admins"}
-                  </button>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      className="mrv-btn-share"
+                      disabled={resharingId === r.id}
+                      onClick={() => void handleReshare(r)}
+                    >
+                      {resharingId === r.id ? "Sharing…" : "Reshare to Head & Admins"}
+                    </button>
+                  )}
                   {r.signedDownloadURL && (
                     <a
                       href={r.signedDownloadURL}
@@ -307,7 +313,7 @@ export function MonthlyReportsViewSection() {
                       <DownloadIcon /> {r.signedKind === "stamped" ? "Download Signed Document" : "Download Verification Certificate"}
                     </a>
                   )}
-                  {r.status === "pending" && (
+                  {!readOnly && r.status === "pending" && (
                     <button
                       type="button"
                       className="mrv-btn-verify"

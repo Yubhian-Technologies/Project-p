@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useAcademicYear } from "../../hooks/useAcademicYear";
-import { SSI_SEVERITY_LABELS, type SsiSeverity } from "../../config/ssiForm";
+import { SSI_DOMAIN_MAX, SSI_DOMAIN_LABELS, ssiSeverityLabel, type SsiDomain, type SsiSeverity } from "../../config/ssiForm";
 import {
   listSsiCollegeResultsForCollege,
   listSsiCollegeResultsForCampus,
@@ -169,15 +169,15 @@ export function SsiCollegeResultsSection() {
           </div>
           <div className="ssi-results__summary-card ssi-results__summary-card--normal">
             <span className="ssi-results__summary-val">{summary.normal}</span>
-            <span className="ssi-results__summary-label"><CheckCircleIcon /> Normal</span>
+            <span className="ssi-results__summary-label"><CheckCircleIcon /> Mild stress</span>
           </div>
           <div className="ssi-results__summary-card ssi-results__summary-card--medium">
             <span className="ssi-results__summary-val">{summary.medium}</span>
-            <span className="ssi-results__summary-label"><AlertCircleIcon /> Medium</span>
+            <span className="ssi-results__summary-label"><AlertCircleIcon /> Moderate stress</span>
           </div>
           <div className="ssi-results__summary-card ssi-results__summary-card--severe">
             <span className="ssi-results__summary-val">{summary.severe}</span>
-            <span className="ssi-results__summary-label"><AlertTriangleIcon /> Severe — needs immediate action</span>
+            <span className="ssi-results__summary-label"><AlertTriangleIcon /> Severe stress</span>
           </div>
           <div className="ssi-results__summary-card ssi-results__summary-card--action">
             <span className="ssi-results__summary-val">
@@ -267,7 +267,7 @@ export function SsiCollegeResultsSection() {
             </div>
             <div className="ssi-results__row-badges">
               <span className={`ssi-results__badge ssi-results__badge--${r.severity}`}>
-                {SSI_SEVERITY_LABELS[r.severity]}
+                {ssiSeverityLabel(r.severity, r.likertMax)}
               </span>
               {r.severity !== "normal" && r.actionTaken && (
                 <span className="ssi-results__action-badge"><CheckIcon /> Action taken</span>
@@ -281,7 +281,7 @@ export function SsiCollegeResultsSection() {
         <Modal title={detail.displayName || detail.userEmail} onClose={() => setDetail(null)} className="ssi-results__detail-modal">
           <div className="ssi-results__row-badges">
             <span className={`ssi-results__badge ssi-results__badge--${detail.severity}`}>
-              {SSI_SEVERITY_LABELS[detail.severity]}
+              {ssiSeverityLabel(detail.severity, detail.likertMax)}
             </span>
             {detail.severity !== "normal" && detail.actionTaken && (
               <span className="ssi-results__action-badge"><CheckIcon /> Action taken</span>
@@ -312,19 +312,39 @@ export function SsiCollegeResultsSection() {
               <small> / {detail.likertMax}</small>
             </span>
           </div>
+          {detail.physicalScore !== undefined && (
+            <p className="ssi-results__score-note">
+              Mild stress: 40–80 · Moderate stress: 81–121 · Severe stress: 122–160
+            </p>
+          )}
 
           <div className="ssi-results__subscales">
-            {[
-              { key: "D", label: "Depression", value: detail.depressionScore },
-              { key: "A", label: "Anxiety", value: detail.anxietyScore },
-              { key: "S", label: "Stress", value: detail.stressScore },
-            ].map((s) => (
+            {(detail.physicalScore !== undefined &&
+            detail.interpersonalScore !== undefined &&
+            detail.academicScore !== undefined &&
+            detail.environmentalScore !== undefined
+              ? ([
+                  ["physical", detail.physicalScore],
+                  ["interpersonal", detail.interpersonalScore],
+                  ["academic", detail.academicScore],
+                  ["environmental", detail.environmentalScore],
+                ] as [SsiDomain, number][]).map(([key, value]) => ({
+                  key,
+                  label: SSI_DOMAIN_LABELS[key],
+                  value,
+                  max: SSI_DOMAIN_MAX,
+                }))
+              : [
+                  { key: "D", label: "Depression", value: detail.depressionScore ?? 0, max: 21 },
+                  { key: "A", label: "Anxiety", value: detail.anxietyScore ?? 0, max: 21 },
+                  { key: "S", label: "Stress", value: detail.stressScore ?? 0, max: 21 },
+                ]).map((s) => (
               <div key={s.key} className="ssi-results__subscale">
-                <span className="ssi-results__subscale-key">{s.key}</span>
+                <span className="ssi-results__subscale-key">{s.key.slice(0, 1).toUpperCase()}</span>
                 <span className="ssi-results__subscale-name">{s.label}</span>
                 <span className="ssi-results__subscale-val">
                   {s.value}
-                  <small> / 21</small>
+                  <small> / {s.max}</small>
                 </span>
               </div>
             ))}

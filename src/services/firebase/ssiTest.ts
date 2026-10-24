@@ -13,6 +13,7 @@ import {
   SSI_LIKERT_MAX,
   SSI_LIKERT_OPTIONS,
   SSI_LIKERT_QUESTIONS,
+  type SsiDomain,
 } from "../../config/ssiForm";
 
 export interface SsiAnswerItem {
@@ -34,9 +35,13 @@ export interface SsiResultInput {
   level3Answers: SsiAnswerItem[];
   likertScore: number;
   likertMax: number;
-  depressionScore: number;
-  anxietyScore: number;
-  stressScore: number;
+  physicalScore?: number;
+  interpersonalScore?: number;
+  academicScore?: number;
+  environmentalScore?: number;
+  depressionScore?: number;
+  anxietyScore?: number;
+  stressScore?: number;
   whatsappNumber: string;
   consentGiven: boolean;
   consentItems: string[];
@@ -51,9 +56,10 @@ export interface SsiLikertResult {
   items: SsiAnswerItem[];
   score: number;
   max: number;
-  depression: number;
-  anxiety: number;
-  stress: number;
+  physical: number;
+  interpersonal: number;
+  academic: number;
+  environmental: number;
 }
 
 const COLLECTION = "ssi_results";
@@ -70,10 +76,14 @@ function toSsiResult(id: string, data: Record<string, unknown>): SsiResult {
     likertAnswers: (data.likertAnswers as SsiAnswerItem[]) ?? [],
     level3Answers: (data.level3Answers as SsiAnswerItem[]) ?? [],
     likertScore: (data.likertScore as number) ?? 0,
-    likertMax: (data.likertMax as number) ?? SSI_LIKERT_MAX,
-    depressionScore: (data.depressionScore as number) ?? 0,
-    anxietyScore: (data.anxietyScore as number) ?? 0,
-    stressScore: (data.stressScore as number) ?? 0,
+    likertMax: (data.likertMax as number) ?? 63,
+    physicalScore: data.physicalScore as number | undefined,
+    interpersonalScore: data.interpersonalScore as number | undefined,
+    academicScore: data.academicScore as number | undefined,
+    environmentalScore: data.environmentalScore as number | undefined,
+    depressionScore: data.depressionScore as number | undefined,
+    anxietyScore: data.anxietyScore as number | undefined,
+    stressScore: data.stressScore as number | undefined,
     whatsappNumber: (data.whatsappNumber as string) ?? "",
     consentGiven: (data.consentGiven as boolean) ?? false,
     consentItems: (data.consentItems as string[]) ?? [],
@@ -127,9 +137,12 @@ export function buildLikertResult(
 ): SsiLikertResult {
   const optionByValue = new Map(SSI_LIKERT_OPTIONS.map((o) => [o.value, o.label]));
   let score = 0;
-  let depression = 0;
-  let anxiety = 0;
-  let stress = 0;
+  const domainScores: Record<SsiDomain, number> = {
+    physical: 0,
+    interpersonal: 0,
+    academic: 0,
+    environmental: 0,
+  };
   const items = SSI_LIKERT_QUESTIONS.map((q) => {
     const value = answers[q.id];
     const item = {
@@ -140,10 +153,8 @@ export function buildLikertResult(
       value: value ?? 0,
     };
     score += value ?? 0;
-    if (q.scale === "d") depression += value ?? 0;
-    else if (q.scale === "a") anxiety += value ?? 0;
-    else stress += value ?? 0;
+    domainScores[q.domain] += value ?? 0;
     return item;
   });
-  return { items, score, max: SSI_LIKERT_MAX, depression, anxiety, stress };
+  return { items, score, max: SSI_LIKERT_MAX, ...domainScores };
 }

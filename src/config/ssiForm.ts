@@ -5,7 +5,7 @@
  * accepted by the counsellor (before the session starts):
  *
  *   Page 1 — Mandatory Student Wellbeing Screening form header + basic details
- *   Page 2 — the DASS-21 statements (all share the same 0-3 rating scale)
+ *   Page 2 — the 40-item SSI inventory (all share the same 1-4 rating scale)
  *   Page 3 — important questions (blanks + option marking)
  *   Page 4 — contact (WhatsApp) + consent tick-boxes, then submit
  *
@@ -35,10 +35,10 @@ export const SSI_LEVELS: SsiLevelIntro[] = [
   },
   {
     id: 2,
-    title: "Page 2 · How you felt this past week",
+    title: "Page 2 · Student Stress Inventory",
     consent: "Your responses are CONFIDENTIAL and are seen only by your authorised wellness counsellor.",
     guidance:
-      "Remember how you have felt over the past week and answer each statement as best you can.\n(గత ఒక వారం రోజులలో మీకు ఎలా అనిపించిందో గుర్తు చేసుకుని, ప్రతి ప్రశ్నకు మీకు సరిపోయే సమాధానాన్ని ఎంచుకోండి)\n\nPlease read each statement and choose the number 0, 1, 2 or 3 which indicates how much the statement applied to you over the past week.\n\nThere are no right or wrong answers. Do not spend too much time on any one statement.",
+      "This inventory measures stresses you have experienced in your study and everyday campus life over this semester. There are no right or wrong answers. Read each statement and choose one response: Never (1), Somewhat frequent (2), Frequent (3), or Always (4).",
   },
   {
     id: 3,
@@ -79,7 +79,7 @@ export function ssiPage1Note(studentOrProfessional?: "student" | "professional")
   return `${base} Department, Year and Hostel/Day Scholar are pre-filled from your profile where available — please correct them here if anything has changed. Age is calculated automatically from your Date of Birth in your Profile's bio data.`;
 }
 
-// ── Page 2: DASS-21 rating scale + statements ─────────────────────────────────
+// ── Page 2: SSI inventory rating scale + statements ──────────────────────────
 export interface SsiLikertOption {
   /** Short label shown on the in-question choice buttons. */
   short: string;
@@ -88,154 +88,74 @@ export interface SsiLikertOption {
   value: number;
 }
 
-export type SsiSubscale = "d" | "a" | "s";
+export type SsiDomain = "physical" | "interpersonal" | "academic" | "environmental";
 
 export interface SsiLikertQuestion {
   id: string;
   label: string;
-  /** DASS-21 subscale: d = depression, a = anxiety, s = stress. */
-  scale: SsiSubscale;
+  domain: SsiDomain;
 }
 
 export const SSI_LIKERT_OPTIONS: SsiLikertOption[] = [
-  {
-    short: "0",
-    label: "0 – Did not apply to me at all (నాకు అసలు వర్తించలేదు)",
-    value: 0,
-  },
-  {
-    short: "1",
-    label: "1 – Applied to me to some degree, or some of the time (కొంతవరకు లేదా కొన్నిసార్లు నాకు ఇలా అనిపించింది)",
-    value: 1,
-  },
-  {
-    short: "2",
-    label: "2 – Applied to me to a considerable degree or a good part of the time (చాలా వరకు లేదా ఎక్కువ సమయం నాకు ఇలా అనిపించింది)",
-    value: 2,
-  },
-  {
-    short: "3",
-    label: "3 – Applied to me very much or most of the time (దాదాపు ఎప్పుడూ లేదా ఎక్కువగా నాకు ఇలా అనిపించింది)",
-    value: 3,
-  },
+  { short: "1", label: "1 – Never (N)", value: 1 },
+  { short: "2", label: "2 – Somewhat frequent (SF)", value: 2 },
+  { short: "3", label: "3 – Frequent (F)", value: 3 },
+  { short: "4", label: "4 – Always (A)", value: 4 },
 ];
 
 export const SSI_LIKERT_QUESTIONS: SsiLikertQuestion[] = [
-  {
-    id: "l2_q1",
-    scale: "s",
-    label: "I found it hard to wind down (ఎంత ప్రయత్నించినా నా మనసు కుదుటపడలేదు. నాకు ప్రశాంతంగా ఉండటం కష్టమైపోయింది.)",
-  },
-  {
-    id: "l2_q2",
-    scale: "a",
-    label: "I was aware of dryness of my mouth (నా నోరు పొడారడం/ఎండిపోవడం నాకు తెలుస్తుంది)",
-  },
-  {
-    id: "l2_q3",
-    scale: "d",
-    label: "I couldn't seem to experience any positive feeling at all (పరిస్థితుల నుండి మంచి అనుభవాలు పొందలేకున్నాను)",
-  },
-  {
-    id: "l2_q4",
-    scale: "a",
-    label: "I experienced breathing difficulty (e.g. excessively rapid breathing, breathlessness in the absence of physical exertion) (నాకు శ్వాస తీసుకోవడం ఇబ్బందిగావుంది (ఉదా: శారీరక శ్రమ లేకపోయినా ఆయాసపడటం))",
-  },
-  {
-    id: "l2_q5",
-    scale: "d",
-    label: "I found it difficult to work up the initiative to do things (నాకు ఒక కొత్త పని మొదలుపెట్టడానికి కష్టంగావుంది/ఉత్సాహంగా లేదు)",
-  },
-  {
-    id: "l2_q6",
-    scale: "s",
-    label: "I tended to over-react to situations (నేను పరిస్థితులకు అతిగా స్పందిస్తున్నాను)",
-  },
-  {
-    id: "l2_q7",
-    scale: "a",
-    label: "I experienced trembling (e.g. in the hands) (నాకు శరీరం వణుకుతున్నట్లు అనిపిస్తోంది (ఉదా: చేతులు వణకడం))",
-  },
-  {
-    id: "l2_q8",
-    scale: "s",
-    label: "I felt that I was using a lot of nervous energy (నేను ఆందోళన చెందటం వలన చాలా శక్తిని ఖర్చుచేస్తున్నాను అని నాకు అనిపిస్తుంది)",
-  },
-  {
-    id: "l2_q9",
-    scale: "a",
-    label: "I was worried about situations in which I might panic and make a fool of myself (నేను కొన్ని పరిస్థితులలో భయపడి నవ్వులపాలు అవుతానేమో అని చింతిస్తున్నాను)",
-  },
-  {
-    id: "l2_q10",
-    scale: "d",
-    label: "I felt that I had nothing to look forward to (నా జీవితంలో ఎదురు చూసేలా ఏమి లేదని నాకు అనిపిస్తోంది)",
-  },
-  {
-    id: "l2_q11",
-    scale: "s",
-    label: "I found myself getting agitated (నేను అసహనానికి లోనవుతున్నాను అని అనిపిస్తోంది)",
-  },
-  {
-    id: "l2_q12",
-    scale: "s",
-    label: "I found it difficult to relax (నేను విశ్రాంతి తీసుకోవడానికి ఇబ్బంది పడుతున్నాను)",
-  },
-  {
-    id: "l2_q13",
-    scale: "d",
-    label: "I felt down-hearted and blue (నాకు చాలా బాధగా, నిరాశగా అనిపిస్తోంది)",
-  },
-  {
-    id: "l2_q14",
-    scale: "s",
-    label: "I was intolerant of anything that kept me from getting on with what I was doing (నేను చేసే పనిని చేయనీకుండా చేసే/ఆపే దేనినైనా నేను సహించలేకపోతున్నాను)",
-  },
-  {
-    id: "l2_q15",
-    scale: "a",
-    label: "I felt I was close to panic (నేను భయాందోళనకు గురవుతున్నానేమో అని అనిపిస్తోంది)",
-  },
-  {
-    id: "l2_q16",
-    scale: "d",
-    label: "I was unable to become enthusiastic about anything (నేను దేనిగురించీ ఆసక్తిగా, ఉత్సాహంగా ఉండలేకపోతున్నాను)",
-  },
-  {
-    id: "l2_q17",
-    scale: "d",
-    label: "I felt I wasn't worth much as a person (నాకు నా పట్ల విలువ లేదనిపిస్తోంది)",
-  },
-  {
-    id: "l2_q18",
-    scale: "s",
-    label: "I felt that I was rather touchy (నాకు చిన్న విషయాలకు చిరాకు వస్తోంది)",
-  },
-  {
-    id: "l2_q19",
-    scale: "a",
-    label: "I was aware of the action of my heart in the absence of physical exertion (e.g. sense of heart rate increase, heart missing a beat) (నాకు శారీరక శ్రమ లేకపోయినా గుండె దడగా వుంటోంది (గుబులు, ఆందోళన))",
-  },
-  {
-    id: "l2_q20",
-    scale: "a",
-    label: "I felt scared without any good reason (సరియైన కారణం లేకుండానే భయపడుతున్నాను)",
-  },
-  {
-    id: "l2_q21",
-    scale: "d",
-    label: "I felt that life was meaningless (నా జీవితం అర్ధవంతంగా లేనిది/వ్యర్థం అని అనిపిస్తోంది)",
-  },
+  { id: "l2_q1", domain: "physical", label: "Headaches" },
+  { id: "l2_q2", domain: "physical", label: "Back pain" },
+  { id: "l2_q3", domain: "physical", label: "Sleep problem" },
+  { id: "l2_q4", domain: "physical", label: "Difficulty breathing" },
+  { id: "l2_q5", domain: "physical", label: "Excessive worry" },
+  { id: "l2_q6", domain: "physical", label: "Stomach pain/nausea" },
+  { id: "l2_q7", domain: "physical", label: "Constant tiredness/fatigue" },
+  { id: "l2_q8", domain: "physical", label: "Sweating/sweaty hands" },
+  { id: "l2_q9", domain: "physical", label: "Frequent cold/flu/fever" },
+  { id: "l2_q10", domain: "physical", label: "Drastic weight loss" },
+  { id: "l2_q11", domain: "interpersonal", label: "I find difficult to meet my high parent’s expectation" },
+  { id: "l2_q12", domain: "interpersonal", label: "My parents treat me as a helpless person" },
+  { id: "l2_q13", domain: "interpersonal", label: "I feel guilty if I fail to fulfill my parent’s hope" },
+  { id: "l2_q14", domain: "interpersonal", label: "My parents wish only for my success" },
+  { id: "l2_q15", domain: "interpersonal", label: "I find difficult to get along with groupmates in doing academic task" },
+  { id: "l2_q16", domain: "interpersonal", label: "My friends did not care about me" },
+  { id: "l2_q17", domain: "interpersonal", label: "I feel disturbed when having problem with my boyfriend/girlfriend" },
+  { id: "l2_q18", domain: "interpersonal", label: "My families are not supportive" },
+  { id: "l2_q19", domain: "interpersonal", label: "My lecturers/ teachers are not supportive" },
+  { id: "l2_q20", domain: "interpersonal", label: "I feel frustrated by the lack of faculty management" },
+  { id: "l2_q21", domain: "academic", label: "I have a financial problem because of the expenses of the university" },
+  { id: "l2_q22", domain: "academic", label: "I find difficult to juggle time between study and social activity" },
+  { id: "l2_q23", domain: "academic", label: "I feel nervous delivering the class presentation" },
+  { id: "l2_q24", domain: "academic", label: "I feel stressed as submission deadline neared" },
+  { id: "l2_q25", domain: "academic", label: "I feel stressed to sit for examination" },
+  { id: "l2_q26", domain: "academic", label: "I find difficult to juggle time between study and society involvement" },
+  { id: "l2_q27", domain: "academic", label: "I loss interest towards courses" },
+  { id: "l2_q28", domain: "academic", label: "I feel burden of academic workloads" },
+  { id: "l2_q29", domain: "academic", label: "I feel stressed dealing with difficult subject" },
+  { id: "l2_q30", domain: "academic", label: "I feel difficult in handling my academic problem" },
+  { id: "l2_q31", domain: "environmental", label: "I have transportation problem" },
+  { id: "l2_q32", domain: "environmental", label: "I feel stressed with bad living condition of hostel" },
+  { id: "l2_q33", domain: "environmental", label: "Surrounding noise distracted me" },
+  { id: "l2_q34", domain: "environmental", label: "Pollution make me uneasy" },
+  { id: "l2_q35", domain: "environmental", label: "Hot weather make me avoid to go out" },
+  { id: "l2_q36", domain: "environmental", label: "Messy living conditions distracted me" },
+  { id: "l2_q37", domain: "environmental", label: "I feel frustrated of inadequate campus facilities" },
+  { id: "l2_q38", domain: "environmental", label: "Crowding make me feel uneasy" },
+  { id: "l2_q39", domain: "environmental", label: "Waited in a long line make me feel uneasy" },
+  { id: "l2_q40", domain: "environmental", label: "I feel scared being at the insecure place" },
 ];
 
-/** Each subscale has 7 of the 21 statements; maximum per subscale = 3 × 7 = 21. */
-export const SSI_LIKERT_MAX = 3 * SSI_LIKERT_QUESTIONS.length;
-export const SSI_SUBSCALE_MAX = 3 * 7;
+export const SSI_LIKERT_MIN = SSI_LIKERT_QUESTIONS.length;
+export const SSI_LIKERT_MAX = 4 * SSI_LIKERT_QUESTIONS.length;
+export const SSI_DOMAIN_MIN = 10;
+export const SSI_DOMAIN_MAX = 4 * SSI_DOMAIN_MIN;
 
-export const SSI_SUBSCALE_LABELS: Record<SsiSubscale, string> = {
-  d: "Depression",
-  a: "Anxiety",
-  s: "Stress",
+export const SSI_DOMAIN_LABELS: Record<SsiDomain, string> = {
+  physical: "Physical",
+  interpersonal: "Interpersonal Relationship",
+  academic: "Academic",
+  environmental: "Environmental",
 };
 
 // ── Page 3: important questions (blanks + option-marking) ─────────────────────
@@ -294,39 +214,31 @@ export const SSI_CONSENT_ITEMS: string[] = [
 export const SSI_WHATSAPP_NOTE =
   "Only your wellness counsellor will contact you. Your details will be kept confidential and your number will be under our records safely.";
 
-// ── Severity tiering (Page 2 DASS-21 subscales + Page 3 safety questions) ─────
+// ── Severity bands (Page 2 SSI total + Page 3 safety questions) ───────────────
 export type SsiSeverity = "normal" | "medium" | "severe";
 
-/**
- * Standard published DASS-21 per-subscale severity bands (raw 7-item sums,
- * 0-21 each), combined with the Page 3 safety questions:
- *  - Severe overrides everything: self-harm ideation answered "Yes"/"Maybe",
- *    or any subscale is in the clinical Severe/Extremely-Severe band.
- *  - Medium: a subscale in the Moderate band, or a "Yes" on the traumatic
- *    event question.
- */
 export function computeSsiSeverity(input: {
-  depression: number;
-  anxiety: number;
-  stress: number;
+  score: number;
   selfHarmAnswer?: string; // l3_q1
   traumaAnswer?: string; // l3_q2
 }): SsiSeverity {
   const selfHarm = input.selfHarmAnswer === "Yes" || input.selfHarmAnswer === "Maybe";
-  const severeBand = input.depression >= 11 || input.anxiety >= 8 || input.stress >= 13;
-  if (selfHarm || severeBand) return "severe";
-
-  const moderateBand =
-    (input.depression >= 7 && input.depression <= 10) ||
-    (input.anxiety >= 6 && input.anxiety <= 7) ||
-    (input.stress >= 10 && input.stress <= 12);
-  if (moderateBand || input.traumaAnswer === "Yes") return "medium";
-
+  if (selfHarm || input.score >= 122) return "severe";
+  if (input.score >= 81 || input.traumaAnswer === "Yes") return "medium";
   return "normal";
 }
 
 export const SSI_SEVERITY_LABELS: Record<SsiSeverity, string> = {
-  severe: "Needs a session or action immediately",
-  medium: "Recommend scheduling a session soon",
-  normal: "No immediate concern",
+  severe: "Severe stress",
+  medium: "Moderate stress",
+  normal: "Mild stress",
 };
+
+export function ssiSeverityLabel(severity: SsiSeverity, likertMax: number): string {
+  if (likertMax !== SSI_LIKERT_MAX) {
+    if (severity === "severe") return "Needs a session or action immediately";
+    if (severity === "medium") return "Recommend scheduling a session soon";
+    return "No immediate concern";
+  }
+  return SSI_SEVERITY_LABELS[severity];
+}

@@ -8,8 +8,13 @@ import { CheckIcon, FlagIcon, MicIcon } from "../common/icons";
 import { useSpeechToText } from "../../hooks/useSpeechToText";
 import { getBookingIntake, getFollowUpHistory, SESSION_DURATION_LABEL } from "../../services/firebase/bookings";
 import { getSsiResult, type SsiResult } from "../../services/firebase/ssiTest";
-import { SSI_SEVERITY_LABELS, SSI_SUBSCALE_MAX } from "../../config/ssiForm";
-import type { SsiSeverity } from "../../config/ssiForm";
+import {
+  computeSsiSeverity,
+  SSI_DOMAIN_MAX,
+  SSI_DOMAIN_LABELS,
+  ssiSeverityLabel,
+} from "../../config/ssiForm";
+import type { SsiDomain, SsiSeverity } from "../../config/ssiForm";
 import type { Booking, BookingIntake } from "../../types/booking";
 import type { UserProfile } from "../../types/user";
 import type { SeriousCase } from "../../types/seriousCase";
@@ -596,17 +601,39 @@ export function RequestDetailModal({
 
   if (ssiResult && showSsiResult) {
     const likertPct = ssiResult.likertMax > 0 ? Math.round((ssiResult.likertScore / ssiResult.likertMax) * 100) : 0;
-    const subscales: { key: "D" | "A" | "S"; label: string; value: number }[] = [
-      { key: "D", label: "Depression", value: ssiResult.depressionScore },
-      { key: "A", label: "Anxiety", value: ssiResult.anxietyScore },
-      { key: "S", label: "Stress", value: ssiResult.stressScore },
+    const domainScores: { key: string; label: string; value: number }[] | null =
+      ssiResult.physicalScore !== undefined &&
+      ssiResult.interpersonalScore !== undefined &&
+      ssiResult.academicScore !== undefined &&
+      ssiResult.environmentalScore !== undefined
+        ? ([
+            ["physical", ssiResult.physicalScore],
+            ["interpersonal", ssiResult.interpersonalScore],
+            ["academic", ssiResult.academicScore],
+            ["environmental", ssiResult.environmentalScore],
+          ] as [SsiDomain, number][]).map(([key, value]) => ({
+            key,
+            label: SSI_DOMAIN_LABELS[key],
+            value,
+          }))
+        : null;
+    const legacySubscales = [
+      { key: "D" as const, label: "Depression", value: ssiResult.depressionScore ?? 0 },
+      { key: "A" as const, label: "Anxiety", value: ssiResult.anxietyScore ?? 0 },
+      { key: "S" as const, label: "Stress", value: ssiResult.stressScore ?? 0 },
     ];
-    // The overall score's own color is a plain equal three-way split of the
-    // total (0-63 -> thirds of 21) — green/amber/red by which third the
-    // total score falls in, independent of the per-subscale severity below.
     const scoreThird = ssiResult.likertMax / 3;
-    const overallSeverity: SsiSeverity =
-      ssiResult.likertScore > scoreThird * 2 ? "severe" : ssiResult.likertScore > scoreThird ? "medium" : "normal";
+    const overallSeverity: SsiSeverity = domainScores
+      ? computeSsiSeverity({
+          score: ssiResult.likertScore,
+          selfHarmAnswer: ssiResult.level3Answers.find((a) => a.id === "l3_q1")?.answer,
+          traumaAnswer: ssiResult.level3Answers.find((a) => a.id === "l3_q2")?.answer,
+        })
+      : ssiResult.likertScore > scoreThird * 2
+        ? "severe"
+        : ssiResult.likertScore > scoreThird
+          ? "medium"
+          : "normal";
     return (
       <Modal title={`SSI Test Result — ${booking.userEmail}`} onClose={onClose} className="request-detail-modal">
         <div className="request-card__ssi-back">
@@ -616,7 +643,7 @@ export function RequestDetailModal({
         </div>
 
         <span className={`request-card__ssi-severity-badge request-card__ssi-severity-badge--${overallSeverity}`}>
-          {SSI_SEVERITY_LABELS[overallSeverity]}
+          {ssiSeverityLabel(overallSeverity, ssiResult.likertMax)}
         </span>
 
         <div className={`request-card__ssi-score request-card__ssi-score--${overallSeverity}`}>
@@ -626,10 +653,30 @@ export function RequestDetailModal({
           </span>
           <span className="request-card__ssi-score-pct">{likertPct}%</span>
         </div>
+        {domainScores && (
+          <p className="request-card__ssi-score-note">
+            Mild stress: 40–80 · Moderate stress: 81–121 · Severe stress: 122–160
+          </p>
+        )}
 
         <div className="request-card__ssi-subscales">
-          {subscales.map((s) => {
-            const severity = subscaleSeverity(s.key, s.value);
+          {(domainScores ?? legacySubscales).map((s) => {
+            if (domainScores) {
+              return (
+                <div key={s.key} className="request-card__ssi-subscale">
+                  <span className="request-card__ssi-subscale-key">{s.key.slice(0, 1).toUpperCase()}</span>
+                  <span className="request-card__ssi-subscale-name">{s.label}</span>
+                  <span className="request-card__ssi-subscale-val">
+                    {s.value}
+                    <small> / {SSI_DOMAIN_MAX}</small>
+                  </span>
+                </div>
+              );
+            }
+            const severity =
+              s.key === "D" || s.key === "A" || s.key === "S"
+                ? subscaleSeverity(s.key, s.value)
+                : "normal";
             return (
               <div
                 key={s.key}
@@ -642,7 +689,7 @@ export function RequestDetailModal({
                 <span className="request-card__ssi-subscale-name">{s.label}</span>
                 <span className="request-card__ssi-subscale-val">
                   {s.value}
-                  <small> / {SSI_SUBSCALE_MAX}</small>
+                  <small> / 21</small>
                 </span>
               </div>
             );

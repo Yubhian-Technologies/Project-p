@@ -363,9 +363,9 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
               <p className="hch-muted">No wellness check-ins yet.</p>
             ) : (
               <ul className="hch-severity">
-                <SeverityRow label="Healthy" value={m.severity.healthy} tone="ok" />
-                <SeverityRow label="Mild concerns" value={m.severity.mild} tone="mild" />
-                <SeverityRow label="Higher concern" value={m.severity.higher} tone="high" />
+                <SeverityRow label="Mild stress" value={m.severity.mild} tone="ok" />
+                <SeverityRow label="Moderate stress" value={m.severity.moderate} tone="mild" />
+                <SeverityRow label="Severe stress" value={m.severity.severe} tone="high" />
               </ul>
             )}
             <p className="hch-small hch-muted">

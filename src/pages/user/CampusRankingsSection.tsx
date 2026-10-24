@@ -41,6 +41,15 @@ export function CampusRankingsSection({ onSelectSection }: CampusRankingsSection
       (!profile.adminAccess ||
         profile.adminAccess.scope === "global" ||
         profile.adminAccess.designation === "management"));
+  const assignedCampusIds =
+    profile?.role === "admin" &&
+    profile.adminAccess?.scope === "campuses" &&
+    profile.adminAccess.designation === "administration" &&
+    (profile.adminAccess.collegeIds?.length ?? 0) > 0
+      ? profile.adminAccess.campusIds ?? []
+      : [];
+  const assignedCampusKey = assignedCampusIds.join("|");
+  const isAssignedAdministration = assignedCampusIds.length > 0;
 
   useEffect(() => {
     let isMounted = true;
@@ -57,6 +66,17 @@ export function CampusRankingsSection({ onSelectSection }: CampusRankingsSection
           if (isMounted) {
             setCampuses(campusList);
             setAllCampusesData(allResults);
+          }
+        } else if (isAssignedAdministration) {
+          const scopedCampusIds = assignedCampusKey ? assignedCampusKey.split("|") : [];
+          const [campusList, assignedResults] = await Promise.all([
+            listCampuses(),
+            Promise.all(scopedCampusIds.map((campusId) => getCampusStudentRankings(campusId))),
+          ]);
+          const assignedCampuses = campusList.filter((campus) => scopedCampusIds.includes(campus.id));
+          if (isMounted) {
+            setCampuses(assignedCampuses);
+            setAllCampusesData(assignedResults);
           }
         } else {
           // Regular user, Head, Counsellor, or non-management campus-scoped Admin
@@ -84,7 +104,7 @@ export function CampusRankingsSection({ onSelectSection }: CampusRankingsSection
       isMounted = false;
       window.removeEventListener("wellness_score_updated", handleUpdate);
     };
-  }, [profile?.campusId, profile?.uid, isManagement]);
+  }, [profile, isManagement, isAssignedAdministration, assignedCampusKey]);
 
   const students = data?.students || [];
   const campusName = data?.campusName || "Your Campus";
@@ -226,7 +246,7 @@ export function CampusRankingsSection({ onSelectSection }: CampusRankingsSection
   // ─────────────────────────────────────────────────────────────────────────────
   // 1. Management Admin / Super-Admin View: View All Campuses' Top 3 Members
   // ─────────────────────────────────────────────────────────────────────────────
-  if (isManagement) {
+  if (isManagement || isAssignedAdministration) {
     const displayedCampuses =
       selectedCampusId === "all"
         ? allCampusesData
@@ -238,17 +258,19 @@ export function CampusRankingsSection({ onSelectSection }: CampusRankingsSection
         <div className="cr-hero">
           <div className="cr-hero__left">
             <span className="cr-hero__tag">
-              <BuildingIcon /> All Campuses Oversight
+              <BuildingIcon /> {isManagement ? "All Campuses Oversight" : "Assigned Campus Oversight"}
             </span>
             <h2 className="cr-hero__title">Student Wellness Rankings</h2>
             <p className="cr-hero__sub">
-              Top 3 student leaders across all enrolled Vishnu Educational Institutions campuses.
+              {isManagement
+                ? "Top 3 student leaders across all enrolled Vishnu Educational Institutions campuses."
+                : "Top 3 student leaders at your assigned campus or campuses."}
             </p>
           </div>
 
           <div className="cr-hero__user-card">
-            <div className="cr-hero__user-card-label">Management Oversight</div>
-            <div className="cr-hero__user-card-name">All Institutions</div>
+            <div className="cr-hero__user-card-label">{isManagement ? "Management Oversight" : "Administration View"}</div>
+            <div className="cr-hero__user-card-name">{isManagement ? "All Institutions" : "Assigned Campuses"}</div>
             <div className="cr-hero__user-metrics">
               <div className="cr-hero__user-stat">
                 <span className="cr-hero__user-stat-val">{campuses.length}</span>
@@ -269,7 +291,7 @@ export function CampusRankingsSection({ onSelectSection }: CampusRankingsSection
             className={`cr-campus-filter-btn ${selectedCampusId === "all" ? "is-active" : ""}`}
             onClick={() => setSelectedCampusId("all")}
           >
-            <BuildingIcon /> All Campuses ({campuses.length})
+            <BuildingIcon />             {isManagement ? "All Campuses" : "All Assigned Campuses"} ({campuses.length})
           </button>
           {campuses.map((c) => (
             <button
@@ -500,4 +522,3 @@ export function CampusRankingsSection({ onSelectSection }: CampusRankingsSection
     </div>
   );
 }
-

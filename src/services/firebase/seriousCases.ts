@@ -43,8 +43,8 @@ export async function getSeriousCaseForBooking(bookingId: string): Promise<Serio
   return snap.exists() ? toSeriousCase(snap.id, snap.data()) : null;
 }
 
-/** Management/Administration retain platform-wide read-only oversight.
-    Principals/VPs see only cases explicitly assigned to them. */
+/** Management retains platform-wide read-only oversight. Administration is
+    limited to assigned colleges; Principals/VPs see explicitly assigned cases. */
 export function subscribeToAdminSeriousCases(
   admin: Pick<UserProfile, "uid" | "adminAccess">,
   onChange: (cases: SeriousCase[]) => void,
@@ -53,11 +53,11 @@ export function subscribeToAdminSeriousCases(
   const isCollegeReviewer =
     access?.scope === "campuses" &&
     (access.designation === "principal" || access.designation === "vice-principal");
+  const isAdministration = access?.designation === "administration";
   const seesEverything =
     !access ||
-    access.scope === "global" ||
-    access.designation === "management" ||
-    access.designation === "administration";
+    (access.scope === "global" && !isAdministration) ||
+    access.designation === "management";
 
   if (seesEverything) {
     const q = query(seriousCasesCollection, orderBy("createdAt", "desc"));
@@ -69,6 +69,52 @@ export function subscribeToAdminSeriousCases(
         onChange([]);
       },
     );
+  }
+
+  if (isAdministration && access?.scope === "campuses") {
+    const campusIds = access.campusIds ?? [];
+    const collegeIds = access.collegeIds ?? [];
+    if (campusIds.length === 0 || collegeIds.length === 0) {
+      onChange([]);
+      return () => {};
+    }
+
+    const collegeChunks = Array.from(
+      { length: Math.ceil(collegeIds.length / 30) },
+      (_, index) => collegeIds.slice(index * 30, (index + 1) * 30),
+    );
+    const assignedQueries = campusIds.flatMap((campusId) =>
+      collegeChunks.map((collegeChunk) =>
+        query(
+          seriousCasesCollection,
+          where("campusId", "==", campusId),
+          where("collegeId", "in", collegeChunk),
+        ),
+      ),
+    );
+    const casesByQuery = new Map<number, Map<string, SeriousCase>>();
+    const emitCombined = () => {
+      const merged = new Map<string, SeriousCase>();
+      for (const cases of casesByQuery.values()) {
+        for (const [id, seriousCase] of cases) merged.set(id, seriousCase);
+      }
+      onChange(Array.from(merged.values()).sort((a, b) => b.createdAt - a.createdAt));
+    };
+    const unsubscribes = assignedQueries.map((assignedQuery, index) =>
+      onSnapshot(
+        assignedQuery,
+        (snap) => {
+          casesByQuery.set(index, new Map(snap.docs.map((d) => [d.id, toSeriousCase(d.id, d.data())])));
+          emitCombined();
+        },
+        (error) => {
+          console.error("Failed to subscribe to assigned Administration cases:", error);
+          onChange([]);
+        },
+      ),
+    );
+
+    return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
   }
 
   if (isCollegeReviewer) {

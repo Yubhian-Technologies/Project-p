@@ -1347,54 +1347,90 @@ export function LandingPage() {
                     </MorphingPopoverTrigger>
                     <MorphingPopoverContent title="For Parents & Guardians" className="landing-parents-modal">
                       <div className="landing-parents-modal__body">
+                        <p className="landing-parents-modal__lead">
+                          <strong>Partnering With You for Your Student’s Well-being</strong>
+                        </p>
+                        <p>
+                          College is an important stage of growth, bringing new experiences, responsibilities,
+                          challenges and opportunities. Parents and guardians play a valuable role in helping
+                          students navigate this journey with confidence.
+                        </p>
+                        <p>
+                          Vishnu Wellness Centre aims to strengthen the partnership between families and the
+                          institution by promoting awareness, encouraging healthy communication and guiding
+                          parents towards appropriate support when needed.
+                        </p>
                         <section>
-                          <h4 className="landing-parents-modal__item-title">1. Understanding Student Well-being</h4>
-                          <p>Help parents understand the emotional, academic and social challenges students may experience during college.</p>
+                          <h4 className="landing-parents-modal__item-title">1. Your Student’s College Journey</h4>
+                          <p>
+                            Understand the transition to college life, including independence, friendships,
+                            academic expectations, personal growth and adjusting to a new environment.
+                          </p>
                         </section>
                         <section>
-                          <h4 className="landing-parents-modal__item-title">2. How Can I Support My Student?</h4>
-                          <p>Practical guidance on listening, communicating and supporting students without creating additional pressure.</p>
+                          <h4 className="landing-parents-modal__item-title">2. Building a Supportive Relationship</h4>
+                          <p>
+                            Learn how to create a safe and supportive home environment where students feel
+                            comfortable sharing their experiences, concerns and aspirations without fear of
+                            judgment.
+                          </p>
                         </section>
                         <section>
-                          <h4 className="landing-parents-modal__item-title">3. When Should I Be Concerned?</h4>
-                          <p>Common changes in mood, behaviour, academics, sleep, attendance, social interaction and daily functioning that may indicate a student needs support.</p>
+                          <h4 className="landing-parents-modal__item-title">3. Navigating Academic Expectations</h4>
+                          <p>
+                            Explore ways to support students through examinations, academic pressure, setbacks,
+                            career decisions and performance expectations while encouraging balanced growth.
+                          </p>
                         </section>
                         <section>
-                          <h4 className="landing-parents-modal__item-title">4. Starting the Conversation</h4>
-                          <p>Simple ways to ask:</p>
-                          <ul>
-                            <li>"How are you really doing?"</li>
-                            <li>"Is there anything you've been finding difficult lately?"</li>
-                            <li>"Would you like me to listen, or would you like help finding support?"</li>
-                          </ul>
+                          <h4 className="landing-parents-modal__item-title">4. Recognising When Support Is Needed</h4>
+                          <p>
+                            Understand when changes in a student’s behaviour, emotional state, academic engagement
+                            or daily routine may call for a caring conversation or additional support.
+                          </p>
                         </section>
                         <section>
-                          <h4 className="landing-parents-modal__item-title">5. When Professional Support May Help</h4>
-                          <p>Explain when counselling or additional professional support may be useful.</p>
+                          <h4 className="landing-parents-modal__item-title">5. Encouraging Healthy Habits</h4>
+                          <p>
+                            Discover practical ways to encourage balanced routines, adequate sleep, physical
+                            activity, responsible technology use and healthy lifestyle choices.
+                          </p>
                         </section>
                         <section>
-                          <h4 className="landing-parents-modal__item-title">6. Academic Stress & College Life</h4>
-                          <p>Guidance around exam pressure, performance expectations, procrastination, adjustment and academic setbacks.</p>
+                          <h4 className="landing-parents-modal__item-title">6. Understanding Counselling & Wellness Support</h4>
+                          <p>
+                            Learn about the role of counselling, how students can access support through Vishnu
+                            Wellness Centre, and how parents can encourage help-seeking when appropriate.
+                          </p>
                         </section>
                         <section>
-                          <h4 className="landing-parents-modal__item-title">7. Digital Well-being & Lifestyle</h4>
-                          <p>Sleep, screen time, social media, routines, physical activity and healthy habits.</p>
+                          <h4 className="landing-parents-modal__item-title">7. Working Together With the Institution</h4>
+                          <p>
+                            Understand how parents, guardians, faculty and wellness counsellors can work together
+                            to support students’ adjustment, development and overall college experience, while
+                            respecting privacy and confidentiality.
+                          </p>
                         </section>
                         <section>
-                          <h4 className="landing-parents-modal__item-title">8. Connecting With Vishnu Wellness Centre</h4>
-                          <p>Explain how students can access counseling and how parents can encourage them to seek support.</p>
+                          <h4 className="landing-parents-modal__item-title">8. Frequently Asked Questions</h4>
+                          <p>
+                            Find answers to common questions about wellness services, counselling appointments,
+                            confidentiality, referrals and the role parents can play in supporting their students.
+                          </p>
                         </section>
                         <section>
-                          <h4 className="landing-parents-modal__item-title">9. Parent FAQs</h4>
-                          <p>Questions about counselling, confidentiality, appointments, referrals and what parents can expect.</p>
-                        </section>
-                        <section>
-                          <h4 className="landing-parents-modal__item-title">10. Urgent Support</h4>
-                          <p>Clear guidance about what to do when there is an immediate safety concern or emergency.</p>
+                          <h4 className="landing-parents-modal__item-title">9. Guidance During Difficult Situations</h4>
+                          <p>
+                            Know how to respond calmly when a student is experiencing significant distress, and
+                            where to seek appropriate professional or emergency assistance when safety is a concern.
+                          </p>
                         </section>
                         <p className="landing-parents-modal__closing">
-                          <strong>Supporting Your Student Starts With Understanding.</strong><br />
-                          Learn how to listen, communicate and connect your students with the right support when they need it.
+                          <strong>A Stronger Support System Begins With Understanding.</strong>
+                          <br />
+                          Your encouragement, patience and willingness to listen can make a meaningful difference
+                          in your student’s college journey. Together, we can help create a supportive environment
+                          where every student feels heard, valued and encouraged to grow.
                         </p>
                       </div>
                     </MorphingPopoverContent>

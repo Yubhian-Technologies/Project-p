@@ -114,7 +114,10 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
       profile.adminAccess.designation === "vice-principal") &&
     collegeIds.length > 0;
   const seesSeriousCases =
-    isCollegeReviewer || !grantedSections || grantedSections.includes("serious-cases");
+    isCollegeReviewer ||
+    profile?.adminAccess?.designation === "administration" ||
+    !grantedSections ||
+    grantedSections.includes("serious-cases");
   const sees = (id: string) => !grantedSections || grantedSections.includes(id as (typeof grantedSections)[number]);
 
   useEffect(() => {
@@ -158,7 +161,10 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
 
         const todayKey = istDateKey(Date.now());
         const [allCampusBookings, attendance] = await Promise.all([
-          labeled("bookings", campusId ? listAllBookingsForStats(campusId, staffUids) : Promise.resolve([])),
+          labeled(
+            "bookings",
+            campusId ? listAllBookingsForStats(campusId, staffUids, false) : Promise.resolve([]),
+          ),
           labeled("attendance", campusId ? listAttendanceForCampusOnDate(campusId, todayKey) : Promise.resolve([])),
         ]);
 

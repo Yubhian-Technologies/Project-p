@@ -556,8 +556,8 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
               <strong className="mho-kpi-card__val">{totalSsiCheckins}</strong>
               <div className="mho-kpi-card__label">SSI Check-ins Recorded</div>
               <div className="mho-kpi-card__meta">
-                <span className="mho-highlight--amber">{totalSsiSevere} Severe</span>
-                <span>{totalSsiModerate} Moderate</span>
+                <span className="mho-highlight--amber">{totalSsiSevere} Severe stress</span>
+                <span>{totalSsiModerate} Moderate stress</span>
               </div>
             </div>
 
@@ -938,15 +938,15 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
               <div className="mho-ssi-distribution">
                 <div className="mho-ssi-dist-card mho-ssi-dist-card--normal">
                   <span className="mho-ssi-dist-card__val">{platformSsiNormal}</span>
-                  <span className="mho-ssi-dist-card__label">Normal</span>
+                  <span className="mho-ssi-dist-card__label">Mild stress</span>
                 </div>
                 <div className="mho-ssi-dist-card mho-ssi-dist-card--moderate">
                   <span className="mho-ssi-dist-card__val">{platformSsiModerate}</span>
-                  <span className="mho-ssi-dist-card__label">Moderate</span>
+                  <span className="mho-ssi-dist-card__label">Moderate stress</span>
                 </div>
                 <div className="mho-ssi-dist-card mho-ssi-dist-card--severe">
                   <span className="mho-ssi-dist-card__val">{platformSsiSevere}</span>
-                  <span className="mho-ssi-dist-card__label">Severe Attention</span>
+                  <span className="mho-ssi-dist-card__label">Severe stress</span>
                 </div>
               </div>
 

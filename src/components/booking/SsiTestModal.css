@@ -80,6 +80,15 @@
   gap: 6px;
 }
 
+.ssi-modal__domain-title {
+  margin: 18px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(30, 58, 138, 0.18);
+  color: #1e3a8a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .ssi-modal__legend-item {
   display: flex;
   align-items: flex-start;
@@ -271,4 +280,27 @@
   gap: 16px;
   font-size: 14px;
   color: #0f172a;
+}
+
+.ssi-modal__done h3,
+.ssi-modal__done p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.ssi-modal__done h3 {
+  color: #1e3a8a;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.ssi-modal__done a {
+  color: #1e3a8a;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ssi-modal__signature {
+  color: #475569;
 }

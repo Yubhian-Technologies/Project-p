@@ -43,9 +43,7 @@ export function SsiTestSection() {
           onSubmit={async (answers: SsiAnswersPayload) => {
             if (!profile.collegeId) return;
             const severity = computeSsiSeverity({
-              depression: answers.depressionScore,
-              anxiety: answers.anxietyScore,
-              stress: answers.stressScore,
+              score: answers.likertScore,
               selfHarmAnswer: answers.level3Answers.find((a) => a.id === "l3_q1")?.answer,
               traumaAnswer: answers.level3Answers.find((a) => a.id === "l3_q2")?.answer,
             });

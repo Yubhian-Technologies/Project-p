@@ -160,7 +160,7 @@ export interface HomeMetrics {
     sessionsByMonth: { label: string; count: number }[];
   };
   team: CounsellorWorkloadRow[];
-  severity: { healthy: number; mild: number; higher: number; total: number };
+  severity: { mild: number; moderate: number; severe: number; total: number };
   concernCategories: { category: ConcernCategory; label: string; count: number; pct: number }[];
   concernCategoriesTotal: number;
   institutions: InstitutionRow[];
@@ -297,9 +297,9 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
   const severityCount = (s: SsiCollegeResult["severity"]) => ssiResults.filter((r) => r.severity === s).length;
   const pct = (n: number) => (severityTotal > 0 ? Math.round((n / severityTotal) * 100) : 0);
   const severity = {
-    healthy: pct(severityCount("normal")),
-    mild: pct(severityCount("medium")),
-    higher: pct(severityCount("severe")),
+    mild: pct(severityCount("normal")),
+    moderate: pct(severityCount("medium")),
+    severe: pct(severityCount("severe")),
     total: severityTotal,
   };
 

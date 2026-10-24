@@ -78,12 +78,16 @@ export function EditAdminModal({ admin, onClose, onSaved }: EditAdminModalProps)
   function handleDesignationChange(value: string) {
     const next = value as "" | AdminDesignation;
     setDesignation(next);
+    if (next === "administration" && scope === "global") {
+      handleScopeChange("campuses");
+    }
     if (next === "principal" || next === "vice-principal") {
       setSections((prev) => prev.filter((s) => s !== "monthly-reports"));
     }
   }
 
   const isPrincipalOrVp = designation === "principal" || designation === "vice-principal";
+  const isAdministration = designation === "administration";
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -117,7 +121,10 @@ export function EditAdminModal({ admin, onClose, onSaved }: EditAdminModalProps)
     label: campusIds.length > 1 ? `${c.name} (${campusNameById.get(c.campusId) ?? "?"})` : c.name,
   }));
   const canSubmit =
-    !saving && (scope === "global" || (campusIds.length > 0 && collegeIds.length > 0)) && sections.length > 0;
+    !saving &&
+    (scope === "global" || (campusIds.length > 0 && collegeIds.length > 0)) &&
+    (!isAdministration || (scope === "campuses" && campusIds.length > 0 && collegeIds.length > 0)) &&
+    sections.length > 0;
 
   return (
     <Modal title="Edit Admin" onClose={onClose}>
@@ -171,7 +178,7 @@ export function EditAdminModal({ admin, onClose, onSaved }: EditAdminModalProps)
         <div className="logins-management__field">
           <label htmlFor="edit-admin-scope">Access</label>
           <Select id="edit-admin-scope" value={scope} onChange={handleScopeChange}>
-            <option value="global">Global — all campuses</option>
+            <option value="global" disabled={isAdministration}>Global — all campuses</option>
             <option value="campuses">Specific campuses</option>
           </Select>
         </div>
@@ -189,7 +196,9 @@ export function EditAdminModal({ admin, onClose, onSaved }: EditAdminModalProps)
         )}
         {scope === "campuses" && campusIds.length > 0 && (
           <div className="logins-management__field">
-            <label htmlFor="edit-admin-colleges">Colleges</label>
+            <label htmlFor="edit-admin-colleges">
+              {isAdministration ? "Assigned college(s) — required" : "Colleges"}
+            </label>
             <MultiSelect
               id="edit-admin-colleges"
               options={collegeOptions}
@@ -197,11 +206,11 @@ export function EditAdminModal({ admin, onClose, onSaved }: EditAdminModalProps)
               onChange={setCollegeIds}
               placeholder="Select the college(s) this admin oversees…"
             />
-            {collegeIds.length > 0 && (
+            {(collegeIds.length > 0 || isAdministration) && (
               <p className="logins-management__hint">
-                Can only manage (create/edit/delete) counsellor &amp; head logins for these colleges; Analytics,
-                Events, and Counsellor Worksheet are also narrowed to just these colleges. Logins for other
-                colleges on the same campus stay visible, just not editable.
+                {isAdministration
+                  ? "Consolidated reports and campus rankings are campus-level, read-only views. At least one college assignment is required for the Principal-style college dashboard."
+                  : "Can only manage (create/edit/delete) counsellor &amp; head logins for these colleges; Analytics, Events, and Counsellor Worksheet are also narrowed to just these colleges. Logins for other colleges on the same campus stay visible, just not editable."}
               </p>
             )}
           </div>
