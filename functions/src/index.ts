@@ -1,4 +1,5 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
@@ -838,6 +839,7 @@ export const verifyMonthlyReport = onCall<VerifyMonthlyReportRequest>(async (req
       verifiedByUid,
       verifiedAt: FieldValue.serverTimestamp(),
     });
+
     return { success: true, signed: false };
   }
 
@@ -903,6 +905,283 @@ export const verifyMonthlyReport = onCall<VerifyMonthlyReportRequest>(async (req
   });
 
   return { success: true, signed: true };
+});
+
+interface ReportNotificationInput {
+  recipientId: string;
+  reportId: string;
+  reportKind: "consolidated" | "staff";
+  title: string;
+  message: string;
+  eventTime: string;
+}
+
+async function writeReportNotification(input: ReportNotificationInput): Promise<void> {
+  const notificationRef = db
+    .collection("notifications")
+    .doc(`${input.reportKind}-report-${input.reportId}-${input.recipientId}`);
+  await db.runTransaction(async (transaction) => {
+    const existing = await transaction.get(notificationRef);
+    const previousEventTime = existing.data()?.reportEventTime as string | undefined;
+    if (previousEventTime && previousEventTime >= input.eventTime) return;
+    transaction.set(notificationRef, {
+      ...input,
+      type: "monthly_report_uploaded",
+      read: false,
+      createdAt: Date.now(),
+      reportEventTime: input.eventTime,
+    });
+  });
+}
+
+async function removeStaleReportNotifications(
+  reportId: string,
+  reportKind: ReportNotificationInput["reportKind"],
+  recipientIds: Set<string>,
+): Promise<void> {
+  const notifications = await db.collection("notifications").where("reportId", "==", reportId).get();
+  const batch = db.batch();
+  let deleteCount = 0;
+  for (const notification of notifications.docs) {
+    const data = notification.data();
+    if (data.type !== "monthly_report_uploaded" || (data.reportKind && data.reportKind !== reportKind)) continue;
+    const recipientId = typeof data.recipientId === "string" ? data.recipientId : "";
+    const canonicalId = `${reportKind}-report-${reportId}-${recipientId}`;
+    if (!recipientIds.has(recipientId) || notification.id !== canonicalId) {
+      batch.delete(notification.ref);
+      deleteCount += 1;
+    }
+  }
+  if (deleteCount > 0) await batch.commit();
+}
+
+function isConsolidatedReportRecipient(user: Record<string, unknown>, campusId: string): boolean {
+  if (user.role !== "admin") return false;
+  const access = user.adminAccess as
+    | { designation?: string; scope?: string; campusIds?: string[] }
+    | undefined;
+  const hasDesignation =
+    access?.designation === "management" ||
+    access?.designation === "administration" ||
+    (!access?.designation && (!access || access.scope === "global"));
+  const hasCampusAccess =
+    !access ||
+    access.scope === "global" ||
+    (access.scope === "campuses" &&
+      Array.isArray(access.campusIds) &&
+      access.campusIds.includes(campusId));
+  return hasDesignation && hasCampusAccess;
+}
+
+async function sendConsolidatedReportNotifications(
+  reportId: string,
+  report: Record<string, unknown>,
+  eventTime: string,
+): Promise<number> {
+  const campusId = typeof report.campusId === "string" ? report.campusId : "";
+  const uploadedByUid = typeof report.uploadedByUid === "string" ? report.uploadedByUid : "";
+  if (!campusId || !uploadedByUid) {
+    console.warn("Skipping consolidated report notification: report data is incomplete.", { reportId });
+    return 0;
+  }
+
+  const [adminsSnap, campusSnap, uploaderSnap] = await Promise.all([
+    db.collection("users").where("role", "==", "admin").get(),
+    db.collection("campuses").doc(campusId).get(),
+    db.collection("users").doc(uploadedByUid).get(),
+  ]);
+  const uploader = uploaderSnap.data();
+  if (uploader?.role !== "head" || uploader.campusId !== campusId) {
+    console.warn("Skipping consolidated report notification: uploader is not the Head for this campus.", {
+      reportId,
+      campusId,
+      uploadedByUid,
+    });
+    return 0;
+  }
+
+  const adminRecipients = adminsSnap.docs.filter((adminDoc) =>
+    isConsolidatedReportRecipient(adminDoc.data(), campusId),
+  );
+  if (adminRecipients.length === 0) {
+    console.error("No Management or Administration recipient can access the consolidated report campus.", {
+      reportId,
+      campusId,
+    });
+  }
+
+  const month = typeof report.month === "number" ? report.month : 1;
+  const year = typeof report.year === "number" ? report.year : new Date().getFullYear();
+  const monthName = new Date(year, month - 1, 1).toLocaleString("en-IN", { month: "long" });
+  const campusData = campusSnap.data();
+  const campusName = typeof campusData?.name === "string" ? campusData.name : "Campus";
+  const title = typeof report.title === "string" ? report.title : `Consolidated Report — ${monthName} ${year}`;
+  const message = `${campusName} has a consolidated report: ${title} (${monthName} ${year}).`;
+  const recipients = new Set([...adminRecipients.map((recipient) => recipient.id), uploadedByUid]);
+
+  await removeStaleReportNotifications(reportId, "consolidated", recipients);
+  await Promise.all(
+    [...recipients].map((recipientId) =>
+      writeReportNotification({
+        recipientId,
+        reportId,
+        reportKind: "consolidated",
+        title: "Consolidated report shared",
+        message,
+        eventTime,
+      }),
+    ),
+  );
+  console.log("Consolidated report notifications created.", {
+    reportId,
+    campusId,
+    recipientCount: recipients.size,
+  });
+  return recipients.size;
+}
+
+export const notifyConsolidatedReportRecipients = onDocumentWritten(
+  { document: "monthlyReports/{reportId}", retry: true },
+  async (event) => {
+    const report = event.data?.after.data();
+    if (!report || report.status !== "pending") return;
+    await sendConsolidatedReportNotifications(
+      event.params.reportId,
+      report,
+      event.time,
+    );
+  },
+);
+
+export const notifyMonthlyStaffReportRecipients = onDocumentWritten(
+  { document: "counsellorMonthlyReports/{reportId}", retry: true },
+  async (event) => {
+    const report = event.data?.after.data();
+    const reportId = event.params.reportId;
+    if (!report || report.status !== "pending") return;
+
+    const uploadedByUid = typeof report.uploadedByUid === "string" ? report.uploadedByUid : "";
+    const campusId = typeof report.campusId === "string" ? report.campusId : "";
+    const collegeId = typeof report.collegeId === "string" ? report.collegeId : "";
+    const uploadedByRole = report.uploadedByRole;
+    const recipientUids = Array.isArray(report.recipientUids)
+      ? report.recipientUids.filter((uid): uid is string => typeof uid === "string")
+      : [];
+    if (!uploadedByUid || !campusId || !collegeId || recipientUids.length === 0) {
+      console.warn("Skipping monthly staff report notification: report data is incomplete.", { reportId });
+      return;
+    }
+
+    const [uploaderSnap, ...recipientSnaps] = await Promise.all([
+      db.collection("users").doc(uploadedByUid).get(),
+      ...recipientUids.map((uid) => db.collection("users").doc(uid).get()),
+    ]);
+    const uploader = uploaderSnap.data();
+    if (
+      !uploader ||
+      uploader.role !== uploadedByRole ||
+      uploader.campusId !== campusId ||
+      uploader.collegeId !== collegeId ||
+      (uploadedByRole !== "head" && uploadedByRole !== "counsellor")
+    ) {
+      console.warn("Skipping monthly staff report notification: uploader profile does not match report.", { reportId });
+      return;
+    }
+
+    const validRecipients = recipientSnaps.filter((recipientSnap) => {
+      const recipient = recipientSnap.data();
+      if (!recipient) return false;
+      if (uploadedByRole === "head") {
+        const access = recipient.adminAccess as
+          | { designation?: string; scope?: string; campusIds?: string[]; collegeIds?: string[] }
+          | undefined;
+        return (
+          recipient.role === "admin" &&
+          (access?.designation === "principal" || access?.designation === "vice-principal") &&
+          access.scope === "campuses" &&
+          access.campusIds?.includes(campusId) === true &&
+          access.collegeIds?.includes(collegeId) === true
+        );
+      }
+      return (
+        recipient.role === "head" &&
+        recipient.campusId === campusId &&
+        recipient.collegeId === collegeId
+      );
+    });
+
+    const month = typeof report.month === "number" ? report.month : 1;
+    const year = typeof report.year === "number" ? report.year : new Date().getFullYear();
+    const monthName = new Date(year, month - 1, 1).toLocaleString("en-IN", { month: "long" });
+    const title = typeof report.title === "string" ? report.title : `Monthly Report — ${monthName} ${year}`;
+    const validRecipientIds = new Set(validRecipients.map((recipient) => recipient.id));
+    await removeStaleReportNotifications(reportId, "staff", validRecipientIds);
+    await Promise.all(
+      validRecipients.map((recipient) =>
+        writeReportNotification({
+          recipientId: recipient.id,
+          reportId,
+          reportKind: "staff",
+          title: "Monthly report shared",
+          message: `${String(report.uploadedBy || "Staff")} shared a monthly report: ${title} (${monthName} ${year}).`,
+          eventTime: event.time,
+        }),
+      ),
+    );
+  },
+);
+
+interface ReshareMonthlyReportRequest {
+  reportId: string;
+}
+
+export const reshareMonthlyReport = onCall<ReshareMonthlyReportRequest>(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) throw new HttpsError("unauthenticated", "You must be signed in.");
+  const { reportId } = request.data ?? {};
+  if (!reportId || typeof reportId !== "string") {
+    throw new HttpsError("invalid-argument", "reportId is required.");
+  }
+
+  const [callerSnap, reportSnap] = await Promise.all([
+    db.collection("users").doc(callerUid).get(),
+    db.collection("monthlyReports").doc(reportId).get(),
+  ]);
+  const caller = callerSnap.data();
+  const report = reportSnap.data();
+  if (!reportSnap.exists || !report) throw new HttpsError("not-found", "Consolidated report not found.");
+  if (!isCampusManagerRole(caller?.role)) {
+    throw new HttpsError("permission-denied", "Only an Admin or Super Admin can share a consolidated report.");
+  }
+
+  const campusId = typeof report.campusId === "string" ? report.campusId : "";
+  const access = caller?.adminAccess as
+    | { designation?: string; scope?: string; campusIds?: string[] }
+    | undefined;
+  const hasShareDesignation =
+    caller?.role === "super-admin" ||
+    !access ||
+    access.scope === "global" && !access.designation ||
+    access.designation === "management" ||
+    access.designation === "administration";
+  const hasCampusAccess =
+    caller?.role === "super-admin" ||
+    !access ||
+    access.scope === "global" ||
+    (access.scope === "campuses" && access.campusIds?.includes(campusId) === true);
+  if (!hasShareDesignation || !hasCampusAccess) {
+    throw new HttpsError("permission-denied", "You don't have access to share this campus report.");
+  }
+
+  const recipientCount = await sendConsolidatedReportNotifications(
+    reportId,
+    report,
+    new Date().toISOString(),
+  );
+  if (recipientCount === 0) {
+    throw new HttpsError("failed-precondition", "No eligible Head or Admin recipients were found.");
+  }
+  return { success: true, recipientCount };
 });
 
 // Session length for a normal (non-emergency, non-offline-import) booking —
@@ -1362,6 +1641,25 @@ function hasDesignation(admin: Record<string, unknown>, designations: string[]):
   return designations.includes(access?.designation ?? "");
 }
 
+type SeriousCaseAdmin = Record<string, unknown> & { uid: string };
+
+function seriousCasePrincipalVpTargets(
+  admins: SeriousCaseAdmin[],
+  campusId: string,
+  collegeId: string | null,
+): SeriousCaseAdmin[] {
+  if (!collegeId) return [];
+  return admins.filter((admin) => {
+    const access = admin.adminAccess as { scope?: string; campusIds?: string[]; collegeIds?: string[] } | undefined;
+    return (
+      access?.scope === "campuses" &&
+      access.campusIds?.includes(campusId) === true &&
+      access.collegeIds?.includes(collegeId) === true &&
+      hasDesignation(admin, SERIOUS_CASE_ADMIN_DESIGNATIONS.principalVp)
+    );
+  });
+}
+
 interface CreateSeriousCaseRequest {
   bookingId: string;
   note: string;
@@ -1442,9 +1740,11 @@ export const createSeriousCase = onCall<CreateSeriousCaseRequest>(async (request
     return !access || access.scope === "global";
   }
 
+  const principalVpTargets = seriousCasePrincipalVpTargets(admins, campusId, collegeId);
+
   let targetTier: "principal-vp" | "management-fallback" | "global-fallback" = "principal-vp";
-  let targets = admins.filter((a) => coversCollege(a) && hasDesignation(a, SERIOUS_CASE_ADMIN_DESIGNATIONS.principalVp));
-  if (targets.length === 0) {
+  let targets = principalVpTargets;
+  if (principalVpTargets.length === 0) {
     targetTier = "management-fallback";
     targets = admins.filter((a) => coversCollege(a) && hasDesignation(a, SERIOUS_CASE_ADMIN_DESIGNATIONS.managementAdmin));
   }
@@ -1461,23 +1761,25 @@ export const createSeriousCase = onCall<CreateSeriousCaseRequest>(async (request
     console.log("createSeriousCase: no admin matched any tier", { bookingId, campusId, collegeId });
     throw new HttpsError("failed-precondition", "No admin account is configured to receive this case.");
   }
+  const reviewTargets = targetTier === "principal-vp" ? targets : [];
   // Management/Administration admins always have standing oversight visibility
-  // into every case platform-wide (they can already see it in their dashboard
-  // regardless of scope) — but until now that was dashboard-only, with no
-  // actual notification unless they happened to also be the targeted tier.
-  // This notifies every one of them directly too, distinctly worded from the
-  // targeted tier's notification so it's clear this is an FYI, not something
-  // the 24h SLA applies to for them.
+  // into every case platform-wide. They receive FYIs, but only an assigned
+  // college Principal/VP is a reviewer and part of the 24h action SLA.
   const oversightAdmins = admins.filter(
-    (a) => hasDesignation(a, SERIOUS_CASE_ADMIN_DESIGNATIONS.managementAdmin) && !targets.some((t) => t.uid === a.uid),
+    (a) =>
+      hasDesignation(a, SERIOUS_CASE_ADMIN_DESIGNATIONS.managementAdmin) &&
+      !reviewTargets.some((t) => t.uid === a.uid),
   );
+  const oversightRecipients = targetTier === "principal-vp"
+    ? oversightAdmins
+    : [...targets, ...oversightAdmins.filter((admin) => !targets.some((target) => target.uid === admin.uid))];
   console.log("createSeriousCase: resolved targets", {
     bookingId,
     targetTier,
-    targetAdminUids: targets.map((a) => a.uid),
-    targetAdminEmails: targets.map((a) => a.email),
-    oversightAdminUids: oversightAdmins.map((a) => a.uid),
-    oversightAdminEmails: oversightAdmins.map((a) => a.email),
+    targetAdminUids: reviewTargets.map((a) => a.uid),
+    targetAdminEmails: reviewTargets.map((a) => a.email),
+    oversightAdminUids: oversightRecipients.map((a) => a.uid),
+    oversightAdminEmails: oversightRecipients.map((a) => a.email),
   });
 
   let notifiedHeadUid: string | undefined;
@@ -1504,7 +1806,7 @@ export const createSeriousCase = onCall<CreateSeriousCaseRequest>(async (request
     authorEmail: caller?.email ?? "",
     note: note.trim(),
     ...(notifiedHeadUid ? { notifiedHeadUid } : {}),
-    targetAdminUids: targets.map((a) => a.uid),
+    targetAdminUids: reviewTargets.map((a) => a.uid),
     targetTier,
     status: "open",
     escalations: [],
@@ -1520,7 +1822,7 @@ export const createSeriousCase = onCall<CreateSeriousCaseRequest>(async (request
   const caseMessage = `${caller?.email ?? "A staff member"} flagged a ${
     booking.isEmergency ? "Crisis SOS" : "session"
   } case with ${booking.userEmail ?? "a student"} for review.`;
-  for (const admin of targets) {
+  for (const admin of reviewTargets) {
     batch.set(db.collection("notifications").doc(), {
       recipientId: admin.uid,
       type: "serious_case_created",
@@ -1531,21 +1833,17 @@ export const createSeriousCase = onCall<CreateSeriousCaseRequest>(async (request
       createdAt: now,
     });
   }
-  // Oversight admins aren't on the hook for the 24h SLA — they're not in
-  // targetAdminUids and can't resolve the case — but they still get the same
-  // high-priority notification so "wide open visibility" actually means
-  // something instead of just being a passive dashboard query.
-  const oversightTitle = booking.isEmergency ? "Crisis SOS case filed (oversight)" : "Serious case filed (oversight)";
-  const oversightMessage = `${caseMessage} For your visibility — this case is assigned to ${
-    targets.map((a) => a.email ?? a.uid).join(", ") || "another admin"
-  }.`;
-  for (const admin of oversightAdmins) {
+  const oversightTitle = booking.isEmergency ? "Crisis SOS case filed (view only)" : "Serious case filed (view only)";
+  const assignedReviewerText = reviewTargets.length
+    ? `It is assigned to ${reviewTargets.map((admin) => admin.email ?? admin.uid).join(", ")}.`
+    : "No Principal or Vice-Principal is assigned to this college yet; management can view the case, but cannot resolve it.";
+  for (const admin of oversightRecipients) {
     batch.set(db.collection("notifications").doc(), {
       recipientId: admin.uid,
       type: "serious_case_created",
       bookingId,
       title: oversightTitle,
-      message: oversightMessage,
+      message: `${caseMessage} For your visibility only. ${assignedReviewerText}`,
       read: false,
       createdAt: now,
     });
@@ -1582,20 +1880,12 @@ const SERIOUS_CASE_ESCALATION_MS = 24 * 60 * 60 * 1000;
 export const escalateSeriousCases = onSchedule("every 15 minutes", async () => {
   const now = Date.now();
   const openSnap = await db.collection("seriousCases").where("status", "==", "open").get();
+  if (openSnap.empty) return;
 
-  const overdue = openSnap.docs.filter((d) => {
-    const data = d.data();
-    return Boolean(data.collegeId) && now - (data.lastEscalatedAt as number) >= SERIOUS_CASE_ESCALATION_MS;
-  });
-  if (overdue.length === 0) return;
-
-  // Same oversight treatment as createSeriousCase: Management/Administration
-  // admins aren't on the SLA hook, but they still get told a case has gone
-  // overdue so their "wide open visibility" stays meaningful on every
-  // escalation cycle, not just at case creation.
   const adminsSnap = await db.collection("users").where("role", "==", "admin").get();
-  const oversightAdminUids = adminsSnap.docs
-    .map((d) => ({ uid: d.id, ...d.data() }) as Record<string, unknown> & { uid: string })
+  const admins = adminsSnap.docs
+    .map((d) => ({ uid: d.id, ...d.data() }) as Record<string, unknown> & { uid: string });
+  const oversightAdminUids = admins
     .filter((a) => hasDesignation(a, SERIOUS_CASE_ADMIN_DESIGNATIONS.managementAdmin))
     .map((a) => a.uid);
 
@@ -1612,44 +1902,76 @@ export const escalateSeriousCases = onSchedule("every 15 minutes", async () => {
     }
   }
 
-  for (const docRef of overdue) {
+  for (const docRef of openSnap.docs) {
     const c = docRef.data();
-    const targetAdminUids = (c.targetAdminUids as string[] | undefined) ?? [];
+    const campusId = typeof c.campusId === "string" ? c.campusId : "";
+    const collegeId = typeof c.collegeId === "string" ? c.collegeId : null;
+    const reviewers = seriousCasePrincipalVpTargets(admins, campusId, collegeId);
+    const reviewerUids = reviewers.map((admin) => admin.uid).sort();
+    const currentTargetUids = ((c.targetAdminUids as string[] | undefined) ?? []).slice().sort();
+    const assignedReviewerChanged =
+      c.targetTier !== (reviewerUids.length ? "principal-vp" : "management-fallback") ||
+      reviewerUids.length !== currentTargetUids.length ||
+      reviewerUids.some((uid, index) => uid !== currentTargetUids[index]);
     const isEmergency = c.isEmergency === true;
-    queue(() =>
-      batch.update(docRef.ref, {
-        lastEscalatedAt: now,
-        escalationCount: FieldValue.increment(1),
-        escalations: FieldValue.arrayUnion({ type: "re-notified", at: now }),
-        updatedAt: now,
-      }),
-    );
-    for (const uid of targetAdminUids) {
-      queue(() =>
-        batch.set(db.collection("notifications").doc(), {
-          recipientId: uid,
-          type: "serious_case_escalated",
-          bookingId: c.bookingId,
-          title: "Overdue: case still needs action",
-          message: `A ${isEmergency ? "Crisis SOS" : "serious"} case has had no action taken for over 24 hours — please respond.`,
-          read: false,
-          createdAt: now,
-        }),
-      );
+    const lastEscalatedAt = typeof c.lastEscalatedAt === "number" ? c.lastEscalatedAt : c.createdAt;
+    const isOverdue = Boolean(collegeId) && now - lastEscalatedAt >= SERIOUS_CASE_ESCALATION_MS;
+    const caseUpdate: Record<string, unknown> = {};
+
+    if (assignedReviewerChanged) {
+      caseUpdate.targetAdminUids = reviewerUids;
+      caseUpdate.targetTier = reviewerUids.length ? "principal-vp" : "management-fallback";
+      for (const reviewer of reviewers) {
+        queue(() =>
+          batch.set(db.collection("notifications").doc(), {
+            recipientId: reviewer.uid,
+            type: "serious_case_created",
+            bookingId: c.bookingId,
+            title: isEmergency ? "Crisis SOS case needs your review" : "Serious case needs your review",
+            message: "An open case for your assigned college is awaiting your review.",
+            read: false,
+            createdAt: now,
+          }),
+        );
+      }
     }
-    for (const uid of oversightAdminUids) {
-      if (targetAdminUids.includes(uid)) continue;
-      queue(() =>
-        batch.set(db.collection("notifications").doc(), {
-          recipientId: uid,
-          type: "serious_case_escalated",
-          bookingId: c.bookingId,
-          title: "Overdue: case still needs action (oversight)",
-          message: `A ${isEmergency ? "Crisis SOS" : "serious"} case has had no action taken for over 24 hours. For your visibility — it's assigned to another admin.`,
-          read: false,
-          createdAt: now,
-        }),
-      );
+
+    if (isOverdue) {
+      caseUpdate.lastEscalatedAt = now;
+      caseUpdate.escalationCount = FieldValue.increment(1);
+      caseUpdate.escalations = FieldValue.arrayUnion({ type: "re-notified", at: now });
+      for (const reviewer of reviewers) {
+        if (assignedReviewerChanged) continue;
+        queue(() =>
+          batch.set(db.collection("notifications").doc(), {
+            recipientId: reviewer.uid,
+            type: "serious_case_escalated",
+            bookingId: c.bookingId,
+            title: "Overdue: case still needs action",
+            message: `A ${isEmergency ? "Crisis SOS" : "serious"} case has had no action taken for over 24 hours — please respond.`,
+            read: false,
+            createdAt: now,
+          }),
+        );
+      }
+      for (const uid of oversightAdminUids) {
+        if (reviewerUids.includes(uid)) continue;
+        queue(() =>
+          batch.set(db.collection("notifications").doc(), {
+            recipientId: uid,
+            type: "serious_case_escalated",
+            bookingId: c.bookingId,
+            title: "Overdue: case still needs action (view only)",
+            message: `A ${isEmergency ? "Crisis SOS" : "serious"} case remains open after 24 hours. Management visibility only; review belongs to the college Principal / Vice-Principal.`,
+            read: false,
+            createdAt: now,
+          }),
+        );
+      }
+    }
+    if (Object.keys(caseUpdate).length > 0) {
+      caseUpdate.updatedAt = now;
+      queue(() => batch.update(docRef.ref, caseUpdate));
     }
   }
   if (opsInBatch > 0) batches.push(batch);

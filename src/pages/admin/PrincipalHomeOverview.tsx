@@ -107,7 +107,14 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
     collegeIds.map((assignedCollegeId) => ({ campusId: assignedCampusId, collegeId: assignedCollegeId })),
   );
   const grantedSections = profile?.adminAccess?.sections;
-  const seesSeriousCases = !grantedSections || grantedSections.includes("serious-cases");
+  const isCollegeReviewer =
+    profile?.role === "admin" &&
+    profile.adminAccess?.scope === "campuses" &&
+    (profile.adminAccess.designation === "principal" ||
+      profile.adminAccess.designation === "vice-principal") &&
+    collegeIds.length > 0;
+  const seesSeriousCases =
+    isCollegeReviewer || !grantedSections || grantedSections.includes("serious-cases");
   const sees = (id: string) => !grantedSections || grantedSections.includes(id as (typeof grantedSections)[number]);
 
   useEffect(() => {

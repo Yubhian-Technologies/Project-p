@@ -34,7 +34,7 @@ import {
 import "./ManagementHomeOverview.css";
 
 interface ManagementHomeOverviewProps {
-  onSelectSection: (sectionId: string) => void;
+  onSelectSection: (sectionId: string, seriousCaseId?: string) => void;
 }
 
 interface CampusStats {
@@ -339,10 +339,19 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
   }, [selectedCampusId, filteredAllEvents, allEvents]);
 
   // Platform-wide metrics for remaining normal wide-campuses view sections
-  const platformSosCases = seriousCases.filter((c) => c.isEmergency).length;
-  const platformSevereCases = seriousCases.filter((c) => !c.isEmergency).length;
   const platformCriticalResolved = seriousCases.filter((c) => c.status === "resolved").length;
-  const platformCriticalPending = seriousCases.filter((c) => c.status === "open").length;
+  const openCasesAssignedForReview = seriousCases.filter(
+    (seriousCase) =>
+      seriousCase.status === "open" &&
+      seriousCase.targetTier === "principal-vp" &&
+      Array.isArray(seriousCase.targetAdminUids) &&
+      seriousCase.targetAdminUids.length > 0,
+  );
+  const prioritizedOpenSeriousCases = [...openCasesAssignedForReview]
+    .sort((a, b) => {
+      if (a.escalationCount !== b.escalationCount) return b.escalationCount - a.escalationCount;
+      return a.createdAt - b.createdAt;
+    });
 
   const platformReportsThisMonth = monthlyReports.filter((r) => {
     const d = new Date(r.uploadedAt);
@@ -631,44 +640,45 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
                 <div>
                   <h3 className="mho-section-card__title">Critical Student Cases Watchlist</h3>
                   <p className="mho-section-card__sub">
-                    Severe flagged counselling cases and Crisis SOS emergencies requiring management escalation monitoring and action follow-up.
+                    Severe flagged counselling cases and Crisis SOS emergencies for college Principal / Vice-Principal review, with management visibility.
                   </p>
                 </div>
               </div>
               <div className="mho-badges-row">
                 <span className="mho-chip mho-chip--sos">
-                  {platformSosCases} Crisis SOS
+                  {openCasesAssignedForReview.filter((seriousCase) => seriousCase.isEmergency).length} Open Crisis SOS
                 </span>
                 <span className="mho-chip mho-chip--severe">
-                  {platformSevereCases} Severe Sessions
+                  {openCasesAssignedForReview.filter((seriousCase) => !seriousCase.isEmergency).length} Open Severe Sessions
                 </span>
                 <span className="mho-chip mho-chip--success">
                   {platformCriticalResolved} Action Recorded
                 </span>
-                {platformCriticalPending > 0 && (
+                {openCasesAssignedForReview.length > 0 && (
                   <span className="mho-chip mho-chip--danger">
-                    {platformCriticalPending} Action Pending
+                      {openCasesAssignedForReview.length} Open Cases
                   </span>
                 )}
               </div>
             </div>
 
-            {seriousCases.length === 0 ? (
+            {prioritizedOpenSeriousCases.length === 0 ? (
               <div className="mho-empty-state">
                 <CheckCircleIcon />
-                <p>No critical cases recorded platform-wide. All campuses are operating smoothly.</p>
+                <p>
+                  No open cases are assigned to a college Principal / VP for review. Resolved cases remain available in the Serious Cases section.
+                </p>
               </div>
             ) : (
               <div className="mho-critical-list">
-                {seriousCases.slice(0, 5).map((sc) => {
+                {prioritizedOpenSeriousCases.map((sc) => {
                   const campusName =
                     campuses.find((c) => c.id === sc.campusId)?.name || "Campus";
-                  const isResolved = sc.status === "resolved";
 
                   return (
                     <div
                       key={sc.id}
-                      className={`mho-critical-item ${isResolved ? "resolved" : "pending"}`}
+                      className="mho-critical-item pending"
                     >
                       <div className="mho-critical-item__left">
                         <span
@@ -696,43 +706,32 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
                       </div>
 
                       <div className="mho-critical-item__right">
-                        {isResolved ? (
-                          <div className="mho-status-box mho-status-box--resolved">
-                            <span className="mho-status-pill mho-status-pill--resolved">✓ Action Taken</span>
-                            {sc.actionTaken && (
-                              <p className="mho-action-taken-text">
-                                "{sc.actionTaken.text}" — {sc.actionTaken.byEmail}
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="mho-status-box mho-status-box--pending">
-                            <span className="mho-status-pill mho-status-pill--pending">⏳ Pending Action</span>
-                            <Button
-                              type="button"
-                              variant="outlined"
-                              onClick={() => onSelectSection("serious-cases")}
-                            >
-                              Resolve in Section →
-                            </Button>
-                          </div>
-                        )}
+                        <div className="mho-status-box mho-status-box--pending">
+                          <span className="mho-status-pill mho-status-pill--pending">Assigned to Principal / VP</span>
+                          <Button
+                            type="button"
+                            variant="outlined"
+                            onClick={() => onSelectSection("serious-cases", sc.id)}
+                          >
+                            View →
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
 
-                {seriousCases.length > 5 && (
-                  <div className="mho-view-all-row">
-                    <button
-                      type="button"
-                      className="mho-link-btn"
-                      onClick={() => onSelectSection("serious-cases")}
-                    >
-                      View All {seriousCases.length} Critical Cases in Serious Cases Section →
-                    </button>
-                  </div>
-                )}
+              </div>
+            )}
+            {platformCriticalResolved > 0 && (
+              <div className="mho-view-all-row">
+                <button
+                  type="button"
+                  className="mho-link-btn"
+                  onClick={() => onSelectSection("serious-cases")}
+                >
+                  View {platformCriticalResolved} resolved case{platformCriticalResolved === 1 ? "" : "s"} →
+                </button>
               </div>
             )}
           </div>
@@ -772,7 +771,7 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
                     <th>SSI Check-ins</th>
                     <th>Counsellors</th>
                     <th>Worksheets</th>
-                    <th>Monthly Report</th>
+                    <th>Consolidated Reports</th>
                     <th>Action</th>
                   </tr>
                 </thead>

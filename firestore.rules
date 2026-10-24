@@ -92,6 +92,14 @@ service cloud.firestore {
         collegeId in myProfile().adminAccess.collegeIds;
     }
 
+    function canReviewSeriousCase(caseData) {
+      return isPrincipalOrVp() &&
+        myProfile().adminAccess.scope == 'campuses' &&
+        'collegeIds' in myProfile().adminAccess &&
+        caseData.get('collegeId', null) in myProfile().adminAccess.collegeIds &&
+        request.auth.uid in caseData.targetAdminUids;
+    }
+
     // Only a "global"-scope admin (or super-admin) may create/edit/delete a
     // Campus or College record at all — a campus-restricted admin never can,
     // regardless of which campuses they're otherwise scoped to.
@@ -718,24 +726,20 @@ service cloud.firestore {
         ))
       );
 
-      // Only the targeted admin or the admin overseeing that specific college
-      // (or Super Admin) can act to resolve the case or log an explanation.
+      // Only the assigned college's targeted Principal/VP can resolve a case
+      // or log a delay. Management/Administration and Super Admin are read-only.
       allow update: if isSignedIn() && resource.data.status == 'open' && (
         (
-          // Resolving: write-once, flips status, only these three keys.
-          (request.auth.uid in resource.data.targetAdminUids ||
-           isRole('super-admin') ||
-           (myRole() == 'admin' && adminCanAccessCollege(resource.data.get('campusId', null), resource.data.get('collegeId', null)))) &&
+          canReviewSeriousCase(resource.data) &&
           !('actionTaken' in resource.data) &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['actionTaken', 'status', 'updatedAt']) &&
           request.resource.data.status == 'resolved' &&
-          request.resource.data.actionTaken.byUid == request.auth.uid
+          request.resource.data.actionTaken.byUid == request.auth.uid &&
+          request.resource.data.actionTaken.byEmail == myProfile().email
         ) || (
           // Logging why no action yet, during an overdue escalation — doesn't
           // resolve the case, just appends one entry to the history.
-          (request.auth.uid in resource.data.targetAdminUids ||
-           isRole('super-admin') ||
-           (myRole() == 'admin' && adminCanAccessCollege(resource.data.get('campusId', null), resource.data.get('collegeId', null)))) &&
+          canReviewSeriousCase(resource.data) &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['escalations', 'updatedAt']) &&
           request.resource.data.escalations.size() == resource.data.escalations.size() + 1
         )
@@ -1101,11 +1105,27 @@ service cloud.firestore {
                     && request.resource.data.status == 'pending';
       // Only Admin/Super Admin can verify (update status → verified); the
       // report's identity/ownership fields must stay untouched.
-      allow update: if adminCanAccessCampus(resource.data.get('campusId', null)) && !isPrincipalOrVp()
-                    && request.resource.data.status == 'verified'
-                    && request.resource.data.uploadedByUid == resource.data.uploadedByUid
-                    && request.resource.data.campusId == resource.data.campusId
-                    && request.resource.data.collegeId == resource.data.collegeId;
+      allow update: if (
+                      adminCanAccessCampus(resource.data.get('campusId', null)) && !isPrincipalOrVp()
+                      && request.resource.data.status == 'verified'
+                      && request.resource.data.uploadedByUid == resource.data.uploadedByUid
+                      && request.resource.data.campusId == resource.data.campusId
+                      && request.resource.data.collegeId == resource.data.collegeId
+                    ) || (
+                      isRole('head')
+                      && resource.data.uploadedByUid == request.auth.uid
+                      && resource.data.campusId == myProfile().campusId
+                      && resource.data.collegeId == myProfile().collegeId
+                      && request.resource.data.uploadedByUid == resource.data.uploadedByUid
+                      && request.resource.data.campusId == resource.data.campusId
+                      && request.resource.data.collegeId == resource.data.collegeId
+                      && request.resource.data.status == 'pending'
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                        'title', 'downloadURL', 'storagePath', 'fileName', 'uploadedAt', 'status',
+                        'verifiedBy', 'verifiedByUid', 'verifiedAt', 'signedDownloadURL',
+                        'signedFileName', 'signedKind'
+                      ])
+                    );
       allow delete: if isRole('head')
                     && resource.data.uploadedByUid == request.auth.uid
                     && resource.data.campusId == myProfile().campusId;
@@ -1133,16 +1153,41 @@ service cloud.firestore {
                     && request.resource.data.recipientUids.size() > 0;
       // Only the Head assigned to the same college can verify a counsellor's
       // report. Head-authored reports are read-only after submission.
-      allow update: if isRole('head')
+      allow update: if (
+                      isRole('head')
+                      && resource.data.campusId == myProfile().campusId
+                      && resource.data.collegeId == myProfile().collegeId
+                      && resource.data.get('uploadedByRole', 'counsellor') == 'counsellor'
+                      && request.resource.data.status == 'verified'
+                      && request.resource.data.uploadedByUid == resource.data.uploadedByUid
+                      && request.resource.data.campusId == resource.data.campusId
+                      && request.resource.data.collegeId == resource.data.collegeId
+                      && request.resource.data.recipientUids == resource.data.recipientUids
+                    ) || (
+                      (isRole('head') || isRole('counsellor'))
+                      && resource.data.uploadedByUid == request.auth.uid
+                      && resource.data.uploadedByRole == myRole()
+                      && resource.data.campusId == myProfile().campusId
+                      && resource.data.collegeId == myProfile().collegeId
+                      && request.resource.data.uploadedByUid == resource.data.uploadedByUid
+                      && request.resource.data.uploadedByRole == resource.data.uploadedByRole
+                      && request.resource.data.campusId == resource.data.campusId
+                      && request.resource.data.collegeId == resource.data.collegeId
+                      && request.resource.data.month == resource.data.month
+                      && request.resource.data.year == resource.data.year
+                      && request.resource.data.status == 'pending'
+                      && request.resource.data.recipientUids is list
+                      && request.resource.data.recipientUids.size() > 0
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                        'title', 'recipientUids', 'downloadURL', 'storagePath', 'fileName',
+                        'uploadedAt', 'status', 'verifiedBy', 'verifiedByUid', 'verifiedAt', 'headNotes'
+                      ])
+                    );
+      allow delete: if (isRole('head') || isRole('counsellor'))
+                    && resource.data.uploadedByUid == request.auth.uid
+                    && resource.data.uploadedByRole == myRole()
                     && resource.data.campusId == myProfile().campusId
-                    && resource.data.collegeId == myProfile().collegeId
-                    && resource.data.get('uploadedByRole', 'counsellor') == 'counsellor'
-                    && request.resource.data.status == 'verified'
-                    && request.resource.data.uploadedByUid == resource.data.uploadedByUid
-                    && request.resource.data.campusId == resource.data.campusId
-                    && request.resource.data.collegeId == resource.data.collegeId
-                    && request.resource.data.recipientUids == resource.data.recipientUids;
-      allow delete: if false;
+                    && resource.data.collegeId == myProfile().collegeId;
     }
 
     // ---------- flash_qa ----------

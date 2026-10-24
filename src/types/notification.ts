@@ -41,6 +41,7 @@ export interface Notification {
   type: NotificationType;
   bookingId?: string;
   reportId?: string;
+  reportKind?: "consolidated" | "staff";
   title: string;
   message: string;
   read: boolean;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { AppShell } from "../../components/layout/AppShell";
 import { ProfileSection } from "../../components/layout/ProfileSection";
 import { useAuth } from "../../hooks/useAuth";
@@ -124,6 +124,8 @@ const TITLES: Record<string, string> = {
 export function AdminDashboard() {
   const { profile } = useAuth();
   const [activeSection, setActiveSection] = useState("overview");
+  const [selectedSeriousCaseId, setSelectedSeriousCaseId] = useState<string | null>(null);
+  const clearSelectedSeriousCase = useCallback(() => setSelectedSeriousCaseId(null), []);
 
   // A missing adminAccess means a legacy/global admin — every section stays
   // visible, same as before per-admin scoping existed. "overview" (Home) is
@@ -138,35 +140,37 @@ export function AdminDashboard() {
     profile.adminAccess?.scope === "campuses" &&
     (profile.adminAccess.collegeIds?.length ?? 0) > 0 &&
     (profile.adminAccess?.designation === "principal" || profile.adminAccess?.designation === "vice-principal");
+  const isConsolidatedReportRecipient =
+    profile?.role === "admin" &&
+    (profile.adminAccess?.designation === "management" ||
+      profile.adminAccess?.designation === "administration" ||
+      (!profile.adminAccess?.designation &&
+        (!profile.adminAccess || profile.adminAccess.scope === "global")));
   const allowedSections = profile?.adminAccess?.sections;
-  // Management/Administration-designated admins (and any global-scope admin)
-  // always see every Serious Case platform-wide, regardless of their own
-  // scope — so the tab itself can't be accidentally hidden from them by an
-  // unchecked "sections" box either. Principal/Vice-Principal admins still
-  // need it explicitly granted, same as any other section.
+  // Management/Administration-designated admins retain platform-wide
+  // read-only oversight. Assigned Principal/VP accounts also always get the
+  // section because they are the only roles allowed to review and resolve.
   const seesSeriousCasesRegardless =
     !profile?.adminAccess ||
     profile.adminAccess.scope === "global" ||
     profile.adminAccess.designation === "management" ||
-    profile.adminAccess.designation === "administration";
-  // Consolidated Reports is a campus-wide roll-up filed once by a campus's
-  // Head and can span several colleges under that campus — a college-scoped
-  // admin (e.g. Principal/VP or Administration assigned to a college) is
-  // restricted to their own college(s), so this is excluded for them (they
-  // get their college's activity through Counsellor Worksheet and their
-  // dedicated college overview).
+    profile.adminAccess.designation === "administration" ||
+    isPrincipalOrVp;
+  // Management/Administration recipients and legacy global admins can review
+  // the campus-wide report, even when other dashboard data is college-scoped.
   const isCollegeScoped =
     profile?.role === "admin" &&
+    !isConsolidatedReportRecipient &&
     ((profile.adminAccess?.collegeIds?.length ?? 0) > 0 ||
       profile.adminAccess?.designation === "principal" ||
-      profile.adminAccess?.designation === "vice-principal" ||
-      (profile.adminAccess?.designation === "administration" && profile.adminAccess?.scope === "campuses"));
+      profile.adminAccess?.designation === "vice-principal");
   const visibleSections = (
     allowedSections
       ? SECTIONS.filter(
           (s) =>
             s.id === "overview" ||
             s.id === "campus-rankings" ||
+            (s.id === "monthly-reports" && isConsolidatedReportRecipient) ||
             (s.id === "staff-monthly-reports" && isPrincipalOrVp) ||
             allowedSections.includes(s.id as (typeof allowedSections)[number]) ||
             (s.id === "serious-cases" && seesSeriousCasesRegardless) ||
@@ -180,6 +184,12 @@ export function AdminDashboard() {
       !(s.id === "staff-monthly-reports" && !isPrincipalOrVp) &&
       !(s.id === "leave-approvals" && !isPrincipalOrVp),
   );
+  const handleManagementSectionSelect = (sectionId: string, seriousCaseId?: string) => {
+    if (sectionId === "serious-cases") {
+      setSelectedSeriousCaseId(seriousCaseId ?? null);
+    }
+    setActiveSection(sectionId);
+  };
 
   return (
     <AppShell
@@ -188,7 +198,12 @@ export function AdminDashboard() {
       activeSection={activeSection}
       onSelectSection={setActiveSection}
       onNotificationClick={(notification) => {
-        if (notification.type === "monthly_report_uploaded") {
+        if (
+          notification.type === "serious_case_created" ||
+          notification.type === "serious_case_escalated"
+        ) {
+          handleManagementSectionSelect("serious-cases", notification.bookingId);
+        } else if (notification.type === "monthly_report_uploaded") {
           if (isPrincipalOrVp) {
             setActiveSection("staff-monthly-reports");
           } else if (visibleSections.some((section) => section.id === "monthly-reports")) {
@@ -212,7 +227,10 @@ export function AdminDashboard() {
       ) : activeSection === "ssi-analytics" ? (
         <SsiAnalyticsSection />
       ) : activeSection === "serious-cases" ? (
-        <SeriousCasesSection />
+        <SeriousCasesSection
+          initialCaseId={selectedSeriousCaseId}
+          onInitialCaseOpened={clearSelectedSeriousCase}
+        />
       ) : activeSection === "counsellor-worksheet" ? (
         <CounsellorWorksheetSection />
       ) : activeSection === "staff-monthly-reports" && isPrincipalOrVp ? (
@@ -234,7 +252,7 @@ export function AdminDashboard() {
           {isCollegeScoped ? (
             <PrincipalHomeOverview onSelectSection={setActiveSection} />
           ) : profile?.adminAccess?.designation === "management" || !profile?.adminAccess?.designation ? (
-            <ManagementHomeOverview onSelectSection={setActiveSection} />
+            <ManagementHomeOverview onSelectSection={handleManagementSectionSelect} />
           ) : (
             <AdminHomeActivityOverview onSelectSection={setActiveSection} />
           )}

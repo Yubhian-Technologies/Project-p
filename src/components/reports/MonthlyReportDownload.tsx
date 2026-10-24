@@ -34,7 +34,10 @@ interface MonthlyReportDownloadProps {
   mode?: "counsellor" | "head";
   recipientOptions?: MonthlyReportRecipient[];
   recipientsLoading?: boolean;
+  reportHistoryLoading?: boolean;
+  reportHistoryError?: string;
   onSubmitReport?: (file: File, title: string, month: number, year: number, recipientUids: string[]) => Promise<void>;
+  isResharePeriod?: (month: number, year: number) => boolean;
 }
 
 type MonthlyAnalyticsResult =
@@ -52,7 +55,10 @@ export function MonthlyReportDownload({
   mode = "counsellor",
   recipientOptions = NO_RECIPIENT_OPTIONS,
   recipientsLoading = false,
+  reportHistoryLoading = false,
+  reportHistoryError = "",
   onSubmitReport,
+  isResharePeriod,
 }: MonthlyReportDownloadProps) {
   const { profile } = useAuth();
   const isCampusReport = mode === "head";
@@ -175,6 +181,13 @@ export function MonthlyReportDownload({
     if (!profile) return;
     if (isCampusReport && (!profile.campusId || !monthlyAnalytics || analyticsError)) return;
     if (submitToHead && !onSubmitReport) return;
+    if (
+      submitToHead &&
+      isResharePeriod?.(monthIdx + 1, year) &&
+      !window.confirm(`A report for ${MONTHS[monthIdx]} ${year} is already shared. Replace it with this version?`)
+    ) {
+      return;
+    }
     if (submitToHead && selectedRecipientUids.length === 0) {
       setError("Select at least one recipient in your college before sending this report.");
       return;
@@ -390,9 +403,16 @@ export function MonthlyReportDownload({
         </div>
 
         {onSubmitReport && (
-          <fieldset className="monthly-report-download__recipients" disabled={busy || recipientsLoading}>
+          <fieldset
+            className="monthly-report-download__recipients"
+            disabled={busy || recipientsLoading || reportHistoryLoading || Boolean(reportHistoryError)}
+          >
             <legend>Send this report to</legend>
-            {recipientsLoading ? (
+            {reportHistoryError ? (
+              <p role="alert">{reportHistoryError}</p>
+            ) : reportHistoryLoading ? (
+              <p>Checking your previously shared reports…</p>
+            ) : recipientsLoading ? (
               <p>Loading recipients for your college…</p>
             ) : recipientOptions.length > 0 ? (
               recipientOptions.map((recipient) => (
@@ -448,13 +468,19 @@ export function MonthlyReportDownload({
               disabled={
                 busy ||
                 recipientsLoading ||
+                reportHistoryLoading ||
+                Boolean(reportHistoryError) ||
                 selectedRecipientUids.length === 0 ||
                 recipientOptions.length === 0 ||
                 (isCampusReport && (analyticsLoading || !monthlyAnalytics || Boolean(analyticsMessage)))
               }
               onClick={() => void generateReport(true)}
             >
-              {status === "submitting" ? "Sending report…" : "Send Monthly Report"}
+              {status === "submitting"
+                ? "Sending report…"
+                : isResharePeriod?.(monthIdx + 1, year)
+                  ? "Reshare Monthly Report"
+                  : "Send Monthly Report"}
             </Button>
           )}
         </div>

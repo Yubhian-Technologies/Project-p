@@ -43,17 +43,16 @@ export async function getSeriousCaseForBooking(bookingId: string): Promise<Serio
   return snap.exists() ? toSeriousCase(snap.id, snap.data()) : null;
 }
 
-/** A Principal/Vice-Principal (or any legacy/undesignated admin) only ever
-    sees cases they're personally targeted on; Management/Administration and
-    any global-scope admin see every case platform-wide, regardless of their
-    own adminAccess scope — a deliberate standing oversight exception, not a
-    bug (confirmed requirement, not derived from the usual scoping rule used
-    everywhere else in this app). */
+/** Management/Administration retain platform-wide read-only oversight.
+    Principals/VPs see only cases explicitly assigned to them. */
 export function subscribeToAdminSeriousCases(
   admin: Pick<UserProfile, "uid" | "adminAccess">,
   onChange: (cases: SeriousCase[]) => void,
 ): Unsubscribe {
   const access = admin.adminAccess;
+  const isCollegeReviewer =
+    access?.scope === "campuses" &&
+    (access.designation === "principal" || access.designation === "vice-principal");
   const seesEverything =
     !access ||
     access.scope === "global" ||
@@ -62,7 +61,31 @@ export function subscribeToAdminSeriousCases(
 
   if (seesEverything) {
     const q = query(seriousCasesCollection, orderBy("createdAt", "desc"));
-    return onSnapshot(q, (snap) => onChange(snap.docs.map((d) => toSeriousCase(d.id, d.data()))));
+    return onSnapshot(
+      q,
+      (snap) => onChange(snap.docs.map((d) => toSeriousCase(d.id, d.data()))),
+      (error) => {
+        console.error("Failed to subscribe to serious cases:", error);
+        onChange([]);
+      },
+    );
+  }
+
+  if (isCollegeReviewer) {
+    const q = query(seriousCasesCollection, where("targetAdminUids", "array-contains", admin.uid));
+    return onSnapshot(
+      q,
+      (snap) =>
+        onChange(
+          snap.docs
+            .map((d) => toSeriousCase(d.id, d.data()))
+            .sort((a, b) => b.createdAt - a.createdAt),
+        ),
+      (error) => {
+        console.error("Failed to subscribe to assigned serious cases:", error);
+        onChange([]);
+      },
+    );
   }
 
   const collegeIds = access?.collegeIds ?? [];

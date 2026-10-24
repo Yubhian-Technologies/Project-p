@@ -4,17 +4,16 @@ import {
   getDocs,
   deleteDoc,
   doc,
-  getDoc,
   query,
   orderBy,
   where,
   serverTimestamp,
+  updateDoc,
+  deleteField,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { httpsCallable, getFunctions } from "firebase/functions";
 import { db, storage, app } from "./config";
-import { createNotification } from "./notifications";
-import { listUsersByRole } from "./firestore";
 import { attachmentMetadata } from "../../utils/attachmentMetadata";
 
 export type MonthlyReportStatus = "pending" | "verified";
@@ -60,6 +59,10 @@ export async function uploadMonthlyReport(
   campusId = "",
   collegeId = "",
 ): Promise<MonthlyReport> {
+  const existingReports = (await listMonthlyReportsByCampus(campusId)).filter(
+    (report) => report.uploadedByUid === uploadedByUid && report.month === month && report.year === year,
+  );
+  const existingReport = existingReports[0];
   const storagePath = `monthly-reports/${uploadedByUid}/${year}/${String(month).padStart(2, "0")}/${Date.now()}_${file.name}`;
   const storageRef = ref(storage, storagePath);
 
@@ -69,7 +72,7 @@ export async function uploadMonthlyReport(
 
   const downloadURL = await getDownloadURL(storageRef);
 
-  const docRef = await addDoc(collection(db, COLLECTION), {
+  const reportData = {
     title,
     month,
     year,
@@ -82,32 +85,49 @@ export async function uploadMonthlyReport(
     fileName: file.name,
     uploadedAt: serverTimestamp(),
     status: "pending",
-  });
+  };
+  let reportId = existingReport?.id ?? "";
+  try {
+    if (existingReport) {
+      await updateDoc(doc(db, COLLECTION, existingReport.id), {
+        ...reportData,
+        verifiedBy: deleteField(),
+        verifiedByUid: deleteField(),
+        verifiedAt: deleteField(),
+        signedDownloadURL: deleteField(),
+        signedFileName: deleteField(),
+        signedKind: deleteField(),
+      });
+    } else {
+      const docRef = await addDoc(collection(db, COLLECTION), reportData);
+      reportId = docRef.id;
+    }
+  } catch (error) {
+    try {
+      await deleteObject(storageRef);
+    } catch (cleanupError) {
+      console.error("Failed to remove an unshared replacement report file:", cleanupError);
+    }
+    throw error;
+  }
 
-  // Platform-level alert for admins whenever a campus uploads a monthly report.
-  const campusName = await getCampusName(campusId);
-  const monthName = new Date(year, month - 1, 1).toLocaleString("en-IN", { month: "long" });
-  const admins = (await listUsersByRole("admin")).filter(
-    (admin) =>
-      admin.adminAccess?.designation !== "principal" &&
-      admin.adminAccess?.designation !== "vice-principal" &&
-      !admin.adminAccess?.collegeIds?.length,
-  );
-  const campusLabel = campusName ? `${campusName} campus` : "A campus";
-  await Promise.all(
-    admins.map((admin) =>
-      createNotification({
-        recipientId: admin.uid,
-        type: "monthly_report_uploaded",
-        reportId: docRef.id,
-        title: "Monthly report available",
-        message: `${campusLabel} has a new monthly report: ${title} (${monthName} ${year}).`,
-      }),
-    ),
-  );
+  for (const duplicate of existingReports.slice(1)) {
+    await deleteDoc(doc(db, COLLECTION, duplicate.id));
+  }
+
+  for (const oldReport of existingReports) {
+    if (oldReport.storagePath !== storagePath) {
+      try {
+        await deleteObject(ref(storage, oldReport.storagePath));
+      } catch (error) {
+        console.error("The report was replaced, but its previous file could not be removed:", error);
+        throw new Error("The report was shared, but its previous file could not be removed. Contact support.");
+      }
+    }
+  }
 
   return {
-    id: docRef.id,
+    id: reportId,
     title,
     month,
     year,
@@ -121,6 +141,12 @@ export async function uploadMonthlyReport(
     uploadedAt: new Date().toISOString(),
     status: "pending",
   };
+}
+
+/** Re-notify the Head and authorized Management/Administration admins. */
+export async function reshareMonthlyReport(reportId: string): Promise<void> {
+  const fn = httpsCallable(getFunctions(app), "reshareMonthlyReport");
+  await fn({ reportId });
 }
 
 /**
@@ -164,15 +190,6 @@ export async function deleteMonthlyReport(id: string, storagePath: string): Prom
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
-async function getCampusName(campusId: string): Promise<string> {
-  try {
-    const snap = await getDoc(doc(db, "campuses", campusId));
-    return (snap.data() as { name?: string } | undefined)?.name ?? "";
-  } catch {
-    return "";
-  }
-}
-
 function docToReport(id: string, data: Record<string, unknown>): MonthlyReport {
   return {
     id,

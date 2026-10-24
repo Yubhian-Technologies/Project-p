@@ -26,6 +26,8 @@ export interface ReportUploadFormProps {
   submitLabel?: string;
   /** Set to false to hide the "Speak to write" voice-to-text control. */
   allowVoiceInput?: boolean;
+  isResharePeriod?: (month: number, year: number) => boolean;
+  submitDisabled?: boolean;
   onUpload: (
     file: File,
     title: string,
@@ -43,6 +45,8 @@ export function ReportUploadForm({
   titlePlaceholder,
   submitLabel = "Upload Report",
   allowVoiceInput = true,
+  isResharePeriod,
+  submitDisabled = false,
   onUpload,
 }: ReportUploadFormProps) {
   const [title, setTitle] = useState("");
@@ -93,6 +97,12 @@ export function ReportUploadForm({
     e.preventDefault();
     if (!file) { setError("Please select a file."); return; }
     if (!title.trim()) { setError("Please enter a report title."); return; }
+    if (
+      isResharePeriod?.(month, year) &&
+      !window.confirm(`A monthly report for ${MONTHS[month - 1]} ${year} is already shared. Replace it?`)
+    ) {
+      return;
+    }
 
     setUploading(true);
     setError("");
@@ -219,8 +229,16 @@ export function ReportUploadForm({
         )}
 
         <div className="report-upload-card__actions">
-          <button type="submit" className="report-upload-card__btn report-upload-card__btn--primary" disabled={uploading}>
-            {uploading ? `Submitting… ${progress}%` : submitLabel}
+          <button
+            type="submit"
+            className="report-upload-card__btn report-upload-card__btn--primary"
+            disabled={uploading || submitDisabled}
+          >
+            {uploading
+              ? `Submitting… ${progress}%`
+              : isResharePeriod?.(month, year)
+                ? "Reshare Monthly Report"
+                : submitLabel}
           </button>
           {file && !uploading && (
             <button

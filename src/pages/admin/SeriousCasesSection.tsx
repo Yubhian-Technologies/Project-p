@@ -27,11 +27,16 @@ function gmailComposeHref(to: string, subject: string): string {
 
 const TARGET_TIER_LABELS: Record<SeriousCase["targetTier"], string> = {
   "principal-vp": "Principal / Vice-Principal",
-  "management-fallback": "Management / Administration",
-  "global-fallback": "Global Admin",
+  "management-fallback": "Management / Administration (view only)",
+  "global-fallback": "Global Admin (view only)",
 };
 
-export function SeriousCasesSection() {
+interface SeriousCasesSectionProps {
+  initialCaseId?: string | null;
+  onInitialCaseOpened?: () => void;
+}
+
+export function SeriousCasesSection({ initialCaseId, onInitialCaseOpened }: SeriousCasesSectionProps) {
   const { profile } = useAuth();
   const [cases, setCases] = useState<SeriousCase[]>([]);
   const [campuses, setCampuses] = useState<Campus[]>([]);
@@ -55,36 +60,38 @@ export function SeriousCasesSection() {
     const unsubscribe = subscribeToAdminSeriousCases(profile, (list) => {
       setCases(list);
       setLoading(false);
+      if (initialCaseId && list.some((seriousCase) => seriousCase.id === initialCaseId)) {
+        setDetailId(initialCaseId);
+        onInitialCaseOpened?.();
+      }
     });
     return unsubscribe;
-  }, [profile]);
+  }, [profile, initialCaseId, onInitialCaseOpened]);
 
   if (loading) return null;
 
   const campusName = (id: string) => campuses.find((c) => c.id === id)?.name ?? "Unknown campus";
-  const collegeName = (id: string | null) => (id ? colleges.find((c) => c.id === id)?.name ?? "Unknown college" : "—");
+  const collegeName = (id: string | null) => (id ? colleges.find((c) => c.id === id)?.name ?? "Unknown college" : "College not assigned");
 
-  const sorted = [...cases]
-    .filter((c) => Boolean(c.collegeId))
-    .sort((a, b) => {
-      const overdueA = a.status === "open" && a.escalationCount > 0;
-      const overdueB = b.status === "open" && b.escalationCount > 0;
-      if (overdueA !== overdueB) return overdueA ? -1 : 1;
-      if ((a.status === "open") !== (b.status === "open")) return a.status === "open" ? -1 : 1;
-      return b.createdAt - a.createdAt;
-    });
+  const sorted = [...cases].sort((a, b) => {
+    const overdueA = a.status === "open" && a.escalationCount > 0;
+    const overdueB = b.status === "open" && b.escalationCount > 0;
+    if (overdueA !== overdueB) return overdueA ? -1 : 1;
+    if ((a.status === "open") !== (b.status === "open")) return a.status === "open" ? -1 : 1;
+    return b.createdAt - a.createdAt;
+  });
 
   const detail = cases.find((c) => c.id === detailId) ?? null;
-  const isTargeted =
+  const canReviewCase =
     !!detail &&
     !!profile &&
-    (detail.targetAdminUids.includes(profile.uid) ||
-      (profile.role === "admin" &&
-        Boolean(detail.collegeId) &&
-        (profile.adminAccess?.collegeIds ?? []).includes(detail.collegeId!)) ||
-      profile.role === "super-admin" ||
-      profile.adminAccess?.designation === "administration" ||
-      profile.adminAccess?.designation === "management");
+    profile.role === "admin" &&
+    profile.adminAccess?.scope === "campuses" &&
+    (profile.adminAccess.designation === "principal" ||
+      profile.adminAccess.designation === "vice-principal") &&
+    Boolean(detail.collegeId) &&
+    (profile.adminAccess.collegeIds ?? []).includes(detail.collegeId!) &&
+    detail.targetAdminUids.includes(profile.uid);
 
   async function handleResolve() {
     if (!detail || !profile || !actionText.trim()) return;
@@ -144,7 +151,6 @@ export function SeriousCasesSection() {
               className={`serious-cases__row serious-cases__row--${
                 c.status === "resolved" ? "resolved" : overdue ? "overdue" : "open"
               }`}
-              onClick={() => setDetailId(c.id)}
             >
               <div className="serious-cases__row-main">
                 <span className="serious-cases__row-title">
@@ -162,6 +168,14 @@ export function SeriousCasesSection() {
               >
                 {c.status === "resolved" ? "Resolved" : overdue ? `Overdue ×${c.escalationCount}` : "Awaiting action"}
               </span>
+              <Button
+                type="button"
+                variant="outlined"
+                aria-label={`View ${c.isEmergency ? "Crisis SOS" : "flagged session"} case details`}
+                onClick={() => setDetailId(c.id)}
+              >
+                View
+              </Button>
             </Card>
           );
         })}
@@ -173,6 +187,8 @@ export function SeriousCasesSection() {
           onClose={() => setDetailId(null)}
         >
           <dl className="serious-cases__dl">
+            <dt>Case reference</dt>
+            <dd>{detail.bookingId}</dd>
             <dt>Campus</dt>
             <dd>{campusName(detail.campusId)}</dd>
             <dt>College</dt>
@@ -188,7 +204,7 @@ export function SeriousCasesSection() {
           </dl>
 
           <div className="serious-cases__section">
-            <h4 className="serious-cases__heading">Note</h4>
+            <h4 className="serious-cases__heading">Reason / notes</h4>
             <p className="serious-cases__note">{detail.note}</p>
           </div>
 
@@ -221,13 +237,15 @@ export function SeriousCasesSection() {
                   — {detail.actionTaken.byEmail}, {formatDateTimeDMY(detail.actionTaken.at)}
                 </span>
               </p>
-              <Button type="button" variant="outlined" onClick={handleEmailResolved}>
-                Email
-              </Button>
+              {canReviewCase && (
+                <Button type="button" variant="outlined" onClick={handleEmailResolved}>
+                  Email
+                </Button>
+              )}
             </div>
           )}
 
-          {detail.status === "open" && isTargeted && (
+          {detail.status === "open" && canReviewCase && (
             <div className="serious-cases__section">
               <h4 className="serious-cases__heading">Action taken</h4>
               <textarea
@@ -242,7 +260,7 @@ export function SeriousCasesSection() {
             </div>
           )}
 
-          {detail.status === "open" && detail.escalationCount > 0 && isTargeted && (
+          {detail.status === "open" && detail.escalationCount > 0 && canReviewCase && (
             <div className="serious-cases__section">
               <h4 className="serious-cases__heading">Why hasn't action been taken yet?</h4>
               <textarea
@@ -254,6 +272,15 @@ export function SeriousCasesSection() {
               <Button type="button" variant="outlined" disabled={!delayText.trim() || saving} onClick={handleDelay}>
                 {saving ? "Saving…" : "Log reason"}
               </Button>
+            </div>
+          )}
+
+          {detail.status === "open" && !canReviewCase && (
+            <div className="serious-cases__section">
+              <h4 className="serious-cases__heading">Review status</h4>
+              <p className="serious-cases__note">
+                This case is view-only. Only the Principal or Vice-Principal assigned to this college can record a resolution.
+              </p>
             </div>
           )}
 

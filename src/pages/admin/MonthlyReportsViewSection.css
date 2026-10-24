@@ -359,6 +359,53 @@
   box-shadow: 0 10px 26px rgba(46, 43, 39, 0.065) !important;
 }
 
+.mrv-btn-share {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 1px solid rgba(32, 101, 246, 0.28) !important;
+  border-radius: 12px !important;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font: 800 13px var(--md-sys-typescale-font-body);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: normal;
+  text-align: center;
+}
+
+.mrv-btn-share:hover {
+  background: #dbeafe;
+  transform: translate(-1px, -1px);
+}
+
+.mrv-btn-share:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
+}
+
+.mrv-action-message,
+.mrv-action-error {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mrv-action-message {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.mrv-action-error {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
 /* On narrow screens the period/status badges plus View/Download, the
    signed-document download, and Verify could add up to more pill width than
    the row has room for, pushing the last one or two past the edge of the
@@ -371,7 +418,8 @@
   }
 
   .mrv-btn-verify,
-  .mrv-btn-download {
+  .mrv-btn-download,
+  .mrv-btn-share {
     flex: 1 1 auto;
   }
 }

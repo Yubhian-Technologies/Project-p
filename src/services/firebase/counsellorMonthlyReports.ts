@@ -3,14 +3,15 @@ import {
   addDoc,
   getDocs,
   doc,
+  deleteDoc,
   updateDoc,
   query,
   where,
   serverTimestamp,
+  deleteField,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage } from "./config";
-import { createNotification } from "./notifications";
 import { listUsersByRole } from "./firestore";
 import { attachmentMetadata } from "../../utils/attachmentMetadata";
 
@@ -119,6 +120,15 @@ export async function submitMonthlyStaffReport(
     throw new Error("Choose at least one recipient assigned to your college.");
   }
 
+  const existingReports = (await listMonthlyStaffReportsForUser(uploadedByUid)).filter(
+    (report) =>
+      report.uploadedByRole === uploadedByRole &&
+      report.campusId === campusId &&
+      report.collegeId === collegeId &&
+      report.month === month &&
+      report.year === year,
+  );
+  const existingReport = existingReports[0];
   const storagePath = `counsellor-monthly-reports/${uploadedByUid}/${year}/${String(month).padStart(2, "0")}/${Date.now()}_${file.name}`;
   const storageRef = ref(storage, storagePath);
 
@@ -132,7 +142,7 @@ export async function submitMonthlyStaffReport(
 
   const downloadURL = await getDownloadURL(storageRef);
 
-  const docRef = await addDoc(collection(db, COLLECTION), {
+  const reportData = {
     title,
     month,
     year,
@@ -147,24 +157,47 @@ export async function submitMonthlyStaffReport(
     fileName: file.name,
     uploadedAt: serverTimestamp(),
     status: "pending",
-  });
+  };
+  let reportId = existingReport?.id ?? "";
+  try {
+    if (existingReport) {
+      await updateDoc(doc(db, COLLECTION, existingReport.id), {
+        ...reportData,
+        verifiedBy: deleteField(),
+        verifiedByUid: deleteField(),
+        verifiedAt: deleteField(),
+        headNotes: deleteField(),
+      });
+    } else {
+      const docRef = await addDoc(collection(db, COLLECTION), reportData);
+      reportId = docRef.id;
+    }
+  } catch (error) {
+    try {
+      await deleteObject(storageRef);
+    } catch (cleanupError) {
+      console.error("Failed to remove an unshared replacement monthly report file:", cleanupError);
+    }
+    throw error;
+  }
 
-  const monthName = new Date(year, month - 1, 1).toLocaleString("en-IN", { month: "long" });
-  const message = `${uploadedBy} submitted a monthly report: ${title} (${monthName} ${year}).`;
-  await Promise.all(
-    recipients.filter((recipient) => selectedRecipientUids.includes(recipient.uid)).map((recipient) =>
-      createNotification({
-        recipientId: recipient.uid,
-        type: "monthly_report_uploaded",
-        reportId: docRef.id,
-        title: "Monthly report submitted",
-        message,
-      }),
-    ),
-  );
+  for (const duplicate of existingReports.slice(1)) {
+    await deleteDoc(doc(db, COLLECTION, duplicate.id));
+  }
+
+  for (const oldReport of existingReports) {
+    if (oldReport.storagePath !== storagePath) {
+      try {
+        await deleteObject(ref(storage, oldReport.storagePath));
+      } catch (error) {
+        console.error("The monthly report was replaced, but a previous file could not be removed:", error);
+        throw new Error("The monthly report was shared, but a previous file could not be removed. Contact support.");
+      }
+    }
+  }
 
   return {
-    id: docRef.id,
+    id: reportId,
     title,
     month,
     year,

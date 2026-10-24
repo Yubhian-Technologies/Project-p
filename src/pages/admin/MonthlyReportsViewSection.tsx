@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   listMonthlyReportsByCampus,
   verifyMonthlyReport,
+  reshareMonthlyReport,
   type MonthlyReport,
 } from "../../services/firebase/monthlyReports";
 import { useAuth } from "../../hooks/useAuth";
@@ -61,6 +62,9 @@ export function MonthlyReportsViewSection() {
   const [filterMonth, setFilterMonth] = useState(0);
   const [filterYear, setFilterYear] = useState(0);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [resharingId, setResharingId] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState("");
+  const [actionError, setActionError] = useState("");
 
   // A campus-restricted Admin only ever sees their own assigned campuses here.
   const scopedCampusIds =
@@ -108,6 +112,22 @@ export function MonthlyReportsViewSection() {
       await loadReports();
     } finally {
       setVerifyingId(null);
+    }
+  }
+
+  async function handleReshare(report: MonthlyReport) {
+    if (!window.confirm(`Reshare ${report.title} with its Head and authorized Management/Administration admins?`)) return;
+    setResharingId(report.id);
+    setActionMessage("");
+    setActionError("");
+    try {
+      await reshareMonthlyReport(report.id);
+      setActionMessage("The report was shared again with the Head and authorized admins.");
+    } catch (error) {
+      console.error("Failed to reshare consolidated report:", error);
+      setActionError("Could not reshare this report. Please try again.");
+    } finally {
+      setResharingId(null);
     }
   }
 
@@ -223,6 +243,8 @@ export function MonthlyReportsViewSection() {
           </span>
         </div>
       )}
+      {actionMessage && <p className="mrv-action-message" role="status">{actionMessage}</p>}
+      {actionError && <p className="mrv-action-error" role="alert">{actionError}</p>}
 
       {/* ── List ─────────────────────────────────────────────────────── */}
       {hasSelection && (
@@ -268,6 +290,14 @@ export function MonthlyReportsViewSection() {
                   >
                     <DownloadIcon /> View / Download
                   </a>
+                  <button
+                    type="button"
+                    className="mrv-btn-share"
+                    disabled={resharingId === r.id}
+                    onClick={() => void handleReshare(r)}
+                  >
+                    {resharingId === r.id ? "Sharing…" : "Reshare to Head & Admins"}
+                  </button>
                   {r.signedDownloadURL && (
                     <a
                       href={r.signedDownloadURL}

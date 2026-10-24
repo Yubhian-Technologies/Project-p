@@ -13,7 +13,6 @@ import { CommunitySection } from "../user/community/CommunitySection";
 import { TeamChatSection } from "../../components/chat/TeamChatSection";
 import { CounsellorWorksheetSection } from "../../components/worksheets/CounsellorWorksheetSection";
 import { TeamWorkloadSection } from "../../components/workload/TeamWorkloadSection";
-import { MonthlyReportsSection } from "./MonthlyReportsSection";
 import { TeamMonthlyReportsSection } from "./TeamMonthlyReportsSection";
 import { FlashQASection } from "./FlashQASection";
 import { GamesSection } from "../user/games/GamesSection";
@@ -21,7 +20,7 @@ import type { GamesSectionHandle } from "../user/games/GamesSection";
 import { JournalSection } from "../user/journal/JournalSection";
 import { HeadCommandCentre } from "./HeadCommandCentre";
 import { SessionReportsSection } from "./SessionReportsSection";
-import { ReportDownloadsSection } from "./ReportDownloadsSection";
+import { ReportDownloadsSection, type ReportKind } from "./ReportDownloadsSection";
 import { AcademicYearsSection } from "./AcademicYearsSection";
 import { CampusRankingsSection } from "../user/CampusRankingsSection";
 import { LeaveManagementSection } from "../../components/leaves/LeaveManagementSection";
@@ -115,13 +114,6 @@ const SECTIONS = [
     ),
   },
   {
-    id: "monthly-reports",
-    label: "Consolidated Reports",
-    icon: (
-      <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
-    ),
-  },
-  {
     id: "games",
     label: "Wellness Exercise",
     icon: (
@@ -173,6 +165,7 @@ const SECTIONS = [
 
 export function HeadDashboard() {
   const [activeSection, setActiveSection] = useState("overview");
+  const [reportDownloadsInitialKind, setReportDownloadsInitialKind] = useState<ReportKind>("monthly");
   const [showImport, setShowImport] = useState(false);
   const [showAddSession, setShowAddSession] = useState(false);
   const [pendingBookingId, setPendingBookingId] = useState<string | undefined>();
@@ -198,7 +191,12 @@ export function HeadDashboard() {
       return;
     }
     if (notification.type === "monthly_report_uploaded") {
-      setActiveSection("counsellor-monthly-reports");
+      if (notification.reportKind === "consolidated") {
+        setReportDownloadsInitialKind("consolidated");
+        setActiveSection("report-downloads");
+      } else {
+        setActiveSection("counsellor-monthly-reports");
+      }
       return;
     }
     if (notification.type === "team_chat_message") {
@@ -227,7 +225,6 @@ export function HeadDashboard() {
     events: "Events & Programs",
     "transfer-requests": "Transfer Requests",
     "counsellor-monthly-reports": "Monthly Reports",
-    "monthly-reports": "Consolidated Reports",
     games: "Wellness Exercise",
     "flash-qa": "Flash Q/A",
     journal: "My Diary",
@@ -268,7 +265,10 @@ export function HeadDashboard() {
       }
       sections={SECTIONS}
       activeSection={activeSection}
-      onSelectSection={setActiveSection}
+      onSelectSection={(sectionId) => {
+        if (sectionId === "report-downloads") setReportDownloadsInitialKind("monthly");
+        setActiveSection(sectionId);
+      }}
       onNotificationClick={handleNotificationClick}
     >
       {activeSection === "profile" && (
@@ -294,12 +294,16 @@ export function HeadDashboard() {
         <TeamManagementSection onOpenTransferRequests={() => setActiveSection("transfer-requests")} />
       )}
       {activeSection === "session-reports" && <SessionReportsSection />}
-      {activeSection === "report-downloads" && <ReportDownloadsSection />}
+      {activeSection === "report-downloads" && (
+        <ReportDownloadsSection
+          key={reportDownloadsInitialKind}
+          initialKind={reportDownloadsInitialKind}
+        />
+      )}
       {activeSection === "academic-years" && <AcademicYearsSection />}
       {activeSection === "events" && <EventsProgramsSection />}
       {activeSection === "transfer-requests" && <TransferRequestsSection />}
       {activeSection === "counsellor-monthly-reports" && <TeamMonthlyReportsSection />}
-      {activeSection === "monthly-reports" && <MonthlyReportsSection />}
       {activeSection === "games" && <GamesSection ref={gamesRef} onActiveChange={setGameOpen} />}
       {activeSection === "flash-qa" && <FlashQASection />}
       {activeSection === "journal" && <JournalSection />}
@@ -311,4 +315,3 @@ export function HeadDashboard() {
     </AppShell>
   );
 }
-

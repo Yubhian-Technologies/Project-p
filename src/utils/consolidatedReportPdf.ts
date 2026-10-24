@@ -1,9 +1,10 @@
 import { jsPDF } from "jspdf";
 import type { ReportSection, ReportStatRow } from "../types/report";
 import type { ConsolidatedReportData } from "./consolidatedReportData";
+import { loadMonthlyReportLogo } from "./monthlyReportImages";
 
 export interface ConsolidatedReportHeaderInfo {
-  monthLabel: string; // "AUGUST 2026"
+  monthLabel: string;
 }
 
 export interface ConsolidatedReportInput {
@@ -14,7 +15,7 @@ export interface ConsolidatedReportInput {
   photos: File[];
 }
 
-function fileToDataUrl(file: File): Promise<string> {
+function fileToDataUrl(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
@@ -23,107 +24,165 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-function wrapText(doc: jsPDF, text: string, x: number, y: number, width: number, lineHeight: number): number {
-  const lines = doc.splitTextToSize(text, width);
-  doc.text(lines, x, y);
-  return lines.length * lineHeight;
+function wrapText(doc: jsPDF, text: string, width: number): string[] {
+  return doc.splitTextToSize(text, width);
 }
 
-export async function generateConsolidatedReportPdf(input: ConsolidatedReportInput): Promise<void> {
+export async function generateConsolidatedReportPdf(input: ConsolidatedReportInput): Promise<Blob> {
   const { header, extraStats, sections, data, photos } = input;
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "landscape" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 40;
+  const margin = 36;
   const contentWidth = pageWidth - margin * 2;
-  let y = 56;
+  let y = 0;
 
-  function ensureSpace(needed: number) {
-    if (y + needed > pageHeight - 40) {
-      doc.addPage();
-      y = 50;
-    }
+  function newPage() {
+    doc.addPage();
+    y = 42;
   }
 
-  doc.setFontSize(16).setFont("helvetica", "bold").text("SHRI VISHNU EDUCATIONAL SOCIETY", margin, y);
-  y += 20;
-  doc.setFontSize(13).text("VISHNU WELLNESS CENTRE", margin, y);
+  function ensureSpace(height: number) {
+    if (y + height > pageHeight - margin) newPage();
+  }
+
+  const logo = await fileToDataUrl(await loadMonthlyReportLogo());
+  const logoWidth = 76;
+  const logoHeight = logoWidth * (379 / 447);
+  doc.addImage(logo, "JPEG", (pageWidth - logoWidth) / 2, 18, logoWidth, logoHeight);
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.7);
+  doc.line(margin, 92, pageWidth - margin, 92);
+  y = 116;
+  doc.setTextColor(15, 23, 42);
+  doc.setFont("helvetica", "bold").setFontSize(16);
+  doc.text(`CONSOLIDATED MONTHLY REPORT — ${header.monthLabel}`, pageWidth / 2, y, { align: "center" });
   y += 18;
-  doc.setFontSize(14).text(`CONSOLIDATED MONTHLY REPORT – ${header.monthLabel}`, margin, y);
-  y += 30;
+  doc.setFont("helvetica", "normal").setFontSize(10).setTextColor(100, 116, 139);
+  doc.text(data.campusName, pageWidth / 2, y, { align: "center" });
+  y += 28;
 
-  // Executive Summary
-  doc.setFontSize(13).text("1. Executive Summary", margin, y);
-  y += 20;
-  doc.setFontSize(10.5).setFont("helvetica", "bold");
-  doc.text("Particulars", margin, y);
-  doc.text(header.monthLabel, margin + contentWidth * 0.65, y);
-  y += 16;
-  doc.setFont("helvetica", "normal");
-  const execRows: [string, string][] = [
-    ["Institutions Covered / Represented", String(data.institutionsCovered)],
-    ["Individual Counselling Sessions Reported", String(data.totalSessions)],
-    ["Student Group Sessions Reported", String(data.groupSessionsCount)],
-    ...extraStats.filter((s) => s.label.trim()).map((s) => [s.label.trim(), s.value.trim()] as [string, string]),
+  function drawTable(
+    title: string,
+    headers: string[],
+    rows: string[][],
+    columnRatios: number[],
+    boldLastRow = false,
+  ) {
+    ensureSpace(50);
+    doc.setTextColor(15, 23, 42).setFont("helvetica", "bold").setFontSize(12);
+    doc.text(title, margin, y);
+    y += 12;
+
+    const widths = columnRatios.map((ratio) => contentWidth * ratio);
+    const rowPadding = 6;
+    const lineHeight = 11;
+
+    function drawRow(cells: string[], isHeader: boolean, isBold: boolean) {
+      const cellLines = cells.map((cell, index) => wrapText(doc, cell, widths[index] - rowPadding * 2));
+      const rowHeight = Math.max(22, ...cellLines.map((lines) => lines.length * lineHeight + rowPadding * 2));
+      if (y + rowHeight > pageHeight - margin) {
+        newPage();
+        if (!isHeader) drawRow(headers, true, false);
+      }
+      const rowTop = y;
+      const rowBottom = rowTop + rowHeight;
+      let x = margin;
+
+      if (isHeader) {
+        doc.setFillColor(248, 250, 252);
+        doc.rect(margin, rowTop, contentWidth, rowHeight, "F");
+      }
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.55);
+      doc.rect(margin, rowTop, contentWidth, rowHeight, "S");
+      for (let index = 0; index < cells.length; index += 1) {
+        if (index > 0) doc.line(x, rowTop, x, rowBottom);
+        doc.setFont("helvetica", isHeader || isBold ? "bold" : "normal");
+        doc.setFontSize(isHeader ? 8.5 : 9);
+        doc.setTextColor(isHeader ? 15 : 51, isHeader ? 23 : 65, isHeader ? 42 : 85);
+        doc.text(cellLines[index], x + rowPadding, rowTop + rowPadding + lineHeight - 2);
+        x += widths[index];
+      }
+      y = rowBottom;
+    }
+
+    drawRow(headers, true, false);
+    rows.forEach((row, index) => drawRow(row, false, boldLastRow && index === rows.length - 1));
+    y += 18;
+  }
+
+  const campusRows = [
+    ["Colleges represented", String(data.campus.collegesCovered)],
+    ["Counsellors and Heads included", String(data.campus.staffCount)],
+    ["Individual counselling sessions", String(data.campus.individualSessions)],
+    ["Follow-up sessions", String(data.campus.followUpSessions)],
+    ["Crisis SOS cases", String(data.campus.crisisSosCases)],
+    ["Total sessions (including SOS)", String(data.campus.totalSessions)],
+    ["Events and programs", String(data.campus.eventsAndPrograms)],
+    ["Group sessions", String(data.campus.groupSessions)],
+    ...extraStats.filter((stat) => stat.label.trim()).map((stat) => [stat.label.trim(), stat.value.trim()]),
   ];
-  for (const [label, value] of execRows) {
-    ensureSpace(20);
-    const used = wrapText(doc, label, margin, y, contentWidth * 0.6, 13);
-    doc.text(value, margin + contentWidth * 0.65, y);
-    y += Math.max(used, 14) + 4;
-  }
-  y += 16;
+  drawTable("1. Campus-wide sessions and activity", ["Activity", header.monthLabel], campusRows, [0.72, 0.28]);
 
-  // Institution-wise Counselling Summary
-  ensureSpace(60);
-  doc.setFontSize(13).text("2. Institution-wise Counselling Summary", margin, y);
-  y += 20;
-  doc.setFontSize(10.5).setFont("helvetica", "bold");
-  doc.text("Institution / Area", margin, y);
-  doc.text("Counsellor(s)", margin + contentWidth * 0.4, y);
-  doc.text("Sessions", margin + contentWidth * 0.85, y);
-  y += 16;
-  doc.setFont("helvetica", "normal");
-  for (const row of data.institutions) {
-    ensureSpace(20);
-    const used = wrapText(doc, row.collegeName, margin, y, contentWidth * 0.38, 13);
-    wrapText(doc, row.counsellorNames.join(", ") || "—", margin + contentWidth * 0.4, y, contentWidth * 0.43, 13);
-    doc.text(String(row.sessions), margin + contentWidth * 0.85, y);
-    y += Math.max(used, 14) + 6;
-  }
-  doc.setFont("helvetica", "bold");
-  doc.text("Total Reported Sessions", margin, y);
-  doc.text(String(data.totalSessions), margin + contentWidth * 0.85, y);
-  y += 30;
+  const staffRows = data.staffRows.map((row) => [
+    row.collegeName,
+    row.name,
+    row.role === "head" ? "Head" : "Counsellor",
+    String(row.individualSessions),
+    String(row.followUpSessions),
+    String(row.crisisSosCases),
+    String(row.totalSessions),
+    String(row.eventsAndPrograms),
+    String(row.groupSessions),
+  ]);
+  staffRows.push([
+    "",
+    "Campus total",
+    "",
+    String(data.campus.individualSessions),
+    String(data.campus.followUpSessions),
+    String(data.campus.crisisSosCases),
+    String(data.campus.totalSessions),
+    String(data.campus.eventsAndPrograms),
+    String(data.campus.groupSessions),
+  ]);
+  drawTable(
+    "2. College and staff-wise activity",
+    ["College", "Counsellor / Head", "Role", "Individual", "Follow-up", "SOS", "Total sessions", "Events / programs", "Groups"],
+    staffRows,
+    [0.16, 0.17, 0.08, 0.1, 0.09, 0.06, 0.1, 0.13, 0.11],
+    true,
+  );
 
-  // Narrative sections
   let sectionNumber = 3;
   for (const section of sections) {
-    if (!section.heading.trim() && section.items.every((it) => !it.details.trim())) continue;
+    if (!section.heading.trim() && section.items.every((item) => !item.details.trim())) continue;
     ensureSpace(40);
-    doc.setFontSize(13).setFont("helvetica", "bold").text(`${sectionNumber}. ${section.heading || "Untitled Section"}`, margin, y);
+    doc.setTextColor(15, 23, 42).setFont("helvetica", "bold").setFontSize(12);
+    doc.text(`${sectionNumber}. ${section.heading || "Untitled Section"}`, margin, y);
     sectionNumber += 1;
     y += 18;
-    doc.setFontSize(10.5).setFont("helvetica", "normal");
+    doc.setFont("helvetica", "normal").setFontSize(10).setTextColor(51, 65, 85);
     for (const item of section.items) {
       if (!item.details.trim() && !item.title.trim()) continue;
-      ensureSpace(30);
       const text = item.title.trim() ? `${item.title.trim()}: ${item.details.trim()}` : item.details.trim();
-      const used = wrapText(doc, `•  ${text}`, margin, y, contentWidth, 13);
-      y += used + 6;
+      const lines = wrapText(doc, `•  ${text}`, contentWidth);
+      const height = lines.length * 13 + 6;
+      ensureSpace(height);
+      doc.text(lines, margin, y);
+      y += height;
     }
-    y += 12;
+    y += 10;
   }
 
   for (const file of photos) {
-    const dataUrl = await fileToDataUrl(file);
-    doc.addPage();
-    const imgProps = doc.getImageProperties(dataUrl);
-    const maxW = contentWidth;
-    const maxH = pageHeight - margin * 2;
-    const scale = Math.min(maxW / imgProps.width, maxH / imgProps.height, 1);
-    doc.addImage(dataUrl, imgProps.fileType, margin, margin, imgProps.width * scale, imgProps.height * scale);
+    const imageData = await fileToDataUrl(file);
+    newPage();
+    const image = doc.getImageProperties(imageData);
+    const scale = Math.min(contentWidth / image.width, (pageHeight - margin * 2) / image.height, 1);
+    doc.addImage(imageData, image.fileType, margin, margin, image.width * scale, image.height * scale);
   }
 
-  doc.save(`consolidated-report-${header.monthLabel.replace(/\s/g, "-")}.pdf`);
+  return doc.output("blob");
 }

@@ -16,13 +16,13 @@ import {
 import "../../components/reports/MonthlyReportDownload.css";
 import "./MonthlyReportsSection.css";
 
-type ReportKind = "monthly" | "consolidated";
+export type ReportKind = "monthly" | "consolidated";
 
 /** Combines the Head's two self-service report downloads (My Monthly Report,
     Consolidated Report) into one sidebar section, picked via a dropdown,
     instead of two separate sidebar entries. */
-export function ReportDownloadsSection() {
-  const [kind, setKind] = useState<ReportKind>("monthly");
+export function ReportDownloadsSection({ initialKind = "monthly" }: { initialKind?: ReportKind }) {
+  const [kind, setKind] = useState<ReportKind>(initialKind);
 
   return (
     <div className="monthly-report-download">
@@ -105,7 +105,14 @@ function HeadMonthlyReportWorkspace() {
     };
   }, [campusId, collegeId]);
 
-  async function submit(file: File, title: string, month: number, year: number, recipientUids: string[], onProgress?: (pct: number) => void) {
+  async function submit(
+    file: File,
+    title: string,
+    month: number,
+    year: number,
+    recipientUids: string[],
+    onProgress?: (pct: number) => void,
+  ) {
     if (!profile?.uid) throw new Error("Your profile is not available.");
     await submitMonthlyStaffReport(
       file,
@@ -133,6 +140,11 @@ function HeadMonthlyReportWorkspace() {
         mode="head"
         recipientOptions={recipients}
         recipientsLoading={loadingRecipients}
+        reportHistoryLoading={loadingReports}
+        reportHistoryError={reportsError}
+        isResharePeriod={(month, year) =>
+          reports.some((report) => report.month === month && report.year === year)
+        }
         onSubmitReport={(file, title, month, year, recipientUids) =>
           submit(file, title, month, year, recipientUids)
         }
@@ -153,6 +165,10 @@ function HeadMonthlyReportWorkspace() {
               titlePlaceholder="e.g. September 2026 Head's Report"
               submitLabel="Send Report"
               allowVoiceInput={false}
+              submitDisabled={loadingReports || Boolean(reportsError)}
+              isResharePeriod={(month, year) =>
+                reports.some((report) => report.month === month && report.year === year)
+              }
               onUpload={(file, title, month, year, onProgress) =>
                 submit(file, title, month, year, recipients.map((recipient) => recipient.uid), onProgress)
               }
