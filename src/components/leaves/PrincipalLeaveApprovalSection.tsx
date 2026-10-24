@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import {
-  subscribeAllLeaves,
+  subscribeLeavesForColleges,
   approveLeave,
   disapproveLeave,
   formatLeaveRange,
@@ -22,69 +22,27 @@ export function PrincipalLeaveApprovalSection() {
   const [actionError, setActionError] = useState<string | null>(null);
 
   const today = getTodayDateString();
+  const isPrincipalOrVp =
+    profile?.role === "admin" &&
+    profile.adminAccess?.scope === "campuses" &&
+    (profile.adminAccess.designation === "principal" ||
+      profile.adminAccess.designation === "vice-principal");
 
-  // Determine role designation label (Principal, Vice-Principal, etc.)
   const reviewerDesignation = useMemo(() => {
-    if (profile?.role === "super-admin") return "super-admin" as const;
-    const des = profile?.adminAccess?.designation;
-    if (des === "vice-principal") return "vice-principal" as const;
-    if (des === "principal") return "principal" as const;
-    return "admin" as const;
+    return profile?.adminAccess?.designation === "vice-principal"
+      ? "vice-principal" as const
+      : "principal" as const;
   }, [profile]);
 
   const collegeIds = useMemo(() => {
-    const list: string[] = [];
-    if (profile?.adminAccess?.collegeIds?.length) {
-      list.push(...profile.adminAccess.collegeIds);
-    }
-    if (profile?.collegeId && !list.includes(profile.collegeId)) {
-      list.push(profile.collegeId);
-    }
-    return list;
+    return profile?.adminAccess?.collegeIds ?? [];
   }, [profile]);
 
-  const campusIds = useMemo(() => {
-    const list: string[] = [];
-    if (profile?.adminAccess?.campusIds?.length) {
-      list.push(...profile.adminAccess.campusIds);
-    }
-    if (profile?.campusId && !list.includes(profile.campusId)) {
-      list.push(profile.campusId);
-    }
-    return list;
-  }, [profile]);
-
-  // Subscribe and filter based on admin scope
   useEffect(() => {
-    if (!profile) return;
+    if (!isPrincipalOrVp || collegeIds.length === 0) return;
 
-    const unsubscribe = subscribeAllLeaves((allLeaves) => {
-      if (profile.role === "super-admin" || profile.adminAccess?.scope === "global") {
-        setLeaves(allLeaves);
-        return;
-      }
-
-      // If no specific restriction configured, show all records
-      if (collegeIds.length === 0 && campusIds.length === 0) {
-        setLeaves(allLeaves);
-        return;
-      }
-
-      const filtered = allLeaves.filter((l) => {
-        // Counsellor's college matches one of admin's assigned colleges
-        if (l.collegeId && collegeIds.includes(l.collegeId)) return true;
-        // Campus Head's application on admin's campus
-        if (l.applicantRole === "head" && campusIds.includes(l.campusId)) return true;
-        // Fallback campus match
-        if (collegeIds.length === 0 && campusIds.includes(l.campusId)) return true;
-        return false;
-      });
-
-      setLeaves(filtered);
-    });
-
-    return () => unsubscribe();
-  }, [profile, collegeIds, campusIds]);
+    return subscribeLeavesForColleges(collegeIds, setLeaves);
+  }, [isPrincipalOrVp, collegeIds]);
 
   const filteredLeaves = useMemo(() => {
     switch (activeTab) {
@@ -154,6 +112,18 @@ export function PrincipalLeaveApprovalSection() {
       setProcessingId(null);
     }
   };
+
+  if (!isPrincipalOrVp) return null;
+
+  if (collegeIds.length === 0) {
+    return (
+      <div className="principal-leave-section">
+        <div className="principal-leave-error" role="alert">
+          Leave approvals are unavailable because no college is assigned to this account. Please contact the platform administrator.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="principal-leave-section">

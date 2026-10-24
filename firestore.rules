@@ -83,6 +83,15 @@ service cloud.firestore {
         collegeId in myProfile().adminAccess.collegeIds;
     }
 
+    // Leave decisions belong only to a Principal/VP assigned to the
+    // applicant's college. Global Admins and Super Admins cannot review them.
+    function leaveAdminCanAccessCollege(collegeId) {
+      return isPrincipalOrVp() &&
+        myProfile().adminAccess.scope == 'campuses' &&
+        'collegeIds' in myProfile().adminAccess &&
+        collegeId in myProfile().adminAccess.collegeIds;
+    }
+
     // Only a "global"-scope admin (or super-admin) may create/edit/delete a
     // Campus or College record at all — a campus-restricted admin never can,
     // regardless of which campuses they're otherwise scoped to.
@@ -1200,29 +1209,46 @@ service cloud.firestore {
     // Leave management for counsellors and heads:
     // - Counsellors and Heads apply for leaves and can cancel at any stage
     // - College Principals and Vice-Principals can review, approve, or disapprove leaves for their college
-    // - Super Admins and global Admins have platform-wide oversight
+    // - Heads can view their campus team's requests
     // - Approved leaves are readable by signed-in users for displaying the active "On Leave" profile badge
     match /leaves/{leaveId} {
       allow read: if isSignedIn() && (
-        isStaff() ||
         resource.data.applicantUid == request.auth.uid ||
-        resource.data.status == 'approved'
+        resource.data.status == 'approved' ||
+        (myRole() == 'head' && resource.data.campusId == myProfile().campusId) ||
+        leaveAdminCanAccessCollege(resource.data.get('collegeId', ''))
       );
 
       allow create: if isSignedIn()
                     && (isRole('counsellor') || isRole('head'))
                     && request.resource.data.applicantUid == request.auth.uid
+                    && request.resource.data.applicantRole == myRole()
+                    && request.resource.data.campusId is string
+                    && request.resource.data.campusId == myProfile().campusId
+                    && request.resource.data.collegeId is string
+                    && request.resource.data.collegeId == myProfile().collegeId
                     && request.resource.data.status == 'pending'
                     && request.resource.data.startDate is string
                     && request.resource.data.endDate is string;
 
       allow update: if isSignedIn() && (
         // Applicant can cancel at any time (before or after approval)
-        (resource.data.applicantUid == request.auth.uid && request.resource.data.status == 'cancelled') ||
-        // College Principal, Vice-Principal, Admin, or Super Admin can approve or disapprove
         (
-          (myRole() == 'super-admin' || isRole('admin')) &&
-          request.resource.data.status in ['approved', 'disapproved']
+          resource.data.applicantUid == request.auth.uid &&
+          request.resource.data.status == 'cancelled' &&
+          request.resource.data.cancelledByUid == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'cancelledAt', 'cancelledByUid', 'cancellationReason', 'updatedAt'])
+        ) ||
+        // Only the assigned college's Principal or Vice-Principal can review.
+        (
+          resource.data.status == 'pending' &&
+          leaveAdminCanAccessCollege(resource.data.get('collegeId', '')) &&
+          request.resource.data.status in ['approved', 'disapproved'] &&
+          request.resource.data.reviewedByUid == request.auth.uid &&
+          request.resource.data.reviewedByRole == myProfile().adminAccess.designation &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'reviewedByUid', 'reviewedByName', 'reviewedByRole', 'reviewedAt', 'reviewRemarks', 'updatedAt'])
         )
       );
 

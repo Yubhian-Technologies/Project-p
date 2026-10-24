@@ -122,6 +122,34 @@ export function subscribeLeavesForCollege(
 }
 
 /**
+ * Listen in real time to leaves for a set of assigned colleges.
+ */
+export function subscribeLeavesForColleges(
+  collegeIds: string[],
+  callback: (leaves: LeaveRequest[]) => void,
+): () => void {
+  const uniqueCollegeIds = [...new Set(collegeIds.filter(Boolean))];
+  if (uniqueCollegeIds.length === 0) {
+    callback([]);
+    return () => undefined;
+  }
+
+  const leavesByCollege = new Map<string, LeaveRequest[]>();
+  const unsubscribers = uniqueCollegeIds.map((collegeId) =>
+    subscribeLeavesForCollege(collegeId, (leaves) => {
+      leavesByCollege.set(collegeId, leaves);
+      callback(
+        [...leavesByCollege.values()]
+          .flat()
+          .sort((a, b) => b.createdAt - a.createdAt),
+      );
+    }),
+  );
+
+  return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
+}
+
+/**
  * Listen in real-time to leaves for an entire campus (for Campus Head & Admins)
  */
 export function subscribeLeavesForCampus(
@@ -149,29 +177,6 @@ export function subscribeLeavesForCampus(
 }
 
 /**
- * Listen in real-time to all leaves (Super Admin)
- */
-export function subscribeAllLeaves(
-  callback: (leaves: LeaveRequest[]) => void,
-): () => void {
-  const q = query(collection(db, LEAVES_COLLECTION));
-
-  return onSnapshot(
-    q,
-    (snapshot) => {
-      const leaves = snapshot.docs
-        .map((d) => d.data() as LeaveRequest)
-        .sort((a, b) => b.createdAt - a.createdAt);
-      callback(leaves);
-    },
-    (err) => {
-      console.error("Error subscribing to all leaves:", err);
-      callback([]);
-    },
-  );
-}
-
-/**
  * Approve a leave request by a Principal or Vice-Principal
  * Either one approving sets the status to "approved".
  */
@@ -180,7 +185,7 @@ export async function approveLeave(
   reviewer: {
     uid: string;
     name: string;
-    role: "principal" | "vice-principal" | "admin" | "super-admin";
+    role: "principal" | "vice-principal";
   },
   remarks?: string,
 ): Promise<void> {
@@ -206,7 +211,7 @@ export async function disapproveLeave(
   reviewer: {
     uid: string;
     name: string;
-    role: "principal" | "vice-principal" | "admin" | "super-admin";
+    role: "principal" | "vice-principal";
   },
   remarks?: string,
 ): Promise<void> {

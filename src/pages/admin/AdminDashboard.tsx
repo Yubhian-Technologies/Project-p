@@ -135,6 +135,8 @@ export function AdminDashboard() {
   const isCampusRestricted = profile?.role === "admin" && profile.adminAccess?.scope === "campuses";
   const isPrincipalOrVp =
     profile?.role === "admin" &&
+    profile.adminAccess?.scope === "campuses" &&
+    (profile.adminAccess.collegeIds?.length ?? 0) > 0 &&
     (profile.adminAccess?.designation === "principal" || profile.adminAccess?.designation === "vice-principal");
   const allowedSections = profile?.adminAccess?.sections;
   // Management/Administration-designated admins (and any global-scope admin)
@@ -147,11 +149,6 @@ export function AdminDashboard() {
     profile.adminAccess.scope === "global" ||
     profile.adminAccess.designation === "management" ||
     profile.adminAccess.designation === "administration";
-  const seesLeaveApprovalsRegardless =
-    !profile?.adminAccess ||
-    profile.adminAccess.scope === "global" ||
-    profile.adminAccess.designation === "principal" ||
-    profile.adminAccess.designation === "vice-principal";
   // Consolidated Reports is a campus-wide roll-up filed once by a campus's
   // Head and can span several colleges under that campus — a college-scoped
   // admin (e.g. Principal/VP or Administration assigned to a college) is
@@ -173,14 +170,15 @@ export function AdminDashboard() {
             (s.id === "staff-monthly-reports" && isPrincipalOrVp) ||
             allowedSections.includes(s.id as (typeof allowedSections)[number]) ||
             (s.id === "serious-cases" && seesSeriousCasesRegardless) ||
-            (s.id === "leave-approvals" && seesLeaveApprovalsRegardless),
+            (s.id === "leave-approvals" && isPrincipalOrVp),
         )
       : SECTIONS
   ).filter(
     (s) =>
       !(isCampusRestricted && s.id === "campuses") &&
       !(isCollegeScoped && s.id === "monthly-reports") &&
-      !(s.id === "staff-monthly-reports" && !isPrincipalOrVp),
+      !(s.id === "staff-monthly-reports" && !isPrincipalOrVp) &&
+      !(s.id === "leave-approvals" && !isPrincipalOrVp),
   );
 
   return (
@@ -221,7 +219,7 @@ export function AdminDashboard() {
         <CollegeMonthlyReportsSection />
       ) : activeSection === "monthly-reports" && !isCollegeScoped ? (
         <MonthlyReportsViewSection />
-      ) : activeSection === "leave-approvals" ? (
+      ) : activeSection === "leave-approvals" && isPrincipalOrVp ? (
         <PrincipalLeaveApprovalSection />
       ) : activeSection === "campus-rankings" ? (
         <CampusRankingsSection />
