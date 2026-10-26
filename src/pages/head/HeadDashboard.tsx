@@ -1,5 +1,14 @@
 import { useRef, useState } from "react";
-import { AppShell } from "../../components/layout/AppShell";
+import { useAuth } from "../../hooks/useAuth";import { AppShell } from "../../components/layout/AppShell";
+import type { UserProfile } from "../../types/user";
+
+function hasHeadDuties(profile: UserProfile | null): boolean {
+  // User is considered a Head if they have headCampusIds assigned,
+  // OR if their role is explicitly "head".
+  if (!profile) return false;
+  if (profile.role === "head") return true;
+  return (profile.headCampusIds ?? []).length > 0;
+}
 import { ProfileSection } from "../../components/layout/ProfileSection";
 import { Button } from "../../components/common/Button";
 import { BookingRequestsSection } from "../counsellor/BookingRequestsSection";
@@ -164,6 +173,8 @@ const SECTIONS = [
 ];
 
 export function HeadDashboard() {
+  const { profile } = useAuth();
+  const headHasDuties = hasHeadDuties(profile);
   const [activeSection, setActiveSection] = useState("overview");
   const [reportDownloadsInitialKind, setReportDownloadsInitialKind] = useState<ReportKind>("monthly");
   const [showImport, setShowImport] = useState(false);
@@ -309,7 +320,7 @@ export function HeadDashboard() {
       {activeSection === "journal" && <JournalSection />}
       {activeSection === "community" && <CommunitySection />}
       {activeSection === "emergency" && <EmergencyAlertsSection />}
-      {activeSection === "leaves" && <LeaveManagementSection isHeadView={true} />}
+      {activeSection === "leaves" && <LeaveManagementSection isHeadView={headHasDuties} />}
       {activeSection === "campus-rankings" && <CampusRankingsSection />}
       {activeSection === "overview" && <HeadCommandCentre onNavigate={setActiveSection} />}
     </AppShell>

@@ -12,6 +12,7 @@ import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { Select } from "../../components/common/Select";
 import { ROLE_LABELS } from "../../config/roles";
+import { exportStaffData } from "../../services/firebase/managedAccounts";
 import { AddLoginModal } from "./AddLoginModal";
 import { EditLoginModal } from "./EditLoginModal";
 import "./LoginsManagementSection.css";
@@ -151,15 +152,33 @@ export function LoginsManagementSection() {
               >
                 Edit
               </Button>
-              <Button
-                type="button"
-                variant="outlined"
-                disabled={deletingUid === login.uid || !canManageLogin(login)}
-                title={canManageLogin(login) ? undefined : "Outside your assigned college(s) — view only"}
-                onClick={() => handleDelete(login.uid)}
-              >
-                {deletingUid === login.uid ? "Deleting…" : "Delete login"}
-              </Button>
+              {login.active === false && (login.role === "counsellor" || login.role === "head") && (
+  <Button
+    type="button"
+    variant="outlined"
+    onClick={async () => {
+      const data = await exportStaffData(login.uid);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${login.displayName || login.email}-export.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }}
+  >
+    Export data
+  </Button>
+)}
+<Button
+  type="button"
+  variant="outlined"
+  disabled={deletingUid === login.uid || !canManageLogin(login)}
+  title={canManageLogin(login) ? undefined : "Outside your assigned college(s) — view only"}
+  onClick={() => handleDelete(login.uid)}
+>
+  {deletingUid === login.uid ? "Deleting…" : "Delete login"}
+</Button>
             </div>
           </Card>
         ))}
@@ -185,7 +204,6 @@ export function LoginsManagementSection() {
         <EditLoginModal
           login={editingLogin}
           colleges={colleges}
-          hasOtherHead={logins.some((l) => l.role === "head" && l.uid !== editingLogin.uid)}
           onClose={() => setEditingLogin(null)}
           onSaved={() => loadForCampus(campusId)}
         />

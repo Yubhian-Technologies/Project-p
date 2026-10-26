@@ -85,11 +85,13 @@ export interface UserProfile {
   // they can no longer sign in at all — not just a booking-availability
   // toggle (that's what `available` above already covers).
   active?: boolean;
+  // NEW: Campuses where this user has Head duties. A counsellor may have
+  // headCampusIds assigned by an Admin/Super Admin; when present and the
+  // user's campusId is among them, they receive Head permissions and dashboards
+  // for those campuses, while retaining their individual counsellor work.
+  headCampusIds?: string[];
   studentOrProfessional?: "student" | "professional";
-  // Student-only. Auto-derived at creation time from the email's own
-  // local-part (e.g. "23pa1a04a0@vishnu.edu.in" -> "23PA1A04A0") — never
-  // typed separately during import/creation — but editable afterward via
-  // Edit User, in case a particular email doesn't follow that pattern.
+  // Student-only. Auto-derived at creation time from the email's own  // local-part (e.g. "23pa1a04a0@vishnu.edu.in" -> "23PA1A04A0") — never  // typed separately during import/creation — but editable afterward via  // Edit User, in case a particular email doesn't follow that pattern.
   registerNumber?: string;
   yearOrBatch?: string; // e.g. "2nd Year" or "2022-2026" — student-only, free text. Shown to users as "Batch".
   admissionType?: "regular" | "lateral"; // student-only

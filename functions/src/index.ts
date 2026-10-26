@@ -328,14 +328,7 @@ export const createCampusLogin = onCall<CreateCampusLoginRequest>(async (request
   }
 
   if (role === "head") {
-    const headSnapshot = await db
-      .collection("users")
-      .where("campusId", "==", campusId)
-      .where("role", "==", "head")
-      .get();
-    if (!headSnapshot.empty) {
-      throw new HttpsError("already-exists", "This campus already has a Head.");
-    }
+    // Multiple Heads are now allowed per campus; no one-head restriction.
   }
 
   const userRecord = await createAuthUser({ email: normalizedEmail, password, displayName });
@@ -451,6 +444,39 @@ interface UpdateCampusLoginRequest {
   active?: boolean; // defaults true; false disables the Firebase Auth account (can't sign in)
 }
 
+export const exportStaffData = onCall<{ uid: string }>(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) throw new HttpsError("unauthenticated", "Sign in required.");
+  const callerDoc = await db.collection("users").doc(callerUid).get();
+  const callerData = callerDoc.data();
+  if (!isCampusManagerRole(callerData?.role)) {
+    throw new HttpsError("permission-denied", "Only Admins can export staff data.");
+  }
+  const uid = request.data?.uid;
+  if (!uid) throw new HttpsError("invalid-argument", "uid required.");
+  const targetDoc = await db.collection("users").doc(uid).get();
+  const targetData = targetDoc.data();
+  if (!targetData || (targetData.role !== "counsellor" && targetData.role !== "head")) {
+    throw new HttpsError("invalid-argument", "Target is not staff.");
+  }
+  if (targetData.active !== false) {
+    throw new HttpsError("failed-precondition", "Only inactive staff can be exported.");
+  }
+  const bookingsSnap = await db.collection("bookings").where("counsellorId", "==", uid).get();
+  const feedbackSnap = await db.collection("sessionFeedback").where("counsellorId", "==", uid).get();
+  const cmrSnap = await db.collection("counsellorMonthlyReports").where("uploadedByUid", "==", uid).get();
+  const mrSnap = await db.collection("monthlyReports").where("uploadedByUid", "==", uid).get();
+  const seriousSnap = await db.collection("seriousCases").where("counsellorId", "==", uid).get();
+  return {
+    user: targetData,
+    bookings: bookingsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    feedback: feedbackSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    counsellorMonthlyReports: cmrSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    monthlyReports: mrSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    seriousCases: seriousSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+  };
+});
+
 export const updateCampusLogin = onCall<UpdateCampusLoginRequest>(async (request) => {
   const callerUid = request.auth?.uid;
   if (!callerUid) {
@@ -484,15 +510,7 @@ export const updateCampusLogin = onCall<UpdateCampusLoginRequest>(async (request
   }
 
   if (role === "head" && campusId) {
-    const headSnapshot = await db
-      .collection("users")
-      .where("campusId", "==", campusId)
-      .where("role", "==", "head")
-      .get();
-    const hasOtherHead = headSnapshot.docs.some((d) => d.id !== uid);
-    if (hasOtherHead) {
-      throw new HttpsError("already-exists", "This campus already has a Head.");
-    }
+    // Multiple Heads are now allowed per campus; no one-head restriction.
   }
 
   await auth.updateUser(uid, {

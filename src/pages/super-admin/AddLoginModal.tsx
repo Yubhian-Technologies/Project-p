@@ -7,7 +7,6 @@ import { createCampusLogin } from "../../services/firebase/managedAccounts";
 import { functionsErrorMessage } from "../../services/firebase/functions";
 import { listCampuses } from "../../services/firebase/campuses";
 import { listColleges } from "../../services/firebase/colleges";
-import { listCampusLogins } from "../../services/firebase/firestore";
 import type { Campus } from "../../types/campus";
 import type { College } from "../../types/college";
 import "./LoginsManagementSection.css";
@@ -35,7 +34,6 @@ export function AddLoginModal({
   const [colleges, setColleges] = useState<College[]>([]);
   const [campusId, setCampusId] = useState(defaultCampusId ?? "");
   const [collegeId, setCollegeId] = useState(defaultCollegeId ?? "");
-  const [hasHead, setHasHead] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,11 +48,9 @@ export function AddLoginModal({
   useEffect(() => {
     if (!campusId) {
       setColleges([]);
-      setHasHead(false);
       return;
     }
     listColleges(campusId).then(setColleges);
-    listCampusLogins(campusId).then((logins) => setHasHead(logins.some((l) => l.role === "head")));
   }, [campusId]);
 
   async function handleSubmit(event: FormEvent) {
@@ -167,9 +163,7 @@ export function AddLoginModal({
           <label htmlFor="add-login-role">Role</label>
           <Select id="add-login-role" value={role} onChange={(v) => setRole(v as "counsellor" | "head")}>
             <option value="counsellor">Counsellor</option>
-            <option value="head" disabled={hasHead}>
-              Head{hasHead ? " (already assigned)" : ""}
-            </option>
+            <option value="head">Head</option>
           </Select>
         </div>
         {error && <p className="logins-management__error">{error}</p>}

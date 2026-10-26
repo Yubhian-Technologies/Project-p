@@ -24,6 +24,21 @@ service cloud.firestore {
       return isSignedIn() && myRole() in ['head', 'admin', 'super-admin'];
     }
 
+    // Returns true if the signed-in user has Head duties assigned for the given campus.
+    // A counsellor with headCampusIds that include this campus is considered a Head
+    // for that campus, receiving Head permissions and dashboards while retaining
+    // their individual counsellor work.
+    function isHeadOfCampus(campusId) {
+      return isSignedIn() && 
+        myProfile().headCampusIds != null &&
+        myProfile().headCampusIds.contains(campusId);
+    }
+
+    // Like isStaff() but specifically checks Head campus assignment rather than role.
+    function isHeadStaff() {
+      return isSignedIn() && myRole() == 'counsellor' && isHeadOfCampus(myProfile().campusId == null ? '' : myProfile().campusId);
+    }
+
     function isSelf(uid) {
       return isSignedIn() && request.auth.uid == uid;
     }
@@ -1133,49 +1148,76 @@ service cloud.firestore {
     }
 
     // ---------- monthlyReports ----------
-    // A campus's consolidated report — there is exactly one Head per campus,
-    // overseeing every college in it, who compiles this from that campus's
-    // counsellor submissions and sends it up to Admin. Admin/Super Admin
-    // browse platform-wide (their tab has its own campus picker) and are the
-    // only ones who can verify it; the Head may only read/create/delete their
-    // own campus's reports — never another campus's. Counsellors have no
-    // access here at all (their own reports live in counsellorMonthlyReports).
+    // A campus's consolidated report — one shared report per campus+period.
+    // Any Head assigned to this campus (via headCampusIds) may create/replace it.
+    // When one Head submits or shares for a campus and reporting period, it
+    // appears submitted/shared for all Heads of that campus. They can view
+    // the shared report and status, but should not create duplicate submissions.
+    // Resharing should replace the one campus-wide shared report and follow
+    // the existing notification/reshare flow.
+    //
+    // Reports are keyed by campusId + month + year, with uploadedByUid identifying
+    // the submitting Head. The shared status is tracked via the campus-wide identity.
     match /monthlyReports/{reportId} {
-      allow read: if (adminCanAccessCampus(resource.data.get('campusId', null)) && !isPrincipalOrVp())
-                  || (isRole('head') && resource.data.campusId == myProfile().campusId);
-      allow create: if isRole('head')
-                    && request.resource.data.uploadedByUid == request.auth.uid
-                    && request.resource.data.campusId == myProfile().campusId
-                    && request.resource.data.collegeId == myProfile().collegeId
-                    && request.resource.data.status == 'pending';
-      // Only Admin/Super Admin can verify (update status → verified); the
-      // report's identity/ownership fields must stay untouched.
+      // Read: any Head assigned to this campus, or Admin/Super Admin scoped to it.
+      // Counsellors cannot read consolidated reports (their own live in counsellorMonthlyReports).
+      allow read: if (
+        (isRole('head') && isHeadOfCampus(resource.data.get('campusId', null)))
+        || adminCanAccessCampus(resource.data.get('campusId', null))
+        || (isRole('super-admin'))
+      ) && !isPrincipalOrVp();
+      
+      // Create: any Head assigned to this campus may create/replace a report.
+      // Identity is campusId + month + year — replacing an existing one
+      // with the same campus+period replaces the shared report for all Heads.
+      allow create: if (
+        isRole('head')
+        && isHeadOfCampus(request.resource.data.campusId)
+        && request.resource.data.uploadedByUid == request.auth.uid
+        && request.resource.data.month >= 1 && request.resource.data.month <= 12
+        && request.resource.data.year > 0
+        && request.resource.data.status == 'pending'
+      );
+      
+      // Update: Admin/Super Admin can verify; Heads can only replace pending
+      // reports with new content (same campus+period replaces shared report).
+      // The submitting Head's uid must match uploadedByUid to replace.
       allow update: if (
-                      adminCanAccessCampus(resource.data.get('campusId', null)) &&
-                      !isPrincipalOrVp() &&
-                      !isAdministrationAdmin()
-                      && request.resource.data.status == 'verified'
-                      && request.resource.data.uploadedByUid == resource.data.uploadedByUid
-                      && request.resource.data.campusId == resource.data.campusId
-                      && request.resource.data.collegeId == resource.data.collegeId
-                    ) || (
-                      isRole('head')
-                      && resource.data.uploadedByUid == request.auth.uid
-                      && resource.data.campusId == myProfile().campusId
-                      && resource.data.collegeId == myProfile().collegeId
-                      && request.resource.data.uploadedByUid == resource.data.uploadedByUid
-                      && request.resource.data.campusId == resource.data.campusId
-                      && request.resource.data.collegeId == resource.data.collegeId
-                      && request.resource.data.status == 'pending'
-                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-                        'title', 'downloadURL', 'storagePath', 'fileName', 'uploadedAt', 'status',
-                        'verifiedBy', 'verifiedByUid', 'verifiedAt', 'signedDownloadURL',
-                        'signedFileName', 'signedKind'
-                      ])
-                    );
-      allow delete: if isRole('head')
-                    && resource.data.uploadedByUid == request.auth.uid
-                    && resource.data.campusId == myProfile().campusId;
+        // Admin/Super Admin verification
+        (
+          adminCanAccessCampus(resource.data.get('campusId', null))
+          && !isPrincipalOrVp()
+          && !isAdministrationAdmin()
+          && request.resource.data.status == 'verified'
+          && request.resource.data.uploadedByUid == resource.data.uploadedByUid
+          && request.resource.data.campusId == resource.data.campusId
+          && request.resource.data.month == resource.data.month
+          && request.resource.data.year == resource.data.year
+        )
+        || (
+          // Head replacing a pending report for their campus+period
+          isRole('head')
+          && isHeadOfCampus(resource.data.get('campusId', null))
+          && resource.data.uploadedByUid == request.auth.uid
+          && request.resource.data.status == 'pending'
+          && request.resource.data.month == resource.data.month
+          && request.resource.data.year == resource.data.year
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'title', 'downloadURL', 'storagePath', 'fileName', 'uploadedAt', 'status',
+            'verifiedBy', 'verifiedByUid', 'verifiedAt', 'signedDownloadURL',
+            'signedFileName', 'signedKind'
+          ])
+        )
+      );
+      
+      // Delete: Head who uploaded it, or Admin/Super Admin scoped to campus
+      allow delete: if (
+        isRole('head')
+        && resource.data.uploadedByUid == request.auth.uid
+        && isHeadOfCampus(resource.data.get('campusId', null))
+      ) || (
+        adminCanAccessCampus(resource.data.get('campusId', null))
+      );
     }
 
     // ---------- counsellorMonthlyReports ----------

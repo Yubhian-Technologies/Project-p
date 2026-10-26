@@ -45,6 +45,12 @@ export async function createAdminLogin(input: CreateAdminLoginInput): Promise<vo
   await fn(input);
 }
 
+export async function exportStaffData(uid: string): Promise<any> {
+  const fn = httpsCallable(getFunctions(app), "exportStaffData");
+  const res: any = await fn({ uid });
+  return res.data;
+}
+
 interface UpdateAdminLoginInput {
   uid: string;
   displayName: string;

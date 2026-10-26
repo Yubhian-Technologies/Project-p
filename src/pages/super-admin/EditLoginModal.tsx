@@ -11,12 +11,11 @@ import "./LoginForms.css";
 interface EditLoginModalProps {
   login: UserProfile;
   colleges: College[];
-  hasOtherHead: boolean;
   onClose: () => void;
   onSaved: () => Promise<void>;
 }
 
-export function EditLoginModal({ login, colleges, hasOtherHead, onClose, onSaved }: EditLoginModalProps) {
+export function EditLoginModal({ login, colleges, onClose, onSaved }: EditLoginModalProps) {
   const [displayName, setDisplayName] = useState(login.displayName ?? "");
   const [email, setEmail] = useState(login.email);
   const [password, setPassword] = useState("");
@@ -80,9 +79,7 @@ export function EditLoginModal({ login, colleges, hasOtherHead, onClose, onSaved
           <label htmlFor="edit-role">Role</label>
           <Select id="edit-role" value={role} onChange={(v) => setRole(v as "counsellor" | "head")}>
             <option value="counsellor">Counsellor</option>
-            <option value="head" disabled={hasOtherHead}>
-              Head{hasOtherHead ? " (already assigned)" : ""}
-            </option>
+            <option value="head">Head</option>
           </Select>
         </div>
         <div className="campus-logins-detail__field">
