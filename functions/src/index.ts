@@ -108,6 +108,15 @@ export const deleteCampusLogin = onCall<DeleteCampusLoginRequest>(async (request
   if ((targetRole === "admin" || targetRole === "super-admin") && callerData?.role !== "super-admin") {
     throw new HttpsError("permission-denied", "Only a Super Admin can delete an Admin or Super Admin login.");
   }
+  if (targetRole === "super-admin") {
+    if (targetUid === callerUid) {
+      throw new HttpsError("failed-precondition", "You cannot delete the Super Admin account you are currently using.");
+    }
+    const superAdmins = await db.collection("users").where("role", "==", "super-admin").get();
+    if (superAdmins.size <= 1) {
+      throw new HttpsError("failed-precondition", "The last Super Admin account cannot be deleted.");
+    }
+  }
   if (
     (targetRole === "counsellor" || targetRole === "head") &&
     !canManageCampusLogin(callerData?.role, callerData?.adminAccess, targetData?.campusId, targetData?.collegeId)

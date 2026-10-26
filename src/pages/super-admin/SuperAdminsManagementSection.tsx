@@ -2,18 +2,21 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { listUsersByRole } from "../../services/firebase/firestore";
 import { createSuperAdminLogin } from "../../services/firebase/managedAccounts";
-import { functionsErrorMessage } from "../../services/firebase/functions";
+import { deleteCampusLogin, functionsErrorMessage } from "../../services/firebase/functions";
 import type { UserProfile } from "../../types/user";
+import { useAuth } from "../../hooks/useAuth";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
 import { Modal } from "../../components/common/Modal";
 import "./LoginsManagementSection.css";
 
 export function SuperAdminsManagementSection() {
+  const { profile } = useAuth();
   const [accounts, setAccounts] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deletingUid, setDeletingUid] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -28,6 +31,22 @@ export function SuperAdminsManagementSection() {
   }
 
   useEffect(() => { void load(); }, []);
+
+  async function removeAccount(account: UserProfile) {
+    if (account.uid === profile?.uid) return;
+    const confirmed = window.confirm(`Delete the Super Admin login for ${account.displayName || account.email}? This removes the login, not shared platform data.`);
+    if (!confirmed) return;
+    setDeletingUid(account.uid);
+    setError(null);
+    try {
+      await deleteCampusLogin(account.uid);
+      await load();
+    } catch (err) {
+      setError(functionsErrorMessage(err, "Could not delete this Super Admin login. Please try again."));
+    } finally {
+      setDeletingUid(null);
+    }
+  }
 
   return (
     <div className="logins-management">
@@ -44,6 +63,15 @@ export function SuperAdminsManagementSection() {
             <p className="logins-management__name">{account.displayName || account.email}</p>
             <p className="logins-management__role">{account.email}</p>
             <p className="logins-management__college">Global access · shared platform data</p>
+          </div>
+          <div className="logins-management__row-actions">
+            {account.uid === profile?.uid ? (
+              <span className="logins-management__hint">Current login</span>
+            ) : (
+              <Button type="button" variant="outlined" disabled={deletingUid === account.uid} onClick={() => void removeAccount(account)}>
+                {deletingUid === account.uid ? "Deleting…" : "Delete login"}
+              </Button>
+            )}
           </div>
         </Card>
       ))}
