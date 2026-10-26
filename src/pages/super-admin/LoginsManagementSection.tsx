@@ -94,7 +94,7 @@ export function LoginsManagementSection() {
       const commonSessionHeaders = [
         "Student name", "Student email", "Counsellor name", "Counsellor email", "Session type",
         "Session date", "Session time", "Duration (minutes)", "Mode", "Status", "Outcome",
-        "Campus", "College", "Concern areas", "Created on",
+        "Campus", "College", "Concern areas", "Created on", "Session reason",
       ];
       const sessionRow = (booking: Record<string, unknown>) => [
         displayValue(booking.studentName),
@@ -108,10 +108,12 @@ export function LoginsManagementSection() {
         displayValue(booking.sessionMode),
         displayValue(booking.status),
         displayValue(booking.outcome),
-        displayValue(payload.campusName),
-        displayValue(payload.collegeName),
+        displayValue(booking.campusName || payload.campusName),
+        displayValue(booking.collegeName || payload.collegeName),
         displayValue(booking.concernCategories),
         formatDate(booking.createdAt),
+        displayValue(booking.cancellationReason || booking.missedReason ||
+          (booking.rescheduleProposal as Record<string, unknown> | undefined)?.reason),
       ];
       if (selected.has("sessions")) {
         const sessions = bookings.filter((booking) => booking.isEmergency !== true);
@@ -119,7 +121,7 @@ export function LoginsManagementSection() {
       }
       if (selected.has("crisisSos")) {
         const sos = bookings.filter((booking) => booking.isEmergency === true);
-        const seriousCases = records(payload.seriousCases).filter((item) => item.isEmergency === true);
+        const seriousCases = records(payload.seriousCases);
         const caseByBooking = new Map(seriousCases.map((item) => [String(item.bookingId ?? item.id), item]));
         const sosHeaders = [...commonSessionHeaders, "Case status", "Case note", "Action taken"];
         const sosRows = sos.map((booking) => {
@@ -127,8 +129,10 @@ export function LoginsManagementSection() {
           return [
             ...sessionRow(booking),
             displayValue(seriousCase?.status),
-            displayValue(seriousCase?.note),
-            displayValue((seriousCase?.actionTaken as Record<string, unknown> | undefined)?.text),
+            displayValue(seriousCase?.note || seriousCase?.reason || booking.cancellationReason || booking.missedReason),
+            displayValue(typeof seriousCase?.actionTaken === "string"
+              ? seriousCase.actionTaken
+              : (seriousCase?.actionTaken as Record<string, unknown> | undefined)?.text || seriousCase?.actionTakenText),
           ];
         });
         await downloadTable("crisis-sos", sosHeaders, sosRows);

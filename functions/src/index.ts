@@ -522,12 +522,14 @@ export const exportStaffData = onCall<{ uid: string }>(async (request) => {
   const seriousSnap = await db.collection("seriousCases").where("authorUid", "==", uid).get();
   const bookings: Record<string, unknown>[] = bookingsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
   const feedback: Record<string, unknown>[] = feedbackSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  const sosCaseSnaps = await Promise.all(bookings
-    .filter((booking) => booking.isEmergency === true)
+  // Cases are keyed by booking ID for both Crisis SOS bookings and regular
+  // sessions that staff flag as serious. Resolve every linked booking so the
+  // export does not omit case notes/actions for non-SOS sessions.
+  const linkedCaseSnaps = await Promise.all(bookings
     .map((booking) => db.collection("seriousCases").doc(String(booking.id)).get()));
   const seriousCasesById = new Map<string, Record<string, unknown>>([
     ...seriousSnap.docs.map((d) => [d.id, { id: d.id, ...d.data() }] as const),
-    ...sosCaseSnaps.filter((d) => d.exists).map((d) => [d.id, { id: d.id, ...d.data() }] as const),
+    ...linkedCaseSnaps.filter((d) => d.exists).map((d) => [d.id, { id: d.id, ...d.data() }] as const),
   ]);
   const relatedUserIds = [...new Set([
     ...bookings.map((booking) => booking.userId).filter((id): id is string => typeof id === "string"),
@@ -540,19 +542,31 @@ export const exportStaffData = onCall<{ uid: string }>(async (request) => {
     return [relatedUid, snapshot.data()?.displayName ?? ""] as const;
   }));
   const nameByUid = new Map(relatedUsers);
-  const campusSnapshot = targetData.campusId
-    ? await db.collection("campuses").doc(String(targetData.campusId)).get()
-    : null;
-  const collegeSnapshot = targetData.collegeId
-    ? await db.collection("colleges").doc(String(targetData.collegeId)).get()
-    : null;
+  const campusIds = [...new Set([
+    targetData.campusId,
+    ...bookings.map((booking) => booking.campusId),
+  ].filter((id): id is string => typeof id === "string" && id.length > 0))];
+  const collegeIds = [...new Set([
+    targetData.collegeId,
+    ...bookings.map((booking) => booking.collegeId),
+  ].filter((id): id is string => typeof id === "string" && id.length > 0))];
+  const [campusSnapshots, collegeSnapshots] = await Promise.all([
+    Promise.all(campusIds.map((id) => db.collection("campuses").doc(id).get())),
+    Promise.all(collegeIds.map((id) => db.collection("colleges").doc(id).get())),
+  ]);
+  const campusNameById = new Map(campusSnapshots.map((snapshot) => [snapshot.id, snapshot.data()?.name ?? ""]));
+  const collegeNameById = new Map(collegeSnapshots.map((snapshot) => [snapshot.id, snapshot.data()?.name ?? ""]));
+  const campusName = typeof targetData.campusId === "string" ? campusNameById.get(targetData.campusId) ?? "" : "";
+  const collegeName = typeof targetData.collegeId === "string" ? collegeNameById.get(targetData.collegeId) ?? "" : "";
   return {
     user: targetData,
-    campusName: campusSnapshot?.data()?.name ?? "",
-    collegeName: collegeSnapshot?.data()?.name ?? "",
+    campusName,
+    collegeName,
     bookings: bookings.map((booking) => ({
       ...booking,
       studentName: nameByUid.get(String(booking.userId)) || "",
+      campusName: campusNameById.get(String(booking.campusId ?? targetData.campusId ?? "")) || campusName,
+      collegeName: collegeNameById.get(String(booking.collegeId ?? targetData.collegeId ?? "")) || collegeName,
     })),
     feedback: feedback.map((entry) => ({
       ...entry,

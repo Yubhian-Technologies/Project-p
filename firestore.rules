@@ -31,12 +31,7 @@ service cloud.firestore {
     function isHeadOfCampus(campusId) {
       return isSignedIn() && 
         myProfile().headCampusIds != null &&
-        myProfile().headCampusIds.contains(campusId);
-    }
-
-    // Like isStaff() but specifically checks Head campus assignment rather than role.
-    function isHeadStaff() {
-      return isSignedIn() && myRole() == 'counsellor' && isHeadOfCampus(myProfile().campusId == null ? '' : myProfile().campusId);
+        campusId in myProfile().headCampusIds;
     }
 
     function isSelf(uid) {

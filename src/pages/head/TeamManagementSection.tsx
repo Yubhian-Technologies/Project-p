@@ -53,10 +53,14 @@ function computeStats(profiles: UserProfile[], bookings: Booking[]): CounsellorS
 
 interface TeamManagementSectionProps {
   onOpenTransferRequests?: () => void;
+  onOpenTeamChat: () => void;
+  onOpenTeamWorkload: () => void;
 }
 
 export function TeamManagementSection({
   onOpenTransferRequests,
+  onOpenTeamChat,
+  onOpenTeamWorkload,
 }: TeamManagementSectionProps) {
   const { profile: headProfile } = useAuth();
   const { includes: inAcademicYear } = useAcademicYear();
@@ -133,6 +137,12 @@ export function TeamManagementSection({
           )}
           <Button type="button" variant="outlined" onClick={() => setAttendanceOpen(true)}>
             Check-in / Check-out →
+          </Button>
+          <Button type="button" variant="outlined" onClick={onOpenTeamChat}>
+            Team Chat →
+          </Button>
+          <Button type="button" variant="outlined" onClick={onOpenTeamWorkload}>
+            Team Workload →
           </Button>
         </div>
       </div>
