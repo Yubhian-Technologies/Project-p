@@ -248,3 +248,11 @@
 .logins-management__export-option small {
   color: var(--neu-text-muted, #718096);
 }
+.logins-management__export-modal {
+  max-width: 640px;
+}
+
+.logins-management__export-modal .logins-management__export-options {
+  width: 100%;
+  min-width: 0;
+}

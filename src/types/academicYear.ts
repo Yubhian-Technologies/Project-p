@@ -1,13 +1,16 @@
 export interface AcademicYearExportInfo {
   at: number;
   byUid: string;
-  counts: { sessions: number; feedback: number; ssiResults: number; events: number };
+  counts: { sessions: number; crisisSos?: number; seriousCases?: number; feedback: number; ssiResults: number; events: number };
+  archivedRecordCount?: number;
+  selectedTypes?: string[];
 }
 
 /** Summary kept on the year after a college's raw data was deleted. */
 export interface AcademicYearArchiveSummary {
   deletedAt: number;
   byUid: string;
+  archivedRecordCount?: number;
   sessions: number;
   completedSessions: number;
   missedSessions: number;

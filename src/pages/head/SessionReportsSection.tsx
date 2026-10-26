@@ -140,7 +140,7 @@ export function SessionReportsSection() {
 
           bookings.forEach(b => {
             if (b.status !== "completed" || b.outcome === "missed") return;
-            const bKey = istDateKey(b.createdAt);
+            const bKey = istDateKey(b.scheduledAt ?? b.createdAt);
             if (bKey < monthStartKey || bKey > monthEndKey) return;
             if (profileCreatedKey && bKey < profileCreatedKey) return;
             const week = getWeekOfMonth(bKey);

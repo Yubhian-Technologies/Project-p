@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import { MonthlyReportDownload } from "../../components/reports/MonthlyReportDownload";
 import { ConsolidatedReportDownloadSection } from "./ConsolidatedReportDownloadSection";
 import { ReportUploadForm } from "../../components/reports/ReportUploadForm";
@@ -43,6 +44,7 @@ export function ReportDownloadsSection({ initialKind = "monthly" }: { initialKin
 
 function HeadMonthlyReportWorkspace() {
   const { profile } = useAuth();
+  const { includesMonth } = useAcademicYear();
   const campusId = profile?.campusId ?? "";
   const collegeId = profile?.collegeId ?? "";
   const [reports, setReports] = useState<MonthlyStaffReport[]>([]);
@@ -179,7 +181,7 @@ function HeadMonthlyReportWorkspace() {
 
       <ReportList
         title="Your Submitted Reports"
-        reports={reports}
+        reports={reports.filter((report) => includesMonth(report.year, report.month, report.campusId || campusId, report.collegeId))}
         loading={loadingReports}
         emptyMessage="You haven't sent a monthly report yet."
         showUploader={false}

@@ -42,6 +42,8 @@ export function LoginsManagementSection() {
     { id: "sessions", label: "Session data", description: "Non-emergency counselling sessions (Excel)" },
     { id: "crisisSos", label: "Crisis SOS data", description: "Crisis SOS cases (Excel)" },
     { id: "feedback", label: "Session feedback", description: "Feedback records for this staff account (Excel)" },
+    { id: "ssiResults", label: "SSI screening results", description: "Scores and severity for screenings linked to this counsellor (Excel)" },
+    { id: "seriousCases", label: "Serious cases", description: "Cases reported by this staff account (Excel)" },
     { id: "monthlyReports", label: "Monthly reports", description: "Download each submitted report separately" },
     { id: "consolidatedReports", label: "Consolidated reports", description: "Download each submitted report separately" },
   ];
@@ -60,32 +62,112 @@ export function LoginsManagementSection() {
       const payload = await exportStaffData(login.uid);
       const safeName = (login.displayName || login.email).replace(/[^a-z0-9-_]+/gi, "-").replace(/^-|-$/g, "");
       const records = (value: unknown) => Array.isArray(value) ? value as Record<string, unknown>[] : [];
-      const rowsFor = (items: Record<string, unknown>[]) => {
-        const keys = [...new Set(items.flatMap((item) => Object.keys(item)))];
-        return [keys, ...items.map((item) => keys.map((key) => {
-          const value = item[key];
-          return value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value);
-        }))];
+      const displayValue = (value: unknown): string => {
+        if (value == null) return "";
+        if (Array.isArray(value)) return value.map((item) => String(item)).join(", ");
+        return typeof value === "object" ? "" : String(value);
       };
-      const downloadSheet = async (name: string, items: Record<string, unknown>[]) => {
-        await downloadXlsx(`${safeName}-${name}.xlsx`, name.slice(0, 31), rowsFor(items));
+      const dateValue = (value: unknown): Date | null => {
+        if (typeof value === "number") return new Date(value < 1_000_000_000_000 ? value * 1000 : value);
+        if (typeof value === "string" && value) return new Date(value);
+        if (value && typeof value === "object") {
+          const timestamp = value as { seconds?: number; _seconds?: number; toDate?: () => Date };
+          if (typeof timestamp.toDate === "function") return timestamp.toDate();
+          const seconds = timestamp.seconds ?? timestamp._seconds;
+          if (typeof seconds === "number") return new Date(seconds * 1000);
+        }
+        return null;
+      };
+      const formatDate = (value: unknown) => dateValue(value)?.toLocaleDateString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric",
+      }) ?? "";
+      const formatTime = (value: unknown) => dateValue(value)?.toLocaleTimeString("en-IN", {
+        hour: "2-digit", minute: "2-digit", hour12: true,
+      }) ?? "";
+      const downloadTable = async (name: string, headers: string[], rows: (string | number)[][]) => {
+        const colWidths = headers.map((header) => Math.min(38, Math.max(14, header.length + 3)));
+        await downloadXlsx(`${safeName}-${name}.xlsx`, name.slice(0, 31), [headers, ...rows], { colWidths });
       };
       const selected = new Set(selectedExports);
       const bookings = records(payload.bookings);
+      const staffName = login.displayName || login.email;
+      const commonSessionHeaders = [
+        "Student name", "Student email", "Counsellor name", "Counsellor email", "Session type",
+        "Session date", "Session time", "Duration (minutes)", "Mode", "Status", "Outcome",
+        "Campus", "College", "Concern areas", "Created on",
+      ];
+      const sessionRow = (booking: Record<string, unknown>) => [
+        displayValue(booking.studentName),
+        displayValue(booking.userEmail),
+        staffName,
+        displayValue(booking.counsellorEmail || login.email),
+        booking.followUpOfBookingId ? "Follow-up" : "Initial session",
+        formatDate(booking.scheduledAt),
+        formatTime(booking.scheduledAt),
+        displayValue(booking.durationMinutes),
+        displayValue(booking.sessionMode),
+        displayValue(booking.status),
+        displayValue(booking.outcome),
+        displayValue(payload.campusName),
+        displayValue(payload.collegeName),
+        displayValue(booking.concernCategories),
+        formatDate(booking.createdAt),
+      ];
       if (selected.has("sessions")) {
-        await downloadSheet("sessions", bookings.filter((booking) => booking.isEmergency !== true));
+        const sessions = bookings.filter((booking) => booking.isEmergency !== true);
+        await downloadTable("sessions", commonSessionHeaders, sessions.map(sessionRow));
       }
       if (selected.has("crisisSos")) {
         const sos = bookings.filter((booking) => booking.isEmergency === true);
         const seriousCases = records(payload.seriousCases).filter((item) => item.isEmergency === true);
         const caseByBooking = new Map(seriousCases.map((item) => [String(item.bookingId ?? item.id), item]));
+        const sosHeaders = [...commonSessionHeaders, "Case status", "Case note", "Action taken"];
         const sosRows = sos.map((booking) => {
           const seriousCase = caseByBooking.get(String(booking.id));
-          return seriousCase ? { ...booking, escalationDetails: JSON.stringify(seriousCase) } : booking;
+          return [
+            ...sessionRow(booking),
+            displayValue(seriousCase?.status),
+            displayValue(seriousCase?.note),
+            displayValue((seriousCase?.actionTaken as Record<string, unknown> | undefined)?.text),
+          ];
         });
-        await downloadSheet("crisis-sos", sosRows);
+        await downloadTable("crisis-sos", sosHeaders, sosRows);
       }
-      if (selected.has("feedback")) await downloadSheet("session-feedback", records(payload.feedback));
+      if (selected.has("feedback")) {
+        const feedback = records(payload.feedback);
+        await downloadTable("session-feedback", ["Student name", "Student email", "Counsellor name", "Counsellor email", "Rating", "Feedback answers", "Submitted on"], feedback.map((entry) => {
+          const answers = Array.isArray(entry.answers)
+            ? (entry.answers as Record<string, unknown>[]).map((answer) => `${displayValue(answer.label)}: ${displayValue(answer.value)}`).join("; ")
+            : "";
+          return [displayValue(entry.studentName), displayValue(entry.userEmail), staffName,
+            displayValue(entry.counsellorEmail || login.email), displayValue(entry.rating), answers, formatDate(entry.submittedAt)];
+        }));
+      }
+
+      if (selected.has("ssiResults")) {
+        const ssiResults = records(payload.ssiResults);
+        await downloadTable("ssi-results", [
+          "Student name", "Student email", "Submitted on", "Severity", "Likert score", "Likert maximum",
+          "Physical score", "Interpersonal score", "Academic score", "Environmental score",
+          "Depression score", "Anxiety score", "Stress score",
+        ], ssiResults.map((result) => [
+          displayValue(result.studentName), displayValue(result.userEmail), formatDate(result.submittedAt),
+          displayValue(result.severity), displayValue(result.likertScore), displayValue(result.likertMax),
+          displayValue(result.physicalScore), displayValue(result.interpersonalScore), displayValue(result.academicScore),
+          displayValue(result.environmentalScore), displayValue(result.depressionScore), displayValue(result.anxietyScore),
+          displayValue(result.stressScore),
+        ]));
+      }
+      if (selected.has("seriousCases")) {
+        const seriousCases = records(payload.seriousCases);
+        await downloadTable("serious-cases", [
+          "Student name", "Student email", "Reported on", "Case type", "Status", "Note", "Action taken",
+        ], seriousCases.map((item) => [
+          displayValue(item.studentName), displayValue(item.studentEmail), formatDate(item.createdAt),
+          item.isEmergency === true ? "Crisis SOS" : "Flagged session", displayValue(item.status),
+          displayValue(item.note), displayValue((item.actionTaken as Record<string, unknown> | undefined)?.text),
+        ]));
+      }
 
       const downloadReports = async (items: Record<string, unknown>[], fallback: string) => {
         for (const report of items) {
@@ -288,7 +370,7 @@ export function LoginsManagementSection() {
       )}
 
       {exportingLogin && (
-        <Modal title={`Export data — ${exportingLogin.displayName || exportingLogin.email}`} onClose={() => !exporting && setExportingLogin(null)}>
+        <Modal title={`Export data — ${exportingLogin.displayName || exportingLogin.email}`} onClose={() => !exporting && setExportingLogin(null)} className="logins-management__export-modal">
           <div className="logins-management__export-options">
             <p>Select the records to download. Session and Crisis SOS data are Excel files; reports are downloaded as separate files.</p>
             <label className="logins-management__export-option">

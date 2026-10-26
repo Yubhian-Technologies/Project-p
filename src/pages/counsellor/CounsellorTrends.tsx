@@ -67,7 +67,7 @@ export function CounsellorTrends() {
   // Everything is limited to the academic year chosen in the header.
   const campusId = profile.campusId;
   const m: HomeMetrics = computeHomeMetrics({
-    bookings: bookings.filter((b) => inAcademicYear(b.createdAt, campusId, b.collegeId)),
+    bookings: bookings.filter((b) => inAcademicYear(b.scheduledAt ?? b.createdAt, campusId, b.collegeId)),
     counsellors: [profile],
     colleges: [],
     events: [],

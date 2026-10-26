@@ -81,14 +81,14 @@ export function StaffAnalyticsInline({ staff }: StaffAnalyticsInlineProps) {
     ]).then(
       ([allBookings, allFeedback, allEvents]) => {
         // Everything below is limited to the academic year chosen in the header.
-        const bookings = allBookings.filter((b) => inAcademicYear(b.createdAt, staff.campusId, b.collegeId));
+        const bookings = allBookings.filter((b) => inAcademicYear(b.scheduledAt ?? b.createdAt, staff.campusId, b.collegeId));
         const feedback = allFeedback.filter((f) => inAcademicYear(f.submittedAt, staff.campusId));
         const events = allEvents.filter((e) => inAcademicYear(e.eventDate, e.campusId, e.collegeId));
         const months = getLastSixMonths();
 
         const points: MonthPoint[] = months.map(({ year, month, label }) => {
           const inMonth = bookings.filter((b) => {
-            const d = new Date(b.createdAt);
+            const d = new Date(b.scheduledAt ?? b.createdAt);
             return d.getFullYear() === year && d.getMonth() === month;
           });
           const completed = inMonth.filter((b) => b.status === "completed" && b.outcome !== "missed").length;

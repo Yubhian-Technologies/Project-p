@@ -38,11 +38,6 @@
   flex-wrap: wrap;
 }
 
-.ay-college__delete {
-  color: var(--md-sys-color-error, #e53e3e);
-  border-color: var(--md-sys-color-error, #e53e3e);
-}
-
 .ay-college__confirm {
   display: flex;
   flex-direction: column;
@@ -67,4 +62,132 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ay-college__export-options,
+.ay-college__archive-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: min(520px, 82vw);
+}
+
+.ay-college__export-options > p {
+  margin: 0 0 4px;
+  color: var(--neu-text-muted, #64748b);
+  line-height: 1.5;
+}
+
+.ay-college__export-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.ay-college__export-option input {
+  margin-top: 3px;
+  accent-color: var(--neu-accent-primary, #2065F6);
+}
+
+.ay-college__export-option span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ay-college__export-option small,
+.ay-college__archive-viewer > small {
+  color: var(--neu-text-muted, #64748b);
+}
+
+.ay-college__archive-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ay-college__archive-filter input,
+.ay-college__archive-filter select {
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: white;
+  color: var(--neu-text-primary, #0f172a);
+  font: inherit;
+}
+
+.ay-college__archive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-height: 52vh;
+  overflow: auto;
+}
+
+.ay-college__archive-record {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 9px 11px;
+}
+
+.ay-college__archive-record summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.ay-college__archive-record summary span {
+  color: var(--neu-text-muted, #64748b);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.ay-college__archive-record dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+  margin: 12px 0 0;
+}
+
+.ay-college__archive-record dl div {
+  min-width: 0;
+}
+
+.ay-college__archive-record dt {
+  color: var(--neu-text-muted, #64748b);
+  font-size: 11px;
+}
+
+.ay-college__archive-record dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+@media (max-width: 560px) {
+  .ay-college__archive-record dl {
+    grid-template-columns: 1fr;
+  }
+
+  .ay-college__archive-record summary {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+.academic-year-data-modal {
+  max-width: 680px;
+}
+
+.academic-year-data-modal .ay-college__export-options,
+.academic-year-data-modal .ay-college__archive-viewer {
+  width: 100%;
+  min-width: 0;
 }

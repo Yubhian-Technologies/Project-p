@@ -170,8 +170,7 @@ export function AcademicYearsSection() {
               {formatDateDMY(year.startDate)} – {formatDateDMY(year.endDate)}
             </p>
             <p className="academic-years__colleges">
-              Data by college — download one college&apos;s records at a time; delete only after the year is closed
-              and exported.
+              Data is grouped by college. Export or search a college&apos;s records here; live records stay saved in the database.
             </p>
             {year.collegeIds.map((collegeId) => (
               <AcademicYearCollegeActions
@@ -180,7 +179,6 @@ export function AcademicYearsSection() {
                 collegeId={collegeId}
                 collegeName={collegeName(collegeId)}
                 campusName={campusName}
-                canDelete
               />
             ))}
           </div>

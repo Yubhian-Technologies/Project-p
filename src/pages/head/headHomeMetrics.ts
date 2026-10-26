@@ -353,7 +353,7 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
   const requestsIn = (month: Date) => {
     const counts = new Map<string, number>();
     for (const b of bookings) {
-      if (monthKey(new Date(b.createdAt)) !== monthKey(month)) continue;
+      if (monthKey(new Date(b.scheduledAt ?? b.createdAt)) !== monthKey(month)) continue;
       const collegeId = counsellorById.get(b.counsellorId)?.collegeId;
       if (collegeId) counts.set(collegeId, (counts.get(collegeId) ?? 0) + 1);
     }

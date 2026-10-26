@@ -5,7 +5,7 @@ import { listCampuses } from "../services/firebase/campuses";
 import { listAcademicYearsForCampuses } from "../services/firebase/academicYears";
 import type { AcademicYear } from "../types/academicYear";
 
-const STORAGE_KEY = "vw.selectedAcademicYearLabel";
+const STORAGE_KEY_PREFIX = "vw.selectedAcademicYearLabel";
 
 export interface AcademicYearContextValue {
   /** Academic years this viewer is allowed to see (already narrowed to their colleges). */
@@ -40,9 +40,14 @@ export interface AcademicYearContextValue {
 
 export const AcademicYearContext = createContext<AcademicYearContextValue | undefined>(undefined);
 
-function readStoredLabel(): string {
+function storageKey(uid: string): string {
+  return `${STORAGE_KEY_PREFIX}.${uid}`;
+}
+
+function readStoredLabel(uid: string | undefined): string {
+  if (!uid) return "";
   try {
-    return localStorage.getItem(STORAGE_KEY) ?? "";
+    return localStorage.getItem(storageKey(uid)) ?? "";
   } catch {
     return "";
   }
@@ -50,13 +55,16 @@ function readStoredLabel(): string {
 
 export function AcademicYearProvider({ children }: { children: ReactNode }) {
   const { profile } = useAuth();
+  const uid = profile?.uid;
   const [allYears, setAllYears] = useState<AcademicYear[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedLabel, setSelectedLabelState] = useState(readStoredLabel);
+  // A browser can be shared by several staff logins. Keep each login's year
+  // selection separate so changing the Management view never changes the
+  // year selected for a counsellor, Head, or another Admin on that device.
+  const [selection, setSelection] = useState<{ uid: string | undefined; label: string }>({ uid: undefined, label: "" });
 
   const role = profile?.role;
   const access = profile?.adminAccess;
-  const uid = profile?.uid;
   const campusId = profile?.campusId;
 
   // Which campuses' years this viewer may read, and which colleges they are
@@ -115,20 +123,21 @@ export function AcademicYearProvider({ children }: { children: ReactNode }) {
 
   // Default: the year that contains today, else the newest one.
   const effectiveLabel = useMemo(() => {
+    const selectedLabel = selection.uid === uid ? selection.label : readStoredLabel(uid);
     if (labels.includes(selectedLabel)) return selectedLabel;
     const now = Date.now();
     const current = allYears.find((y) => y.startDate <= now && now <= y.endDate);
     return current?.label ?? labels[0] ?? "";
-  }, [labels, selectedLabel, allYears]);
+  }, [labels, selection, uid, allYears]);
 
   const setSelectedLabel = useCallback((label: string) => {
-    setSelectedLabelState(label);
+    setSelection({ uid, label });
     try {
-      localStorage.setItem(STORAGE_KEY, label);
+      if (uid) localStorage.setItem(storageKey(uid), label);
     } catch {
       // Non-critical convenience only.
     }
-  }, []);
+  }, [uid]);
 
   const yearForCampus = useCallback(
     (forCampusId: string | undefined) =>

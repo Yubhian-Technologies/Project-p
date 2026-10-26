@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import {
   listMonthlyReportRecipients,
   listMonthlyStaffReportsForUser,
@@ -16,6 +17,7 @@ import "./CounsellorMonthlyReportsSection.css";
     selection, submission history, and optional existing-file upload. */
 export function CounsellorMonthlyReportsSection() {
   const { profile } = useAuth();
+  const { includesMonth } = useAcademicYear();
   const campusId = profile?.campusId ?? "";
   const collegeId = profile?.collegeId ?? "";
 
@@ -144,7 +146,7 @@ export function CounsellorMonthlyReportsSection() {
 
       <ReportList
         title="Your Submitted Reports"
-        reports={reports}
+        reports={reports.filter((report) => includesMonth(report.year, report.month, report.campusId || campusId, report.collegeId))}
         loading={loading}
         emptyMessage="You haven't submitted a monthly report yet."
         showUploader={false}

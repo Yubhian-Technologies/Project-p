@@ -74,6 +74,23 @@
         { "fieldPath": "collegeId", "order": "ASCENDING" },
         { "fieldPath": "uploadedByUid", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "records",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "recordType", "order": "ASCENDING" },
+        { "fieldPath": "sourceId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "records",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "recordType", "order": "ASCENDING" },
+        { "fieldPath": "searchTerms", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "sourceId", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [

@@ -45,6 +45,17 @@ export async function createAdminLogin(input: CreateAdminLoginInput): Promise<vo
   await fn(input);
 }
 
+export interface CreateSuperAdminLoginInput {
+  email: string;
+  password: string;
+  displayName: string;
+}
+
+export async function createSuperAdminLogin(input: CreateSuperAdminLoginInput): Promise<void> {
+  const fn = httpsCallable(getFunctions(app), "createSuperAdminLogin");
+  await fn(input);
+}
+
 export async function exportStaffData(uid: string): Promise<any> {
   const fn = httpsCallable(getFunctions(app), "exportStaffData");
   const res: any = await fn({ uid });

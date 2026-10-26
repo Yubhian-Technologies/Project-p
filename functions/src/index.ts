@@ -244,6 +244,46 @@ export const createAdminLogin = onCall<CreateAdminLoginRequest>(async (request) 
   return { success: true, uid: userRecord.uid };
 });
 
+interface CreateSuperAdminLoginRequest {
+  email: string;
+  password: string;
+  displayName: string;
+}
+
+// Super Admins share the same global data and permissions. Only an existing
+// Super Admin can provision another global account.
+export const createSuperAdminLogin = onCall<CreateSuperAdminLoginRequest>(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) throw new HttpsError("unauthenticated", "You must be signed in.");
+
+  const callerDoc = await db.collection("users").doc(callerUid).get();
+  if (callerDoc.data()?.role !== "super-admin") {
+    throw new HttpsError("permission-denied", "Only a Super Admin can create another Super Admin login.");
+  }
+
+  const email = typeof request.data.email === "string" ? request.data.email.trim().toLowerCase() : "";
+  const password = typeof request.data.password === "string" ? request.data.password : "";
+  const displayName = typeof request.data.displayName === "string" ? request.data.displayName.trim() : "";
+  if (!email || !password || !displayName) {
+    throw new HttpsError("invalid-argument", "Email, password, and display name are required.");
+  }
+
+  const userRecord = await createAuthUser({ email, password, displayName });
+  try {
+    await db.collection("users").doc(userRecord.uid).set({
+      uid: userRecord.uid,
+      email,
+      displayName,
+      role: "super-admin",
+      createdAt: Date.now(),
+    });
+  } catch (err) {
+    await auth.deleteUser(userRecord.uid);
+    throw err;
+  }
+  return { success: true, uid: userRecord.uid };
+});
+
 interface UpdateAdminLoginRequest {
   uid: string;
   displayName: string;
@@ -462,18 +502,63 @@ export const exportStaffData = onCall<{ uid: string }>(async (request) => {
   if (targetData.active !== false) {
     throw new HttpsError("failed-precondition", "Only inactive staff can be exported.");
   }
+  if (!canManageCampusLogin(callerData?.role, callerData?.adminAccess, targetData.campusId, targetData.collegeId)) {
+    throw new HttpsError("permission-denied", "You don't have access to export this login's data.");
+  }
   const bookingsSnap = await db.collection("bookings").where("counsellorId", "==", uid).get();
   const feedbackSnap = await db.collection("sessionFeedback").where("counsellorId", "==", uid).get();
+  const ssiSnap = await db.collection("ssi_results").where("counsellorId", "==", uid).get();
   const cmrSnap = await db.collection("counsellorMonthlyReports").where("uploadedByUid", "==", uid).get();
   const mrSnap = await db.collection("monthlyReports").where("uploadedByUid", "==", uid).get();
   const seriousSnap = await db.collection("seriousCases").where("authorUid", "==", uid).get();
+  const bookings: Record<string, unknown>[] = bookingsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const feedback: Record<string, unknown>[] = feedbackSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const sosCaseSnaps = await Promise.all(bookings
+    .filter((booking) => booking.isEmergency === true)
+    .map((booking) => db.collection("seriousCases").doc(String(booking.id)).get()));
+  const seriousCasesById = new Map<string, Record<string, unknown>>([
+    ...seriousSnap.docs.map((d) => [d.id, { id: d.id, ...d.data() }] as const),
+    ...sosCaseSnaps.filter((d) => d.exists).map((d) => [d.id, { id: d.id, ...d.data() }] as const),
+  ]);
+  const relatedUserIds = [...new Set([
+    ...bookings.map((booking) => booking.userId).filter((id): id is string => typeof id === "string"),
+    ...feedback.map((entry) => entry.userId).filter((id): id is string => typeof id === "string"),
+    ...ssiSnap.docs.map((entry) => entry.data().userId).filter((id): id is string => typeof id === "string"),
+    ...[...seriousCasesById.values()].map((entry) => entry.studentId).filter((id): id is string => typeof id === "string"),
+  ])];
+  const relatedUsers = await Promise.all(relatedUserIds.map(async (relatedUid) => {
+    const snapshot = await db.collection("users").doc(relatedUid).get();
+    return [relatedUid, snapshot.data()?.displayName ?? ""] as const;
+  }));
+  const nameByUid = new Map(relatedUsers);
+  const campusSnapshot = targetData.campusId
+    ? await db.collection("campuses").doc(String(targetData.campusId)).get()
+    : null;
+  const collegeSnapshot = targetData.collegeId
+    ? await db.collection("colleges").doc(String(targetData.collegeId)).get()
+    : null;
   return {
     user: targetData,
-    bookings: bookingsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-    feedback: feedbackSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    campusName: campusSnapshot?.data()?.name ?? "",
+    collegeName: collegeSnapshot?.data()?.name ?? "",
+    bookings: bookings.map((booking) => ({
+      ...booking,
+      studentName: nameByUid.get(String(booking.userId)) || "",
+    })),
+    feedback: feedback.map((entry) => ({
+      ...entry,
+      studentName: nameByUid.get(String(entry.userId)) || "",
+    })),
+    ssiResults: ssiSnap.docs.map((d) => {
+      const result = d.data();
+      return { ...result, id: d.id, studentName: nameByUid.get(String(result.userId)) || "" };
+    }),
     counsellorMonthlyReports: cmrSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
     monthlyReports: mrSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-    seriousCases: seriousSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    seriousCases: [...seriousCasesById.values()].map((entry) => ({
+      ...entry,
+      studentName: nameByUid.get(String(entry.studentId ?? "")) || "",
+    })),
   };
 });
 
@@ -2155,6 +2240,19 @@ export const saveAcademicYear = onCall<SaveAcademicYearRequest>(async (request) 
     if (!snap.exists || snap.data()?.campusId !== d.campusId) {
       throw new HttpsError("invalid-argument", "That academic year was not found on this campus.");
     }
+    const previous = snap.data() ?? {};
+    const hasExports = Object.keys((previous.exports as Record<string, unknown> | undefined) ?? {}).length > 0;
+    const hasArchives = Object.keys((previous.archive as Record<string, unknown> | undefined) ?? {}).length > 0;
+    const previousCollegeIds = [...((previous.collegeIds as string[] | undefined) ?? [])].sort();
+    const nextCollegeIds = [...collegeIds].sort();
+    const definitionChanged = previous.label !== d.label.trim() || previous.startDate !== startDate ||
+      previous.endDate !== endDate || previousCollegeIds.join("|") !== nextCollegeIds.join("|");
+    if ((hasExports || hasArchives) && definitionChanged) {
+      throw new HttpsError("failed-precondition", "This year already has an archive; its label, dates, and colleges are locked.");
+    }
+    if (hasArchives && previous.status === "closed" && payload.status === "active") {
+      throw new HttpsError("failed-precondition", "An archived year cannot be reopened.");
+    }
     await ref.update(payload);
     return { id: d.id };
   }
@@ -2261,20 +2359,44 @@ async function loadYearCollegeRecords(year: Record<string, unknown>, collegeId: 
 
   // Single-field queries filtered in memory — a (collegeId + date range)
   // query would need a composite index per collection.
-  const [bookingSnap, ssiSnap, eventSnap] = await Promise.all([
+  const [bookingSnap, ssiSnap, eventSnap, staffReportsSnap, consolidatedReportsSnap] = await Promise.all([
     db.collection("bookings").where("collegeId", "==", collegeId).get(),
     db.collection("ssi_college_results").where("collegeId", "==", collegeId).get(),
     db.collection("events").where("collegeId", "==", collegeId).get(),
+    db.collection("counsellorMonthlyReports").where("collegeId", "==", collegeId).get(),
+    db.collection("monthlyReports").where("collegeId", "==", collegeId).get(),
   ]);
+  const reportInYear = (data: FirebaseFirestore.DocumentData) => {
+    const reportYear = Number(data.year);
+    const month = Number(data.month);
+    if (!Number.isInteger(reportYear) || !Number.isInteger(month) || month < 1 || month > 12) return false;
+    if (data.campusId && data.campusId !== year.campusId) return false;
+    const firstDay = new Date(reportYear, month - 1, 1).getTime();
+    const lastDay = new Date(reportYear, month, 0, 23, 59, 59, 999).getTime();
+    return firstDay <= end && lastDay >= start;
+  };
 
   const bookings = bookingSnap.docs.filter((d) => {
-    const t = d.data().createdAt as number;
+    const data = d.data();
+    // Attribute a session to the year it happened, not the year it was booked.
+    // Requests without a scheduled time fall back to their creation date.
+    const t = (typeof data.scheduledAt === "number" ? data.scheduledAt : data.createdAt) as number;
     return t >= start && t <= end;
   });
-  const ssi = ssiSnap.docs.filter((d) => {
+  const collegeSsi = ssiSnap.docs.filter((d) => {
     const t = d.data().submittedAt as number;
     return t >= start && t <= end;
   });
+  const sessionSsi: FirebaseFirestore.DocumentSnapshot[] = [];
+  for (let i = 0; i < bookings.length; i += 30) {
+    const chunk = bookings.slice(i, i + 30);
+    const snapshots = await db.getAll(...chunk.map((booking) => db.collection("ssi_results").doc(booking.id)));
+    sessionSsi.push(...snapshots.filter((snapshot) => {
+      const timestamp = snapshot.data()?.submittedAt;
+      return snapshot.exists && typeof timestamp === "number" && timestamp >= start && timestamp <= end;
+    }));
+  }
+  const ssi = [...collegeSsi, ...sessionSsi];
   const events = eventSnap.docs.filter((d) => {
     const t = d.data().eventDate as number;
     return t >= start && t <= end;
@@ -2284,8 +2406,111 @@ async function loadYearCollegeRecords(year: Record<string, unknown>, collegeId: 
   const feedbackRefs = bookings.map((b) => db.collection("sessionFeedback").doc(b.id));
   const feedbackDocs = feedbackRefs.length > 0 ? await db.getAll(...feedbackRefs) : [];
   const feedback = feedbackDocs.filter((d) => d.exists);
+  const staffReports = staffReportsSnap.docs.filter((d) => reportInYear(d.data()));
+  const consolidatedReports = consolidatedReportsSnap.docs.filter((d) => reportInYear(d.data()));
 
-  return { bookings, ssi, events, feedback };
+  return { bookings, ssi, events, feedback, staffReports, consolidatedReports };
+}
+
+const ACADEMIC_YEAR_EXPORT_TYPES = ["sessions", "crisis-sos", "serious-cases", "feedback", "ssi", "events", "monthly-reports", "consolidated-reports"] as const;
+type AcademicYearExportType = (typeof ACADEMIC_YEAR_EXPORT_TYPES)[number];
+
+async function archiveYearCollegeRecords(
+  yearId: string,
+  collegeId: string,
+  bookings: FirebaseFirestore.QueryDocumentSnapshot[],
+  ssi: FirebaseFirestore.DocumentSnapshot[],
+  events: FirebaseFirestore.QueryDocumentSnapshot[],
+  feedback: FirebaseFirestore.DocumentSnapshot[],
+  staffReports: FirebaseFirestore.QueryDocumentSnapshot[],
+  consolidatedReports: FirebaseFirestore.QueryDocumentSnapshot[],
+) {
+  const bookingIds = bookings.map((booking) => booking.id);
+  const [caseDocs, privateSnapshots, chatDocs, resourceDocs] = await Promise.all([
+    bookingIds.length
+      ? db.getAll(...bookingIds.map((id) => db.collection("seriousCases").doc(id)))
+      : Promise.resolve([]),
+    (async () => {
+      const snapshots: FirebaseFirestore.QuerySnapshot[] = [];
+      for (let i = 0; i < bookings.length; i += 30) {
+        snapshots.push(...await Promise.all(bookings.slice(i, i + 30).map((booking) => booking.ref.collection("private").get())));
+      }
+      return snapshots;
+    })(),
+    (async () => {
+      const docs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+      for (let i = 0; i < bookingIds.length; i += 30) {
+        const snap = await db.collection("chat_messages").where("chatRoomId", "in", bookingIds.slice(i, i + 30)).get();
+        docs.push(...snap.docs);
+      }
+      return docs;
+    })(),
+    (async () => {
+      const docs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+      for (let i = 0; i < bookingIds.length; i += 30) {
+        const snap = await db.collection("session_resources").where("bookingId", "in", bookingIds.slice(i, i + 30)).get();
+        docs.push(...snap.docs);
+      }
+      return docs;
+    })(),
+  ]);
+
+  const records: { type: string; id: string; data: Record<string, unknown> }[] = [
+    ...bookings.map((d) => ({ type: d.data().isEmergency === true ? "crisis-sos" : "sessions", id: d.id, data: d.data() })),
+    ...feedback.filter((d) => d.exists).map((d) => ({ type: "feedback", id: d.id, data: d.data() ?? {} })),
+    ...ssi.filter((d) => d.exists).map((d) => ({ type: "ssi", id: d.id, data: d.data() ?? {} })),
+    ...events.map((d) => ({ type: "events", id: d.id, data: d.data() })),
+    ...staffReports.map((d) => ({ type: "monthly-reports", id: d.id, data: d.data() })),
+    ...consolidatedReports.map((d) => ({ type: "consolidated-reports", id: d.id, data: d.data() })),
+    ...caseDocs.filter((d) => d.exists).map((d) => ({ type: "serious-cases", id: d.id, data: d.data() ?? {} })),
+    ...chatDocs.map((d) => ({ type: "chat-messages", id: d.id, data: d.data() })),
+    ...resourceDocs.map((d) => ({ type: "session-resources", id: d.id, data: d.data() })),
+    ...privateSnapshots.flatMap((snapshot) => snapshot.docs.map((d) => ({
+      type: "session-private", id: `${d.ref.parent.parent?.id ?? "booking"}_${d.id}`, data: d.data(),
+    }))),
+  ];
+  const personUids = [...new Set(records.flatMap((record) => [record.data.userId, record.data.counsellorId, record.data.studentId])
+    .filter((uid): uid is string => typeof uid === "string"))];
+  const personDocs = await Promise.all(personUids.map(async (uid) => [uid, (await db.collection("users").doc(uid).get()).data() ?? {}] as const));
+  const personByUid = new Map(personDocs);
+  const recordsRef = db.collection("academicYears").doc(yearId).collection("archiveRecords").doc(collegeId).collection("records");
+  let batch = db.batch();
+  let writes = 0;
+  for (const record of records) {
+    const safeId = encodeURIComponent(record.id).slice(0, 800);
+    const ref = recordsRef.doc(`${record.type}__${safeId}`);
+    const student = personByUid.get(String(record.data.userId ?? record.data.studentId)) ?? {};
+    const counsellor = personByUid.get(String(record.data.counsellorId)) ?? {};
+    const data: Record<string, unknown> = {
+      ...record.data,
+      ...(student.displayName ? { studentName: student.displayName } : {}),
+      ...(counsellor.displayName ? { counsellorName: counsellor.displayName } : {}),
+    };
+    const searchText = [data.studentName, data.counsellorName, data.userEmail, data.studentEmail, data.title]
+      .filter((value): value is string => typeof value === "string")
+      .join(" ").toLowerCase();
+    const searchableFields = ["studentName", "counsellorName", "displayName", "userEmail", "studentEmail", "counsellorEmail", "email", "title", "status", "outcome", "note"];
+    const searchTerms = [...new Set(searchableFields.flatMap((field) => {
+      const value = data[field];
+      if (typeof value !== "string") return [];
+      return [value.trim().toLowerCase(), ...value.toLowerCase().split(/[^a-z0-9@._-]+/).filter(Boolean).slice(0, 100)];
+    }))].slice(0, 300);
+    batch.set(ref, {
+      recordType: record.type,
+      sourceId: record.id,
+      data,
+      searchText,
+      searchTerms,
+      archivedAt: Date.now(),
+    });
+    if (++writes === 400) {
+      await batch.commit();
+      batch = db.batch();
+      writes = 0;
+    }
+  }
+  if (writes > 0) await batch.commit();
+  return records.length;
 }
 
 async function loadYearForCaller(request: { auth?: { uid: string }; data: { yearId?: string; collegeId?: string } }) {
@@ -2312,193 +2537,244 @@ async function loadYearForCaller(request: { auth?: { uid: string }; data: { year
 // stamps `exports.<collegeId>` on the year — delete refuses to run until
 // that stamp exists. Student-identifying intake details (bookings/*/private)
 // are intentionally not included.
-export const exportAcademicYearCollege = onCall<{ yearId: string; collegeId: string }>(async (request) => {
-  const { callerUid, collegeId, year, yearRef } = await loadYearForCaller(request);
-  const { bookings, ssi, events, feedback } = await loadYearCollegeRecords(year, collegeId);
+export const exportAcademicYearCollege = onCall<{ yearId: string; collegeId: string; selectedTypes?: string[] }>(async (request) => {
+  const { callerUid, yearId, collegeId, year, yearRef } = await loadYearForCaller(request);
+  const { bookings, ssi, events, feedback, staffReports, consolidatedReports } = await loadYearCollegeRecords(year, collegeId);
+  const selected = request.data.selectedTypes ?? [...ACADEMIC_YEAR_EXPORT_TYPES];
+  if (!Array.isArray(selected) || selected.length === 0 || selected.some((type) => !ACADEMIC_YEAR_EXPORT_TYPES.includes(type as AcademicYearExportType))) {
+    throw new HttpsError("invalid-argument", "Select at least one valid data type to download.");
+  }
+  const archivedRecordCount = await archiveYearCollegeRecords(yearId, collegeId, bookings, ssi, events, feedback, staffReports, consolidatedReports);
+  const personIds = [...new Set([
+    ...bookings.flatMap((b) => [b.data().userId, b.data().counsellorId]),
+    ...ssi.map((s) => s.data()?.userId),
+    ...feedback.flatMap((f) => [f.data()?.userId, f.data()?.counsellorId]),
+  ].filter((id): id is string => typeof id === "string"))];
+  const personProfiles = await Promise.all(personIds.map(async (id) => [id, (await db.collection("users").doc(id).get()).data() ?? {}] as const));
+  const profilesById = new Map(personProfiles);
+  const [campusData, collegeData] = await Promise.all([
+    db.collection("campuses").doc(String(year.campusId)).get(),
+    db.collection("colleges").doc(collegeId).get(),
+  ]);
+  const readableCampus = String(campusData.data()?.name ?? "");
+  const readableCollege = String(collegeData.data()?.name ?? "");
 
-  const sessionRows = bookings.map((b) => {
+  const allSessionRows = bookings.map((b) => {
     const d = b.data();
+    const student = profilesById.get(String(d.userId)) ?? {};
+    const counsellor = profilesById.get(String(d.counsellorId)) ?? {};
+    const sessionTimestamp = typeof d.scheduledAt === "number" ? d.scheduledAt : d.createdAt;
     return {
-      bookingId: b.id,
-      requestedAt: isoDate(d.createdAt),
-      scheduledAt: isoDate(d.scheduledAt),
-      status: d.status,
-      outcome: d.outcome,
+      "Student name": student.displayName ?? "",
+      "Student email": d.userEmail ?? student.email ?? "",
+      "Counsellor name": counsellor.displayName ?? "",
+      "Counsellor email": d.counsellorEmail ?? counsellor.email ?? "",
+      "Session type": d.isEmergency === true ? "Crisis SOS" : d.followUpOfBookingId ? "Follow-up" : "Initial session",
+      "Session date": isoDate(sessionTimestamp),
+      "Session time": typeof d.scheduledAt === "number" ? new Date(d.scheduledAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "",
+      "Duration (minutes)": d.durationMinutes ?? "",
+      Status: d.status,
+      Outcome: d.outcome,
       isEmergency: d.isEmergency === true ? "yes" : "no",
-      sessionMode: d.sessionMode,
-      studentEmail: d.userEmail,
-      counsellorEmail: d.counsellorEmail,
-      concernCategories: Array.isArray(d.concernCategories) ? d.concernCategories.join("; ") : "",
-      studentRating: d.userRatingOfCounsellor,
+      Mode: d.sessionMode,
+      "Concern areas": Array.isArray(d.concernCategories) ? d.concernCategories.join("; ") : "",
+      "Student rating": d.userRatingOfCounsellor,
+      Campus: readableCampus,
+      College: readableCollege,
     };
   });
+  const sessionRows = allSessionRows.filter((row) => row.isEmergency !== "yes");
+  const crisisSosRows = allSessionRows.filter((row) => row.isEmergency === "yes");
   const feedbackRows = feedback.map((f) => {
     const d = f.data() ?? {};
+    const student = profilesById.get(String(d.userId)) ?? {};
+    const counsellor = profilesById.get(String(d.counsellorId)) ?? {};
     return {
-      bookingId: f.id,
-      submittedAt: isoDate(d.submittedAt),
-      counsellorEmail: d.counsellorEmail,
-      studentEmail: d.userEmail,
-      rating: d.rating,
-      answers: d.answers,
+      "Student name": student.displayName ?? "",
+      "Student email": d.userEmail ?? student.email ?? "",
+      "Counsellor name": counsellor.displayName ?? "",
+      "Counsellor email": d.counsellorEmail ?? counsellor.email ?? "",
+      "Submitted on": isoDate(d.submittedAt),
+      Rating: d.rating,
+      Answers: d.answers,
     };
   });
-  const ssiRows = ssi.map((s) => {
-    const d = s.data();
+  const ssiRows = ssi.filter((s) => s.exists).map((s) => {
+    const d = s.data() ?? {};
+    const student = profilesById.get(String(d.userId)) ?? {};
     return {
-      resultId: s.id,
-      submittedAt: isoDate(d.submittedAt),
-      studentEmail: d.userEmail,
-      severity: d.severity,
-      likertScore: d.likertScore,
-      likertMax: d.likertMax,
-      depressionScore: d.depressionScore,
-      anxietyScore: d.anxietyScore,
-      stressScore: d.stressScore,
+      "Student name": student.displayName ?? "",
+      "Student email": d.userEmail ?? student.email ?? "",
+      "Submitted on": isoDate(d.submittedAt),
+      Severity: d.severity,
+      "Likert score": d.likertScore,
+      "Likert max": d.likertMax,
+      "Depression score": d.depressionScore,
+      "Anxiety score": d.anxietyScore,
+      "Stress score": d.stressScore,
     };
   });
   const eventRows = events.map((e) => {
     const d = e.data();
     return {
-      eventId: e.id,
-      eventDate: isoDate(d.eventDate),
-      title: d.title,
-      category: d.category,
-      description: d.description,
+      Date: isoDate(d.eventDate),
+      Title: d.title,
+      Category: d.category,
+      Description: d.description,
     };
   });
+  const reportFiles = [
+    ...staffReports.map((report) => ({ type: "monthly-reports", data: report.data() })),
+    ...consolidatedReports.map((report) => ({ type: "consolidated-reports", data: report.data() })),
+  ].filter(({ data }) => typeof data.downloadURL === "string" && data.downloadURL.length > 0);
 
-  const files = [
+  const bookingIds = bookings.map((booking) => booking.id);
+  const caseDocs = bookingIds.length
+    ? await db.getAll(...bookingIds.map((id) => db.collection("seriousCases").doc(id)))
+    : [];
+  const seriousRows = caseDocs.filter((d) => d.exists).map((d) => {
+    const data = d.data() ?? {};
+    const student = profilesById.get(String(data.studentId)) ?? {};
+    return {
+      "Student name": student.displayName ?? "",
+      "Student email": data.studentEmail ?? "",
+      "Reported on": isoDate(data.createdAt),
+      "Case type": data.isEmergency === true ? "Crisis SOS" : "Flagged session",
+      Status: data.status ?? "",
+      Note: data.note ?? "",
+      "Action taken": (data.actionTaken as Record<string, unknown> | undefined)?.text ?? "",
+    };
+  });
+  const allFiles = [
     {
       name: "sessions.csv",
       content: toCsv(
         [
-          "bookingId", "requestedAt", "scheduledAt", "status", "outcome", "isEmergency",
-          "sessionMode", "studentEmail", "counsellorEmail", "concernCategories", "studentRating",
+          "Student name", "Student email", "Counsellor name", "Counsellor email", "Session type", "Session date", "Session time",
+          "Duration (minutes)", "Status", "Outcome", "Mode", "Concern areas", "Student rating", "Campus", "College",
         ],
         sessionRows,
       ),
     },
     {
+      name: "crisis-sos.csv",
+      content: toCsv(
+        ["Student name", "Student email", "Counsellor name", "Counsellor email", "Session type", "Session date", "Session time", "Duration (minutes)", "Status", "Outcome", "Mode", "Concern areas", "Campus", "College"],
+        crisisSosRows,
+      ),
+    },
+    {
+      name: "serious-cases.csv",
+      content: toCsv(["Student name", "Student email", "Reported on", "Case type", "Status", "Note", "Action taken"], seriousRows),
+    },
+    {
       name: "feedback.csv",
-      content: toCsv(["bookingId", "submittedAt", "counsellorEmail", "studentEmail", "rating", "answers"], feedbackRows),
+      content: toCsv(["Student name", "Student email", "Counsellor name", "Counsellor email", "Submitted on", "Rating", "Answers"], feedbackRows),
     },
     {
       name: "ssi-results.csv",
       content: toCsv(
         [
-          "resultId", "submittedAt", "studentEmail", "severity", "likertScore", "likertMax",
-          "depressionScore", "anxietyScore", "stressScore",
+          "Student name", "Student email", "Submitted on", "Severity", "Likert score", "Likert max",
+          "Depression score", "Anxiety score", "Stress score",
         ],
         ssiRows,
       ),
     },
     {
       name: "events.csv",
-      content: toCsv(["eventId", "eventDate", "title", "category", "description"], eventRows),
+      content: toCsv(["Date", "Title", "Category", "Description"], eventRows),
     },
+    ...reportFiles.map(({ type, data }) => {
+      const originalName = typeof data.fileName === "string" ? data.fileName : "report.pdf";
+      const safeName = originalName.replace(/[\\/:*?\"<>|]+/g, "-");
+      const month = String(data.month ?? "").padStart(2, "0");
+      return {
+        name: `${type}-${data.year ?? "year"}-${month}-${safeName}`,
+        downloadURL: String(data.downloadURL),
+      };
+    }),
   ];
+
+  const typeByFile: Record<string, AcademicYearExportType> = {
+    "sessions.csv": "sessions",
+    "crisis-sos.csv": "crisis-sos",
+    "serious-cases.csv": "serious-cases",
+    "feedback.csv": "feedback",
+    "ssi-results.csv": "ssi",
+    "events.csv": "events",
+  };
+  const files = allFiles.filter((file) => {
+    const reportType = file.name.startsWith("monthly-reports-") ? "monthly-reports"
+      : file.name.startsWith("consolidated-reports-") ? "consolidated-reports" : undefined;
+    return selected.includes(typeByFile[file.name] ?? reportType as AcademicYearExportType);
+  });
 
   const counts = {
     sessions: sessionRows.length,
+    crisisSos: crisisSosRows.length,
+    seriousCases: seriousRows.length,
     feedback: feedbackRows.length,
     ssiResults: ssiRows.length,
     events: eventRows.length,
+    monthlyReports: staffReports.length,
+    consolidatedReports: consolidatedReports.length,
+  };
+  const archiveSummary = {
+    sessions: bookings.length,
+    completedSessions: bookings.filter((b) => b.data().status === "completed" && b.data().outcome !== "missed").length,
+    missedSessions: bookings.filter((b) => b.data().outcome === "missed").length,
+    feedbackCount: feedback.length,
+    averageRating: feedback.length
+      ? feedback.reduce((sum, f) => sum + (Number(f.data()?.rating) || 0), 0) / feedback.length
+      : null,
+    ssiResults: ssi.length,
+    ssiSevere: ssi.filter((s) => s.data()?.severity === "severe").length,
+    ssiMedium: ssi.filter((s) => s.data()?.severity === "medium").length,
+    ssiNormal: ssi.filter((s) => s.data()?.severity === "normal").length,
+    events: events.length,
   };
   await yearRef.update({
-    [`exports.${collegeId}`]: { at: Date.now(), byUid: callerUid, counts },
+    [`exports.${collegeId}`]: { at: Date.now(), byUid: callerUid, counts, archivedRecordCount, selectedTypes: selected, archiveSummary },
     updatedAt: Date.now(),
   });
 
   return { files, counts };
 });
 
-// Permanently deletes ONE college's records for ONE closed, already-exported
-// academic year: its bookings (with intake/private subcollections), their
-// feedback and chat/resources, SSI results, and events in the date range.
-// Bookings that never got a collegeId (legacy data) can't be attributed to a
-// college and are left untouched.
+/** Searchable year archive. Authorization is checked against the current
+ * Head assignment, so a replacement Head for the same campus can read it. */
+export const listAcademicYearArchiveRecords = onCall<{
+  yearId: string;
+  collegeId: string;
+  recordType: string;
+  searchTerm?: string;
+  cursor?: string;
+}>(async (request) => {
+  const { yearRef } = await loadYearForCaller(request);
+  const allowedTypes = ["sessions", "crisis-sos", "feedback", "ssi", "events", "serious-cases", "chat-messages", "session-resources", "session-private", "monthly-reports", "consolidated-reports"];
+  const recordType = request.data.recordType;
+  if (!allowedTypes.includes(recordType)) throw new HttpsError("invalid-argument", "Choose a valid archive category.");
+  let query = yearRef.collection("archiveRecords").doc(request.data.collegeId).collection("records")
+    .where("recordType", "==", recordType);
+  const searchTerm = request.data.searchTerm?.trim().toLowerCase();
+  if (searchTerm) query = query.where("searchTerms", "array-contains", searchTerm);
+  query = query.orderBy("sourceId").limit(101);
+  if (request.data.cursor) query = query.startAfter(request.data.cursor);
+  const snapshot = await query.get();
+  const hasMore = snapshot.docs.length > 100;
+  const page = snapshot.docs.slice(0, 100);
+  return {
+    records: page.map((doc) => ({ id: doc.get("sourceId"), data: doc.get("data") ?? {}, searchText: doc.get("searchText") ?? "" })),
+    hasMore,
+    nextCursor: hasMore ? page[page.length - 1]?.get("sourceId") ?? "" : "",
+  };
+});
+
+// Legacy endpoint retained so old clients fail safely instead of deleting
+// historical records. Academic-year data is retained and filtered by date.
 export const deleteAcademicYearCollegeData = onCall<{ yearId: string; collegeId: string; confirm: string }>(
-  async (request) => {
-    const { callerUid, collegeId, year, yearRef } = await loadYearForCaller(request);
-
-    if (year.status !== "closed") {
-      throw new HttpsError("failed-precondition", "Close the academic year before deleting its data.");
-    }
-    const exportInfo = (year.exports as Record<string, { at: number }> | undefined)?.[collegeId];
-    if (!exportInfo) {
-      throw new HttpsError("failed-precondition", "Download this college's export first — it is required before deleting.");
-    }
-    if ((year.archive as Record<string, unknown> | undefined)?.[collegeId]) {
-      throw new HttpsError("failed-precondition", "This college's data for this year was already deleted.");
-    }
-    const expected = `DELETE ${year.label as string}`;
-    if (request.data.confirm !== expected) {
-      throw new HttpsError("invalid-argument", `Type "${expected}" to confirm.`);
-    }
-
-    const { bookings, ssi, events, feedback } = await loadYearCollegeRecords(year, collegeId);
-    const bookingIds = bookings.map((b) => b.id);
-
-    // Chat messages and session resources hang off bookings by bookingId.
-    async function refsByBookingId(collectionName: string, field: string) {
-      const refs: FirebaseFirestore.DocumentReference[] = [];
-      for (let i = 0; i < bookingIds.length; i += 30) {
-        const chunk = bookingIds.slice(i, i + 30);
-        const snap = await db.collection(collectionName).where(field, "in", chunk).get();
-        refs.push(...snap.docs.map((d) => d.ref));
-      }
-      return refs;
-    }
-    const [chatRefs, resourceRefs] =
-      bookingIds.length > 0
-        ? await Promise.all([
-            refsByBookingId("chat_messages", "chatRoomId"),
-            refsByBookingId("session_resources", "bookingId"),
-          ])
-        : [[], []];
-
-    // Summary snapshot kept on the year so multi-year trends survive.
-    const summary = {
-      deletedAt: Date.now(),
-      byUid: callerUid,
-      sessions: bookings.length,
-      completedSessions: bookings.filter((b) => b.data().status === "completed" && b.data().outcome !== "missed").length,
-      missedSessions: bookings.filter((b) => b.data().outcome === "missed").length,
-      feedbackCount: feedback.length,
-      averageRating:
-        feedback.length > 0
-          ? feedback.reduce((sum, f) => sum + (Number(f.data()?.rating) || 0), 0) / feedback.length
-          : null,
-      ssiResults: ssi.length,
-      ssiSevere: ssi.filter((s) => s.data().severity === "severe").length,
-      ssiMedium: ssi.filter((s) => s.data().severity === "medium").length,
-      ssiNormal: ssi.filter((s) => s.data().severity === "normal").length,
-      events: events.length,
-    };
-    await yearRef.update({ [`archive.${collegeId}`]: summary, updatedAt: Date.now() });
-
-    const flat: FirebaseFirestore.DocumentReference[] = [
-      ...feedback.map((f) => f.ref),
-      ...ssi.map((s) => s.ref),
-      ...events.map((e) => e.ref),
-      ...chatRefs,
-      ...resourceRefs,
-    ];
-    let batch = db.batch();
-    let ops = 0;
-    for (const ref of flat) {
-      batch.delete(ref);
-      if (++ops === 400) {
-        await batch.commit();
-        batch = db.batch();
-        ops = 0;
-      }
-    }
-    if (ops > 0) await batch.commit();
-    // Bookings last, recursively, so their private/ subcollections go too.
-    for (const b of bookings) await db.recursiveDelete(b.ref);
-
-    return { summary };
+  async () => {
+    throw new HttpsError("failed-precondition", "Permanent academic-year deletion is disabled. Records are retained and filtered by academic year.");
   },
 );

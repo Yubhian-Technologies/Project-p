@@ -62,25 +62,41 @@ export async function backfillBookingCollegeIds(): Promise<number> {
 
 export interface AcademicYearExportFile {
   name: string;
-  content: string;
+  content?: string;
+  downloadURL?: string;
+}
+
+export type AcademicYearExportType = "sessions" | "crisis-sos" | "serious-cases" | "feedback" | "ssi" | "events" | "monthly-reports" | "consolidated-reports";
+export interface AcademicYearArchiveRecord {
+  id: string;
+  data: Record<string, unknown>;
+  searchText: string;
 }
 
 export async function exportAcademicYearCollege(
   yearId: string,
   collegeId: string,
+  selectedTypes: AcademicYearExportType[],
 ): Promise<{ files: AcademicYearExportFile[]; counts: Record<string, number> }> {
   const fn = httpsCallable<
-    { yearId: string; collegeId: string },
+    { yearId: string; collegeId: string; selectedTypes: AcademicYearExportType[] },
     { files: AcademicYearExportFile[]; counts: Record<string, number> }
   >(getFunctions(app), "exportAcademicYearCollege");
-  const result = await fn({ yearId, collegeId });
+  const result = await fn({ yearId, collegeId, selectedTypes });
   return result.data;
 }
 
-export async function deleteAcademicYearCollegeData(yearId: string, collegeId: string, confirm: string): Promise<void> {
-  const fn = httpsCallable<{ yearId: string; collegeId: string; confirm: string }, unknown>(
-    getFunctions(app),
-    "deleteAcademicYearCollegeData",
-  );
-  await fn({ yearId, collegeId, confirm });
+export async function listAcademicYearArchiveRecords(
+  yearId: string,
+  collegeId: string,
+  recordType: string,
+  searchTerm?: string,
+  cursor?: string,
+): Promise<{ records: AcademicYearArchiveRecord[]; hasMore: boolean; nextCursor: string }> {
+  const fn = httpsCallable<
+    { yearId: string; collegeId: string; recordType: string; searchTerm?: string; cursor?: string },
+    { records: AcademicYearArchiveRecord[]; hasMore: boolean; nextCursor: string }
+  >(getFunctions(app), "listAcademicYearArchiveRecords");
+  const result = await fn({ yearId, collegeId, recordType, searchTerm, cursor });
+  return result.data;
 }
