@@ -12,6 +12,7 @@ import { AboutPhotoCarousel } from "../components/ui/AboutPhotoCarousel";
 import { MorphingPopover, MorphingPopoverTrigger, MorphingPopoverContent } from "../components/common/MorphingPopover";
 import { ReferStudentForm } from "./ReferStudentForm";
 import { LandingFooterPolicies } from "./LandingFooterPolicies";
+import { StudentResourcesModal } from "./StudentResourcesModal";
 import "./LandingPage.css";
 
 const DOING_CARDS = [
@@ -371,6 +372,7 @@ export function LandingPage() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [emailCopied, setEmailCopied] = useState(false);
+  const [studentResourcesOpen, setStudentResourcesOpen] = useState(false);
 
   const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -1282,7 +1284,15 @@ export function LandingPage() {
                   </Link>
                 </li>
                 <li><a href="#team">Our Wellness Counsellors</a></li>
-                <li><a href="#resources">Student Resources</a></li>
+                <li>
+                  <button
+                    type="button"
+                    className="landing-footer__resource-link"
+                    onClick={() => setStudentResourcesOpen(true)}
+                  >
+                    Student Resources
+                  </button>
+                </li>
                 <li>
                   <MorphingPopover>
                     <MorphingPopoverTrigger className="landing-footer__morph-trigger">
@@ -1468,6 +1478,9 @@ export function LandingPage() {
           </div>
         </div>
       </footer>
+      {studentResourcesOpen && (
+        <StudentResourcesModal onClose={() => setStudentResourcesOpen(false)} />
+      )}
     </div>
   );
 }

@@ -1471,6 +1471,24 @@ body {
   color: #FFFFFF;
 }
 
+.landing-footer__resource-link {
+  font-family: var(--font-main);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #93C5FD;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.landing-footer__resource-link:hover,
+.landing-footer__resource-link:focus-visible {
+  color: #FFFFFF;
+}
+
 .landing-footer__crisis-link {
   display: inline-flex;
   align-items: center;

@@ -1,0 +1,187 @@
+.modal__panel.student-resources-modal {
+  width: min(920px, calc(100vw - 32px));
+  max-width: 920px;
+  max-height: min(900px, calc(100vh - 48px));
+  padding: 28px;
+}
+
+.student-resources {
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.student-resources p {
+  margin: 0 0 12px;
+}
+
+.student-resources__hero {
+  padding: 6px 2px 12px;
+}
+
+.student-resources__eyebrow {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  margin-bottom: 8px !important;
+  text-transform: uppercase;
+}
+
+.student-resources__hero h2 {
+  color: #0f172a;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: clamp(24px, 4vw, 34px);
+  line-height: 1.2;
+  margin: 0 0 14px;
+}
+
+.student-resources__index {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 28px;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+.student-resources__index button {
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1d4ed8;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  min-height: 42px;
+  padding: 9px 12px;
+  text-align: left;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.student-resources__index button:hover,
+.student-resources__index button:focus-visible {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.student-resources__article,
+.student-resources__faq,
+.student-resources__safety,
+.student-resources__cards,
+.student-resources__governance,
+.student-resources__website-email {
+  scroll-margin-top: 16px;
+  padding: 22px 2px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.student-resources__article h3,
+.student-resources__faq h3,
+.student-resources__safety h3,
+.student-resources__cards h3,
+.student-resources__governance h3,
+.student-resources__website-email h3 {
+  color: #1e3a8a;
+  font-size: 19px;
+  line-height: 1.3;
+  margin: 0 0 4px;
+}
+
+.student-resources__subtitle {
+  color: #475569;
+  font-size: 13px;
+  font-style: italic;
+  margin-bottom: 14px !important;
+}
+
+.student-resources__article h4,
+.student-resources__faq-item h4 {
+  color: #3b82c4;
+  font-size: 14px;
+  margin: 16px 0 4px;
+}
+
+.student-resources__article ul,
+.student-resources__cards ul {
+  margin: 4px 0 12px;
+  padding-left: 22px;
+}
+
+.student-resources__article li,
+.student-resources__cards li {
+  padding-left: 2px;
+  margin: 3px 0;
+}
+
+.student-resources__faq-item + .student-resources__faq-item {
+  margin-top: 14px;
+}
+
+.student-resources__faq-item h4 {
+  margin-top: 14px;
+}
+
+.student-resources__safety {
+  border: 1px solid #bfdbfe;
+  border-radius: 14px;
+  background: #eff6ff;
+  margin: 4px 0;
+  padding: 18px;
+}
+
+.student-resources__safety h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.student-resources__safety p {
+  margin: 0;
+}
+
+.student-resources__cards {
+  padding-bottom: 4px;
+}
+
+@media (max-width: 768px) {
+  .modal__panel.student-resources-modal {
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 92px);
+    padding: 18px;
+  }
+
+  .student-resources {
+    font-size: 13px;
+  }
+
+  .student-resources__index {
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .student-resources__index button {
+    font-size: 12px;
+    min-height: 40px;
+    padding: 8px;
+  }
+
+  .student-resources__article,
+  .student-resources__faq,
+  .student-resources__safety,
+.student-resources__cards,
+.student-resources__governance,
+.student-resources__website-email {
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .student-resources__index {
+    grid-template-columns: 1fr;
+  }
+}
