@@ -207,3 +207,44 @@
      keeping it on the right where it always was. */
   margin-left: auto;
 }
+
+.logins-management__export-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.logins-management__export-options > p:first-child {
+  margin: 0 0 4px;
+  color: var(--neu-text-muted, #718096);
+  line-height: 1.5;
+}
+
+.logins-management__export-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(46, 43, 39, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.logins-management__export-option input {
+  margin-top: 3px;
+  accent-color: var(--neu-accent-primary, #2065F6);
+}
+
+.logins-management__export-option span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.logins-management__export-option strong {
+  color: var(--neu-text-primary, #2D3748);
+}
+
+.logins-management__export-option small {
+  color: var(--neu-text-muted, #718096);
+}

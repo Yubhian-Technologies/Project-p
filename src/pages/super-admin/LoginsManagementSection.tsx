@@ -13,6 +13,8 @@ import { Button } from "../../components/common/Button";
 import { Select } from "../../components/common/Select";
 import { ROLE_LABELS } from "../../config/roles";
 import { exportStaffData } from "../../services/firebase/managedAccounts";
+import { downloadXlsx } from "../../utils/excelExport";
+import { Modal } from "../../components/common/Modal";
 import { AddLoginModal } from "./AddLoginModal";
 import { EditLoginModal } from "./EditLoginModal";
 import "./LoginsManagementSection.css";
@@ -31,6 +33,91 @@ export function LoginsManagementSection() {
   const [editingLogin, setEditingLogin] = useState<UserProfile | null>(null);
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [exportingLogin, setExportingLogin] = useState<UserProfile | null>(null);
+  const [selectedExports, setSelectedExports] = useState<string[]>([]);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const exportOptions = [
+    { id: "sessions", label: "Session data", description: "Non-emergency counselling sessions (Excel)" },
+    { id: "crisisSos", label: "Crisis SOS data", description: "Crisis SOS cases (Excel)" },
+    { id: "feedback", label: "Session feedback", description: "Feedback records for this staff account (Excel)" },
+    { id: "monthlyReports", label: "Monthly reports", description: "Download each submitted report separately" },
+    { id: "consolidatedReports", label: "Consolidated reports", description: "Download each submitted report separately" },
+  ];
+
+  function toggleExport(id: string) {
+    setSelectedExports((current) => id === "all"
+      ? current.length === exportOptions.length ? [] : exportOptions.map((option) => option.id)
+      : current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  }
+
+  async function downloadStaffExport(login: UserProfile) {
+    if (!selectedExports.length) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const payload = await exportStaffData(login.uid);
+      const safeName = (login.displayName || login.email).replace(/[^a-z0-9-_]+/gi, "-").replace(/^-|-$/g, "");
+      const records = (value: unknown) => Array.isArray(value) ? value as Record<string, unknown>[] : [];
+      const rowsFor = (items: Record<string, unknown>[]) => {
+        const keys = [...new Set(items.flatMap((item) => Object.keys(item)))];
+        return [keys, ...items.map((item) => keys.map((key) => {
+          const value = item[key];
+          return value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value);
+        }))];
+      };
+      const downloadSheet = async (name: string, items: Record<string, unknown>[]) => {
+        await downloadXlsx(`${safeName}-${name}.xlsx`, name.slice(0, 31), rowsFor(items));
+      };
+      const selected = new Set(selectedExports);
+      const bookings = records(payload.bookings);
+      if (selected.has("sessions")) {
+        await downloadSheet("sessions", bookings.filter((booking) => booking.isEmergency !== true));
+      }
+      if (selected.has("crisisSos")) {
+        const sos = bookings.filter((booking) => booking.isEmergency === true);
+        const seriousCases = records(payload.seriousCases).filter((item) => item.isEmergency === true);
+        const caseByBooking = new Map(seriousCases.map((item) => [String(item.bookingId ?? item.id), item]));
+        const sosRows = sos.map((booking) => {
+          const seriousCase = caseByBooking.get(String(booking.id));
+          return seriousCase ? { ...booking, escalationDetails: JSON.stringify(seriousCase) } : booking;
+        });
+        await downloadSheet("crisis-sos", sosRows);
+      }
+      if (selected.has("feedback")) await downloadSheet("session-feedback", records(payload.feedback));
+
+      const downloadReports = async (items: Record<string, unknown>[], fallback: string) => {
+        for (const report of items) {
+          const url = typeof report.downloadURL === "string" ? report.downloadURL : "";
+          if (!url) continue;
+          const filename = typeof report.fileName === "string" && report.fileName
+            ? `${safeName}-${report.fileName}`
+            : `${fallback}-${String(report.year ?? "")}-${String(report.month ?? "")}.pdf`;
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = filename;
+          link.rel = "noopener";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          // Browsers may block a burst of multiple file downloads.
+          await new Promise((resolve) => window.setTimeout(resolve, 300));
+        }
+      };
+      if (selected.has("monthlyReports")) {
+        await downloadReports(records(payload.counsellorMonthlyReports), "monthly-report");
+      }
+      if (selected.has("consolidatedReports")) {
+        await downloadReports(records(payload.monthlyReports), "consolidated-report");
+      }
+      setExportingLogin(null);
+    } catch (err) {
+      setExportError(functionsErrorMessage(err, "Could not export this login's data. Please try again."));
+    } finally {
+      setExporting(false);
+    }
+  }
 
   // A campus-restricted Admin login only ever sees/picks their own assigned
   // campuses here — Super Admin and a global-scope Admin see every campus,
@@ -153,23 +240,14 @@ export function LoginsManagementSection() {
                 Edit
               </Button>
               {login.active === false && (login.role === "counsellor" || login.role === "head") && (
-  <Button
-    type="button"
-    variant="outlined"
-    onClick={async () => {
-      const data = await exportStaffData(login.uid);
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${login.displayName || login.email}-export.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }}
-  >
-    Export data
-  </Button>
-)}
+                <Button type="button" variant="outlined" onClick={() => {
+                  setExportingLogin(login);
+                  setSelectedExports([]);
+                  setExportError(null);
+                }}>
+                  Export data
+                </Button>
+              )}
 <Button
   type="button"
   variant="outlined"
@@ -207,6 +285,28 @@ export function LoginsManagementSection() {
           onClose={() => setEditingLogin(null)}
           onSaved={() => loadForCampus(campusId)}
         />
+      )}
+
+      {exportingLogin && (
+        <Modal title={`Export data — ${exportingLogin.displayName || exportingLogin.email}`} onClose={() => !exporting && setExportingLogin(null)}>
+          <div className="logins-management__export-options">
+            <p>Select the records to download. Session and Crisis SOS data are Excel files; reports are downloaded as separate files.</p>
+            <label className="logins-management__export-option">
+              <input type="checkbox" checked={selectedExports.length === exportOptions.length} onChange={() => toggleExport("all")} />
+              <span><strong>All data</strong><small>Download each selected data file and each report separately</small></span>
+            </label>
+            {exportOptions.map((option) => (
+              <label className="logins-management__export-option" key={option.id}>
+                <input type="checkbox" checked={selectedExports.includes(option.id)} onChange={() => toggleExport(option.id)} />
+                <span><strong>{option.label}</strong><small>{option.description}</small></span>
+              </label>
+            ))}
+            {exportError && <p className="logins-management__error">{exportError}</p>}
+            <Button type="button" disabled={!selectedExports.length || exporting} onClick={() => downloadStaffExport(exportingLogin)}>
+              {exporting ? "Preparing downloads…" : "Download selected data"}
+            </Button>
+          </div>
+        </Modal>
       )}
     </div>
   );

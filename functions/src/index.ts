@@ -466,7 +466,7 @@ export const exportStaffData = onCall<{ uid: string }>(async (request) => {
   const feedbackSnap = await db.collection("sessionFeedback").where("counsellorId", "==", uid).get();
   const cmrSnap = await db.collection("counsellorMonthlyReports").where("uploadedByUid", "==", uid).get();
   const mrSnap = await db.collection("monthlyReports").where("uploadedByUid", "==", uid).get();
-  const seriousSnap = await db.collection("seriousCases").where("counsellorId", "==", uid).get();
+  const seriousSnap = await db.collection("seriousCases").where("authorUid", "==", uid).get();
   return {
     user: targetData,
     bookings: bookingsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
