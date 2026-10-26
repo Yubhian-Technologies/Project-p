@@ -2196,6 +2196,28 @@ export const saveAcademicYear = onCall<SaveAcademicYearRequest>(async (request) 
   if (d.endDate <= d.startDate) {
     throw new HttpsError("invalid-argument", "The end date must be after the start date.");
   }
+  const yearLabel = /^(\d{4})-(\d{2})$/.exec(d.label.trim());
+  if (!yearLabel) {
+    throw new HttpsError("invalid-argument", "Use an academic year label such as 2026-27.");
+  }
+  const startYear = Number(yearLabel[1]);
+  if (startYear < 2000 || startYear > 2099) {
+    throw new HttpsError("invalid-argument", "Academic years must start between 2000 and 2099.");
+  }
+  const expectedLabel = `${startYear}-${String(startYear + 1).slice(-2)}`;
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
+  const expectedStartDate = Date.UTC(startYear, 5, 1) - istOffsetMs;
+  const expectedEndDate = Date.UTC(startYear + 1, 5, 1) - istOffsetMs - 1;
+  if (
+    d.label.trim() !== expectedLabel ||
+    d.startDate !== expectedStartDate ||
+    d.endDate !== expectedEndDate
+  ) {
+    throw new HttpsError(
+      "invalid-argument",
+      `Academic year ${expectedLabel} must run from June 1, ${startYear} through May 31, ${startYear + 1} (India time).`,
+    );
+  }
   if (d.status !== undefined && d.status !== "active" && d.status !== "closed") {
     throw new HttpsError("invalid-argument", "Invalid status.");
   }

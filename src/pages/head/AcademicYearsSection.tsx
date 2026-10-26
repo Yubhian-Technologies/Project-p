@@ -16,30 +16,27 @@ import "./AcademicYearsSection.css";
 
 interface FormState {
   id?: string;
-  label: string;
-  start: string; // yyyy-mm-dd
-  end: string;
+  startYear: number;
   collegeIds: string[];
   status: "active" | "closed";
 }
 
-const EMPTY_FORM: FormState = { label: "", start: "", end: "", collegeIds: [], status: "active" };
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
-function toInputDate(ms: number): string {
-  const d = new Date(ms);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+function datesForStartYear(startYear: number) {
+  return {
+    label: `${startYear}-${String(startYear + 1).slice(-2)}`,
+    startDate: Date.UTC(startYear, 5, 1) - IST_OFFSET_MS,
+    endDate: Date.UTC(startYear + 1, 5, 1) - IST_OFFSET_MS - 1,
+  };
 }
 
-// Local start of the first day / end of the last day, so the whole of both
-// dates is inside the year.
-function startOfDay(value: string): number {
-  const [y, m, d] = value.split("-").map(Number);
-  return new Date(y, m - 1, d, 0, 0, 0, 0).getTime();
+function startYearFromTimestamp(timestamp: number): number {
+  return new Date(timestamp + IST_OFFSET_MS).getUTCFullYear();
 }
-function endOfDay(value: string): number {
-  const [y, m, d] = value.split("-").map(Number);
-  return new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+
+function currentAcademicYearStart(now = new Date()): number {
+  return now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
 }
 
 export function AcademicYearsSection() {
@@ -63,19 +60,21 @@ export function AcademicYearsSection() {
 
   const collegeName = (id: string) => colleges.find((c) => c.id === id)?.name ?? "Unknown college";
   const campusYears = years.filter((y) => y.campusId === campusId);
+  const nextStartYear = () => Math.max(
+    currentAcademicYearStart(),
+    ...campusYears.map((year) => startYearFromTimestamp(year.startDate) + 1),
+  );
 
   function openCreate() {
     setError("");
-    setForm({ ...EMPTY_FORM, collegeIds: colleges.map((college) => college.id) });
+    setForm({ startYear: nextStartYear(), collegeIds: colleges.map((college) => college.id), status: "active" });
   }
 
   function openEdit(year: AcademicYear) {
     setError("");
     setForm({
       id: year.id,
-      label: year.label,
-      start: toInputDate(year.startDate),
-      end: toInputDate(year.endDate),
+      startYear: startYearFromTimestamp(year.startDate),
       collegeIds: colleges.map((college) => college.id),
       status: year.status,
     });
@@ -84,27 +83,22 @@ export function AcademicYearsSection() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!form || !campusId) return;
-    if (!form.label.trim() || !form.start || !form.end) {
-      setError("Enter a label, a start date and an end date.");
+    if (!Number.isInteger(form.startYear) || form.startYear < 2000 || form.startYear > 2099) {
+      setError("Enter a valid academic year start year.");
       return;
     }
     if (form.collegeIds.length === 0) {
-      setError("Assign at least one college to this academic year.");
-      return;
-    }
-    if (endOfDay(form.end) <= startOfDay(form.start)) {
-      setError("The end date must be after the start date.");
+      setError("This campus needs at least one college before an academic year can be created.");
       return;
     }
     setSaving(true);
     setError("");
     try {
+      const dates = datesForStartYear(form.startYear);
       await saveAcademicYear({
         id: form.id,
         campusId,
-        label: form.label.trim(),
-        startDate: startOfDay(form.start),
-        endDate: endOfDay(form.end),
+        ...dates,
         collegeIds: form.collegeIds,
         status: form.status,
       });
@@ -200,24 +194,28 @@ export function AcademicYearsSection() {
         <Modal title={form.id ? "Edit academic year" : "New academic year"} onClose={() => setForm(null)}>
           <form className="academic-years__form" onSubmit={handleSubmit}>
             <label className="academic-years__field">
-              <span>Label</span>
+              <span>Academic year start</span>
               <input
-                type="text"
-                value={form.label}
+                type="number"
+                min={2000}
+                max={2099}
+                step={1}
+                value={form.startYear}
+                onChange={(e) => setForm({ ...form, startYear: Number(e.target.value) })}
                 placeholder="e.g. 2025–26"
-                onChange={(e) => setForm({ ...form, label: e.target.value })}
               />
             </label>
             <div className="academic-years__field-row">
               <label className="academic-years__field">
                 <span>From</span>
-                <input type="date" value={form.start} onChange={(e) => setForm({ ...form, start: e.target.value })} />
+                <p>June 1, {form.startYear}</p>
               </label>
               <label className="academic-years__field">
                 <span>To</span>
-                <input type="date" value={form.end} onChange={(e) => setForm({ ...form, end: e.target.value })} />
+                <p>May 31, {form.startYear + 1}</p>
               </label>
             </div>
+            <p className="academic-years__intro">All campuses use June 1 through May 31 in India time. The year label and dates follow this fixed calendar.</p>
 
             <fieldset className="academic-years__colleges-field">
               <legend>Campus colleges</legend>
