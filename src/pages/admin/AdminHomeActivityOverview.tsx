@@ -9,6 +9,7 @@ import type { Campus } from "../../types/campus";
 import { formatDateDMY } from "../../utils/formatDate";
 import { useViewMore } from "../../hooks/useViewMore";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import { Button } from "../../components/common/Button";
 import {
   TrendingUpIcon,
@@ -29,6 +30,7 @@ interface AdminHomeActivityOverviewProps {
 
 export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivityOverviewProps) {
   const { profile } = useAuth();
+  const { years, selectedLabel, includesMonth } = useAcademicYear();
   const [monthlyReports, setMonthlyReports] = useState<MonthlyReport[]>([]);
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,27 +69,31 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
   }, []);
 
   const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  const currentYear = now.getFullYear();
-  const periodLabel = now.toLocaleString("en-IN", { month: "long", year: "numeric" });
+  const selectedYear = years.find((year) => year.label === selectedLabel);
+  const referenceDate = selectedYear && (now.getTime() < selectedYear.startDate || now.getTime() > selectedYear.endDate)
+    ? new Date(selectedYear.endDate)
+    : now;
+  const currentMonth = referenceDate.getMonth() + 1;
+  const currentYear = referenceDate.getFullYear();
+  const periodLabel = referenceDate.toLocaleString("en-IN", { month: "long", year: "numeric" });
+  const yearReports = monthlyReports.filter((report) =>
+    includesMonth(report.year, report.month, report.campusId, report.collegeId),
+  );
 
   // "Submitted this period" is based on when a report was actually uploaded
   // (uploadedAt), not the month/year a Head tagged it with — that field
   // defaults to the current month at upload time with no guidance to change
   // it, so a campus that just submitted last month's report would otherwise
   // show as permanently "Pending" for the whole current month.
-  const reportsThisMonth = monthlyReports.filter((r) => {
-    const d = new Date(r.uploadedAt);
-    return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
-  });
+  const reportsThisMonth = yearReports.filter((r) => r.month === currentMonth && r.year === currentYear);
 
   const submittedCampusIds = new Set(
     reportsThisMonth.map((r) => r.campusId).filter((id): id is string => Boolean(id)),
   );
   const submittedCount = campuses.filter((c) => submittedCampusIds.has(c.id)).length;
   const pendingCount = campuses.length - submittedCount;
-  const totalReports = monthlyReports.length;
-  const collegesCovered = new Set(monthlyReports.map((r) => r.collegeId).filter(Boolean)).size;
+  const totalReports = yearReports.length;
+  const collegesCovered = new Set(yearReports.map((r) => r.collegeId).filter(Boolean)).size;
 
   const campusRows = campuses
     .map((campus) => {
@@ -95,7 +101,7 @@ export function AdminHomeActivityOverview({ onSelectSection }: AdminHomeActivity
       // all-time — lastUpload stays all-time since "last activity ever" is
       // still useful context even for a campus with 0 uploads this month.
       const campusReportsThisMonth = reportsThisMonth.filter((r) => r.campusId === campus.id);
-      const lastUpload = monthlyReports
+      const lastUpload = yearReports
         .filter((r) => r.campusId === campus.id)
         .reduce((max, r) => {
           const t = new Date(r.uploadedAt).getTime();

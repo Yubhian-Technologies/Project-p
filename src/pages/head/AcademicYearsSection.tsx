@@ -66,7 +66,7 @@ export function AcademicYearsSection() {
 
   function openCreate() {
     setError("");
-    setForm({ ...EMPTY_FORM });
+    setForm({ ...EMPTY_FORM, collegeIds: colleges.map((college) => college.id) });
   }
 
   function openEdit(year: AcademicYear) {
@@ -76,15 +76,9 @@ export function AcademicYearsSection() {
       label: year.label,
       start: toInputDate(year.startDate),
       end: toInputDate(year.endDate),
-      collegeIds: year.collegeIds,
+      collegeIds: colleges.map((college) => college.id),
       status: year.status,
     });
-  }
-
-  function toggleCollege(id: string) {
-    setForm((f) =>
-      f ? { ...f, collegeIds: f.collegeIds.includes(id) ? f.collegeIds.filter((c) => c !== id) : [...f.collegeIds, id] } : f,
-    );
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -226,14 +220,15 @@ export function AcademicYearsSection() {
             </div>
 
             <fieldset className="academic-years__colleges-field">
-              <legend>Colleges in this year</legend>
+              <legend>Campus colleges</legend>
+              <p>Every college on this campus uses the same academic-year dates.</p>
               {colleges.length === 0 && <p>No colleges on this campus yet.</p>}
               {colleges.map((college) => (
                 <label key={college.id} className="academic-years__check">
                   <input
                     type="checkbox"
                     checked={form.collegeIds.includes(college.id)}
-                    onChange={() => toggleCollege(college.id)}
+                    disabled
                   />
                   <span>{college.name}</span>
                 </label>

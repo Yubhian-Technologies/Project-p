@@ -87,7 +87,9 @@ export function TeamManagementSection({
     );
     setStats(computeStats(profiles, yearBookings));
     setFeedbackAggregates(
-      new Map(aggregateAllCounsellorFeedback(feedback).map((a) => [a.counsellorId, a])),
+      new Map(aggregateAllCounsellorFeedback(
+        feedback.filter((entry) => inAcademicYear(entry.submittedAt, id)),
+      ).map((a) => [a.counsellorId, a])),
     );
     setScheduledBookings(liveBookings);
     setLoading(false);

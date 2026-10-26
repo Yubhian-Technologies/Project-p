@@ -2211,9 +2211,14 @@ export const saveAcademicYear = onCall<SaveAcademicYearRequest>(async (request) 
   }
 
   const collegeIds = Array.from(new Set(d.collegeIds));
-  const collegeDocs = await Promise.all(collegeIds.map((id) => db.collection("colleges").doc(id).get()));
-  if (collegeDocs.some((c) => !c.exists || c.data()?.campusId !== d.campusId)) {
-    throw new HttpsError("invalid-argument", "Every selected college must belong to this campus.");
+  const campusColleges = await db.collection("colleges").where("campusId", "==", d.campusId).get();
+  const campusCollegeIds = campusColleges.docs.map((college) => college.id).sort();
+  if (
+    campusCollegeIds.length === 0 ||
+    collegeIds.length !== campusCollegeIds.length ||
+    [...collegeIds].sort().some((id, index) => id !== campusCollegeIds[index])
+  ) {
+    throw new HttpsError("invalid-argument", "An academic year must include every college on the campus.");
   }
 
   const startDate = d.startDate;

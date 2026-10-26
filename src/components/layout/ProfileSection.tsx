@@ -20,6 +20,7 @@ import { Avatar } from "../common/Avatar";
 import { Button } from "../common/Button";
 import { Select } from "../common/Select";
 import { AvatarCropModal } from "../common/AvatarCropModal";
+import { AcademicYearSelector } from "../common/AcademicYearSelector";
 import "./ProfileSection.css";
 
 function toCsv(list?: string[]): string {
@@ -363,6 +364,12 @@ export function ProfileSection({ onOpenFeedback }: ProfileSectionProps) {
   return (
     <div className="profile-page">
       <Card className="profile-section">
+        {(profile.role === "counsellor" || profile.role === "head" || profile.role === "admin" || profile.role === "super-admin") && (
+          <div className="profile-section__academic-year">
+            <p className="profile-section__subheading">ACADEMIC YEAR</p>
+            <AcademicYearSelector />
+          </div>
+        )}
         <div className="profile-section__avatar-block">
           <Avatar photoURL={profile.photoURL} label={profile.email} size="large" />
           <input

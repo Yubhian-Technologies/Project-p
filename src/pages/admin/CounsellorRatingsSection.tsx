@@ -3,6 +3,7 @@ import { listBookableProfiles } from "../../services/firebase/bookings";
 import { getAllFeedback, aggregateAllCounsellorFeedback } from "../../services/firebase/feedback";
 import type { CounsellorFeedbackAggregate } from "../../services/firebase/feedback";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import { listCampuses } from "../../services/firebase/campuses";
 import type { Campus } from "../../types/campus";
 import type { UserProfile } from "../../types/user";
@@ -18,6 +19,7 @@ const STARS = [5, 4, 3, 2, 1];
 
 export function CounsellorRatingsSection() {
   const { profile } = useAuth();
+  const { includes: inAcademicYear, selectedLabel } = useAcademicYear();
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [campusId, setCampusId] = useState(() =>
     profile?.role === "admin" && profile.adminAccess?.scope === "campuses" && profile.adminAccess.campusIds?.length === 1
@@ -51,12 +53,14 @@ export function CounsellorRatingsSection() {
         getAllFeedback(campusId || undefined),
       ]);
       setCounsellors(profiles.filter((p) => p.role === "counsellor"));
-      setAggregates(aggregateAllCounsellorFeedback(feedback));
+      setAggregates(aggregateAllCounsellorFeedback(
+        feedback.filter((entry) => inAcademicYear(entry.submittedAt, entry.campusId ?? campusId)),
+      ));
       setExpandedUid(null);
       setLoading(false);
     }
     load();
-  }, [campusId]);
+  }, [campusId, inAcademicYear, selectedLabel]);
 
   const aggregateByCounsellor = useMemo(
     () => new Map(aggregates.map((a) => [a.counsellorId, a])),

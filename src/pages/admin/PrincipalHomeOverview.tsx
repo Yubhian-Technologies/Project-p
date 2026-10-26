@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../services/firebase/config";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import { listEventsForCollege } from "../../services/firebase/events";
 import { listSsiCollegeResultsForCollege } from "../../services/firebase/ssiCollegeResults";
 import { subscribeToAdminSeriousCases } from "../../services/firebase/seriousCases";
@@ -33,7 +34,7 @@ interface PrincipalHomeOverviewProps {
   onSelectSection: (sectionId: string) => void;
 }
 
-const PERIODS: HomePeriod[] = ["week", "month"];
+const PERIODS: HomePeriod[] = ["week", "month", "year"];
 const DAY_MS = 24 * 60 * 60 * 1000;
 function isHeldSession(b: Booking): boolean {
   return b.status === "completed" && b.outcome !== "missed";
@@ -76,6 +77,7 @@ interface LoadedData {
     tiles and the student-concerns panel. */
 export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverviewProps) {
   const { profile } = useAuth();
+  const { includes: inAcademicYear, includesMonth, yearForCampus, selectedLabel } = useAcademicYear();
   const [data, setData] = useState<LoadedData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<HomePeriod>("month");
@@ -206,16 +208,30 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
 
   if (!collegeIds.length) return null;
 
+  const selectedAcademicYear = yearForCampus(campusId);
   const nowMs = now.getTime();
-  const periodStartMs = periodStart(period, now);
+  const periodNow = selectedAcademicYear && (nowMs < selectedAcademicYear.startDate || nowMs > selectedAcademicYear.endDate)
+    ? new Date(selectedAcademicYear.endDate)
+    : now;
+  const periodStartMs = period === "year" && selectedAcademicYear
+    ? selectedAcademicYear.startDate
+    : periodStart(period, periodNow);
   const loading = !data;
 
-  const events = data?.events ?? [];
-  const ssiResults = data?.ssiResults ?? [];
+  const events = (data?.events ?? []).filter((event) =>
+    inAcademicYear(event.eventDate, campusId, event.collegeId),
+  );
+  const ssiResults = (data?.ssiResults ?? []).filter((result) =>
+    inAcademicYear(result.submittedAt, campusId, result.collegeId),
+  );
   const staffUids = data?.staffUids ?? [];
   const staffNames = data?.staffNames ?? new Map<string, string>();
-  const collegeBookings = data?.collegeBookings ?? [];
-  const monthlyReports = data?.monthlyReports ?? [];
+  const collegeBookings = (data?.collegeBookings ?? []).filter((booking) =>
+    inAcademicYear(bookingTime(booking), campusId, booking.collegeId),
+  );
+  const monthlyReports = (data?.monthlyReports ?? []).filter((report) =>
+    includesMonth(report.year, report.month, report.campusId ?? campusId, report.collegeId),
+  );
   const attendanceToday = data?.attendanceToday ?? [];
   const counsellorCount = data?.counsellorCount ?? 0;
 
@@ -223,10 +239,12 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
     .filter((e) => e.eventDate >= nowMs && e.eventDate <= nowMs + 30 * DAY_MS)
     .sort((a, b) => a.eventDate - b.eventDate);
   const pendingSevereSsi = ssiResults.filter((r) => r.severity === "severe" && !r.actionTaken).length;
-  const openCases = seriousCases.filter((c) => c.status === "open").length;
+  const openCases = seriousCases.filter((item) =>
+    item.status === "open" && inAcademicYear(item.createdAt, item.campusId, item.collegeId ?? undefined),
+  ).length;
 
   // ── Sessions held by this college's own counsellor(s)/head, this period ─
-  const periodBookings = collegeBookings.filter((b) => bookingTime(b) >= periodStartMs);
+  const periodBookings = collegeBookings.filter((b) => bookingTime(b) >= periodStartMs && bookingTime(b) <= periodNow.getTime());
   const heldSessions = periodBookings.filter(isHeldSession);
   const sessionsByStaff = staffUids
     .map((uid) => ({ uid, name: staffNames.get(uid) ?? uid, count: heldSessions.filter((b) => b.counsellorId === uid).length }))
@@ -258,7 +276,9 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
     .slice(0, 5);
 
   // ── Monthly reports this calendar month (fixed — not period-scoped) ────
-  const reportsThisMonth = monthlyReports.filter((r) => r.month === now.getMonth() + 1 && r.year === now.getFullYear());
+  const reportsThisMonth = monthlyReports.filter((r) =>
+    r.month === periodNow.getMonth() + 1 && r.year === periodNow.getFullYear(),
+  );
   const pendingReports = reportsThisMonth.filter((r) => r.status === "pending").length;
 
   // ── Today's check-in/check-out (fixed — not period-scoped) ─────────────
@@ -406,7 +426,7 @@ export function PrincipalHomeOverview({ onSelectSection }: PrincipalHomeOverview
           </div>
         </div>
         <p className="pha-muted">
-          Sessions Held, Group Sessions, and Student Concerns below are for <strong>{periodLabel(period, now)}</strong>.
+          Sessions Held, Group Sessions, and Student Concerns below are for <strong>{period === "year" ? selectedLabel : periodLabel(period, periodNow)}</strong>.
         </p>
 
         <div className="pha-kpis">
