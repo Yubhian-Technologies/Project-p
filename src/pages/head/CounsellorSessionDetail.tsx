@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import {
   listBookingsForCounsellor,
   listBookableProfiles,
@@ -51,6 +52,7 @@ function groupByUser(bookings: Booking[]): UserGroup[] {
 }
 
 export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessionDetailProps) {
+  const { includes: inAcademicYear } = useAcademicYear();
   const [groups, setGroups] = useState<UserGroup[]>([]);
   const [summaries, setSummaries] = useState<Record<string, string | undefined>>({});
   const [feedbackByBooking, setFeedbackByBooking] = useState<Map<string, SessionFeedback>>(new Map());
@@ -73,27 +75,34 @@ export function CounsellorSessionDetail({ counsellor, onBack }: CounsellorSessio
     });
   }
 
-  async function load() {
+  const load = useCallback(async () => {
     const [bookings, profiles, feedback] = await Promise.all([
       listBookingsForCounsellor(counsellor.uid),
       listBookableProfiles(),
       listFeedbackForCounsellor(counsellor.uid).catch(() => []),
     ]);
-    setGroups(groupByUser(bookings));
+    const yearBookings = bookings.filter((booking) =>
+      inAcademicYear(booking.scheduledAt ?? booking.createdAt, counsellor.campusId, booking.collegeId),
+    );
+    const yearFeedback = feedback.filter((entry) =>
+      inAcademicYear(entry.submittedAt, counsellor.campusId, counsellor.collegeId),
+    );
+    setGroups(groupByUser(yearBookings));
     setCandidates(profiles.filter((p) => p.uid !== counsellor.uid));
-    setFeedbackByBooking(new Map(feedback.map((f) => [f.bookingId, f])));
+    setFeedbackByBooking(new Map(yearFeedback.map((f) => [f.bookingId, f])));
 
-    const completed = bookings.filter((b) => b.status === "completed");
+    const completed = yearBookings.filter((b) => b.status === "completed");
     const entries = await Promise.all(
       completed.map(async (b) => [b.id, (await getBookingIntake(b.id))?.summary] as const),
     );
     setSummaries(Object.fromEntries(entries));
     setLoading(false);
-  }
+  }, [counsellor.uid, counsellor.campusId, counsellor.collegeId, inAcademicYear]);
 
   useEffect(() => {
+    // eslint-disable-next-line react/set-state-in-effect -- load fetches the selected year's session details.
     load();
-  }, [counsellor.uid]);
+  }, [load]);
 
   async function handleReassign(booking: Booking) {
     const target = candidates.find((c) => c.uid === targetId);

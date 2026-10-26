@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import { listBookableProfiles, listAllBookingsForStats, listScheduledBookings } from "../../services/firebase/bookings";
 import { getAllFeedback, aggregateAllCounsellorFeedback } from "../../services/firebase/feedback";
 import type { CounsellorFeedbackAggregate } from "../../services/firebase/feedback";
@@ -58,6 +59,7 @@ export function TeamManagementSection({
   onOpenTransferRequests,
 }: TeamManagementSectionProps) {
   const { profile: headProfile } = useAuth();
+  const { includes: inAcademicYear } = useAcademicYear();
   const campusId = headProfile?.campusId;
   const [stats, setStats] = useState<CounsellorStats[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
@@ -69,7 +71,7 @@ export function TeamManagementSection({
   const [selectedCounsellor, setSelectedCounsellor] = useState<UserProfile | null>(null);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
 
-  async function load(id: string) {
+  const load = useCallback(async (id: string) => {
     const [allProfiles, liveBookings, feedback] = await Promise.all([
       listBookableProfiles(),
       listScheduledBookings(),
@@ -80,19 +82,22 @@ export function TeamManagementSection({
     // too, not just reads but genuinely wrong data on screen.
     const profiles = allProfiles.filter((p) => p.campusId === id);
     const bookings = await listAllBookingsForStats(id, profiles.map((p) => p.uid));
-    setStats(computeStats(profiles, bookings));
+    const yearBookings = bookings.filter((booking) =>
+      inAcademicYear(booking.scheduledAt ?? booking.createdAt, id, booking.collegeId),
+    );
+    setStats(computeStats(profiles, yearBookings));
     setFeedbackAggregates(
       new Map(aggregateAllCounsellorFeedback(feedback).map((a) => [a.counsellorId, a])),
     );
     setScheduledBookings(liveBookings);
     setLoading(false);
-  }
+  }, [inAcademicYear]);
 
   useEffect(() => {
     if (!campusId) return;
     // eslint-disable-next-line react/set-state-in-effect -- initial data fetch, not resetting state from a prop change
     load(campusId);
-  }, [campusId]);
+  }, [campusId, load]);
 
   async function handleToggleAvailability(target: UserProfile) {
     setTogglingId(target.uid);

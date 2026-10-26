@@ -196,6 +196,7 @@ export interface HomeInput {
   feedbackList: SessionFeedback[];
   period: HomePeriod;
   now: Date;
+  academicYear?: { startDate: number; endDate: number } | null;
 }
 
 /** Average of a rating question's numeric answers (matched by label), scaled to a 0–100%. */
@@ -213,9 +214,13 @@ function ratingAnswerPct(feedbackList: SessionFeedback[], questionId: string): n
 }
 
 export function computeHomeMetrics(input: HomeInput): HomeMetrics {
-  const { bookings, counsellors, colleges, events, reports, transfers, ssiResults, feedbackList, period, now } = input;
+  const { bookings, counsellors, colleges, events, reports, transfers, ssiResults, feedbackList, period, now, academicYear } = input;
   const nowMs = now.getTime();
-  const startMs = periodStart(period, now);
+  const periodNow = academicYear && (nowMs < academicYear.startDate || nowMs > academicYear.endDate)
+    ? new Date(academicYear.endDate)
+    : now;
+  const periodEndMs = period === "year" && academicYear ? academicYear.endDate : Number.POSITIVE_INFINITY;
+  const startMs = period === "year" && academicYear ? academicYear.startDate : periodStart(period, periodNow);
 
   const collegeName = new Map(colleges.map((c) => [c.id, c.name]));
   const counsellorById = new Map(counsellors.map((c) => [c.uid, c]));
@@ -230,7 +235,7 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
   };
   const displayName = (p: UserProfile) => p.displayName || p.email;
 
-  const inPeriod = bookings.filter((b) => bookingTime(b) >= startMs);
+  const inPeriod = bookings.filter((b) => bookingTime(b) >= startMs && bookingTime(b) <= periodEndMs);
   const periodSessions = inPeriod.filter(isSession);
 
   // ── KPIs ───────────────────────────────────────────────────────────
@@ -242,13 +247,13 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
   const institutionsCovered = new Set(periodSessions.map((b) => counsellorById.get(b.counsellorId)?.collegeId).filter(Boolean)).size;
 
   // ── Centre performance ──────────────────────────────────────────────
-  const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const thisMonth = new Date(periodNow.getFullYear(), periodNow.getMonth(), 1);
+  const lastMonth = new Date(periodNow.getFullYear(), periodNow.getMonth() - 1, 1);
   const sessionsIn = (month: Date) =>
     bookings.filter((b) => isSession(b) && monthKey(new Date(bookingTime(b))) === monthKey(month));
   const studentsIn = (month: Date) => new Set(sessionsIn(month).map((b) => b.userId)).size;
   const sessionsByMonth = Array.from({ length: 6 }, (_, i) => {
-    const month = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    const month = new Date(periodNow.getFullYear(), periodNow.getMonth() - (5 - i), 1);
     return {
       label: month.toLocaleString("en-US", { month: "short" }),
       count: sessionsIn(month).length,
@@ -389,7 +394,7 @@ export function computeHomeMetrics(input: HomeInput): HomeMetrics {
   ).length;
   const highWorkloadCounsellors = counsellorRows.filter((r) => r.workload === "High").length;
   const reportsThisMonth = reports.filter(
-    (r) => r.month === now.getMonth() + 1 && r.year === now.getFullYear(),
+    (r) => r.month === periodNow.getMonth() + 1 && r.year === periodNow.getFullYear(),
   );
   const submittedUids = new Set(reportsThisMonth.map((r) => r.uploadedByUid));
   const reportRows: ReportStatusRow[] = counsellors

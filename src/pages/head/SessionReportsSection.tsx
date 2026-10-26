@@ -64,7 +64,7 @@ function getWeekDateRange(weekIdx: number, year: number, month: number): { start
 
 export function SessionReportsSection() {
   const { profile: headProfile } = useAuth();
-  const { includesMonth } = useAcademicYear();
+  const { includesMonth, yearForCampus, selectedLabel } = useAcademicYear();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [collegeMap, setCollegeMap] = useState<Map<string, string>>(new Map());
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -91,10 +91,15 @@ export function SessionReportsSection() {
   const availableMonths = useMemo(() => {
     const months: string[] = [];
     const now = new Date();
-    const startYear = 2026;
-    const startMonth = 7; // August (0-indexed)
-    const endYear = now.getFullYear();
-    const endMonth = now.getMonth();
+    const selectedAcademicYear = yearForCampus(headProfile?.campusId);
+    const start = selectedAcademicYear ? new Date(selectedAcademicYear.startDate) : new Date(2026, 7, 1);
+    const end = selectedAcademicYear
+      ? new Date(Math.min(selectedAcademicYear.endDate, now.getTime()))
+      : now;
+    const startYear = start.getFullYear();
+    const startMonth = start.getMonth();
+    const endYear = end.getFullYear();
+    const endMonth = end.getMonth();
 
     for (let y = startYear; y <= endYear; y++) {
       const startM = y === startYear ? startMonth : 0;
@@ -108,7 +113,7 @@ export function SessionReportsSection() {
     }
     return months.reverse(); // newest first
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [includesMonth, headProfile?.campusId]);
+  }, [includesMonth, yearForCampus, selectedLabel, headProfile?.campusId]);
 
   const loadReport = useCallback(async (month: string) => {
     if (!month) return;

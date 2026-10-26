@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback, type ReactNode } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import {
   listBookableProfiles,
   listPendingTransferRequestsForCampus,
@@ -26,7 +27,7 @@ import "./HeadCommandCentre.css";
 
 type LoadedData = Omit<HomeInput, "period" | "now">;
 
-const PERIODS: HomePeriod[] = ["week", "month"];
+const PERIODS: HomePeriod[] = ["week", "month", "year"];
 
 function formatPct(value: number | null, suffix = "%"): string {
   return value === null ? "—" : `${value}${suffix}`;
@@ -50,6 +51,7 @@ interface HeadCommandCentreProps {
 
 export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
   const { profile } = useAuth();
+  const { includes: inAcademicYear, includesMonth, yearForCampus, selectedLabel } = useAcademicYear();
   const campusId = profile?.campusId;
   const collegeId = profile?.collegeId;
   const profileUid = profile?.uid;
@@ -155,7 +157,28 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
   if (error) return <p className="hch-error">{error}</p>;
   if (!data) return <p className="hch-muted">Loading dashboard…</p>;
 
-  const m: HomeMetrics = computeHomeMetrics({ ...data, period, now });
+  const selectedAcademicYear = yearForCampus(campusId);
+  const yearData: LoadedData = {
+    ...data,
+    bookings: data.bookings.filter((booking) =>
+      inAcademicYear(booking.scheduledAt ?? booking.createdAt, campusId, booking.collegeId),
+    ),
+    events: data.events.filter((event) => inAcademicYear(event.eventDate, campusId, event.collegeId)),
+    reports: data.reports.filter((report) =>
+      includesMonth(report.year, report.month, report.campusId || campusId, report.collegeId),
+    ),
+    ssiResults: data.ssiResults.filter((result) =>
+      inAcademicYear(result.submittedAt, campusId, result.collegeId),
+    ),
+    feedbackList: data.feedbackList.filter((feedback) =>
+      inAcademicYear(feedback.submittedAt, campusId),
+    ),
+  };
+  const m: HomeMetrics = computeHomeMetrics({ ...yearData, period, now, academicYear: selectedAcademicYear });
+  const displayDate = selectedAcademicYear && (now.getTime() < selectedAcademicYear.startDate || now.getTime() > selectedAcademicYear.endDate)
+    ? new Date(selectedAcademicYear.endDate)
+    : now;
+  const shownPeriodLabel = period === "year" ? (selectedLabel || "Academic Year") : periodLabel(period, displayDate);
   const studentsChange = formatChange(m.centre.studentsChangePct);
   const sessionsChange = formatChange(m.centre.sessionsChangePct);
   const maxMonth = Math.max(1, ...m.centre.sessionsByMonth.map((s) => s.count));
@@ -199,7 +222,7 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
           </div>
         </div>
         <p className="hch-muted hch-small">
-          Showing results for <strong>{periodLabel(period, now)}</strong> — applies to the first four cards and
+          Showing results for <strong>{shownPeriodLabel}</strong> — applies to the first four cards and
           Team Pulse below.
         </p>
         <div className="hch-kpis">
@@ -312,8 +335,8 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
                   </header>
                   <dl className="hch-counsellor__stats">
                     <div>
-                      <dt title={`Accepted, scheduled, or completed bookings for ${periodLabel(period, now)}`}>
-                        Sessions ({periodLabel(period, now)})
+                      <dt title={`Accepted, scheduled, or completed bookings for ${shownPeriodLabel}`}>
+                        Sessions ({shownPeriodLabel})
                       </dt>
                       <dd>{c.total}</dd>
                     </div>

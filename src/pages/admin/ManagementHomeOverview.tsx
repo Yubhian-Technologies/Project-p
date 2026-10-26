@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import { listCampuses } from "../../services/firebase/campuses";
 import { listAllBookingsForStats } from "../../services/firebase/bookings";
 import { listEventsForCampus } from "../../services/firebase/events";
@@ -61,6 +62,7 @@ interface CampusStats {
 
 export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOverviewProps) {
   const { profile } = useAuth();
+  const { years, selectedLabel, includes: inAcademicYear, includesMonth } = useAcademicYear();
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<"month" | "all">("month");
   const [selectedCampusId, setSelectedCampusId] = useState("");
@@ -78,9 +80,19 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
   >(null);
 
   const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  const currentYear = now.getFullYear();
-  const periodLabel = now.toLocaleString("en-IN", { month: "long", year: "numeric" });
+  const referenceDateForCampus = (campusId: string) => {
+    const year = years.find((item) => item.campusId === campusId && item.label === selectedLabel);
+    if (!year || (now.getTime() >= year.startDate && now.getTime() <= year.endDate)) return now;
+    return new Date(year.endDate);
+  };
+  const referenceDate = selectedCampusId
+    ? referenceDateForCampus(selectedCampusId)
+    : years.find((year) => year.label === selectedLabel)
+      ? referenceDateForCampus(years.find((year) => year.label === selectedLabel)!.campusId)
+      : now;
+  const currentMonth = referenceDate.getMonth() + 1;
+  const currentYear = referenceDate.getFullYear();
+  const periodLabel = referenceDate.toLocaleString("en-IN", { month: "long", year: "numeric" });
 
   const scopedCampusIds =
     profile?.role === "admin" && profile.adminAccess?.scope === "campuses"
@@ -119,56 +131,70 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
             listWorksheetAcademicYears(campus.id).catch(() => []),
           ]);
 
-          campusEvents.forEach((ev) => eventsAccumulator.push({ event: ev, campusName: campus.name }));
+          const yearEvents = campusEvents.filter((event) =>
+            inAcademicYear(event.eventDate, campus.id, event.collegeId),
+          );
+          yearEvents.forEach((ev) => eventsAccumulator.push({ event: ev, campusName: campus.name }));
           const counsellors = campusLogins.filter((l) => l.role === "counsellor");
 
           // Worksheets count
           let totalWs = 0;
-          if (worksheetYears.length > 0) {
+          const matchingWorksheetYears = worksheetYears.filter((year) => year.label === selectedLabel);
+          if (matchingWorksheetYears.length > 0) {
             const currentYearWs = await Promise.all(
-              worksheetYears.map((y) => listWorksheets(campus.id, y.id).catch(() => [] as Worksheet[])),
+              matchingWorksheetYears.map((y) => listWorksheets(campus.id, y.id).catch(() => [] as Worksheet[])),
             );
             totalWs = currentYearWs.flat().length;
           }
 
-          // Filter by period if month is selected
+          const yearBookings = campusBookings.filter((booking) =>
+            inAcademicYear(booking.scheduledAt ?? booking.createdAt, campus.id, booking.collegeId),
+          );
+          // The selected academic year scopes every Management metric. When
+          // viewing a historical year, "This Month" anchors to its final month.
+          const campusReferenceDate = referenceDateForCampus(campus.id);
+          const campusMonth = campusReferenceDate.getMonth() + 1;
+          const campusYear = campusReferenceDate.getFullYear();
           const filteredBookings = period === "month"
-            ? campusBookings.filter((b) => {
-                const timestamp = b.createdAt || b.scheduledAt;
+            ? yearBookings.filter((b) => {
+                const timestamp = b.scheduledAt ?? b.createdAt;
                 if (timestamp === undefined) return false;
                 const d = new Date(timestamp);
-                return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+                return d.getMonth() + 1 === campusMonth && d.getFullYear() === campusYear;
               })
-            : campusBookings;
+            : yearBookings;
 
           const completedSessions = filteredBookings.filter(
             (b) => b.status === "completed" && b.outcome !== "missed",
           ).length;
 
-          const groupSessions = campusEvents.filter((e) => {
+          const groupSessions = yearEvents.filter((e) => {
             if (e.category !== "group-session") return false;
             if (period === "month") {
               const d = new Date(e.eventDate);
-              return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+              return d.getMonth() + 1 === campusMonth && d.getFullYear() === campusYear;
             }
             return true;
           });
 
-          const programsEvents = campusEvents.filter((e) => {
+          const programsEvents = yearEvents.filter((e) => {
             if (e.category === "group-session") return false;
             if (period === "month") {
               const d = new Date(e.eventDate);
-              return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+              return d.getMonth() + 1 === campusMonth && d.getFullYear() === campusYear;
             }
             return true;
           });
 
+          const yearSsi = campusSsi.filter((result) =>
+            inAcademicYear(result.submittedAt, campus.id, result.collegeId),
+          );
           const filteredSsi = period === "month"
-            ? campusSsi.filter((s) => {
+            ? yearSsi.filter((s) => {
                 const d = new Date(s.submittedAt);
-                return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+                return d.getMonth() + 1 === campusMonth && d.getFullYear() === campusYear;
               })
-            : campusSsi;
+            : yearSsi;
 
           const ssiSevere = filteredSsi.filter((s) => s.severity === "severe").length;
           const ssiModerate = filteredSsi.filter((s) => s.severity === "medium").length;
@@ -177,12 +203,12 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
           // Reports info
           const campusReportsThisMonth = reports.filter((r) => {
             if (r.campusId !== campus.id) return false;
-            const d = new Date(r.uploadedAt);
-            return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+            return r.month === campusMonth && r.year === campusYear &&
+              includesMonth(r.year, r.month, campus.id, r.collegeId);
           });
 
           const lastUpload = reports
-            .filter((r) => r.campusId === campus.id)
+            .filter((r) => r.campusId === campus.id && includesMonth(r.year, r.month, campus.id, r.collegeId))
             .reduce((max, r) => {
               const t = new Date(r.uploadedAt).getTime();
               return Number.isNaN(t) ? max : Math.max(max, t);
@@ -248,7 +274,7 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
   useEffect(() => {
     loadAllData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period]);
+  }, [period, selectedLabel, inAcademicYear, includesMonth]);
 
   // Subscribe to all platform serious cases
   useEffect(() => {
@@ -299,20 +325,26 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
   const totalWorksheets = activeCampusStats.reduce((sum, s) => sum + s.worksheetsCount, 0);
 
   // Critical cases platform/campus metrics
-  const filteredSeriousCases = useMemo(() => {
-    if (!selectedCampusId) return seriousCases;
-    return seriousCases.filter((c) => c.campusId === selectedCampusId);
-  }, [seriousCases, selectedCampusId]);
+  const academicYearSeriousCases = useMemo(() => seriousCases.filter((item) =>
+    inAcademicYear(item.createdAt, item.campusId, item.collegeId ?? undefined),
+  ), [seriousCases, inAcademicYear]);
+  const filteredSeriousCases = useMemo(() => selectedCampusId
+    ? academicYearSeriousCases.filter((item) => item.campusId === selectedCampusId)
+    : academicYearSeriousCases,
+  [academicYearSeriousCases, selectedCampusId]);
 
   const totalCriticalCases = filteredSeriousCases.length;
   const totalCriticalResolved = filteredSeriousCases.filter((c) => c.status === "resolved").length;
   const totalCriticalPending = filteredSeriousCases.filter((c) => c.status === "open").length;
 
   // Monthly Reports platform/campus metrics
-  const filteredMonthlyReports = useMemo(() => {
-    if (!selectedCampusId) return monthlyReports;
-    return monthlyReports.filter((r) => r.campusId === selectedCampusId);
-  }, [monthlyReports, selectedCampusId]);
+  const academicYearMonthlyReports = useMemo(() => monthlyReports.filter((report) =>
+    includesMonth(report.year, report.month, report.campusId, report.collegeId),
+  ), [monthlyReports, includesMonth]);
+  const filteredMonthlyReports = useMemo(() => selectedCampusId
+    ? academicYearMonthlyReports.filter((report) => report.campusId === selectedCampusId)
+    : academicYearMonthlyReports,
+  [academicYearMonthlyReports, selectedCampusId]);
 
   const reportsThisMonth = filteredMonthlyReports.filter((r) => {
     const d = new Date(r.uploadedAt);
@@ -339,8 +371,8 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
   }, [selectedCampusId, filteredAllEvents, allEvents]);
 
   // Platform-wide metrics for remaining normal wide-campuses view sections
-  const platformCriticalResolved = seriousCases.filter((c) => c.status === "resolved").length;
-  const openCasesAssignedForReview = seriousCases.filter(
+  const platformCriticalResolved = academicYearSeriousCases.filter((c) => c.status === "resolved").length;
+  const openCasesAssignedForReview = academicYearSeriousCases.filter(
     (seriousCase) =>
       seriousCase.status === "open" &&
       seriousCase.targetTier === "principal-vp" &&
@@ -353,10 +385,9 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
       return a.createdAt - b.createdAt;
     });
 
-  const platformReportsThisMonth = monthlyReports.filter((r) => {
-    const d = new Date(r.uploadedAt);
-    return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
-  });
+  const platformReportsThisMonth = academicYearMonthlyReports.filter((r) =>
+    r.month === currentMonth && r.year === currentYear,
+  );
   const platformSubmittedCampusIds = new Set(platformReportsThisMonth.map((r) => r.campusId).filter(Boolean));
   const platformCampusesSubmittedCount = campuses.filter((c) => platformSubmittedCampusIds.has(c.id)).length;
   const platformCampusesPendingReports = campuses.length - platformCampusesSubmittedCount;
@@ -414,7 +445,7 @@ export function ManagementHomeOverview({ onSelectSection }: ManagementHomeOvervi
                 className={`mho-period-btn ${period === "all" ? "active" : ""}`}
                 onClick={() => setPeriod("all")}
               >
-                All Time
+                {selectedLabel || "Selected Academic Year"}
               </button>
             </div>
 

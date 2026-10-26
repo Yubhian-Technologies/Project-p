@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useAcademicYear } from "../../hooks/useAcademicYear";
 import { getUserProfile } from "../../services/firebase/firestore";
 import { subscribeToNotifications } from "../../services/firebase/notifications";
 import {
@@ -112,6 +113,7 @@ export function BookingRequestsSection({
   onChatAutoOpenConsumed,
 }: BookingRequestsSectionProps) {
   const { currentUser, profile } = useAuth();
+  const { includes: inAcademicYear } = useAcademicYear();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [userNames, setUserNames] = useState<Map<string, string>>(new Map());
   const [userPhotos, setUserPhotos] = useState<Map<string, string>>(new Map());
@@ -278,11 +280,19 @@ export function BookingRequestsSection({
     (b) => UPCOMING_STATUSES.includes(b.status) && !isSessionEndedPending(b) && !isOpenCrisisSos(b),
   );
   const upcomingCrisisSos = bookings.filter(isOpenCrisisSos);
-  const completed = bookings.filter((b) => COMPLETED_STATUSES.includes(b.status) && b.outcome !== "missed");
-  const cancelled = bookings.filter((b) => CANCELLED_STATUSES.includes(b.status));
+  // Keep live requests/upcoming sessions visible for operational follow-up;
+  // history tabs follow the academic year selected in the dashboard header.
+  const completed = bookings.filter((b) =>
+    COMPLETED_STATUSES.includes(b.status) && b.outcome !== "missed" &&
+    inAcademicYear(completedDate(b).getTime(), profile?.campusId, b.collegeId),
+  );
+  const cancelled = bookings.filter((b) =>
+    CANCELLED_STATUSES.includes(b.status) &&
+    inAcademicYear(completedDate(b).getTime(), profile?.campusId, b.collegeId),
+  );
   const missed = bookings.filter(
     (b) => (b.status === "completed" && b.outcome === "missed") || (isSessionEndedPending(b) && !isOpenCrisisSos(b)),
-  );
+  ).filter((b) => inAcademicYear(completedDate(b).getTime(), profile?.campusId, b.collegeId));
   const upcomingFollowUps = upcoming.filter((b) => b.followUpOfBookingId);
   const upcomingNewSessions = upcoming.filter((b) => !b.followUpOfBookingId);
   const filteredCompleted = completed.filter((b) => {
