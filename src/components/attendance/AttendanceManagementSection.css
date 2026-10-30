@@ -1,16 +1,16 @@
-.head-attendance {
+.attendance-management {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.head-attendance__tabs {
+.attendance-management__tabs {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.head-attendance__tab {
+.attendance-management__tab {
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
@@ -24,13 +24,13 @@
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.head-attendance__tab:hover {
+.attendance-management__tab:hover {
   background: #FFF7ED;
   color: #EA580C;
   transform: translateY(-2px);
 }
 
-.head-attendance__tab--active {
+.attendance-management__tab--active {
   background: #0B193C !important;
   color: #FFFFFF !important;
   border-color: #0B193C !important;
@@ -38,11 +38,11 @@
 }
 
 @media (max-width: 768px) {
-  .head-attendance__tabs {
+  .attendance-management__tabs {
     gap: 8px;
   }
 
-  .head-attendance__tab {
+  .attendance-management__tab {
     padding: 7px 14px;
     font-size: 12px;
   }

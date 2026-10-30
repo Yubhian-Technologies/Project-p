@@ -1,0 +1,14 @@
+.campus-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 280px;
+  margin-bottom: 4px;
+}
+
+.campus-filter label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #4a5568);
+  flex-shrink: 0;
+}

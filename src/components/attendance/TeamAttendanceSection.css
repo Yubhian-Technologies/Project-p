@@ -154,24 +154,26 @@
   border-bottom: none;
 }
 
+.team-attendance__range-fields {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .team-attendance__date-field {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1 1 220px;
+  max-width: 280px;
 }
 
 .team-attendance__date-field label {
   font-size: 13px;
   font-weight: 600;
   color: var(--neu-text-muted, #718096);
-}
-
-.team-attendance__date-field input[type="date"] {
-  font-family: inherit;
-  font-size: 13px;
-  padding: 7px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 8px;
+  flex-shrink: 0;
 }
 
 .team-attendance__mark-cell {

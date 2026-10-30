@@ -450,6 +450,27 @@ service cloud.firestore {
                         && request.resource.data.manualEntry.markedByUid == request.auth.uid
                         && recordId == request.resource.data.uid + '_' + request.resource.data.date
                       )
+                      || (
+                        // Admin manually marking a counsellor/head in scope —
+                        // same hierarchy as the rest of the Admin dashboard:
+                        // Principal/VP/Administration narrowed to their
+                        // assigned college (adminCanAccessCollege), Management
+                        // and global admins keep whole-campus access, and
+                        // Super Admin always qualifies.
+                        adminCanAccessCollege(
+                          request.resource.data.campusId,
+                          get(/databases/$(database)/documents/users/$(request.resource.data.uid)).data.get('collegeId', null)
+                        )
+                        && request.resource.data.uid != request.auth.uid
+                        && request.resource.data.checkInAt is number
+                        && request.resource.data.checkInAt <= request.time.toMillis() + 600000
+                        && request.resource.data.checkInMethod == 'manual'
+                        && 'manualEntry' in request.resource.data
+                        && request.resource.data.manualEntry.reason is string
+                        && request.resource.data.manualEntry.reason.size() > 0
+                        && request.resource.data.manualEntry.markedByUid == request.auth.uid
+                        && recordId == request.resource.data.uid + '_' + request.resource.data.date
+                      )
                     );
 
       // Check-out: fills checkOutAt exactly once. Nothing else on the record
@@ -477,6 +498,18 @@ service cloud.firestore {
                         (
                           (isRole('head') && resource.data.campusId == myProfile().campusId) ||
                           isHeadOfCampus(resource.data.campusId)
+                        )
+                        && 'manualEntry' in request.resource.data
+                        && request.resource.data.manualEntry.reason is string
+                        && request.resource.data.manualEntry.reason.size() > 0
+                        && request.resource.data.manualEntry.markedByUid == request.auth.uid
+                      )
+                      || (
+                        // Admin completing a missing check-in/out for a
+                        // counsellor/head in scope — same hierarchy as above.
+                        adminCanAccessCollege(
+                          resource.data.campusId,
+                          get(/databases/$(database)/documents/users/$(resource.data.uid)).data.get('collegeId', null)
                         )
                         && 'manualEntry' in request.resource.data
                         && request.resource.data.manualEntry.reason is string
@@ -1466,19 +1499,16 @@ service cloud.firestore {
     // ---------- camera-locations ----------
     // Per-login check-in spots: each counsellor/head has exactly two slots
     // (doc id {uid}_location-1 / {uid}_location-2). Written by super-admin,
-    // a management-designation admin scoped to the campus, or the Head of
-    // that campus; readable by any counsellor/head and scoped admins.
-    function canManageCameraLocation(campusId) {
-      return isRole('super-admin') ||
-        (
-          myRole() == 'admin' &&
-          'adminAccess' in myProfile() &&
-          myProfile().adminAccess.get('designation', '') in ['management', ''] &&
-          (
-            myProfile().adminAccess.scope == 'global' ||
-            campusId in myProfile().adminAccess.get('campusIds', [])
-          )
-        ) ||
+    // an Admin scoped to that login's college/campus (Principal/VP/
+    // Administration narrowed to their assigned college via
+    // adminCanAccessCollege; Management/global admins keep whole-campus
+    // access, same hierarchy as the rest of the Admin dashboard), or the
+    // Head of that campus; readable by any counsellor/head and scoped admins.
+    function canManageCameraLocation(campusId, uid) {
+      return adminCanAccessCollege(
+        campusId,
+        get(/databases/$(database)/documents/users/$(uid)).data.get('collegeId', null)
+      ) ||
         (
           // The campus Head manages their campus's logins' camera slots.
           (isRole('head') || isHeadOfCampus(campusId)) &&
@@ -1495,7 +1525,7 @@ service cloud.firestore {
       allow create, update: if request.resource.data.uid is string
       && locationId == request.resource.data.uid + '_' + request.resource.data.slot
       && request.resource.data.slot in ['location-1', 'location-2']
-      && canManageCameraLocation(request.resource.data.campusId)
+      && canManageCameraLocation(request.resource.data.campusId, request.resource.data.uid)
       && request.resource.data.campusId is string
       && request.resource.data.name is string
       && request.resource.data.name.size() > 0
@@ -1507,7 +1537,7 @@ service cloud.firestore {
 
       allow delete: if isSignedIn() && (
         // The person themself can't delete their slots; only their managers can.
-        canManageCameraLocation(resource.data.get('campusId', null))
+        canManageCameraLocation(resource.data.get('campusId', null), resource.data.uid)
       );
     }
 
@@ -1518,8 +1548,8 @@ service cloud.firestore {
     //   out their enrolled face. Re-registering requires their manager to
     //   reset (delete) the profile first, which then allows a fresh create.
     // - The same people who manage a login's camera-locations (super-admin,
-    //   a scoped management admin, or the campus Head) can also read status
-    //   and reset (delete) any profile in their scope.
+    //   a scoped Admin, or the campus Head — see canManageCameraLocation)
+    //   can also read status and reset (delete) any profile in their scope.
     match /face-profiles/{uid} {
       // getDoc() on a profile that doesn't exist yet (the normal case for
       // "not registered") still runs this rule, and `resource` is null —
@@ -1532,7 +1562,7 @@ service cloud.firestore {
       // only an EXISTING profile needs the real campus-scope check.
       allow read: if isSelf(uid)
         || (isSignedIn() && resource == null && isStaff())
-        || (isSignedIn() && resource != null && canManageCameraLocation(resource.data.get('campusId', null)));
+        || (isSignedIn() && resource != null && canManageCameraLocation(resource.data.get('campusId', null), uid));
 
       allow create: if isSelf(uid)
         && request.resource.data.uid == uid
@@ -1554,7 +1584,7 @@ service cloud.firestore {
 
       allow delete: if isSelf(uid)
         || (isSignedIn() && resource == null && isStaff())
-        || (isSignedIn() && resource != null && canManageCameraLocation(resource.data.get('campusId', null)));
+        || (isSignedIn() && resource != null && canManageCameraLocation(resource.data.get('campusId', null), uid));
     }
 
 

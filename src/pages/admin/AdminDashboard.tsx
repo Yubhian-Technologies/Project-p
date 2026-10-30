@@ -16,9 +16,7 @@ import { PrincipalHomeOverview } from "./PrincipalHomeOverview";
 import { ManagementHomeOverview } from "./ManagementHomeOverview";
 import { CampusRankingsSection } from "../user/CampusRankingsSection";
 import { PrincipalLeaveApprovalSection } from "../../components/leaves/PrincipalLeaveApprovalSection";
-import { CameraLocationsSection } from "../../components/attendance/CameraLocationsSection";
-import { FaceRegistrationsSection } from "../../components/attendance/FaceRegistrationsSection";
-import { AttendanceSection } from "../admin/AttendanceSection";
+import { AttendanceManagementSection } from "../../components/attendance/AttendanceManagementSection";
 import { TrophyIcon } from "../../components/common/icons";
 import "../../styles/bento-grid.css";
 import "./AdminDashboard.css";
@@ -96,17 +94,10 @@ const SECTIONS = [
     ),
   },
   {
-    id: "camera-locations",
-    label: "Camera Locations",
-    icon: (
-      <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
-    ),
-  },
-  {
     id: "attendance",
     label: "Attendance",
     icon: (
-      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
     ),
   },
   {
@@ -136,8 +127,7 @@ const TITLES: Record<string, string> = {
   "staff-monthly-reports": "Monthly Reports",
   "leave-approvals": "Leave Approvals",
   "campus-rankings": "Campus Rankings",
-  "camera-locations": "Camera Check-in Locations",
-  attendance: "Counsellor & Head Attendance",
+  attendance: "Attendance",
 };
 
 export function AdminDashboard() {
@@ -193,6 +183,14 @@ export function AdminDashboard() {
   const isManagementAdmin =
     profile?.role === "admin" &&
     (!profile.adminAccess?.designation || profile.adminAccess.designation === "management");
+  // Face Registrations / Camera Locations follow the same hierarchy as the
+  // "Counsellor & Head Attendance" section below: Management (and legacy
+  // global) admins keep whole-campus authority, while an assigned
+  // Principal/VP or Administration admin is scoped to their own college —
+  // same "all the authorities a Head has, but only for their college" rule.
+  // firestore.rules enforces the actual scope via adminCanAccessCollege();
+  // this only controls whether the tab is offered at all.
+  const canManageAttendance = isManagementAdmin || isPrincipalOrVp || hasAdministrationAssignment;
   const visibleSections = (
     allowedSections
       ? SECTIONS.filter(
@@ -204,8 +202,7 @@ export function AdminDashboard() {
             allowedSections.includes(s.id as (typeof allowedSections)[number]) ||
             (s.id === "serious-cases" && seesSeriousCasesRegardless) ||
             (s.id === "leave-approvals" && isPrincipalOrVp) ||
-            (s.id === "camera-locations" && isManagementAdmin) ||
-            s.id === "attendance",
+            (s.id === "attendance" && canManageAttendance),
           )
       : SECTIONS
   ).filter(
@@ -214,8 +211,7 @@ export function AdminDashboard() {
       !(isCollegeScoped && !isAdministration && s.id === "monthly-reports") &&
       !(s.id === "staff-monthly-reports" && !isPrincipalOrVp) &&
       !(s.id === "leave-approvals" && !isPrincipalOrVp) &&
-      !(s.id === "camera-locations" && !isManagementAdmin) &&
-      !(s.id === "attendance" && !profile?.role),
+      !(s.id === "attendance" && !canManageAttendance),
   );
   const effectiveActiveSection = visibleSections.some((section) => section.id === activeSection)
     ? activeSection
@@ -288,13 +284,8 @@ export function AdminDashboard() {
         <MonthlyReportsViewSection readOnly={isAdministration} />
       ) : effectiveActiveSection === "leave-approvals" && isPrincipalOrVp ? (
         <PrincipalLeaveApprovalSection />
-      ) : effectiveActiveSection === "camera-locations" && isManagementAdmin ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
-          <FaceRegistrationsSection />
-          <CameraLocationsSection />
-        </div>
-      ) : effectiveActiveSection === "attendance" ? (
-        <AttendanceSection />
+      ) : effectiveActiveSection === "attendance" && canManageAttendance ? (
+        <AttendanceManagementSection />
       ) : effectiveActiveSection === "campus-rankings" ? (
         <CampusRankingsSection />
       ) : (

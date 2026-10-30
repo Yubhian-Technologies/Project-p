@@ -12,16 +12,19 @@ import {
 import { isLeaveActiveOnDate, subscribeLeavesByApplicant } from "../../services/firebase/leaves";
 import { toIsoDate } from "../../utils/dateFormat";
 import { useAuth } from "../../hooks/useAuth";
+import { adminCanSeeStaff, allowedCampusIdsFor } from "../../utils/adminScope";
 import type { UserProfile } from "../../types/user";
 import type { AttendanceRecord } from "../../types/attendance";
 import type { Booking } from "../../types/booking";
 import type { LeaveRequest } from "../../types/leave";
 import { computeLiveStatus, liveStatusLabel } from "../../utils/counsellorStatus";
-import { Card } from "../../components/common/Card";
-import { Button } from "../../components/common/Button";
-import { Modal } from "../../components/common/Modal";
-import { AttendanceCheckCard } from "../../components/attendance/AttendanceCheckCard";
-import { MyAttendanceLog } from "../../components/attendance/MyAttendanceLog";
+import { Card } from "../common/Card";
+import { Button } from "../common/Button";
+import { Modal } from "../common/Modal";
+import { DatePicker } from "../common/DatePicker";
+import { AttendanceCheckCard } from "./AttendanceCheckCard";
+import { MyAttendanceLog } from "./MyAttendanceLog";
+import { CampusFilterSelect } from "./CampusFilterSelect";
 import { ROLE_LABELS } from "../../config/roles";
 import "./TeamAttendanceSection.css";
 
@@ -35,20 +38,50 @@ function formatDateLabel(date: string): string {
   });
 }
 
+/** Every "YYYY-MM-DD" day from start to end inclusive, built from the local
+    date components (not by adding milliseconds) so it can't drift across a
+    DST boundary. */
+function dateKeysBetween(start: string, end: string): string[] {
+  const [sy, sm, sd] = start.split("-").map(Number);
+  const [ey, em, ed] = end.split("-").map(Number);
+  const cursor = new Date(sy, sm - 1, sd);
+  const last = new Date(ey, em - 1, ed);
+  const keys: string[] = [];
+  while (cursor.getTime() <= last.getTime()) {
+    keys.push(
+      `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`,
+    );
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return keys;
+}
+
 /** Optional — set only when this is reached from somewhere that needs its
     own "back" affordance; omitted entirely when it's its own standalone tab
-    (the Head dashboard's Attendance section). */
+    (the Head/Admin/Super Admin dashboards' Attendance section).
+
+    Shared by Head, Admin, and Super Admin — each sees the self check-in
+    card only when they're a Head (counsellors/heads camera-check-in;
+    Admins don't), and the managed staff list is scoped per the dashboard's
+    existing hierarchy: a Head to their own campus's counsellors, an Admin
+    to counsellors AND heads within their adminAccess scope (whole campus
+    for Management/global, their assigned college(s) for Principal/VP/
+    Administration — see adminCanSeeStaff). */
 export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
-  const { currentUser, profile: headProfile } = useAuth();
+  const { currentUser, profile } = useAuth();
+  const isHeadViewer = profile?.role === "head";
+  const isAdminViewer = profile?.role === "admin" || profile?.role === "super-admin";
   const [nowMs] = useState(() => Date.now());
   const [counsellors, setCounsellors] = useState<UserProfile[]>([]);
   const [scheduledBookings, setScheduledBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<UserProfile | null>(null);
+  const [campusFilter, setCampusFilter] = useState("");
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [recordsLoading, setRecordsLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState("");
+  const [rangeStart, setRangeStart] = useState("");
+  const [rangeEnd, setRangeEnd] = useState("");
   const [correction, setCorrection] = useState<{ day: string; part: "check-in" | "check-out" | "both" } | null>(null);
   const [correctionReason, setCorrectionReason] = useState("");
   const [correctionError, setCorrectionError] = useState("");
@@ -62,9 +95,13 @@ export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
       setCounsellors(
         profiles.filter(
           (p) =>
-            p.role === "counsellor" &&
             !!p.campusId &&
-            p.campusId === headProfile?.campusId,
+            (isHeadViewer
+              ? p.role === "counsellor" && p.campusId === profile?.campusId
+              : (p.role === "counsellor" || p.role === "head") &&
+                !!profile &&
+                isAdminViewer &&
+                adminCanSeeStaff(profile, p)),
         ),
       );
       setScheduledBookings(live);
@@ -73,7 +110,7 @@ export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
     return () => {
       cancelled = true;
     };
-  }, [headProfile?.campusId]);
+  }, [profile, isHeadViewer, isAdminViewer]);
 
   useEffect(() => {
     if (!selected) {
@@ -85,7 +122,8 @@ export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
 
   async function openCounsellor(counsellor: UserProfile) {
     setSelected(counsellor);
-    setSelectedDate("");
+    setRangeStart("");
+    setRangeEnd("");
     setRecordsLoading(true);
     setError("");
     try {
@@ -99,7 +137,7 @@ export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
   }
 
   async function saveCorrection() {
-    if (!correction || !selected || !currentUser || !headProfile) return;
+    if (!correction || !selected || !currentUser || !profile) return;
     if (!correctionReason.trim()) {
       setCorrectionError("A reason is required — explain why you're marking this attendance manually.");
       return;
@@ -114,7 +152,7 @@ export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
         part: correction.part,
         reason: correctionReason.trim(),
         markedByUid: currentUser.uid,
-        markedByName: headProfile.displayName || headProfile.email,
+        markedByName: profile.displayName || profile.email,
       });
       setRecords(await listAttendance(selected.uid, selected.campusId ?? ""));
       setCorrection(null);
@@ -140,20 +178,33 @@ export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
             </Button>
           )}
         </div>
-        <div className="bento-grid">
-          <AttendanceCheckCard span={12} />
-        </div>
-        <MyAttendanceLog />
+        {isHeadViewer && (
+          <>
+            <div className="bento-grid">
+              <AttendanceCheckCard span={12} />
+            </div>
+            <MyAttendanceLog />
+          </>
+        )}
 
-        <h3 className="team-attendance__heading">Your Team</h3>
+        <h3 className="team-attendance__heading">{isHeadViewer ? "Your Team" : "Counsellors & Heads"}</h3>
         <p className="team-attendance__intro">
-          Tap a counsellor's name, then pick a date to see their check-in / check-out for that
-          day. You can mark a missed check-in or check-out as finished for them — a reason is
-          required, and the mark is stored with the record for Admins to see.
+          Tap a name, then pick a date to see their check-in / check-out for that day. You can
+          mark a missed check-in or check-out as finished for them — a reason is required, and
+          the mark is stored with the record.
         </p>
+        {isAdminViewer && profile && (
+          <CampusFilterSelect
+            value={campusFilter}
+            onChange={setCampusFilter}
+            allowedCampusIds={allowedCampusIdsFor(profile)}
+          />
+        )}
         {error && <p className="team-attendance__error">{error}</p>}
-        {counsellors.length === 0 && <p>No counsellors on your campus yet.</p>}
-        {counsellors.map((counsellor) => {
+        {counsellors.length === 0 && <p>No counsellors or heads in your scope yet.</p>}
+        {counsellors
+          .filter((p) => !campusFilter || p.campusId === campusFilter)
+          .map((counsellor) => {
           const status = computeLiveStatus(counsellor, scheduledBookings);
           return (
             <Card
@@ -206,15 +257,12 @@ export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
     );
   }
 
-  // ----- Level 2: date-filtered check-in/check-out, nothing shown until a
-  //       specific date is picked rather than dumping a whole month at once ----
+  // ----- Level 2: date-RANGE-filtered check-in/check-out, nothing shown
+  //       until a range is picked, one row per day in that range ----
   const recordsByDate = new Map(records.map((r) => [r.date, r]));
   const minDate = toIsoDate(new Date(selected.createdAt));
   const maxDate = toIsoDate(new Date(nowMs));
-  const selectedRecord = selectedDate ? recordsByDate.get(selectedDate) : undefined;
-  const monthOpen = selectedDate ? isMonthlyWindowOpen(selectedDate) : false;
-  const selectedIsSunday = selectedDate ? isDateKeySunday(selectedDate) : false;
-  const selectedLeave = selectedDate ? leaves.find((l) => isLeaveActiveOnDate(l, selectedDate)) : undefined;
+  const rangeDays = rangeStart && rangeEnd ? dateKeysBetween(rangeStart, rangeEnd) : [];
 
   return (
     <div className="team-attendance">
@@ -224,28 +272,63 @@ export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
           ← Back to counsellors
         </Button>
       </div>
-      <div className="team-attendance__date-field">
-        <label htmlFor="team-attendance-date">Date</label>
-        <input
-          id="team-attendance-date"
-          type="date"
-          min={minDate}
-          max={maxDate}
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-        />
+      <div className="team-attendance__range-fields">
+        {/* Both fields always show the full [account creation, today] range —
+            narrowing one field's bounds to the other's current pick (e.g.
+            capping "From" at whatever "To" already was) could trap the
+            calendar down to a 1-2 day window depending on pick order. A
+            swap on an inverted pick keeps the range valid instead. */}
+        <div className="team-attendance__date-field">
+          <label htmlFor="team-attendance-from">From</label>
+          <DatePicker
+            id="team-attendance-from"
+            value={rangeStart}
+            min={minDate}
+            max={maxDate}
+            placeholder="Start date…"
+            onChange={(v) => {
+              setRangeStart(v);
+              if (rangeEnd && v > rangeEnd) setRangeEnd(v);
+            }}
+          />
+        </div>
+        <div className="team-attendance__date-field">
+          <label htmlFor="team-attendance-to">To</label>
+          <DatePicker
+            id="team-attendance-to"
+            value={rangeEnd}
+            min={minDate}
+            max={maxDate}
+            placeholder="End date…"
+            onChange={(v) => {
+              setRangeEnd(v);
+              if (rangeStart && v < rangeStart) setRangeStart(v);
+            }}
+          />
+        </div>
+        {(rangeStart || rangeEnd) && (
+          <Button
+            type="button"
+            variant="outlined"
+            onClick={() => {
+              setRangeStart("");
+              setRangeEnd("");
+            }}
+          >
+            Clear
+          </Button>
+        )}
       </div>
       {error && <p className="team-attendance__error">{error}</p>}
-      {!selectedDate ? (
-        <p className="team-attendance__intro">Pick a date above to see that day's check-in / check-out.</p>
+      {rangeDays.length === 0 ? (
+        <p className="team-attendance__intro">Pick a date range above to see those days' check-in / check-out.</p>
       ) : recordsLoading ? (
         <p className="team-attendance__intro">Loading…</p>
       ) : (
         <>
           <p className="team-attendance__intro">
-            {monthOpen
-              ? "Editable up to the 25th of the month — mark a missed check-in or check-out as finished (a reason is required). After the 25th this month locks."
-              : "This month is locked — it was only editable up to the 25th."}
+            Each day is editable up to the 25th of its own month — mark a missed check-in or
+            check-out as finished (a reason is required). After the 25th that month locks.
           </p>
           <div className="team-attendance__table-wrap">
             <table className="team-attendance__table">
@@ -260,14 +343,15 @@ export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
                 </tr>
               </thead>
               <tbody>
-                {(() => {
-                  const record = selectedRecord;
+                {rangeDays.map((date) => {
+                  const record = recordsByDate.get(date);
                   const checkIn = record?.checkInAt;
                   const checkOut = record?.checkOutAt;
-                  const rowEditable = monthOpen;
-                  const date = selectedDate;
+                  const rowEditable = isMonthlyWindowOpen(date);
+                  const isSunday = isDateKeySunday(date);
+                  const onLeave = leaves.find((l) => isLeaveActiveOnDate(l, date));
                   return (
-                    <tr>
+                    <tr key={date}>
                       <td>{formatIstDateLabel(date)}</td>
                       <td>
                         {checkIn != null ? formatIstTime(checkIn) : "—"}
@@ -287,9 +371,9 @@ export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
                           : "—"}
                       </td>
                       <td>
-                        {selectedIsSunday
+                        {isSunday
                           ? "Sunday — not required"
-                          : selectedLeave
+                          : onLeave
                             ? "On leave"
                             : checkIn != null && checkOut != null
                               ? "Present ✓"
@@ -298,7 +382,7 @@ export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
                                 : "—"}
                       </td>
                       <td className="team-attendance__mark-cell">
-                        {/* The Head retains the manual mark-as-finished override even on a
+                        {/* The Head/Admin retains the manual mark-as-finished override even on a
                             Sunday/leave day — e.g. someone genuinely came in for an emergency —
                             unlike the counsellor's own view, which has no such override at all. */}
                         {rowEditable && (checkIn == null || checkOut == null) && (
@@ -338,7 +422,7 @@ export function TeamAttendanceSection({ onBack }: { onBack?: () => void }) {
                       </td>
                     </tr>
                   );
-                })()}
+                })}
               </tbody>
             </table>
           </div>

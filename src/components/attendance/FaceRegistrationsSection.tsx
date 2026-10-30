@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { listBookableProfiles } from "../../services/firebase/bookings";
 import { getFaceProfile, resetFaceProfile, type FaceProfile } from "../../services/firebase/faceProfiles";
 import { useAuth } from "../../hooks/useAuth";
+import { adminCanSeeStaff, allowedCampusIdsFor } from "../../utils/adminScope";
 import type { UserProfile } from "../../types/user";
 import { Card } from "../common/Card";
 import { Button } from "../common/Button";
+import { CampusFilterSelect } from "./CampusFilterSelect";
 import "./FaceRegistrationsSection.css";
 
 /**
@@ -28,6 +30,8 @@ export function FaceRegistrationsSection() {
   const [profiles, setProfiles] = useState<Map<string, FaceProfile>>(new Map());
   const [loading, setLoading] = useState(true);
   const [busyUid, setBusyUid] = useState<string | null>(null);
+  const [campusFilter, setCampusFilter] = useState("");
+  const isAdminViewer = profile?.role === "admin" || profile?.role === "super-admin";
 
   useEffect(() => {
     let active = true;
@@ -37,8 +41,13 @@ export function FaceRegistrationsSection() {
           (p) =>
             (p.role === "counsellor" || p.role === "head") &&
             !!p.campusId &&
-            (profile?.role === "super-admin" ||
-              (profile?.role === "head" && p.campusId === profile.campusId)),
+            // Mirrors CameraLocationsSection's scoping: a Head manages their
+            // own campus; an Admin follows the same hierarchy as the rest of
+            // the dashboard — Management (and legacy global) whole-campus,
+            // Principal/VP/Administration narrowed to their assigned college(s).
+            ((profile?.role === "head" && p.campusId === profile.campusId) ||
+              (!!profile && (profile.role === "admin" || profile.role === "super-admin") &&
+                adminCanSeeStaff(profile, p))),
         );
         if (active) setStaff(scoped);
         // One failed lookup shouldn't sink everyone else's status — treat it
@@ -64,7 +73,7 @@ export function FaceRegistrationsSection() {
     return () => {
       active = false;
     };
-  }, [profile?.role, profile?.campusId]);
+  }, [profile?.role, profile?.campusId, profile?.adminAccess]);
 
   async function handleReset(uid: string, name: string) {
     if (!window.confirm(`Reset ${name}'s face registration? They'll need to register again before their next check-in/check-out.`)) {
@@ -99,10 +108,20 @@ export function FaceRegistrationsSection() {
         </div>
       </div>
 
+      {isAdminViewer && profile && (
+        <CampusFilterSelect
+          value={campusFilter}
+          onChange={setCampusFilter}
+          allowedCampusIds={allowedCampusIdsFor(profile)}
+        />
+      )}
+
       {staff.length === 0 ? (
         <p className="face-registrations__empty">No counsellors or heads found for your campus.</p>
       ) : (
-        staff.map((person) => {
+        staff
+          .filter((p) => !campusFilter || p.campusId === campusFilter)
+          .map((person) => {
           const faceProfile = profiles.get(person.uid);
           return (
             <Card key={person.uid} className="face-registrations__row">

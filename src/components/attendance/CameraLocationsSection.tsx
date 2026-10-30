@@ -7,11 +7,13 @@ import {
 } from "../../services/firebase/cameraLocations";
 import { listBookableProfiles } from "../../services/firebase/bookings";
 import { useAuth } from "../../hooks/useAuth";
+import { adminCanSeeStaff, allowedCampusIdsFor } from "../../utils/adminScope";
 import type { CameraLocation, CameraSlot } from "../../types/cameraLocation";
 import type { UserProfile } from "../../types/user";
 import { Card } from "../common/Card";
 import { Button } from "../common/Button";
 import { Modal } from "../common/Modal";
+import { CampusFilterSelect } from "./CampusFilterSelect";
 import "./CameraLocationsSection.css";
 
 /**
@@ -30,6 +32,8 @@ export function CameraLocationsSection() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [campusFilter, setCampusFilter] = useState("");
+  const isAdminViewer = profile?.role === "admin" || profile?.role === "super-admin";
 
   useEffect(() => {
     const unsub = subscribeAllCameraLocations(setLocations);
@@ -39,16 +43,19 @@ export function CameraLocationsSection() {
           (p) =>
             (p.role === "counsellor" || p.role === "head") &&
             !!p.campusId &&
-            // A Head manages their own campus; Super Admin and Management
-            // admins see all (or their scoped) campuses.
-            (profile?.role === "super-admin" ||
-              (profile?.role === "head" && p.campusId === profile.campusId)),
+            // A Head manages their own campus; an Admin's scope follows the
+            // same hierarchy as the rest of the dashboard — Management (and
+            // legacy global) admins see their whole campus(es), Principal/
+            // VP/Administration are narrowed to their assigned college(s).
+            ((profile?.role === "head" && p.campusId === profile.campusId) ||
+              (!!profile && (profile.role === "admin" || profile.role === "super-admin") &&
+                adminCanSeeStaff(profile, p))),
         ),
       );
       setLoading(false);
     });
     return () => unsub();
-  }, [profile?.role, profile?.campusId]);
+  }, [profile?.role, profile?.campusId, profile?.adminAccess]);
 
   const selected = useMemo(
     () => staff.find((p) => p.uid === selectedUid) ?? null,
@@ -134,11 +141,21 @@ export function CameraLocationsSection() {
 
       {error && !editingSlot && <p className="camera-locations__error">{error}</p>}
 
+      {!selected && isAdminViewer && profile && (
+        <CampusFilterSelect
+          value={campusFilter}
+          onChange={setCampusFilter}
+          allowedCampusIds={allowedCampusIdsFor(profile)}
+        />
+      )}
+
       {!selected ? (
         staff.length === 0 ? (
           <p className="camera-locations__empty">No counsellors or heads found for your campus.</p>
         ) : (
-          staff.map((person) => {
+          staff
+            .filter((p) => !campusFilter || p.campusId === campusFilter)
+            .map((person) => {
             const count = locations.filter((l) => l.uid === person.uid).length;
             return (
               <Card

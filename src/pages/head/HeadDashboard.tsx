@@ -27,7 +27,7 @@ import { FlashQASection } from "./FlashQASection";
 import { GamesSection } from "../user/games/GamesSection";
 import type { GamesSectionHandle } from "../user/games/GamesSection";
 import { JournalSection } from "../user/journal/JournalSection";
-import { HeadAttendanceSection } from "./HeadAttendanceSection";
+import { AttendanceManagementSection } from "../../components/attendance/AttendanceManagementSection";
 import { HeadCommandCentre } from "./HeadCommandCentre";
 import { SessionReportsSection } from "./SessionReportsSection";
 import { ReportDownloadsSection, type ReportKind } from "./ReportDownloadsSection";
@@ -303,7 +303,7 @@ export function HeadDashboard() {
           onOpenTeamWorkload={() => setActiveSection("team-workload")}
         />
       )}
-      {activeSection === "camera-locations" && <HeadAttendanceSection />}
+      {activeSection === "camera-locations" && <AttendanceManagementSection />}
       {activeSection === "session-reports" && <SessionReportsSection />}
       {activeSection === "report-downloads" && (
         <ReportDownloadsSection
