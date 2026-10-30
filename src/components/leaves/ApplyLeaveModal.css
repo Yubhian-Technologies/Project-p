@@ -70,7 +70,6 @@
 }
 
 .apply-leave-form__field input,
-.apply-leave-form__field select,
 .apply-leave-form__field textarea {
   width: 100%;
   box-sizing: border-box;
@@ -85,7 +84,6 @@
 }
 
 .apply-leave-form__field input:focus,
-.apply-leave-form__field select:focus,
 .apply-leave-form__field textarea:focus {
   outline: none;
   border-color: #2563eb;

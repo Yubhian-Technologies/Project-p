@@ -27,6 +27,7 @@ import { FlashQASection } from "./FlashQASection";
 import { GamesSection } from "../user/games/GamesSection";
 import type { GamesSectionHandle } from "../user/games/GamesSection";
 import { JournalSection } from "../user/journal/JournalSection";
+import { HeadAttendanceSection } from "./HeadAttendanceSection";
 import { HeadCommandCentre } from "./HeadCommandCentre";
 import { SessionReportsSection } from "./SessionReportsSection";
 import { ReportDownloadsSection, type ReportKind } from "./ReportDownloadsSection";
@@ -71,6 +72,13 @@ const SECTIONS = [
     label: "Team Management",
     icon: (
       <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4" /><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /><path d="M21 21v-2a4 4 0 0 0-3-3.87" /></svg>
+    ),
+  },
+  {
+    id: "camera-locations",
+    label: "Attendance",
+    icon: (
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
     ),
   },
   {
@@ -216,6 +224,7 @@ export function HeadDashboard() {
     "team-workload": "Team Workload",
     "ssi-results": "SSI Test Results",
     "team-management": "Team Management",
+    "camera-locations": "Attendance",
     "session-reports": "Session Reports",
     "report-downloads": "My Reports",
     "academic-years": "Academic Years",
@@ -294,6 +303,7 @@ export function HeadDashboard() {
           onOpenTeamWorkload={() => setActiveSection("team-workload")}
         />
       )}
+      {activeSection === "camera-locations" && <HeadAttendanceSection />}
       {activeSection === "session-reports" && <SessionReportsSection />}
       {activeSection === "report-downloads" && (
         <ReportDownloadsSection

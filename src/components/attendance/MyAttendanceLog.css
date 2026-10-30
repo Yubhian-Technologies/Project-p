@@ -1,0 +1,73 @@
+.my-attendance-log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.my-attendance-log__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.my-attendance-log__heading {
+  margin: 0;
+  font-size: 18px;
+}
+
+.my-attendance-log__date-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.my-attendance-log__date-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #4a5568);
+}
+
+.my-attendance-log__date-field input[type="date"] {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+.my-attendance-log__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary, #718096);
+}
+
+.my-attendance-log__error {
+  color: #c53030;
+  font-size: 13px;
+  margin: 0;
+}
+
+.my-attendance-log__table-wrap {
+  overflow-x: auto;
+}
+
+.my-attendance-log__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.my-attendance-log__table th,
+.my-attendance-log__table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.my-attendance-log__table th {
+  font-weight: 600;
+  color: var(--text-secondary, #4a5568);
+  white-space: nowrap;
+}

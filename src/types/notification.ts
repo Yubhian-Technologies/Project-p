@@ -33,7 +33,10 @@ export type NotificationType =
   | "serious_case_created"
   | "serious_case_head_notice"
   | "serious_case_escalated"
-  | "serious_case_resolved";
+  | "serious_case_resolved"
+  | "attendance_missed_check_in"
+  | "attendance_missing_check_out"
+  | "attendance_marked_for_you";
 
 export interface Notification {
   id: string;
@@ -47,3 +50,4 @@ export interface Notification {
   read: boolean;
   createdAt: number;
 }
+

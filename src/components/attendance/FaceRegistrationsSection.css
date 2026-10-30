@@ -1,0 +1,74 @@
+.face-registrations {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.face-registrations__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.face-registrations__heading {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.face-registrations__intro {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary, #718096);
+  max-width: 68ch;
+}
+
+.face-registrations__empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary, #a0aec0);
+  font-style: italic;
+}
+
+.face-registrations__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.face-registrations__name {
+  margin: 0 0 2px;
+  font-weight: 600;
+}
+
+.face-registrations__meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary, #718096);
+}
+
+.face-registrations__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.face-registrations__badge {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-secondary, #4a5568);
+  white-space: nowrap;
+}
+
+.face-registrations__badge--done {
+  background: rgba(16, 185, 129, 0.15);
+  color: #047857;
+}

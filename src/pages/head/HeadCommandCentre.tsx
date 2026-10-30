@@ -13,6 +13,7 @@ import { AttendanceCheckCard } from "../../components/attendance/AttendanceCheck
 import { TeamAttendanceTodayCard } from "./TeamAttendanceTodayCard";
 import { listSsiCollegeResultsForCampus, type SsiCollegeResult } from "../../services/firebase/ssiCollegeResults";
 import { getAllFeedback } from "../../services/firebase/feedback";
+import { notifyHeadOfMissingAttendance } from "../../services/firebase/attendanceAlerts";
 import { formatDateDMY } from "../../utils/formatDate";
 import type { UserProfile } from "../../types/user";
 import {
@@ -61,6 +62,13 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
   const [now] = useState(() => new Date());
 
   const teamCarouselRef = useRef<HTMLDivElement>(null);
+
+  // Once per dashboard load: tell the Head about anyone who hasn't checked
+  // in / out today (on-leave staff are skipped inside the checker).
+  useEffect(() => {
+    if (!profileUid || !campusId) return;
+    void notifyHeadOfMissingAttendance(profileUid, campusId);
+  }, [profileUid, campusId]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 

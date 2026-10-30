@@ -8,6 +8,8 @@ import { LoginsManagementSection } from "./LoginsManagementSection";
 import { UsersManagementSection } from "./UsersManagementSection";
 import { AdminsManagementSection } from "./AdminsManagementSection";
 import { SuperAdminsManagementSection } from "./SuperAdminsManagementSection";
+import { CameraLocationsSection } from "../../components/attendance/CameraLocationsSection";
+import { FaceRegistrationsSection } from "../../components/attendance/FaceRegistrationsSection";
 import "../../styles/bento-grid.css";
 
 const SECTIONS = [
@@ -30,6 +32,13 @@ const SECTIONS = [
     label: "Logins",
     icon: (
       <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+    ),
+  },
+  {
+    id: "camera-locations",
+    label: "Camera Locations",
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
     ),
   },
   {
@@ -59,6 +68,7 @@ const TITLES: Record<string, string> = {
   profile: "Profile",
   campuses: "Campuses",
   logins: "Logins",
+  "camera-locations": "Camera Check-in Locations",
   users: "Users",
   admins: "Admins",
   "super-admins": "Super Admins",
@@ -81,6 +91,11 @@ export function SuperAdminDashboard() {
         <CampusManagementSection />
       ) : activeSection === "logins" ? (
         <LoginsManagementSection />
+      ) : activeSection === "camera-locations" ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
+          <FaceRegistrationsSection />
+          <CameraLocationsSection />
+        </div>
       ) : activeSection === "users" ? (
         <UsersManagementSection />
       ) : activeSection === "admins" ? (

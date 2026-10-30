@@ -123,6 +123,20 @@ service firebase.storage {
       allow delete: if false;
     }
 
+    // Camera check-in/check-out face captures:
+    // src/services/firebase/attendance.ts uploads to
+    // attendance-captures/{uid}/{date}/check-in|check-out. Scoped by the
+    // owner's own uid segment like avatars above; readable by any signed-in
+    // staff member for oversight (the Firestore attendance rule gates the
+    // listing), written only by the owner. Images only, 5MB cap.
+    match /attendance-captures/{uid}/{date}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid &&
+        request.resource.size < 5 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+      allow delete: if false;
+    }
+
     // Deny everything else by default.
     match /{allPaths=**} {
       allow read, write: if false;

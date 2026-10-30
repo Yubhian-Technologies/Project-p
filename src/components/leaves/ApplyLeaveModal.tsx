@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Modal } from "../common/Modal";
 import { Button } from "../common/Button";
+import { Select } from "../common/Select";
 import { useAuth } from "../../hooks/useAuth";
 import { applyLeave, getTodayDateString } from "../../services/firebase/leaves";
 import type { LeaveDuration, LeaveType } from "../../types/leave";
@@ -137,23 +138,23 @@ export function ApplyLeaveModal({
         <div className="apply-leave-form__row">
           <div className="apply-leave-form__field">
             <label htmlFor="leave-duration">Duration</label>
-            <select
+            <Select
               id="leave-duration"
               value={duration}
-              onChange={(e) => setDuration(e.target.value as LeaveDuration)}
+              onChange={(v) => setDuration(v as LeaveDuration)}
             >
               <option value="full_day">Full Day</option>
               <option value="half_day_morning">Half Day (Morning Session)</option>
               <option value="half_day_afternoon">Half Day (Afternoon Session)</option>
-            </select>
+            </Select>
           </div>
 
           <div className="apply-leave-form__field">
             <label htmlFor="leave-type">Leave Type</label>
-            <select
+            <Select
               id="leave-type"
               value={type}
-              onChange={(e) => setType(e.target.value as LeaveType)}
+              onChange={(v) => setType(v as LeaveType)}
             >
               <option value="casual">Casual Leave</option>
               <option value="sick">Sick / Medical Leave</option>
@@ -161,7 +162,7 @@ export function ApplyLeaveModal({
               <option value="emergency">Emergency Leave</option>
               <option value="duty">On-Duty / Official Work</option>
               <option value="other">Other</option>
-            </select>
+            </Select>
           </div>
         </div>
 

@@ -1,0 +1,103 @@
+.counsellor-attendance {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.counsellor-attendance__tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.counsellor-attendance__tab {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(30, 30, 30, 0.08);
+  cursor: pointer;
+  background: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(30, 30, 30, 0.04);
+  color: #2E2B27;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.counsellor-attendance__tab:hover {
+  background: #FFF7ED;
+  color: #EA580C;
+  transform: translateY(-2px);
+}
+
+.counsellor-attendance__tab--active {
+  background: #0B193C !important;
+  color: #FFFFFF !important;
+  border-color: #0B193C !important;
+  box-shadow: 0 4px 14px rgba(11, 25, 60, 0.25) !important;
+}
+
+@media (max-width: 768px) {
+  .counsellor-attendance__tabs {
+    gap: 8px;
+  }
+
+  .counsellor-attendance__tab {
+    padding: 7px 14px;
+    font-size: 12px;
+  }
+}
+
+.counsellor-attendance__summary {
+  /* A plain Card, not a BentoCard, so it has no bento-card--col-N span class
+     of its own — without an explicit grid-column here it only ever got the
+     grid's default one-track width next to AttendanceCheckCard's span={6},
+     which is what squeezed its text down to wrapping one character per line. */
+  grid-column: span 6;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+
+.counsellor-attendance__summary-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.counsellor-attendance__summary-stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.counsellor-attendance__pill {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.counsellor-attendance__pill--present {
+  background: rgba(47, 133, 90, 0.12);
+  color: #276749;
+}
+
+.counsellor-attendance__pill--missing {
+  background: rgba(214, 158, 46, 0.15);
+  color: #975a16;
+}
+
+.counsellor-attendance__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary, #718096);
+}
+
+.counsellor-attendance__error {
+  color: #c53030;
+  font-size: 13px;
+  margin: 0;
+}
+

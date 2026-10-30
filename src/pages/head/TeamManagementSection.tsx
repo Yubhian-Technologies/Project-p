@@ -13,7 +13,6 @@ import { Button } from "../../components/common/Button";
 import { StarRating } from "../../components/common/StarRating";
 import { ROLE_LABELS } from "../../config/roles";
 import { CounsellorSessionDetail } from "./CounsellorSessionDetail";
-import { TeamAttendanceSection } from "./TeamAttendanceSection";
 import "./TeamManagementSection.css";
 
 const TAKEN_STATUSES = ["accepted", "scheduled", "completed"];
@@ -73,7 +72,6 @@ export function TeamManagementSection({
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [selectedCounsellor, setSelectedCounsellor] = useState<UserProfile | null>(null);
-  const [attendanceOpen, setAttendanceOpen] = useState(false);
 
   const load = useCallback(async (id: string) => {
     const [allProfiles, liveBookings, feedback] = await Promise.all([
@@ -119,10 +117,6 @@ export function TeamManagementSection({
     return <CounsellorSessionDetail counsellor={selectedCounsellor} onBack={() => setSelectedCounsellor(null)} />;
   }
 
-  if (attendanceOpen) {
-    return <TeamAttendanceSection onBack={() => setAttendanceOpen(false)} />;
-  }
-
   if (!campusId) return <p>Your profile isn't linked to a campus yet.</p>;
   if (loading) return null;
 
@@ -135,9 +129,6 @@ export function TeamManagementSection({
               Transfer Requests →
             </Button>
           )}
-          <Button type="button" variant="outlined" onClick={() => setAttendanceOpen(true)}>
-            Check-in / Check-out →
-          </Button>
           <Button type="button" variant="outlined" onClick={onOpenTeamChat}>
             Team Chat →
           </Button>

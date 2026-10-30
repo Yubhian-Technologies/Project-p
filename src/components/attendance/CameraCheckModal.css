@@ -1,0 +1,105 @@
+.camera-check {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.camera-check__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #4a5568);
+}
+
+.camera-check__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary, #718096);
+}
+
+.camera-check__viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 320px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #1a202c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-check__viewport video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror, natural selfie feel */
+}
+
+/* Circular face guide overlay */
+.camera-check__guide {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.camera-check__guide::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 55%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 2px dashed rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+}
+
+.camera-check__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.camera-check__error {
+  margin: 0;
+  font-size: 13px;
+  color: #c53030;
+}
+
+.camera-check__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.camera-check__note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary, #718096);
+}
+
+.camera-check__empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary, #4a5568);
+}
+
+.camera-check__face-status {
+  margin: 0;
+  font-size: 13px;
+  color: #276749;
+}
+
+.camera-check__face-status--warn {
+  color: #975a16;
+}

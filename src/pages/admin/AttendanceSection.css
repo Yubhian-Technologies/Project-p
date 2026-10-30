@@ -1,0 +1,121 @@
+.admin-attendance {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-attendance__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-attendance__heading {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.admin-attendance__intro {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary, #718096);
+  max-width: 70ch;
+}
+
+.admin-attendance__nav {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-attendance__error {
+  color: #c53030;
+  font-size: 13px;
+  margin: 0;
+}
+
+.admin-attendance__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-attendance__name {
+  margin: 0 0 2px;
+  font-weight: 600;
+}
+
+.admin-attendance__meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary, #718096);
+}
+
+.admin-attendance__stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-attendance__pill {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.admin-attendance__pill--present {
+  background: rgba(47, 133, 90, 0.12);
+  color: #276749;
+}
+
+.admin-attendance__pill--missing {
+  background: rgba(214, 158, 46, 0.15);
+  color: #975a16;
+}
+
+.admin-attendance__pill--leave {
+  background: rgba(49, 130, 206, 0.12);
+  color: #2b6cb0;
+}
+
+.admin-attendance__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-attendance__detail label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #4a5568);
+}
+
+.admin-attendance__detail textarea {
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.admin-attendance__detail-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-attendance__manual-note {
+  font-size: 13px;
+  color: #975a16;
+  background: rgba(214, 158, 46, 0.1);
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin: 0;
+}

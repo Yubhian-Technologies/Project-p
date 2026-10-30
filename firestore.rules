@@ -380,42 +380,110 @@ service cloud.firestore {
       // record exists yet.
       allow read: if isSignedIn() && (
         recordId.split('_')[0] == request.auth.uid ||
+        // listAttendance() (My Attendance's own log) queries
+        // where('uid','==',self), where('campusId','==',self) — Firestore can
+        // only validate that LIST query against a rule branch that reads
+        // resource.data.uid, since the query itself filters on it; the
+        // doc-id-based check above only ever covers a single getDoc() by a
+        // known id (e.g. before today's first check-in exists yet), not a
+        // list query, which is why a Counsellor's own "My Attendance" page
+        // was throwing "Missing or insufficient permissions" even though
+        // they were only ever reading their own data.
+        //
+        // Below this point every disjunct is guarded with `resource != null`
+        // first: a getDoc() on a record that doesn't exist yet still runs
+        // the rule (Firestore must decide readability before it can even
+        // report "not found"), and `resource.data...` throws on a null
+        // resource rather than evaluating false — which previously broke a
+        // Head's "who hasn't checked in" lookup (notifyHeadOfMissingAttendance)
+        // for exactly the people it's meant to flag: anyone with NO record
+        // for today at all. A still-nonexistent record has no data to
+        // protect, so any staff member may probe its existence.
+        (resource == null && isStaff()) ||
+        (resource != null && resource.data.get('uid', null) == request.auth.uid) ||
         // isStaff() includes Admin/Super Admin, whose own profile has no
         // campusId field at all (they're scoped via adminAccess.campusIds
         // instead) — myProfile().campusId would throw for them here, so
         // both sides use .get(field, null) to compare safely regardless.
-        (isStaff() && resource.data.get('campusId', null) == myProfile().get('campusId', null)) ||
-        adminCanAccessCampus(resource.data.get('campusId', null))
+        (resource != null && isStaff() && resource.data.get('campusId', null) == myProfile().get('campusId', null)) ||
+        (resource != null && adminCanAccessCampus(resource.data.get('campusId', null)))
       );
 
       // Check-in: the owner only, counsellor or head only, on their own campus,
       // for the day named in the doc id, and stamped within ten minutes of the
-      // server's clock so times can't be backdated. Only check-in fields may be set.
-      // (Reading a field that doesn't exist fails the whole rule, so the
-      // "not yet checked out" test uses `in` instead of comparing to null.)
+      // server's clock so times can't be backdated. Camera check-ins carry
+      // location/photo/method fields; manual marks by a Head (or a management
+      // admin fixing their campus's records) carry the manualEntry audit block.
       allow create: if isSignedIn()
-                    && myRole() in ['counsellor', 'head']
-                    && request.resource.data.uid == request.auth.uid
-                    && request.resource.data.campusId == myProfile().campusId
-                    && recordId == request.auth.uid + '_' + request.resource.data.date
-                    && request.resource.data.checkInAt is number
-                    && request.resource.data.checkInAt <= request.time.toMillis() + 600000
-                    && request.resource.data.checkInAt >= request.time.toMillis() - 600000
-                    && !('checkOutAt' in request.resource.data)
-                    && request.resource.data.keys().hasOnly(['uid', 'campusId', 'date', 'checkInAt', 'updatedAt']);
+                    && (
+                      // Self check-in (camera flow) by a counsellor or head.
+                      (
+                        myRole() in ['counsellor', 'head']
+                        && request.resource.data.uid == request.auth.uid
+                        && request.resource.data.campusId == myProfile().campusId
+                        && recordId == request.auth.uid + '_' + request.resource.data.date
+                        && request.resource.data.checkInAt is number
+                        && request.resource.data.checkInAt <= request.time.toMillis() + 600000
+                        && request.resource.data.checkInAt >= request.time.toMillis() - 600000
+                        && request.resource.data.checkInMethod == 'camera'
+                        && !('checkOutAt' in request.resource.data)
+                        && request.resource.data.keys().hasOnly([
+                          'uid', 'campusId', 'date', 'checkInAt', 'updatedAt',
+                          'checkInMethod', 'checkInLocationId', 'checkInLocationName', 'checkInPhotoPath'
+                        ])
+                      )
+                      || (
+                        // Head manually marking a same-campus counsellor/head
+                        // (or a counsellor with head duties marking for their
+                        // campus), with a mandatory reason audit block.
+                        (
+                          (isRole('head') && request.resource.data.campusId == myProfile().campusId) ||
+                          isHeadOfCampus(request.resource.data.campusId)
+                        )
+                        && request.resource.data.uid != request.auth.uid
+                        && request.resource.data.checkInAt is number
+                        && request.resource.data.checkInAt <= request.time.toMillis() + 600000
+                        && request.resource.data.checkInMethod == 'manual'
+                        && 'manualEntry' in request.resource.data
+                        && request.resource.data.manualEntry.reason is string
+                        && request.resource.data.manualEntry.reason.size() > 0
+                        && request.resource.data.manualEntry.markedByUid == request.auth.uid
+                        && recordId == request.resource.data.uid + '_' + request.resource.data.date
+                      )
+                    );
 
       // Check-out: fills checkOutAt exactly once. Nothing else on the record
       // can change, so the check-in time and day can't be rewritten.
       allow update: if isSignedIn()
-                    && myRole() in ['counsellor', 'head']
-                    && resource.data.uid == request.auth.uid
-                    && 'checkInAt' in resource.data
-                    && !('checkOutAt' in resource.data)
-                    && request.resource.data.checkOutAt is number
-                    && request.resource.data.checkOutAt <= request.time.toMillis() + 600000
-                    && request.resource.data.checkOutAt >= request.time.toMillis() - 600000
-                    && request.resource.data.checkOutAt > resource.data.checkInAt
-                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['checkOutAt', 'updatedAt']);
+                    && (
+                      (
+                        myRole() in ['counsellor', 'head']
+                        && resource.data.uid == request.auth.uid
+                        && 'checkInAt' in resource.data
+                        && !('checkOutAt' in resource.data)
+                        && request.resource.data.checkOutAt is number
+                        && request.resource.data.checkOutAt <= request.time.toMillis() + 600000
+                        && request.resource.data.checkOutAt >= request.time.toMillis() - 600000
+                        && request.resource.data.checkOutAt > resource.data.checkInAt
+                        && request.resource.data.checkOutMethod == 'camera'
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                          'checkOutAt', 'updatedAt', 'checkOutMethod', 'checkOutLocationId',
+                          'checkOutLocationName', 'checkOutPhotoPath'
+                        ])
+                      )
+                      || (
+                        // Head completing a missing check-in/out for their campus's
+                        // staff — manualEntry (with reason) must be written together.
+                        (
+                          (isRole('head') && resource.data.campusId == myProfile().campusId) ||
+                          isHeadOfCampus(resource.data.campusId)
+                        )
+                        && 'manualEntry' in request.resource.data
+                        && request.resource.data.manualEntry.reason is string
+                        && request.resource.data.manualEntry.reason.size() > 0
+                        && request.resource.data.manualEntry.markedByUid == request.auth.uid
+                      )
+                    );
 
       allow delete: if false;
     }
@@ -982,6 +1050,13 @@ service cloud.firestore {
             isSignedIn() && myRole() == 'admin' &&
             request.auth.uid in get(/databases/$(database)/documents/seriousCases/$(request.resource.data.bookingId)).data.targetAdminUids &&
             get(/databases/$(database)/documents/seriousCases/$(request.resource.data.bookingId)).data.authorUid == request.resource.data.recipientId
+          ) || (
+            // Attendance alerts from a campus Head about their own campus's
+            // counsellors/heads — and back, when the Head marks someone's
+            // attendance for them. No booking link; scoped by campus.
+            request.resource.data.type in ['attendance_missed_check_in', 'attendance_missing_check_out', 'attendance_marked_for_you'] &&
+            isSignedIn() && myRole() == 'head' &&
+            get(/databases/$(database)/documents/users/$(request.resource.data.recipientId)).data.campusId == myProfile().campusId
           )
         );
 
@@ -1385,6 +1460,101 @@ service cloud.firestore {
         myRole() == 'super-admin' ||
         (resource.data.applicantUid == request.auth.uid && resource.data.status == 'pending')
       );
+    }
+
+
+    // ---------- camera-locations ----------
+    // Per-login check-in spots: each counsellor/head has exactly two slots
+    // (doc id {uid}_location-1 / {uid}_location-2). Written by super-admin,
+    // a management-designation admin scoped to the campus, or the Head of
+    // that campus; readable by any counsellor/head and scoped admins.
+    function canManageCameraLocation(campusId) {
+      return isRole('super-admin') ||
+        (
+          myRole() == 'admin' &&
+          'adminAccess' in myProfile() &&
+          myProfile().adminAccess.get('designation', '') in ['management', ''] &&
+          (
+            myProfile().adminAccess.scope == 'global' ||
+            campusId in myProfile().adminAccess.get('campusIds', [])
+          )
+        ) ||
+        (
+          // The campus Head manages their campus's logins' camera slots.
+          (isRole('head') || isHeadOfCampus(campusId)) &&
+          campusId == myProfile().get('campusId', null)
+        );
+    }
+
+    match /camera-locations/{locationId} {
+      allow read: if isSignedIn() && (
+        myRole() in ['counsellor', 'head'] ||
+        adminCanAccessCampus(resource.data.get('campusId', null))
+      );
+
+      allow create, update: if request.resource.data.uid is string
+      && locationId == request.resource.data.uid + '_' + request.resource.data.slot
+      && request.resource.data.slot in ['location-1', 'location-2']
+      && canManageCameraLocation(request.resource.data.campusId)
+      && request.resource.data.campusId is string
+      && request.resource.data.name is string
+      && request.resource.data.name.size() > 0
+      && request.resource.data.latitude is number
+      && request.resource.data.longitude is number
+      && request.resource.data.radiusMeters is number
+      && request.resource.data.radiusMeters > 0
+      && request.resource.data.createdByUid == request.auth.uid;
+
+      allow delete: if isSignedIn() && (
+        // The person themself can't delete their slots; only their managers can.
+        canManageCameraLocation(resource.data.get('campusId', null))
+      );
+    }
+
+    // ---------- face-profiles ----------
+    // One face descriptor per user for camera check-in verification.
+    // - Self can register (create) their OWN profile, but only once — there
+    //   is deliberately no self "update": a counsellor can't silently swap
+    //   out their enrolled face. Re-registering requires their manager to
+    //   reset (delete) the profile first, which then allows a fresh create.
+    // - The same people who manage a login's camera-locations (super-admin,
+    //   a scoped management admin, or the campus Head) can also read status
+    //   and reset (delete) any profile in their scope.
+    match /face-profiles/{uid} {
+      // getDoc() on a profile that doesn't exist yet (the normal case for
+      // "not registered") still runs this rule, and `resource` is null —
+      // touching `resource.data` on it throws rather than evaluating false,
+      // which was silently breaking the whole Face Registrations list (one
+      // not-yet-registered person in it was enough to reject the entire
+      // Promise.all with an unhandled rejection, so the section just never
+      // finished loading). A missing profile has no data to protect, so any
+      // manager-type role may read/reset that "no, not registered yet" state;
+      // only an EXISTING profile needs the real campus-scope check.
+      allow read: if isSelf(uid)
+        || (isSignedIn() && resource == null && isStaff())
+        || (isSignedIn() && resource != null && canManageCameraLocation(resource.data.get('campusId', null)));
+
+      allow create: if isSelf(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.campusId is string
+        && request.resource.data.descriptor is list;
+
+      // One-time, narrowly-scoped self-repair for profiles registered before
+      // `campusId` existed on this doc (it was added when Head-side
+      // management/reset shipped): the owner may backfill ONLY that missing
+      // field, and only while it's genuinely absent — the face descriptor and
+      // enrollment timestamp must stay byte-identical, so this can never be
+      // used to swap out an enrolled face the way a real "update" would.
+      allow update: if isSelf(uid)
+        && !('campusId' in resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['campusId'])
+        && request.resource.data.campusId is string
+        && request.resource.data.descriptor == resource.data.descriptor
+        && request.resource.data.enrolledAt == resource.data.enrolledAt;
+
+      allow delete: if isSelf(uid)
+        || (isSignedIn() && resource == null && isStaff())
+        || (isSignedIn() && resource != null && canManageCameraLocation(resource.data.get('campusId', null)));
     }
 
 

@@ -153,3 +153,64 @@
 .team-attendance__table tbody tr:last-child td {
   border-bottom: none;
 }
+
+.team-attendance__date-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.team-attendance__date-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neu-text-muted, #718096);
+}
+
+.team-attendance__date-field input[type="date"] {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+.team-attendance__mark-cell {
+  white-space: nowrap;
+}
+
+.team-attendance__mark-actions {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.team-attendance__correction {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.team-attendance__correction-date {
+  margin: 0;
+  font-weight: 600;
+}
+
+.team-attendance__correction-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary, #718096);
+}
+
+.team-attendance__correction textarea {
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.team-attendance__correction-actions {
+  display: flex;
+  gap: 10px;
+}

@@ -16,6 +16,9 @@ import { PrincipalHomeOverview } from "./PrincipalHomeOverview";
 import { ManagementHomeOverview } from "./ManagementHomeOverview";
 import { CampusRankingsSection } from "../user/CampusRankingsSection";
 import { PrincipalLeaveApprovalSection } from "../../components/leaves/PrincipalLeaveApprovalSection";
+import { CameraLocationsSection } from "../../components/attendance/CameraLocationsSection";
+import { FaceRegistrationsSection } from "../../components/attendance/FaceRegistrationsSection";
+import { AttendanceSection } from "../admin/AttendanceSection";
 import { TrophyIcon } from "../../components/common/icons";
 import "../../styles/bento-grid.css";
 import "./AdminDashboard.css";
@@ -93,6 +96,20 @@ const SECTIONS = [
     ),
   },
   {
+    id: "camera-locations",
+    label: "Camera Locations",
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
+    ),
+  },
+  {
+    id: "attendance",
+    label: "Attendance",
+    icon: (
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+    ),
+  },
+  {
     id: "leave-approvals",
     label: "Leave Approvals",
     icon: (
@@ -119,6 +136,8 @@ const TITLES: Record<string, string> = {
   "staff-monthly-reports": "Monthly Reports",
   "leave-approvals": "Leave Approvals",
   "campus-rankings": "Campus Rankings",
+  "camera-locations": "Camera Check-in Locations",
+  attendance: "Counsellor & Head Attendance",
 };
 
 export function AdminDashboard() {
@@ -171,6 +190,9 @@ export function AdminDashboard() {
         ((profile.adminAccess?.collegeIds?.length ?? 0) > 0 ||
           profile.adminAccess?.designation === "principal" ||
           profile.adminAccess?.designation === "vice-principal")));
+  const isManagementAdmin =
+    profile?.role === "admin" &&
+    (!profile.adminAccess?.designation || profile.adminAccess.designation === "management");
   const visibleSections = (
     allowedSections
       ? SECTIONS.filter(
@@ -181,7 +203,9 @@ export function AdminDashboard() {
             (s.id === "staff-monthly-reports" && isPrincipalOrVp) ||
             allowedSections.includes(s.id as (typeof allowedSections)[number]) ||
             (s.id === "serious-cases" && seesSeriousCasesRegardless) ||
-            (s.id === "leave-approvals" && isPrincipalOrVp),
+            (s.id === "leave-approvals" && isPrincipalOrVp) ||
+            (s.id === "camera-locations" && isManagementAdmin) ||
+            s.id === "attendance",
           )
       : SECTIONS
   ).filter(
@@ -189,7 +213,9 @@ export function AdminDashboard() {
       !(isCampusRestricted && s.id === "campuses") &&
       !(isCollegeScoped && !isAdministration && s.id === "monthly-reports") &&
       !(s.id === "staff-monthly-reports" && !isPrincipalOrVp) &&
-      !(s.id === "leave-approvals" && !isPrincipalOrVp),
+      !(s.id === "leave-approvals" && !isPrincipalOrVp) &&
+      !(s.id === "camera-locations" && !isManagementAdmin) &&
+      !(s.id === "attendance" && !profile?.role),
   );
   const effectiveActiveSection = visibleSections.some((section) => section.id === activeSection)
     ? activeSection
@@ -262,6 +288,13 @@ export function AdminDashboard() {
         <MonthlyReportsViewSection readOnly={isAdministration} />
       ) : effectiveActiveSection === "leave-approvals" && isPrincipalOrVp ? (
         <PrincipalLeaveApprovalSection />
+      ) : effectiveActiveSection === "camera-locations" && isManagementAdmin ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
+          <FaceRegistrationsSection />
+          <CameraLocationsSection />
+        </div>
+      ) : effectiveActiveSection === "attendance" ? (
+        <AttendanceSection />
       ) : effectiveActiveSection === "campus-rankings" ? (
         <CampusRankingsSection />
       ) : (

@@ -1,0 +1,79 @@
+.location-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.location-picker__search {
+  display: flex;
+  gap: 8px;
+}
+
+.location-picker__search input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+.location-picker__search-btn {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.location-picker__search-btn:hover:not(:disabled) {
+  background: #f7fafc;
+}
+
+.location-picker__search-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.location-picker__search-error {
+  margin: 0;
+  font-size: 12px;
+  color: #c53030;
+}
+
+.location-picker__map {
+  height: 260px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  z-index: 0; /* stay under the modal scrim/panel stacking */
+}
+
+.location-picker__gps {
+  align-self: flex-start;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.location-picker__gps:hover {
+  background: #f7fafc;
+}
+
+.location-picker__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary, #718096);
+}
+
+/* Fix default Leaflet marker icon paths under bundlers */
+.location-picker__map .leaflet-marker-icon {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+}
