@@ -63,10 +63,12 @@ export async function listMonthlyReportRecipients(
   collegeId: string,
   authorRole: MonthlyReportAuthorRole,
 ): Promise<MonthlyReportRecipient[]> {
-  const [heads, admins] = await Promise.all([
-    authorRole === "counsellor" ? listUsersByRole("head") : Promise.resolve([]),
+const [headsRes, adminsRes] = await Promise.all([
+    authorRole === "counsellor" ? listUsersByRole("head") : Promise.resolve({ users: [], lastDoc: null, hasMore: false }),
     listUsersByRole("admin"),
   ]);
+  const heads = headsRes.users ?? headsRes;
+  const admins = adminsRes.users ?? adminsRes;
   const headRecipients: MonthlyReportRecipient[] = heads
     .filter((head) => head.campusId === campusId && head.collegeId === collegeId)
     .map((head) => ({

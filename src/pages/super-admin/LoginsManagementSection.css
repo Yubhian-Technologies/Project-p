@@ -42,6 +42,16 @@
   color: var(--neu-text-muted, #718096);
 }
 
+/* The live "this many logins" count under the filters — slightly stronger
+   than a plain hint so the number is easy to spot at a glance. */
+.logins-management__hint--count {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--neu-text-secondary, #4a5568);
+}
+
 .logins-management__heading {
   margin: 0;
   font-family: var(--md-sys-typescale-font-display);

@@ -43,7 +43,7 @@ export function ImportBioDataModal({ onClose }: ImportBioDataModalProps) {
   const [result, setResult] = useState<ImportResult | null>(null);
 
   useEffect(() => {
-    listUsersByRole("user").then((list) => {
+    listUsersByRole("user").then((res) => { const list = res.users;
       setStudents(list);
       setLoadingStudents(false);
     });

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { listCampuses } from "../../services/firebase/campuses";
 import { listColleges } from "../../services/firebase/colleges";
-import { listUsersByRole } from "../../services/firebase/firestore";
+import { listUsersByRole, getTotalUserCount } from "../../services/firebase/firestore";
 import type { Campus } from "../../types/campus";
 import type { College } from "../../types/college";
 import type { UserProfile } from "../../types/user";
@@ -68,13 +68,31 @@ export function UsersManagementSection() {
   // "Unassigned".
   const canCreateUsers = campusFilter !== ALL && campusFilter !== UNASSIGNED;
 
+  const [lastDoc, setLastDoc] = useState<any>(null);
+  const [hasMore, setHasMore] = useState(true);
+const [totalCount, setTotalCount] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   async function load() {
-    const [campusList, userList] = await Promise.all([listCampuses(), listUsersByRole("user")]);
+    const [campusList, res, total] = await Promise.all([listCampuses(), listUsersByRole("user", 200), getTotalUserCount()]);
     setCampuses(campusList);
-    setUsers(userList);
+    setUsers(res.users);
+    setLastDoc(res.lastDoc);
+    setHasMore(res.hasMore);
+    setTotalCount(total);
     const collegeLists = await Promise.all(campusList.map((c) => listColleges(c.id)));
     setAllColleges(collegeLists.flat());
     setLoading(false);
+  }
+
+  async function loadMore() {
+    if (!hasMore || loadingMore) return;
+    setLoadingMore(true);
+    const res = await listUsersByRole("user", 200, lastDoc);
+    setUsers((prev) => [...prev, ...res.users]);
+    setLastDoc(res.lastDoc);
+    setHasMore(res.hasMore);
+    setLoadingMore(false);
   }
 
   useEffect(() => {
@@ -82,8 +100,8 @@ export function UsersManagementSection() {
   }, []);
 
   useEffect(() => {
-    setCollegeFilter(ALL);
-  }, [campusFilter]);
+    setPage(1);
+  }, [campusFilter, collegeFilter, branchFilter, yearFilter, admissionTypeFilter, occupationFilter, emailSearch]);
 
   // Branch/Year options depend on which campus+college is selected, so a
   // stale choice (e.g. a branch that only exists elsewhere) can't linger
@@ -157,6 +175,10 @@ export function UsersManagementSection() {
   const sortedUsers = [...filteredUsers].sort((a, b) =>
     a.email.localeCompare(b.email, undefined, { numeric: true, sensitivity: "base" }),
   );
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
+  const pagedUsers = sortedUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(sortedUsers.length / PAGE_SIZE);
 
   if (loading) return null;
 
@@ -196,6 +218,21 @@ export function UsersManagementSection() {
     );
   if (emailQuery) breadcrumbParts.push(`Email contains "${emailSearch.trim()}"`);
   const breadcrumb = breadcrumbParts.join(" → ");
+
+  // Live count of what the filters currently resolve to — "X of Y" when any
+  // filter/search is narrowing the full list, otherwise just the total.
+  const anyFilterActive =
+    campusFilter !== ALL ||
+    collegeFilter !== ALL ||
+    branchFilter !== ALL ||
+    yearFilter !== ALL ||
+    admissionTypeFilter !== ALL ||
+    occupationFilter !== ALL ||
+    emailQuery.length > 0;
+  const countLabel =
+    anyFilterActive
+      ? `${filteredUsers.length} of ${users.length} loaded logins match the filters (total ${totalCount})`
+      : `${users.length} of ${totalCount} logins loaded`;
 
   return (
     <div className="logins-management">
@@ -317,10 +354,11 @@ export function UsersManagementSection() {
       </div>
 
       <p className="logins-management__hint">{breadcrumb}</p>
+      <p className="logins-management__hint logins-management__hint--count">{countLabel}</p>
 
       {filteredUsers.length === 0 && <p>No users match this filter.</p>}
 
-      {sortedUsers.map((user) => (
+      {pagedUsers.map((user) => (
         <Card key={user.uid} className="logins-management__row">
           <div>
             <p className="logins-management__name">{user.displayName || user.email}</p>
@@ -329,18 +367,6 @@ export function UsersManagementSection() {
               {user.campusId ? campusName(user.campusId) ?? "Unknown campus" : "Unassigned campus"}
               {" • "}
               {user.campusId ? (user.collegeId ? collegeName(user.collegeId) ?? "Unknown college" : "Unassigned college") : "—"}
-            </p>
-            <p className="logins-management__college">
-              {user.studentOrProfessional === "professional"
-                ? "Working professional"
-                : user.studentOrProfessional === "student"
-                  ? "Student"
-                  : "Unassigned (set before this field existed)"}
-              {user.registerNumber ? ` • ${user.registerNumber}` : ""}
-              {user.yearOrBatch ? ` • ${user.yearOrBatch}` : ""}
-              {user.admissionType ? ` • ${user.admissionType === "regular" ? "Regular" : "Lateral"}` : ""}
-              {user.branch ? ` • ${user.branch}` : ""}
-              {user.gender ? ` • ${user.gender}` : ""}
             </p>
           </div>
           <div className="logins-management__row-actions">
@@ -351,7 +377,27 @@ export function UsersManagementSection() {
         </Card>
       ))}
 
-      {editingUser && (
+      {totalPages > 1 && (
+  <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 12 }}>
+    <Button type="button" variant="outlined" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+      Prev
+    </Button>
+    <span>
+      {page} / {totalPages}
+    </span>
+    <Button type="button" variant="outlined" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+      Next
+    </Button>
+  </div>
+)}
+
+{hasMore && (
+  <Button type="button" variant="outlined" onClick={loadMore} disabled={loadingMore}>
+    {loadingMore ? "Loading…" : "Load more"}
+  </Button>
+)}
+
+{editingUser && (
         <EditUserModal
           user={editingUser}
           campuses={campuses}

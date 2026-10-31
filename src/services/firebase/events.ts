@@ -59,7 +59,7 @@ export async function createEvent(
   // campus; a legacy/global admin (no adminAccess, or scope "global") always
   // gets it, same as before this restriction existed.
   const campusName = await getCampusName(input.campusId);
-  const allAdmins = await listUsersByRole("admin");
+  const allAdmins = (await listUsersByRole("admin")).users;
   const admins = allAdmins.filter(
     (admin) =>
       !admin.adminAccess ||
@@ -87,7 +87,7 @@ export async function createEvent(
   // the scheduled function still handles events whose day arrives later.
   if (isTodayIST(input.eventDate)) {
     const [students, staff] = await Promise.all([
-      listUsersByRole("user"),
+      listUsersByRole("user").then((r) => r.users),
       listCampusLogins(input.campusId),
     ]);
     const recipientUids = [

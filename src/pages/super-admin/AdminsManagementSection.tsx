@@ -32,8 +32,8 @@ export function AdminsManagementSection() {
   const [designationFilter, setDesignationFilter] = useState(ALL);
 
   async function load() {
-    const [adminList, campusList] = await Promise.all([listUsersByRole("admin"), listCampuses()]);
-    setAdmins(adminList);
+const [adminRes, campusList] = await Promise.all([listUsersByRole("admin"), listCampuses()]);
+      setAdmins(adminRes.users);
     setCampuses(campusList);
     const collegeLists = await Promise.all(campusList.map((c) => listColleges(c.id)));
     setAllColleges(collegeLists.flat());
@@ -75,6 +75,13 @@ export function AdminsManagementSection() {
   });
 
   const { visible: visibleAdmins, hiddenCount, showMore } = useViewMore(filteredAdmins);
+
+  // Live count of what the search/designation filter currently resolves to.
+  const anyFilterActive = designationFilter !== ALL || searchQueryNormalized.length > 0;
+  const countLabel =
+    anyFilterActive
+      ? `${filteredAdmins.length} of ${admins.length} admin logins match the filter`
+      : `${admins.length} admin logins in total`;
 
   if (loading) return null;
 
@@ -134,6 +141,7 @@ export function AdminsManagementSection() {
       </div>
 
       {deleteError && <p className="logins-management__error">{deleteError}</p>}
+      <p className="logins-management__hint logins-management__hint--count">{countLabel}</p>
       {admins.length === 0 && <p>No admin logins yet.</p>}
       {admins.length > 0 && filteredAdmins.length === 0 && <p>No admins match this filter.</p>}
 

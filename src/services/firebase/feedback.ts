@@ -78,7 +78,8 @@ async function notifyFeedbackSubmitted(booking: Booking, rating: number): Promis
     });
 
     const heads = booking.campusId
-      ? (await listUsersByRole("head")).filter((h) => h.campusId === booking.campusId)
+? (await listUsersByRole("head")).users.filter((h) => h.campusId === 
+booking.campusId)
       : [];
     await Promise.all(
       heads.map((head) =>

@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where, limit, startAfter, getCountFromServer } from "firebase/firestore";
 import { db } from "./config";
 import type { Role, StudentBioData, UserProfile } from "../../types/user";
 
@@ -19,10 +19,27 @@ export async function createUserProfile(profile: UserProfile): Promise<void> {
   await setDoc(doc(db, "users", profile.uid), profile);
 }
 
-export async function listUsersByRole(role: Role): Promise<UserProfile[]> {
-  const q = query(collection(db, "users"), where("role", "==", role));
+export async function getTotalUserCount(): Promise<number> {
+  const snap = await getCountFromServer(query(collection(db, "users"), where("role", "==", "user")));
+  return snap.data().count;
+}
+
+export async function listUsersByRole(
+  role: Role,
+  pageSize = 200,
+  lastDoc?: any,
+): Promise<{ users: UserProfile[]; lastDoc: any; hasMore: boolean }> {
+  let q = query(collection(db, "users"), where("role", "==", role), limit(pageSize + 1));
+  if (lastDoc) q = query(collection(db, "users"), where("role", "==", role), startAfter(lastDoc), limit(pageSize + 1));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => d.data() as UserProfile);
+  const docs = snapshot.docs;
+  const hasMore = docs.length > pageSize;
+  const pageDocs = hasMore ? docs.slice(0, pageSize) : docs;
+  return {
+    users: pageDocs.map((d) => d.data() as UserProfile),
+    lastDoc: pageDocs.length ? pageDocs[pageDocs.length - 1] : lastDoc,
+    hasMore,
+  };
 }
 
 // Super Admin fixing a student ("user" role) account's campus/college and basic

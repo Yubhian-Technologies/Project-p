@@ -21,7 +21,7 @@ export function SuperAdminsManagementSection() {
   async function load() {
     setLoading(true);
     try {
-      setAccounts(await listUsersByRole("super-admin"));
+      setAccounts((await listUsersByRole("super-admin")).users);
       setError(null);
     } catch {
       setError("Could not load Super Admin accounts. Please try again.");
