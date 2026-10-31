@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal } from "../common/Modal";
 import { Button } from "../common/Button";
 import { Select } from "../common/Select";
@@ -10,6 +10,7 @@ import {
   getFaceProfile,
   type FaceProfile,
 } from "../../services/firebase/faceProfiles";
+import type { LivenessProgress } from "../../utils/faceVerification";
 import type { CameraLocation } from "../../types/cameraLocation";
 import "./CameraCheckModal.css";
 
@@ -23,6 +24,23 @@ interface CameraCheckModalProps {
 
 type FaceStep = "loading" | "ready" | "no-face" | "mismatch" | "not-registered";
 
+/** A guided, click-to-start liveness check — not a silent background gate.
+    Tapping "Capture & Confirm" walks through two short, explicit steps
+    ("blink", then "turn your head") before the actual capture/match/
+    geofence flow (handleSubmit) runs automatically; this proves a held-up
+    photo of the registered person can't be used in place of them. See
+    waitForBlink()/waitForHeadTurn() in utils/faceVerification for what
+    this does and doesn't defend against. */
+type LivenessPhase = "idle" | "blink" | "blink-timeout" | "move" | "move-timeout" | "verifying";
+
+const LIVENESS_TEXT: Record<Exclude<LivenessPhase, "idle">, string> = {
+  blink: "Step 1 of 2 — blink your eyes now.",
+  "blink-timeout": "Didn't catch a blink — face the camera straight-on with your eyes well lit, then blink again.",
+  move: "Step 2 of 2 — turn your head slightly, left or right.",
+  "move-timeout": "Didn't catch a head turn — turn a little further, then try again.",
+  verifying: "Verifying your face…",
+};
+
 /** Live preview from the camera with a circular face-guide overlay.
     Every capture is verified against the user's enrolled face descriptor;
     the first successful capture enrolls the face automatically. */
@@ -35,6 +53,9 @@ export function CameraCheckModal({ title, locations, onSubmit, onClose }: Camera
   const [faceStep, setFaceStep] = useState<FaceStep>("loading");
   const [faceMessage, setFaceMessage] = useState<string>("Loading face model…");
   const [profile, setProfile] = useState<FaceProfile | null>(null);
+  const [livenessPhase, setLivenessPhase] = useState<LivenessPhase>("idle");
+  const [progress, setProgress] = useState<LivenessProgress | null>(null);
+  const livenessSignalRef = useRef({ cancelled: false });
 
   const selected = useMemo(
     () => locations.find((l) => l.id === locationId) ?? null,
@@ -56,7 +77,9 @@ export function CameraCheckModal({ title, locations, onSubmit, onClose }: Camera
         setProfile(existing);
         if (existing) {
           setFaceStep("ready");
-          setFaceMessage("Face model loaded — you're registered. Look at the camera and capture.");
+          // Overridden by the liveness instructions below once the camera
+          // itself is live — this only ever shows before "Start Camera".
+          setFaceMessage("Press \"Start Camera\" to begin.");
         } else {
           setFaceStep("not-registered");
           setFaceMessage("You haven't registered your face yet — close this and use \"Register Face\" first.");
@@ -73,6 +96,54 @@ export function CameraCheckModal({ title, locations, onSubmit, onClose }: Camera
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.uid]);
+
+  // Stops any in-flight blink/head-turn wait loop when the modal unmounts,
+  // so it doesn't keep polling a video element that's gone.
+  useEffect(() => {
+    return () => {
+      livenessSignalRef.current.cancelled = true;
+    };
+  }, []);
+
+  /** Runs when "Capture & Confirm" is tapped (or "Try Again" after a
+      timeout): walks through the two liveness steps in order, each with
+      its own short timeout and a clear instruction on screen, then runs
+      the real capture/match/geofence flow automatically — no extra click
+      needed once both steps are seen. */
+  async function startLivenessThenCapture() {
+    const video = capture.videoRef.current;
+    if (!video) {
+      setError("Camera not ready — press Start Camera first.");
+      return;
+    }
+    setError(null);
+    const signal = { cancelled: false };
+    livenessSignalRef.current = signal;
+    const { waitForBlink, waitForHeadTurn } = await import("../../utils/faceVerification");
+
+    setLivenessPhase("blink");
+    setProgress(null);
+    const blinked = await waitForBlink(video, signal, 10000, (p) => setProgress(p));
+    if (signal.cancelled) return;
+    if (!blinked) {
+      setLivenessPhase("blink-timeout");
+      return;
+    }
+
+    setLivenessPhase("move");
+    setProgress(null);
+    const turned = await waitForHeadTurn(video, signal, 10000, (p) => setProgress(p));
+    if (signal.cancelled) return;
+    if (!turned) {
+      setLivenessPhase("move-timeout");
+      return;
+    }
+
+    setLivenessPhase("verifying");
+    setProgress(null);
+    await handleSubmit();
+    if (!signal.cancelled) setLivenessPhase("idle");
+  }
 
   async function handleSubmit() {
     if (!selected || !currentUser) return;
@@ -147,6 +218,16 @@ export function CameraCheckModal({ title, locations, onSubmit, onClose }: Camera
     }
   }
 
+  const statusMessage = livenessPhase === "idle" ? faceMessage : LIVENESS_TEXT[livenessPhase];
+  const statusWarn =
+    livenessPhase === "blink-timeout" || livenessPhase === "move-timeout"
+      ? true
+      : livenessPhase !== "idle"
+        ? false
+        : faceStep === "mismatch" || faceStep === "no-face" || faceStep === "not-registered";
+  const livenessRunning = livenessPhase === "blink" || livenessPhase === "move" || livenessPhase === "verifying";
+  const timedOut = livenessPhase === "blink-timeout" || livenessPhase === "move-timeout";
+
   return (
     <Modal title={title} onClose={() => { capture.close(); onClose(); }}>
       <div className="camera-check">
@@ -181,17 +262,26 @@ export function CameraCheckModal({ title, locations, onSubmit, onClose }: Camera
               {capture.phase === "loading" && (
                 <div className="camera-check__overlay">Starting camera…</div>
               )}
+              {(livenessPhase === "blink" || livenessPhase === "move") && progress && (
+                <div
+                  className={`camera-check__analyzing${progress.hint === "analyzing" ? "" : " camera-check__analyzing--noface"}`}
+                  role="status"
+                >
+                  <span className="camera-check__analyzing-dot" aria-hidden="true" />
+                  {progress.hint === "analyzing"
+                    ? "Analyzing…"
+                    : progress.hint === "too-far"
+                      ? "You're too far — move closer"
+                      : "Your face is not visible — look at the camera"}
+                </div>
+              )}
             </div>
 
             <p
-              className={`camera-check__face-status${
-                faceStep === "mismatch" || faceStep === "no-face" || faceStep === "not-registered"
-                  ? " camera-check__face-status--warn"
-                  : ""
-              }`}
+              className={`camera-check__face-status${statusWarn ? " camera-check__face-status--warn" : ""}`}
             >
-              {faceStep === "mismatch" || faceStep === "no-face" || faceStep === "not-registered" ? "⚠ " : "✓ "}
-              {faceMessage}
+              {statusWarn ? "⚠ " : "✓ "}
+              {statusMessage}
             </p>
 
             {capture.error && <p className="camera-check__error">{capture.error}</p>}
@@ -205,15 +295,24 @@ export function CameraCheckModal({ title, locations, onSubmit, onClose }: Camera
               )}
               <Button
                 type="button"
-                onClick={handleSubmit}
-                disabled={busy || capture.phase !== "ready" || faceStep !== "ready"}
+                onClick={startLivenessThenCapture}
+                disabled={busy || livenessRunning || capture.phase !== "ready" || faceStep !== "ready"}
               >
-                {busy ? "Verifying & saving…" : "Capture & Confirm"}
+                {timedOut
+                  ? "Try Again"
+                  : livenessPhase === "blink"
+                    ? "Blink your eyes…"
+                    : livenessPhase === "move"
+                      ? "Turn your head…"
+                      : busy || livenessPhase === "verifying"
+                        ? "Verifying & saving…"
+                        : "Capture & Confirm"}
               </Button>
             </div>
             <p className="camera-check__note">
-              Your face is matched against your enrolled face and your current location is
-              checked against the camera location's range before this check is accepted.
+              Tap "Capture & Confirm", then follow the two quick prompts (blink, then turn your head) —
+              your face is matched against your enrolled face and your current location is checked
+              against the camera location's range before this check is accepted.
             </p>
           </>
         )}

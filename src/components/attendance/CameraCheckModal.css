@@ -103,3 +103,51 @@
 .camera-check__face-status--warn {
   color: #975a16;
 }
+
+/* Live "Analyzing…" pill shown over the camera while a liveness step is
+   running, so the wait feels active instead of frozen. */
+.camera-check__analyzing {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.camera-check__analyzing--noface {
+  color: #fbd38d;
+}
+
+.camera-check__analyzing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #68d391;
+  animation: camera-check__pulse 1s ease-in-out infinite;
+}
+
+.camera-check__analyzing--noface .camera-check__analyzing-dot {
+  background: #fbd38d;
+}
+
+@keyframes camera-check__pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+/* Instruction pills need slightly more room than a lone timer — let them
+   wrap to two short lines on narrow screens instead of overflowing. */
+.camera-check__analyzing {
+  max-width: calc(100% - 20px);
+  text-align: center;
+  justify-content: center;
+}
