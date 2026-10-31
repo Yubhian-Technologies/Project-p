@@ -1,4 +1,4 @@
-import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { defineSecret, defineString } from "firebase-functions/params";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
@@ -200,6 +200,36 @@ export function buildRescheduledEmails(
   return { user, counsellor };
 }
 
+interface SosEmailContext {
+  studentName: string;
+  studentEmail: string;
+  studentWhatsapp: string;
+  campusName: string;
+  issue: string;
+  dispatchedAt: number;
+}
+
+/** One alert email, sent identically to every Head/Counsellor on the
+    student's campus — unlike the per-recipient appointment emails above,
+    there's no "your session" framing here, just an urgent shared alert. */
+export function buildEmergencySosEmail(d: SosEmailContext): RenderedEmail {
+  const date = formatDate(d.dispatchedAt);
+  const time = formatTime(d.dispatchedAt);
+  return renderEmail({
+    subject: `URGENT: Crisis SOS dispatched — ${d.studentName}`,
+    heading: "Crisis SOS — immediate attention needed",
+    intro: `${d.studentName} has dispatched a Crisis SOS on ${d.campusName} and needs immediate attention. Open the app now to respond — any Head or Counsellor on campus can accept it.`,
+    rows: [
+      ["Student", d.studentName],
+      ["Email", d.studentEmail],
+      ["WhatsApp", d.studentWhatsapp || "Not provided"],
+      ["Campus", d.campusName],
+      ["Dispatched", `${date}, ${time}`],
+      ["Note", d.issue],
+    ],
+  });
+}
+
 /** Only one of these two is actually sent — to whichever party didn't do the
     cancelling, same as the in-app notification this mirrors. Both are built
     regardless since that's cheap and keeps this symmetric with the other
@@ -229,7 +259,7 @@ export function buildCancellationEmails(d: BookingEmailContext): { user: Rendere
 }
 
 /** Booking-level events that trigger an email. */
-type AppointmentEmailEvent = "scheduled" | "rescheduled" | "cancelled";
+type AppointmentEmailEvent = "scheduled" | "rescheduled" | "cancelled" | "emergency";
 
 interface DetectedEvent {
   event: AppointmentEmailEvent;
@@ -401,6 +431,79 @@ export const sendAppointmentEmails = onDocumentUpdated(
       // Release the claim so a retry can go out — Resend's Idempotency-Key
       // stops any recipient that already got their copy from getting it twice.
       await releaseEvent(bookingId, appointmentEvent);
+      throw err;
+    }
+  },
+);
+
+/**
+ * Crisis SOS alert emails, dispatched to every Head/Counsellor on the
+ * student's campus the moment the booking is created — the in-app
+ * "emergency_sos" notification (see createEmergencySosBooking) already
+ * reaches the same people instantly, but a login email can't be missed
+ * just because nobody has the app open right then. A dedicated onCreate
+ * trigger rather than reusing sendAppointmentEmails: detectEvent()
+ * deliberately excludes isEmergency bookings (there's no "scheduled" time
+ * to report), and this needs a rich, campus-staff-fanout email, not the
+ * single to/counsellor shape the appointment builders assume.
+ */
+export const emailOnEmergencySosDispatch = onDocumentCreated(
+  { document: "bookings/{bookingId}", secrets: [resendApiKey] },
+  async (event) => {
+    const snapshot = event.data;
+    if (!snapshot) return;
+    const booking = snapshot.data();
+    if (!booking?.isEmergency) return;
+
+    const bookingId = event.params.bookingId;
+    const claimed = await claimEvent(bookingId, "emergency");
+    if (!claimed) return;
+
+    try {
+      const db = getFirestore();
+      const campusId = booking.campusId as string | undefined;
+      const [intakeSnap, campusSnap, staffSnap] = await Promise.all([
+        db.collection("bookings").doc(bookingId).collection("private").doc("details").get(),
+        campusId ? db.collection("campuses").doc(campusId).get() : Promise.resolve(null),
+        // A single where("role","in",...) filter only needs Firestore's
+        // automatic single-field index — combining it server-side with a
+        // second where("campusId","==",...) would need a composite index
+        // that doesn't exist, so campus/active filtering happens in memory
+        // below instead, same as listBookableProfiles()'s client callers do.
+        db.collection("users").where("role", "in", ["counsellor", "head"]).get(),
+      ]);
+      const intake = intakeSnap.data() ?? {};
+      const campusName = (campusSnap?.data()?.name as string | undefined) || "your campus";
+      const studentEmail = (booking.userEmail as string) || "";
+      const studentName = (intake.username as string) || studentEmail || "A student";
+
+      const email = buildEmergencySosEmail({
+        studentName,
+        studentEmail,
+        studentWhatsapp: (intake.whatsappNumber as string) || "",
+        campusName,
+        issue: (intake.issue as string) || "Crisis SOS — immediate assistance requested.",
+        dispatchedAt: typeof booking.createdAt === "number" ? booking.createdAt : Date.now(),
+      });
+
+      const sends: Promise<void>[] = [];
+      staffSnap.docs.forEach((staffDoc) => {
+        const staff = staffDoc.data();
+        if (staff.campusId !== campusId || staff.active === false) return;
+        const to = staff.email as string | undefined;
+        if (!to) {
+          console.warn("Skipping SOS email: staff has no address", staffDoc.id);
+          return;
+        }
+        sends.push(sendEmail(to, email, `${bookingId}:emergency:${staffDoc.id}`));
+      });
+
+      if (sends.length === 0) {
+        console.warn("No campus staff emails to send Crisis SOS alert to", bookingId);
+      }
+      await Promise.all(sends);
+    } catch (err) {
+      await releaseEvent(bookingId, "emergency");
       throw err;
     }
   },

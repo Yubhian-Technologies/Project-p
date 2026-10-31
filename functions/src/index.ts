@@ -2165,8 +2165,8 @@ export const getStudentMoodLogs = onCall<{ bookingId: string }>(async (request) 
   return { entries: entriesSnap.docs.map((d) => d.data()) };
 });
 
-export { sendAppointmentEmails } from "./appointmentEmails";
-export { emailOnEmergencySos, submitStudentReferral } from "./email";
+export { sendAppointmentEmails, emailOnEmergencySosDispatch } from "./appointmentEmails";
+export { submitStudentReferral } from "./email";
 
 // ───────────────────────── Academic years ─────────────────────────
 //
