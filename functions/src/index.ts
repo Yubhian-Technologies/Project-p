@@ -585,6 +585,35 @@ export const exportStaffData = onCall<{ uid: string }>(async (request) => {
   };
 });
 
+export const deactivateExpiredStudentLogins = onSchedule("0 0 * * *", async () => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const snap = await db.collection("users").where("role", "==", "user").get();
+  for (const docSnap of snap.docs) {
+    const data = docSnap.data() as any;
+    const batch = (data.yearOrBatch || "").trim();
+    if (!batch) continue;
+    const parts = batch.split(/[-/]/);
+    let endYear = 0;
+    if (parts.length >= 2) {
+      const last = parts[parts.length - 1].trim();
+      if (/^\d{4}$/.test(last)) endYear = parseInt(last, 10);
+      else if (/^\d{2}$/.test(last)) {
+        const first = parts[0].trim();
+        const century = first.slice(0, 2);
+        endYear = parseInt(century + last, 10);
+      }
+    }
+    if (!endYear || currentYear <= endYear) continue;
+    if (data.active === false) continue;
+    try {
+      await auth.updateUser(docSnap.id, { disabled: true });
+    } catch (e) {
+      console.warn("disable auth failed", docSnap.id, e);
+    }
+    await db.collection("users").doc(docSnap.id).update({ active: false });
+  }
+});
 export const updateCampusLogin = onCall<UpdateCampusLoginRequest>(async (request) => {
   const callerUid = request.auth?.uid;
   if (!callerUid) {
