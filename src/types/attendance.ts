@@ -8,12 +8,11 @@ export interface AttendanceRecord {
   checkInAt?: number;
   /** Epoch ms of the check-out. Added once the user checks out. */
   checkOutAt?: number;
-  /** How the check-in was recorded. Legacy records (before camera flow)
-      have no method — treated as "button". */
+  /** How the check-in was recorded. Older button records may have no method. */
   checkInMethod?: "camera" | "manual" | "button";
   /** How the check-out was recorded. */
   checkOutMethod?: "camera" | "manual" | "button";
-  /** Camera-location id the check-in was accepted at (camera method only). */
+  /** Assigned-location id the check-in was accepted at. */
   checkInLocationId?: string;
   /** Camera-location name snapshot for display without extra reads. */
   checkInLocationName?: string;
@@ -21,9 +20,9 @@ export interface AttendanceRecord {
   checkOutLocationId?: string;
   /** Camera-location name snapshot. */
   checkOutLocationName?: string;
-  /** Storage path of the check-in face capture. */
+  /** Legacy storage path of the check-in camera capture. */
   checkInPhotoPath?: string;
-  /** Storage path of the check-out face capture. */
+  /** Legacy storage path of the check-out camera capture. */
   checkOutPhotoPath?: string;
   /** Set when a Head manually marks check-in/out on behalf of the person. */
   manualEntry?: {

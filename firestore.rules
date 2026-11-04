@@ -411,12 +411,11 @@ service cloud.firestore {
 
       // Check-in: the owner only, counsellor or head only, on their own campus,
       // for the day named in the doc id, and stamped within ten minutes of the
-      // server's clock so times can't be backdated. Camera check-ins carry
-      // location/photo/method fields; manual marks by a Head (or a management
-      // admin fixing their campus's records) carry the manualEntry audit block.
+      // server's clock so times can't be backdated. Self check-ins carry their
+      // assigned location and method; manual marks carry the manualEntry audit block.
       allow create: if isSignedIn()
                     && (
-                      // Self check-in (camera flow) by a counsellor or head.
+                      // Self check-in by a counsellor or head at an assigned location.
                       (
                         myRole() in ['counsellor', 'head']
                         && request.resource.data.uid == request.auth.uid
@@ -425,7 +424,12 @@ service cloud.firestore {
                         && request.resource.data.checkInAt is number
                         && request.resource.data.checkInAt <= request.time.toMillis() + 600000
                         && request.resource.data.checkInAt >= request.time.toMillis() - 600000
-                        && request.resource.data.checkInMethod == 'camera'
+                        && request.resource.data.checkInMethod in ['camera', 'button']
+                        && request.resource.data.checkInLocationId is string
+                        && request.resource.data.checkInLocationName is string
+                        && get(/databases/$(database)/documents/camera-locations/$(request.resource.data.checkInLocationId)).data.uid == request.auth.uid
+                        && get(/databases/$(database)/documents/camera-locations/$(request.resource.data.checkInLocationId)).data.campusId == request.resource.data.campusId
+                        && get(/databases/$(database)/documents/camera-locations/$(request.resource.data.checkInLocationId)).data.name == request.resource.data.checkInLocationName
                         && !('checkOutAt' in request.resource.data)
                         && request.resource.data.keys().hasOnly([
                           'uid', 'campusId', 'date', 'checkInAt', 'updatedAt',
@@ -486,7 +490,12 @@ service cloud.firestore {
                         && request.resource.data.checkOutAt <= request.time.toMillis() + 600000
                         && request.resource.data.checkOutAt >= request.time.toMillis() - 600000
                         && request.resource.data.checkOutAt > resource.data.checkInAt
-                        && request.resource.data.checkOutMethod == 'camera'
+                        && request.resource.data.checkOutMethod in ['camera', 'button']
+                        && request.resource.data.checkOutLocationId is string
+                        && request.resource.data.checkOutLocationName is string
+                        && get(/databases/$(database)/documents/camera-locations/$(request.resource.data.checkOutLocationId)).data.uid == request.auth.uid
+                        && get(/databases/$(database)/documents/camera-locations/$(request.resource.data.checkOutLocationId)).data.campusId == resource.data.campusId
+                        && get(/databases/$(database)/documents/camera-locations/$(request.resource.data.checkOutLocationId)).data.name == request.resource.data.checkOutLocationName
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
                           'checkOutAt', 'updatedAt', 'checkOutMethod', 'checkOutLocationId',
                           'checkOutLocationName', 'checkOutPhotoPath'

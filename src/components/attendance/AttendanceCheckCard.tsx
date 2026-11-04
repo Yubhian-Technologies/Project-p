@@ -3,8 +3,8 @@ import { BentoCard } from "../common/BentoCard";
 import { Button } from "../common/Button";
 import { useAuth } from "../../hooks/useAuth";
 import {
-  cameraCheckIn,
-  cameraCheckOut,
+  checkIn,
+  checkOut,
   formatDuration,
   formatIstDateLabel,
   formatIstTime,
@@ -15,20 +15,18 @@ import {
 import {
   subscribeLocationsForUser,
 } from "../../services/firebase/cameraLocations";
-import { backfillFaceProfileCampusId, getFaceProfile, type FaceProfile } from "../../services/firebase/faceProfiles";
 import { subscribeActiveLeavesToday, formatLeaveRange } from "../../services/firebase/leaves";
 import type { AttendanceRecord } from "../../types/attendance";
 import type { CameraLocation } from "../../types/cameraLocation";
 import type { LeaveRequest } from "../../types/leave";
-import { CameraCheckModal } from "./CameraCheckModal";
-import { FaceRegisterModal } from "./FaceRegisterModal";
+import { distanceMeters } from "../../utils/geo";
 import "./AttendanceCheckCard.css";
 
 interface AttendanceCheckCardProps {
   span?: 3 | 4 | 6 | 8 | 12;
 }
 
-/** Today's camera-based check-in / check-out for counsellors and heads.
+/** Today's location-based check-in / check-out for counsellors and heads.
     Shared by both home screens; the same records are shown on the profile page. */
 export function AttendanceCheckCard({ span = 4 }: AttendanceCheckCardProps) {
   const { currentUser, profile } = useAuth();
@@ -45,10 +43,12 @@ export function AttendanceCheckCard({ span = 4 }: AttendanceCheckCardProps) {
   const [record, setRecord] = useState<AttendanceRecord | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [modal, setModal] = useState<"in" | "out" | null>(null);
   const [locations, setLocations] = useState<CameraLocation[]>([]);
-  const [faceProfile, setFaceProfile] = useState<FaceProfile | null | undefined>(undefined);
-  const [registering, setRegistering] = useState(false);
+  const [locationsLoaded, setLocationsLoaded] = useState(false);
+  const [position, setPosition] = useState<GeolocationPosition | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [actionPhase, setActionPhase] = useState<"locating" | "saving" | null>(null);
 
   // Subscribe to real-time active approved leaves today
   useEffect(() => {
@@ -59,32 +59,46 @@ export function AttendanceCheckCard({ span = 4 }: AttendanceCheckCardProps) {
     return () => unsub();
   }, [uid, eligible]);
 
-  // This login's own two camera slots (Location 1 / Location 2)
+  // This login's own two assigned check-in locations
   useEffect(() => {
     if (!uid || !eligible) return;
-    return subscribeLocationsForUser(uid, setLocations);
+    return subscribeLocationsForUser(uid, (nextLocations) => {
+      setPosition(null);
+      setLocationError(null);
+      setLocationsLoaded(true);
+      setLocations(nextLocations);
+    }, () => {
+      setPosition(null);
+      setLocations([]);
+      setLocationsLoaded(true);
+      setLocationError("Couldn't load your assigned check-in locations. Please try again later.");
+    });
   }, [uid, eligible]);
 
-  // Face registration status — check-in/out stays locked until this exists.
+  // Use bounded one-shot requests so location detection always resolves with
+  // either a fix or an actionable error instead of waiting indefinitely.
   useEffect(() => {
-    if (!uid || !eligible) return;
+    if (!eligible || !locationsLoaded || locations.length === 0) return;
     let active = true;
-    getFaceProfile(uid).then(async (p) => {
-      // A profile registered before `campusId` was added to this doc (an
-      // older test enrollment, from before Head-side management/reset
-      // shipped) is invisible to the Head's management view — their read
-      // rule needs campusId to confirm it's in-scope. Self-heal it the
-      // moment the owner's own card loads, rather than leaving it stuck.
-      if (p && !p.campusId && campusId) {
-        await backfillFaceProfileCampusId(uid, campusId);
-        p = { ...p, campusId };
-      }
-      if (active) setFaceProfile(p);
-    });
+    setPosition(null);
+    setLocating(true);
+    setLocationError(null);
+    requestLocationFix()
+      .then((nextPosition) => {
+        if (active) setPosition(nextPosition);
+      })
+      .catch((geoError: unknown) => {
+        if (!active) return;
+        setPosition(null);
+        setLocationError(geoError instanceof Error ? geoError.message : "Couldn't determine your location.");
+      })
+      .finally(() => {
+        if (active) setLocating(false);
+      });
     return () => {
       active = false;
     };
-  }, [uid, eligible, campusId]);
+  }, [eligible, locationsLoaded, locations]);
 
   useEffect(() => {
     if (!uid || !eligible || onLeave) return;
@@ -101,47 +115,74 @@ export function AttendanceCheckCard({ span = 4 }: AttendanceCheckCardProps) {
     };
   }, [uid, eligible, onLeave, dateKey]);
 
+  const matchingLocation = position ? getVerifiedLocation(position, locations) : null;
+
   if (!eligible) return null;
 
-  async function handleCheckIn({ location, photoBlob }: { location: CameraLocation; photoBlob: Blob }) {
-    if (!uid || !campusId || onLeave || isSunday) return;
-    setBusy(true);
-    setError(null);
+  async function refreshLocation() {
+    if (locating || locations.length === 0 || !geolocationSupported) return;
+    setLocating(true);
+    setLocationError(null);
     try {
-      await cameraCheckIn({
-        uid,
-        campusId,
-        date: dateKey,
-        locationId: location.id,
-        locationName: location.name,
-        photoBlob,
-      });
-      setRecord(await getAttendanceRecord(uid, dateKey));
+      setPosition(await requestLocationFix());
+    } catch (geoError) {
+      setLocationError(geoError instanceof Error ? geoError.message : "Couldn't determine your location.");
     } finally {
-      setBusy(false);
+      setLocating(false);
     }
   }
 
-  async function handleCheckOut({ location, photoBlob }: { location: CameraLocation; photoBlob: Blob }) {
-    if (!uid || onLeave || isSunday) return;
+  async function handleAttendanceAction(action: "check-in" | "check-out") {
+    if (!uid || !campusId || onLeave || isSunday || busy || !geolocationSupported) return;
     setBusy(true);
+    setActionPhase("locating");
     setError(null);
+    setLocationError(null);
+    let savingAttendance = false;
     try {
-      await cameraCheckOut({
-        uid,
-        date: dateKey,
-        locationId: location.id,
-        locationName: location.name,
-        photoBlob,
-      });
+      const currentPosition = await requestLocationFix();
+      setPosition(currentPosition);
+      const verifiedLocation = getVerifiedLocation(currentPosition, locations);
+      if (!verifiedLocation) {
+        setLocationError("Your current location is outside your assigned check-in locations.");
+        return;
+      }
+
+      setLocationError(null);
+      setActionPhase("saving");
+      savingAttendance = true;
+      if (action === "check-in") {
+        await checkIn({
+          uid,
+          campusId,
+          date: dateKey,
+          locationId: verifiedLocation.id,
+          locationName: verifiedLocation.name,
+        });
+      } else {
+        await checkOut({
+          uid,
+          date: dateKey,
+          locationId: verifiedLocation.id,
+          locationName: verifiedLocation.name,
+        });
+      }
       setRecord(await getAttendanceRecord(uid, dateKey));
+      setLocationError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Couldn't complete attendance. Please try again.";
+      if (!savingAttendance) setLocationError(message);
+      else setError(message);
     } finally {
+      setActionPhase(null);
       setBusy(false);
     }
   }
 
   const checkedIn = record?.checkInAt != null;
   const checkedOut = record?.checkOutAt != null;
+  const geolocationSupported =
+    typeof navigator !== "undefined" && Boolean(navigator.geolocation);
 
   return (
     <BentoCard
@@ -166,26 +207,8 @@ export function AttendanceCheckCard({ span = 4 }: AttendanceCheckCardProps) {
               : "You're marked unavailable today, so attendance check-in and check-out are turned off."}
           </p>
         </div>
-      ) : faceProfile === undefined ? (
-        <div className="attn">
-          <p className="attn-muted">Loading…</p>
-        </div>
-      ) : faceProfile === null ? (
-        <div className="attn">
-          <p className="attn-status">You haven't registered your face yet.</p>
-          <p className="attn-muted">
-            Register once — it takes a few seconds — and every future check-in/check-out is matched against it.
-            Check-in and check-out stay locked until you do.
-          </p>
-          <div className="attn-actions">
-            <Button type="button" onClick={() => setRegistering(true)}>
-              Register Face
-            </Button>
-          </div>
-        </div>
       ) : (
         <div className="attn">
-          <p className="attn-registered">✓ Face registered</p>
           <p className="attn-status">
             {checkedIn && checkedOut
               ? `Checked in ${formatIstTime(record!.checkInAt!)} · out ${formatIstTime(record!.checkOutAt!)} — Present ✓`
@@ -196,63 +219,144 @@ export function AttendanceCheckCard({ span = 4 }: AttendanceCheckCardProps) {
           {checkedIn && checkedOut && (
             <p className="attn-muted">Worked {formatDuration(record!.checkOutAt! - record!.checkInAt!)}</p>
           )}
+          {locations.length > 0 && !checkedOut && (
+            <div className="attn-location">
+              <p
+                className={
+                  matchingLocation
+                    ? "attn-registered"
+                    : locationError
+                      ? "attn-error"
+                      : "attn-muted"
+                }
+                role="status"
+              >
+                {matchingLocation
+                  ? `Within ${matchingLocation.name}`
+                  : !geolocationSupported
+                    ? "This device or browser doesn't support location access."
+                    : locationError ??
+                      (locating
+                        ? "Finding your location…"
+                        : position
+                          ? "Outside your assigned check-in locations."
+                          : "Location hasn't been confirmed yet.")}
+              </p>
+              {locationError && matchingLocation && (
+                <p className="attn-error" role="alert">{locationError}</p>
+              )}
+              {geolocationSupported && (
+                <Button
+                  type="button"
+                  variant="outlined"
+                  className="attn-location__refresh"
+                  disabled={locating || busy}
+                  onClick={() => void refreshLocation()}
+                >
+                  {locating ? "Finding location…" : "Refresh location"}
+                </Button>
+              )}
+            </div>
+          )}
           <div className="attn-actions">
             {!checkedIn && (
               <Button
                 type="button"
-                disabled={busy || !campusId || locations.length === 0}
-                onClick={() => setModal("in")}
+                disabled={busy || !campusId || !geolocationSupported || !matchingLocation}
+                onClick={() => void handleAttendanceAction("check-in")}
               >
-                {busy ? "Saving…" : "Check In"}
+                {actionPhase === "locating"
+                  ? "Checking location…"
+                  : actionPhase === "saving"
+                    ? "Saving…"
+                    : "Check In"}
               </Button>
             )}
             {checkedIn && !checkedOut && (
               <Button
                 type="button"
-                disabled={busy || locations.length === 0}
-                onClick={() => setModal("out")}
+                disabled={busy || !geolocationSupported || !matchingLocation}
+                onClick={() => void handleAttendanceAction("check-out")}
               >
-                {busy ? "Saving…" : "Check Out"}
+                {actionPhase === "locating"
+                  ? "Checking location…"
+                  : actionPhase === "saving"
+                    ? "Saving…"
+                    : "Check Out"}
               </Button>
             )}
           </div>
           {!checkedIn && locations.length === 0 && (
-            <p className="attn-muted">
-              No camera locations are available for your campus yet — ask your Head or Admin to add one.
+            <p className={locationError ? "attn-error" : "attn-muted"}>
+              {locationsLoaded
+                ? locationError ?? "No check-in locations are assigned yet — ask your Head or Admin to add one."
+                : "Loading your assigned check-in locations…"}
             </p>
           )}
           {error && <p className="attn-error">{error}</p>}
         </div>
       )}
-
-      {registering && uid && campusId && (
-        <FaceRegisterModal
-          uid={uid}
-          campusId={campusId}
-          onDone={() => {
-            setRegistering(false);
-            getFaceProfile(uid).then(setFaceProfile);
-          }}
-          onClose={() => setRegistering(false)}
-        />
-      )}
-
-      {modal === "in" && (
-        <CameraCheckModal
-          title="Face Check-in"
-          locations={locations}
-          onSubmit={handleCheckIn}
-          onClose={() => setModal(null)}
-        />
-      )}
-      {modal === "out" && (
-        <CameraCheckModal
-          title="Face Check-out"
-          locations={locations}
-          onSubmit={handleCheckOut}
-          onClose={() => setModal(null)}
-        />
-      )}
     </BentoCard>
   );
+}
+
+function getVerifiedLocation(
+  position: GeolocationPosition,
+  locations: CameraLocation[],
+): CameraLocation | null {
+  if (
+    !Number.isFinite(position.coords.latitude) ||
+    !Number.isFinite(position.coords.longitude) ||
+    !Number.isFinite(position.coords.accuracy) ||
+    position.coords.accuracy < 0
+  ) {
+    return null;
+  }
+
+  let closestLocation: CameraLocation | null = null;
+  let closestDistance = Number.POSITIVE_INFINITY;
+
+  for (const location of locations) {
+    const distance = distanceMeters(
+      position.coords.latitude,
+      position.coords.longitude,
+      location.latitude,
+      location.longitude,
+    );
+    if (distance <= location.radiusMeters && distance < closestDistance) {
+      closestLocation = location;
+      closestDistance = distance;
+    }
+  }
+
+  return closestLocation;
+}
+
+async function requestLocationFix(): Promise<GeolocationPosition> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) {
+    throw new Error("This device or browser doesn't support location access.");
+  }
+
+  try {
+    const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 12000,
+      });
+    });
+    return position;
+  } catch (error) {
+    throw error instanceof Error ? error : locationRequestError(error);
+  }
+}
+
+function locationRequestError(error: unknown): Error {
+  if (typeof error === "object" && error !== null && "code" in error && error.code === 1) {
+    return new Error("Allow location access in your browser, then try again.");
+  }
+  if (typeof error === "object" && error !== null && "code" in error && error.code === 3) {
+    return new Error("Location timed out. Check that GPS or location services are enabled, then try again.");
+  }
+  return new Error("Couldn't get your location. Check GPS, location services, and your network, then try again.");
 }

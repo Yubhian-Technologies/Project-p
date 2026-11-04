@@ -209,7 +209,9 @@ export function HeadCommandCentre({ onNavigate }: HeadCommandCentreProps) {
         </button>
       </section>
 
-      <AttendanceCheckCard span={12} />
+      <div className="bento-grid hch-attendance-grid">
+        <AttendanceCheckCard span={4} />
+      </div>
 
       {/* 2. KPIs */}
       <section className="hch-section">

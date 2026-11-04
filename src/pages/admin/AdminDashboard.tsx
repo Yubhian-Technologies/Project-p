@@ -183,7 +183,7 @@ export function AdminDashboard() {
   const isManagementAdmin =
     profile?.role === "admin" &&
     (!profile.adminAccess?.designation || profile.adminAccess.designation === "management");
-  // Face Registrations / Camera Locations follow the same hierarchy as the
+  // Check-in locations follow the same hierarchy as the
   // "Counsellor & Head Attendance" section below: Management (and legacy
   // global) admins keep whole-campus authority, while an assigned
   // Principal/VP or Administration admin is scoped to their own college —

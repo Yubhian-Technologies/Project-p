@@ -6,6 +6,10 @@
   color: var(--neu-text-primary, #2E2B27);
 }
 
+.hch-attendance-grid {
+  margin-top: 0;
+}
+
 .hch-muted {
   color: var(--neu-text-muted, #8A8375);
   margin: 0;

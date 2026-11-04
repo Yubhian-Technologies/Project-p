@@ -5,7 +5,7 @@ import {
   onSnapshot,
   orderBy,
   query,
-  setDoc,
+  runTransaction,
   updateDoc,
   where,
   type Unsubscribe,
@@ -33,25 +33,22 @@ export async function createNotification(
   }
 }
 
-/** Creates a notification whose document ID is derived from the caller —
-    used where the same event can be triggered several times in quick
-    succession (e.g. the head dashboard effect re-running). With a fixed ID
-    the second write merges into the first document instead of duplicating
-    it, so concurrent runs can never create two copies of the same alert. */
+/** Creates a notification only once for a deterministic ID. */
 export async function createNotificationWithId(
   id: string,
   input: Omit<Notification, "id" | "read" | "createdAt">,
 ): Promise<void> {
   try {
-    await setDoc(
-      doc(db, "notifications", id),
-      {
+    const notificationRef = doc(db, "notifications", id);
+    await runTransaction(db, async (transaction) => {
+      const existing = await transaction.get(notificationRef);
+      if (existing.exists()) return;
+      transaction.set(notificationRef, {
         ...input,
         read: false,
         createdAt: Date.now(),
-      },
-      { merge: true },
-    );
+      });
+    });
   } catch (error) {
     console.error("Failed to create notification", error);
   }

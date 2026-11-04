@@ -1,6 +1,5 @@
 import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
-import { ref, uploadBytes } from "firebase/storage";
-import { db, storage } from "./config";
+import { db } from "./config";
 import type { AttendanceRecord } from "../../types/attendance";
 
 const attendanceCollection = collection(db, "attendance");
@@ -84,20 +83,39 @@ export async function getAttendanceRecord(
   return { id: snapshot.id, ...snapshot.data() } as AttendanceRecord;
 }
 
-export async function checkIn(uid: string, campusId: string, date: string): Promise<void> {
-  await setDoc(doc(attendanceCollection, attendanceDocId(uid, date)), {
-    uid,
-    campusId,
-    date,
-    checkInAt: Date.now(),
-    updatedAt: Date.now(),
+export async function checkIn(params: {
+  uid: string;
+  campusId: string;
+  date: string;
+  locationId: string;
+  locationName: string;
+}): Promise<void> {
+  const now = Date.now();
+  await setDoc(doc(attendanceCollection, attendanceDocId(params.uid, params.date)), {
+    uid: params.uid,
+    campusId: params.campusId,
+    date: params.date,
+    checkInAt: now,
+    checkInMethod: "button",
+    checkInLocationId: params.locationId,
+    checkInLocationName: params.locationName,
+    updatedAt: now,
   });
 }
 
-export async function checkOut(uid: string, date: string): Promise<void> {
-  await updateDoc(doc(attendanceCollection, attendanceDocId(uid, date)), {
-    checkOutAt: Date.now(),
-    updatedAt: Date.now(),
+export async function checkOut(params: {
+  uid: string;
+  date: string;
+  locationId: string;
+  locationName: string;
+}): Promise<void> {
+  const now = Date.now();
+  await updateDoc(doc(attendanceCollection, attendanceDocId(params.uid, params.date)), {
+    checkOutAt: now,
+    checkOutMethod: "button",
+    checkOutLocationId: params.locationId,
+    checkOutLocationName: params.locationName,
+    updatedAt: now,
   });
 }
 
@@ -128,68 +146,6 @@ export async function listAttendanceForCampusOnDate(
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as AttendanceRecord);
 }
-/**
- * Records a camera check-in: writes the attendance record with the camera
- * metadata and stores the face capture in Cloud Storage. The record id
- * (uid_date) prevents a second check-in for the same day.
- */
-export async function cameraCheckIn(params: {
-  uid: string;
-  campusId: string;
-  date: string;
-  locationId: string;
-  locationName: string;
-  photoBlob: Blob;
-}): Promise<void> {
-  const now = Date.now();
-  const photoPath = `attendance-captures/${params.uid}/${params.date}/check-in`;
-  await uploadBytes(photoRef(photoPath), params.photoBlob, { contentType: "image/jpeg" });
-  const snapshot = await getDoc(doc(attendanceCollection, attendanceDocId(params.uid, params.date)));
-  if (snapshot.exists() && (snapshot.data() as AttendanceRecord).checkInAt != null) {
-    throw new Error("Already checked in today.");
-  }
-  await setDoc(doc(attendanceCollection, attendanceDocId(params.uid, params.date)), {
-    uid: params.uid,
-    campusId: params.campusId,
-    date: params.date,
-    checkInAt: now,
-    checkInMethod: "camera" as const,
-    checkInLocationId: params.locationId,
-    checkInLocationName: params.locationName,
-    checkInPhotoPath: photoPath,
-    updatedAt: now,
-  });
-}
-
-/** Records a camera check-out: adds the check-out fields and stores the capture. */
-export async function cameraCheckOut(params: {
-  uid: string;
-  date: string;
-  locationId: string;
-  locationName: string;
-  photoBlob: Blob;
-}): Promise<void> {
-  const now = Date.now();
-  const photoPath = `attendance-captures/${params.uid}/${params.date}/check-out`;
-  await uploadBytes(photoRef(photoPath), params.photoBlob, { contentType: "image/jpeg" });
-  const snapshot = await getDoc(doc(attendanceCollection, attendanceDocId(params.uid, params.date)));
-  if (!snapshot.exists() || (snapshot.data() as AttendanceRecord).checkInAt == null) {
-    throw new Error("You need to check in before checking out.");
-  }
-  const existing = snapshot.data() as AttendanceRecord;
-  if (existing.checkOutAt != null) {
-    throw new Error("Already checked out today.");
-  }
-  await updateDoc(doc(attendanceCollection, attendanceDocId(params.uid, params.date)), {
-    checkOutAt: now,
-    checkOutMethod: "camera" as const,
-    checkOutLocationId: params.locationId,
-    checkOutLocationName: params.locationName,
-    checkOutPhotoPath: photoPath,
-    updatedAt: now,
-  });
-}
-
 /**
  * Head manually marks check-in / check-out / both for a counsellor (or another
  * head) on a past day. The reason is mandatory — the UI enforces it before
@@ -266,10 +222,6 @@ export function isMonthlyWindowOpen(date: string): boolean {
 }
 
 // -- small internal helpers ------------------------------------------------
-
-function photoRef(path: string) {
-  return ref(storage, path);
-}
 
 function dayNumberOf(date: string): [number, number, number] {
   return date.split("-").map(Number) as [number, number, number];

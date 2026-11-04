@@ -1,24 +1,16 @@
 import { useState } from "react";
 import { TeamAttendanceSection } from "./TeamAttendanceSection";
-import { FaceRegistrationsSection } from "./FaceRegistrationsSection";
 import { CameraLocationsSection } from "./CameraLocationsSection";
 import "./AttendanceManagementSection.css";
 
-type Tab = "check-in-out" | "face-registrations" | "camera-locations";
+type Tab = "check-in-out" | "locations";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "check-in-out", label: "Check-in / Check-out" },
-  { id: "face-registrations", label: "Face Registrations" },
-  { id: "camera-locations", label: "Camera Locations" },
+  { id: "locations", label: "Check-in Locations" },
 ];
 
-/** The full Attendance tab shared by Head, Admin, and Super Admin dashboards:
-    who's checked in today, face registration status, and camera check-in
-    location setup — switched between via tabs instead of stacked on one
-    long page or split across separate sidebar entries. Each dashboard
-    renders this single component; the scope (whose data shows up) is
-    resolved per-viewer inside TeamAttendanceSection / FaceRegistrationsSection
-    / CameraLocationsSection, matching that dashboard's existing hierarchy. */
+/** The full Attendance tab shared by Head, Admin, and Super Admin dashboards. */
 export function AttendanceManagementSection() {
   const [activeTab, setActiveTab] = useState<Tab>("check-in-out");
 
@@ -38,8 +30,7 @@ export function AttendanceManagementSection() {
       </div>
 
       {activeTab === "check-in-out" && <TeamAttendanceSection />}
-      {activeTab === "face-registrations" && <FaceRegistrationsSection />}
-      {activeTab === "camera-locations" && <CameraLocationsSection />}
+      {activeTab === "locations" && <CameraLocationsSection />}
     </div>
   );
 }

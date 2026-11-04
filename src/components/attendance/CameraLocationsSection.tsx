@@ -17,7 +17,7 @@ import { CampusFilterSelect } from "./CampusFilterSelect";
 import "./CameraLocationsSection.css";
 
 /**
- * Camera check-in locations are assigned PER LOGIN: pick a counsellor or
+ * Check-in locations are assigned PER LOGIN: pick a counsellor or
  * head, then set their two slots — Location 1 and Location 2 — each with a
  * map-placed pin and radius. No free-form "add"; the two slots are fixed.
  */
@@ -130,9 +130,9 @@ export function CameraLocationsSection() {
     <div className="camera-locations">
       <div className="camera-locations__header">
         <div>
-          <h3 className="camera-locations__heading">Camera Check-in Locations</h3>
+          <h3 className="camera-locations__heading">Check-in Locations</h3>
           <p className="camera-locations__intro">
-            Each counsellor and head has two fixed check-in spots — Location 1 and Location 2.
+            Each counsellor and head can have two assigned check-in spots — Location 1 and Location 2.
             Select a login below and set both spots. Their check-in and check-out are only
             accepted at one of these two, inside the radius.
           </p>

@@ -70,6 +70,7 @@ export function subscribeAllCameraLocations(
 export function subscribeLocationsForUser(
   uid: string,
   callback: (locations: CameraLocation[]) => void,
+  onError: (error: Error) => void,
 ): Unsubscribe {
   return onSnapshot(
     query(collection(db, "camera-locations"), where("uid", "==", uid)),
@@ -83,7 +84,7 @@ export function subscribeLocationsForUser(
     },
     (err) => {
       console.error("Failed to subscribe to camera locations", err);
-      callback([]);
+      onError(err);
     },
   );
 }
