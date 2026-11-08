@@ -8,11 +8,13 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 }
 
 export async function listCampusLogins(campusId: string): Promise<UserProfile[]> {
-  const q = query(collection(db, "users"), where("campusId", "==", campusId));
+  const q = query(
+    collection(db, "users"),
+    where("campusId", "==", campusId),
+    where("role", "in", ["counsellor", "head"]),
+  );
   const snapshot = await getDocs(q);
-  return snapshot.docs
-    .map((d) => d.data() as UserProfile)
-    .filter((p) => p.role === "counsellor" || p.role === "head");
+  return snapshot.docs.map((d) => d.data() as UserProfile);
 }
 
 export async function createUserProfile(profile: UserProfile): Promise<void> {
