@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where, writeBatch } from "firebase/firestore";
 import { db } from "./config";
 import type { Worksheet, WorksheetAcademicYear, WorksheetRow, WorksheetRowStatus } from "../../types/worksheet";
 
@@ -80,32 +80,47 @@ export async function listWorksheetRows(worksheetId: string, campusId: string): 
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as WorksheetRow).sort((a, b) => a.order - b.order);
 }
 
-export async function addWorksheetRow(
+export async function addWorksheetRows(
   worksheetId: string,
   campusId: string,
   input: {
-    counsellorId: string;
-    counsellorName: string;
+    assignees: Array<{ counsellorId: string; counsellorName: string }>;
     month: string;
     topic: string;
     dates: string;
     time: string;
   },
   createdBy: string,
-): Promise<string> {
+): Promise<void> {
+  if (input.assignees.length === 0) {
+    throw new Error("Assign at least one counsellor or head.");
+  }
+  if (new Set(input.assignees.map((assignee) => assignee.counsellorId)).size !== input.assignees.length) {
+    throw new Error("Each counsellor or head can only be assigned once per row.");
+  }
+
   const existingRows = await listWorksheetRows(worksheetId, campusId);
-  const nextOrder = existingRows.reduce((max, row) => Math.max(max, row.order), -1) + 1;
+  const firstOrder = existingRows.reduce((max, row) => Math.max(max, row.order), -1) + 1;
   const now = Date.now();
-  const docRef = await addDoc(rowsCollection(worksheetId), {
-    campusId,
-    ...input,
-    status: "pending" satisfies WorksheetRowStatus,
-    order: nextOrder,
-    createdBy,
-    createdAt: now,
-    updatedAt: now,
+  const batch = writeBatch(db);
+
+  input.assignees.forEach((assignee, index) => {
+    batch.set(doc(rowsCollection(worksheetId)), {
+      campusId,
+      ...assignee,
+      month: input.month,
+      topic: input.topic,
+      dates: input.dates,
+      time: input.time,
+      status: "pending" satisfies WorksheetRowStatus,
+      order: firstOrder + index,
+      createdBy,
+      createdAt: now,
+      updatedAt: now,
+    });
   });
-  return docRef.id;
+
+  await batch.commit();
 }
 
 export async function updateWorksheetRow(
@@ -117,6 +132,68 @@ export async function updateWorksheetRow(
     ...patch,
     updatedAt: Date.now(),
   });
+}
+
+export async function updateWorksheetRowWithAssignees(
+  worksheetId: string,
+  campusId: string,
+  rowId: string,
+  input: {
+    assignees: Array<{ counsellorId: string; counsellorName: string }>;
+    month: string;
+    topic: string;
+    dates: string;
+    time: string;
+  },
+  createdBy: string,
+): Promise<void> {
+  if (input.assignees.length === 0) {
+    throw new Error("Assign at least one counsellor or head.");
+  }
+  if (input.assignees.length > 500) {
+    throw new Error("A worksheet row cannot be assigned to more than 500 people.");
+  }
+  if (new Set(input.assignees.map((assignee) => assignee.counsellorId)).size !== input.assignees.length) {
+    throw new Error("Each counsellor or head can only be assigned once per row.");
+  }
+
+  const existingRows = await listWorksheetRows(worksheetId, campusId);
+  const row = existingRows.find((existingRow) => existingRow.id === rowId);
+  if (!row) {
+    throw new Error("This worksheet row no longer exists. Reload the worksheet and try again.");
+  }
+
+  const now = Date.now();
+  const batch = writeBatch(db);
+  const rowRef = doc(rowsCollection(worksheetId), rowId);
+  batch.update(rowRef, {
+    counsellorId: input.assignees[0].counsellorId,
+    counsellorName: input.assignees[0].counsellorName,
+    month: input.month,
+    topic: input.topic,
+    dates: input.dates,
+    time: input.time,
+    updatedAt: now,
+  });
+
+  const firstOrder = existingRows.reduce((max, existingRow) => Math.max(max, existingRow.order), -1) + 1;
+  input.assignees.slice(1).forEach((assignee, index) => {
+    batch.set(doc(rowsCollection(worksheetId)), {
+      campusId,
+      ...assignee,
+      month: input.month,
+      topic: input.topic,
+      dates: input.dates,
+      time: input.time,
+      status: "pending" satisfies WorksheetRowStatus,
+      order: firstOrder + index,
+      createdBy,
+      createdAt: now,
+      updatedAt: now,
+    });
+  });
+
+  await batch.commit();
 }
 
 export async function toggleWorksheetRowStatus(

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import "./MultiSelect.css";
 
 interface MultiSelectOption {
@@ -26,17 +27,65 @@ export function MultiSelect({
   emptyMessage = "No options available",
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const controlRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target as Node;
+      if (!containerRef.current?.contains(target) && !menuRef.current?.contains(target)) {
         setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+
+    function updateMenuPosition() {
+      const control = controlRef.current;
+      if (!control) return;
+
+      const bounds = control.getBoundingClientRect();
+      const margin = 8;
+      const spaceBelow = window.innerHeight - bounds.bottom - margin;
+      const spaceAbove = bounds.top - margin;
+      const opensBelow = spaceBelow >= Math.min(240, spaceAbove) || spaceBelow >= 160;
+      const availableSpace = Math.max(80, Math.min(240, opensBelow ? spaceBelow : spaceAbove));
+      const width = Math.min(bounds.width, window.innerWidth - margin * 2);
+      const left = Math.min(
+        Math.max(margin, bounds.left),
+        window.innerWidth - width - margin,
+      );
+
+      setMenuStyle({
+        position: "fixed",
+        left,
+        width,
+        maxHeight: availableSpace,
+        top: opensBelow ? bounds.bottom + margin : Math.max(margin, bounds.top - availableSpace - margin),
+      });
+    }
+
+    updateMenuPosition();
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+    };
+  }, [open]);
 
   function toggleValue(value: string) {
     onChange(selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value]);
@@ -49,6 +98,7 @@ export function MultiSelect({
       <button
         type="button"
         id={id}
+        ref={controlRef}
         className="md-multiselect__control"
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
@@ -62,8 +112,14 @@ export function MultiSelect({
           ▾
         </span>
       </button>
-      {open && (
-        <ul className="md-multiselect__menu" role="listbox" aria-multiselectable="true">
+      {open && menuStyle && createPortal(
+        <ul
+          ref={menuRef}
+          className="md-multiselect__menu"
+          style={menuStyle}
+          role="listbox"
+          aria-multiselectable="true"
+        >
           {options.length === 0 && <li className="md-multiselect__empty">{emptyMessage}</li>}
           {options.map((opt) => (
             <li
@@ -77,7 +133,8 @@ export function MultiSelect({
               <span>{opt.label}</span>
             </li>
           ))}
-        </ul>
+        </ul>,
+        document.body,
       )}
     </div>
   );

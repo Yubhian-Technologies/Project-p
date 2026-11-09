@@ -8,8 +8,8 @@ import {
   createWorksheet,
   deleteWorksheet,
   listWorksheetRows,
-  addWorksheetRow,
-  updateWorksheetRow,
+  addWorksheetRows,
+  updateWorksheetRowWithAssignees,
   deleteWorksheetRow,
   toggleWorksheetRowStatus,
 } from "../../services/firebase/worksheets";
@@ -18,6 +18,7 @@ import type { WorksheetAcademicYear, Worksheet, WorksheetRow, WorksheetRowStatus
 import type { UserProfile } from "../../types/user";
 import { Card } from "../common/Card";
 import { Button } from "../common/Button";
+import { MultiSelect } from "../common/MultiSelect";
 import { Select } from "../common/Select";
 import "./CounsellorWorksheetSection.css";
 
@@ -67,10 +68,10 @@ export function CounsellorWorksheetSection() {
   const [worksheetAddFailed, setWorksheetAddFailed] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const [newRow, setNewRow] = useState({ counsellorId: "", month: "", topic: "", dates: "", time: "" });
+  const [newRow, setNewRow] = useState({ counsellorIds: [] as string[], month: "", topic: "", dates: "", time: "" });
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState({ counsellorId: "", month: "", topic: "", dates: "", time: "" });
+  const [editDraft, setEditDraft] = useState({ counsellorIds: [] as string[], month: "", topic: "", dates: "", time: "" });
 
   useEffect(() => {
     if (!campusId) {
@@ -187,21 +188,29 @@ export function CounsellorWorksheetSection() {
 
   async function handleAddRow() {
     if (!campusId || !currentUser || !selectedWorksheetId) return;
-    const counsellor = counsellors.find((c) => c.uid === newRow.counsellorId);
-    // Time is the only optional field here — everything else must be filled
-    // in before a row can be added.
-    if (!counsellor || !newRow.month.trim() || !newRow.topic.trim() || !newRow.dates.trim()) {
+    const assignees = newRow.counsellorIds
+      .map((uid) => counsellors.find((counsellor) => counsellor.uid === uid))
+      .filter((counsellor): counsellor is UserProfile => counsellor !== undefined);
+    if (
+      assignees.length !== newRow.counsellorIds.length ||
+      new Set(newRow.counsellorIds).size !== newRow.counsellorIds.length ||
+      !newRow.month.trim() ||
+      !newRow.topic.trim() ||
+      !newRow.dates.trim()
+    ) {
       return;
     }
     setBusy(true);
     setError("");
     try {
-      await addWorksheetRow(
+      await addWorksheetRows(
         selectedWorksheetId,
         campusId,
         {
-          counsellorId: counsellor.uid,
-          counsellorName: counsellor.displayName || counsellor.email,
+          assignees: assignees.map((counsellor) => ({
+            counsellorId: counsellor.uid,
+            counsellorName: counsellor.displayName || counsellor.email,
+          })),
           month: newRow.month.trim(),
           topic: newRow.topic.trim(),
           dates: newRow.dates.trim(),
@@ -209,7 +218,7 @@ export function CounsellorWorksheetSection() {
         },
         currentUser.uid,
       );
-      setNewRow({ counsellorId: "", month: "", topic: "", dates: "", time: "" });
+      setNewRow({ counsellorIds: [], month: "", topic: "", dates: "", time: "" });
       await reloadRows();
     } catch (err) {
       console.error("Failed to add worksheet row:", err);
@@ -222,7 +231,7 @@ export function CounsellorWorksheetSection() {
   function handleStartEditRow(row: WorksheetRow) {
     setEditingRowId(row.id);
     setEditDraft({
-      counsellorId: row.counsellorId,
+      counsellorIds: [row.counsellorId],
       month: row.month,
       topic: row.topic,
       dates: row.dates,
@@ -232,22 +241,39 @@ export function CounsellorWorksheetSection() {
   }
 
   async function handleSaveEditRow() {
-    if (!selectedWorksheetId || !editingRowId) return;
-    const counsellor = counsellors.find((c) => c.uid === editDraft.counsellorId);
-    if (!counsellor || !editDraft.month.trim() || !editDraft.topic.trim() || !editDraft.dates.trim() || !editDraft.time.trim()) {
+    if (!campusId || !selectedWorksheetId || !editingRowId || !currentUser) return;
+    const assignees = editDraft.counsellorIds
+      .map((uid) => counsellors.find((counsellor) => counsellor.uid === uid))
+      .filter((counsellor): counsellor is UserProfile => counsellor !== undefined);
+    if (
+      assignees.length !== editDraft.counsellorIds.length ||
+      new Set(editDraft.counsellorIds).size !== editDraft.counsellorIds.length ||
+      !editDraft.month.trim() ||
+      !editDraft.topic.trim() ||
+      !editDraft.dates.trim() ||
+      !editDraft.time.trim()
+    ) {
       return;
     }
     setBusy(true);
     setError("");
     try {
-      await updateWorksheetRow(selectedWorksheetId, editingRowId, {
-        counsellorId: counsellor.uid,
-        counsellorName: counsellor.displayName || counsellor.email,
-        month: editDraft.month.trim(),
-        topic: editDraft.topic.trim(),
-        dates: editDraft.dates.trim(),
-        time: editDraft.time.trim(),
-      });
+      await updateWorksheetRowWithAssignees(
+        selectedWorksheetId,
+        campusId,
+        editingRowId,
+        {
+          assignees: assignees.map((counsellor) => ({
+            counsellorId: counsellor.uid,
+            counsellorName: counsellor.displayName || counsellor.email,
+          })),
+          month: editDraft.month.trim(),
+          topic: editDraft.topic.trim(),
+          dates: editDraft.dates.trim(),
+          time: editDraft.time.trim(),
+        },
+        currentUser.uid,
+      );
       setEditingRowId(null);
       await reloadRows();
     } catch (err) {
@@ -335,19 +361,16 @@ export function CounsellorWorksheetSection() {
                   return (
                     <tr key={row.id}>
                       <td>
-                        <Select
-                          value={editDraft.counsellorId}
-                          onChange={(v) => setEditDraft((d) => ({ ...d, counsellorId: v }))}
-                        >
-                          <option value="" disabled>
-                            Select counsellor…
-                          </option>
-                          {counsellors.map((c) => (
-                            <option key={c.uid} value={c.uid}>
-                              {c.displayName || c.email}
-                            </option>
-                          ))}
-                        </Select>
+                        <MultiSelect
+                          options={counsellors.map((counsellor) => ({
+                            value: counsellor.uid,
+                            label: counsellor.displayName || counsellor.email,
+                          }))}
+                          selected={editDraft.counsellorIds}
+                          onChange={(counsellorIds) => setEditDraft((draft) => ({ ...draft, counsellorIds }))}
+                          placeholder="Select counsellors or heads…"
+                          emptyMessage="No counsellors or heads available"
+                        />
                       </td>
                       <td>
                         <Select value={editDraft.month} onChange={(v) => setEditDraft((d) => ({ ...d, month: v }))}>
@@ -387,7 +410,11 @@ export function CounsellorWorksheetSection() {
                       </td>
                       <td>
                         <div className="counsellor-worksheet__status-cell">
-                          <Button type="button" disabled={busy} onClick={handleSaveEditRow}>
+                          <Button
+                            type="button"
+                            disabled={busy || editDraft.counsellorIds.length === 0}
+                            onClick={handleSaveEditRow}
+                          >
                             {busy ? "Saving…" : "Save"}
                           </Button>
                           <Button
@@ -456,16 +483,16 @@ export function CounsellorWorksheetSection() {
           <Card className="counsellor-worksheet__add-row">
             <p className="counsellor-worksheet__add-row-title">Add a row</p>
             <div className="counsellor-worksheet__add-row-fields">
-              <Select value={newRow.counsellorId} onChange={(v) => setNewRow((r) => ({ ...r, counsellorId: v }))}>
-                <option value="" disabled>
-                  Select counsellor…
-                </option>
-                {counsellors.map((c) => (
-                  <option key={c.uid} value={c.uid}>
-                    {c.displayName || c.email}
-                  </option>
-                ))}
-              </Select>
+              <MultiSelect
+                options={counsellors.map((counsellor) => ({
+                  value: counsellor.uid,
+                  label: counsellor.displayName || counsellor.email,
+                }))}
+                selected={newRow.counsellorIds}
+                onChange={(counsellorIds) => setNewRow((row) => ({ ...row, counsellorIds }))}
+                placeholder="Select counsellors or heads…"
+                emptyMessage="No counsellors or heads available"
+              />
               <Select value={newRow.month} onChange={(v) => setNewRow((r) => ({ ...r, month: v }))}>
                 <option value="" disabled>
                   Select month…
@@ -503,7 +530,11 @@ export function CounsellorWorksheetSection() {
               <Button
                 type="button"
                 disabled={
-                  busy || !newRow.counsellorId || !newRow.month.trim() || !newRow.topic.trim() || !newRow.dates.trim()
+                  busy ||
+                  newRow.counsellorIds.length === 0 ||
+                  !newRow.month.trim() ||
+                  !newRow.topic.trim() ||
+                  !newRow.dates.trim()
                 }
                 onClick={handleAddRow}
               >

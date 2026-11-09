@@ -206,7 +206,8 @@
   color: #ffffff;
 }
 
-.counsellor-worksheet__table td .md-select {
+.counsellor-worksheet__table td .md-select,
+.counsellor-worksheet__table td .md-multiselect {
   min-width: 140px;
 }
 
@@ -301,6 +302,12 @@
   flex: 1 1 180px;
   width: auto;
   min-width: 160px;
+}
+
+.counsellor-worksheet__add-row-fields .md-multiselect {
+  flex: 1 1 220px;
+  width: auto;
+  min-width: 180px;
 }
 
 .counsellor-worksheet__add-row-fields input[type="text"] {
